@@ -28,13 +28,12 @@ public:
     void SetNextBElemWRTCR(indexType nextIndex);
 
     void SetNextBElemWRTCL(indexType nextIndex);
-    bool SetNextEdge(indexType nextEdgeIndex, indexType cellIndex);
+
+    bool SetNextBElem(indexType nextBElemIndex, indexType cellIndex);
 
     indexType GetNextBElemWRTCL() const;
 
-    indexType GetNextBElemWRTCR() const {
-        return NextBElemWRTCR;
-    }
+    indexType GetNextBElemWRTCR() const;
 
     indexType GetNextBElem(indexType cellIndex) const;
 
@@ -66,7 +65,7 @@ void CellBoundaryConnection<indexType>::SetNextBElemWRTCL(indexType nextIndex){
 }
 
 template<typename indexType>
-bool CellBoundaryConnection<indexType>::SetNextEdge(indexType nextEdgeIndex, indexType cellIndex){
+bool CellBoundaryConnection<indexType>::SetNextBElem(indexType nextBElemIndex, indexType cellIndex){
 
     // CellIndex is invalid then false returned
     if (cellIndex == INVALID_INDEX(indexType)){
@@ -76,14 +75,14 @@ bool CellBoundaryConnection<indexType>::SetNextEdge(indexType nextEdgeIndex, ind
     // then is posible to set up invalid indexes
     if (CellConnection<indexType>::GetCellLeftIndex() == cellIndex) {
 
-        SetNextBElemWRTCL(nextEdgeIndex);
+        SetNextBElemWRTCL(nextBElemIndex);
         return true;
 
     }
 
     if (CellConnection<indexType>::GetCellRightIndex() == cellIndex){
 
-        SetNextBElemWRTCR(nextEdgeIndex);
+        SetNextBElemWRTCR(nextBElemIndex);
         return true;
 
     }
@@ -93,7 +92,7 @@ bool CellBoundaryConnection<indexType>::SetNextEdge(indexType nextEdgeIndex, ind
     // CellRightIndex is set as cellIndex
     if (CellConnection<indexType>::GetCellLeftIndex() == INVALID_INDEX(indexType)){
 
-        SetCellLeftIndex(cellIndex);
+        CellConnection<indexType>::SetCellLeftIndex(cellIndex);
 
     }
 
@@ -101,7 +100,7 @@ bool CellBoundaryConnection<indexType>::SetNextEdge(indexType nextEdgeIndex, ind
     // then nextEdgeWRTCL is set as nextEdgeIndex, ret true
     if (cellIndex == CellConnection<indexType>::GetCellLeftIndex()) {
 
-        SetNextBElemWRTCL(nextEdgeIndex);
+        SetNextBElemWRTCL(nextBElemIndex);
 
         return true;
 
@@ -111,14 +110,14 @@ bool CellBoundaryConnection<indexType>::SetNextEdge(indexType nextEdgeIndex, ind
         // but CellLeftIndex is already filled
         // then set CellLeftIndex as cellIndex
         if(CellConnection<indexType>::GetCellRightIndex() == INVALID_INDEX(indexType)){
-            SetCellRightIndex(cellIndex);
+            CellConnection<indexType>::SetCellRightIndex(cellIndex);
         }
 
         // Parameter cellIndex is equal to CellLeftIndex then
         // set NextEdgeWRTCR as nextEdgeIndex, ret true
         if (cellIndex == CellConnection<indexType>::GetCellRightIndex()){
 
-            SetNextBElemWRTCR(nextEdgeIndex);
+            SetNextBElemWRTCR(nextBElemIndex);
 
             return true;
 
@@ -140,6 +139,11 @@ bool CellBoundaryConnection<indexType>::SetNextEdge(indexType nextEdgeIndex, ind
 template<typename indexType>
 indexType CellBoundaryConnection<indexType>::GetNextBElemWRTCL() const {
     return NextBElemWRTCL;
+}
+
+template<typename indexType>
+indexType CellBoundaryConnection<indexType>::GetNextBElemWRTCR() const {
+    return NextBElemWRTCR;
 }
 
 template<typename indexType>

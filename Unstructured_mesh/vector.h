@@ -1,5 +1,6 @@
-#ifndef VERTEX_H
-#define VERTEX_H
+#ifndef VECTOR_H
+#define VECTOR_H
+
 #include <math.h>
 #include <iostream>
 #include <initializer_list>
@@ -7,19 +8,19 @@
 
 
 template <unsigned int Dim, typename Real = double>
-class Vertex {
+class Vector {
     /**
      * @brief Coordinates
      */
     Real Coordinates[Dim] = {};
 
 public:
-    Vertex(){}
-    Vertex(std::initializer_list<Real> l){
+    Vector(){}
+    Vector(std::initializer_list<Real> l){
         *this = l;
     }
 
-    Vertex<Dim, Real>& operator =(std::initializer_list<Real> l);
+    Vector<Dim, Real>& operator =(std::initializer_list<Real> l);
 
     void SetCoordinate(Real coord, unsigned int pos){
         Coordinates[pos] = coord;
@@ -39,27 +40,35 @@ public:
         return  inlineScalarProduct<Dim, Real>::computation(Coordinates, Coordinates);
     }
 
-    Vertex<Dim, Real> operator-(const Vertex<Dim, Real>&) const;
+    Vector<Dim, Real> operator-(const Vector<Dim, Real>&) const;
 
-    Vertex<Dim, Real> operator+(const Vertex<Dim, Real>&) const;
+    Vector<Dim, Real> operator+(const Vector<Dim, Real>&) const;
 
-    Vertex<Dim, Real> operator*(const Real&) const;
+    Vector<Dim, Real> operator*(const Real&) const;
 
-    Vertex<Dim, Real> operator/(const Real&) const;
+    Vector<Dim, Real> operator/(const Real&) const;
+    /**
+     * @brief operator *
+     *
+     * Scalar product of two vectors
+     * @param v
+     * @return
+     */
+    Real operator*(const Vector& v);
+
+    Vector<Dim, Real>& operator+=(const Vector<Dim, Real>&);
+    Vector<Dim, Real>& operator-=(const Vector<Dim, Real>&);
+    Vector<Dim, Real>& operator*=(const Real&);
+    Vector<Dim, Real>& operator/=(const Real&);
 
 
-    Vertex<Dim, Real>& operator+=(const Vertex<Dim, Real>&);
-    Vertex<Dim, Real>& operator-=(const Vertex<Dim, Real>&);
-    Vertex<Dim, Real>& operator*=(const Real&);
-    Vertex<Dim, Real>& operator/=(const Real&);
-
-    bool operator==(const Vertex<Dim, Real>&) const;
-    bool operator!=(const Vertex<Dim, Real>&) const;
+    bool operator==(const Vector<Dim, Real>&) const;
+    bool operator!=(const Vector<Dim, Real>&) const;
 };
 
 
 template<unsigned int Dim, typename Real>
-Vertex<Dim, Real>& Vertex<Dim, Real>::operator =(std::initializer_list<Real> l){
+Vector<Dim, Real>& Vector<Dim, Real>::operator =(std::initializer_list<Real> l){
     unsigned int i = 0;
 
     for(Real x : l){
@@ -77,11 +86,24 @@ Vertex<Dim, Real>& Vertex<Dim, Real>::operator =(std::initializer_list<Real> l){
     }
     return *this;
 }
+
+template <typename Real>
+Vector<3, Real> VectorProduct(const Vector<3, Real>& v1, const Vector<3, Real>& v2){
+    Vector<3,Real> res = {};
+    res[0] = v1[1]*v2[2] - v1[2]*v2[1];
+    res[1] = v1[2]*v2[0] - v1[0]*v2[2];
+    res[2] = v1[0]*v2[1] - v1[1]*v2[0];
+    return res;
+}
+
+
+
+
 /*
 ** Calculates the Eucleid norm of the point
 */
 template <unsigned int Dim, typename Real>
-Real Vertex<Dim, Real>::NormEukleid(){
+Real Vector<Dim, Real>::NormEukleid(){
     return sqrt(SumOfSquares());
 }
 
@@ -93,24 +115,24 @@ Real Vertex<Dim, Real>::NormEukleid(){
 */
 //subtracting two points
 template <unsigned int Dim, typename Real>
-Vertex<Dim, Real> Vertex<Dim, Real>::operator -(const Vertex<Dim, Real>& v) const {
-    Vertex<Dim, Real> res;
+Vector<Dim, Real> Vector<Dim, Real>::operator -(const Vector<Dim, Real>& v) const {
+    Vector<Dim, Real> res;
     inlineSubtraction<Dim, Real>::computation(res.Coordinates, this->Coordinates, v.Coordinates);
     return res;
 }
 
 //addition of two points
 template <unsigned int Dim, typename Real>
-Vertex<Dim, Real> Vertex<Dim, Real>::operator +(const Vertex<Dim, Real>& v) const {
-    Vertex<Dim, Real> res;
+Vector<Dim, Real> Vector<Dim, Real>::operator +(const Vector<Dim, Real>& v) const {
+    Vector<Dim, Real> res;
     inlineAddition<Dim, Real>::computation(res.Coordinates, this->Coordinates, v.Coordinates);
     return res;
 }
 
 //multiplying coordinates with real number
 template <unsigned int Dim, typename Real>
-Vertex<Dim, Real> Vertex<Dim, Real>::operator *(const Real& x) const {
-    Vertex<Dim, Real> res;
+Vector<Dim, Real> Vector<Dim, Real>::operator *(const Real& x) const {
+    Vector<Dim, Real> res;
     inlineMultiplication<Dim, Real>::computation(res.Coordinates, this->Coordinates, x);
     return res;
 }
@@ -118,20 +140,29 @@ Vertex<Dim, Real> Vertex<Dim, Real>::operator *(const Real& x) const {
 
 //division
 template <unsigned int Dim, typename Real>
-Vertex<Dim, Real> Vertex<Dim, Real>::operator /(const Real& x) const {
+Vector<Dim, Real> Vector<Dim, Real>::operator /(const Real& x) const {
     return this->operator*(Real(1.0)/x);
+}
+
+
+
+
+template<unsigned int Dim, typename Real>
+Real Vector<Dim, Real>::operator*(const Vector &v)
+{
+    return inlineScalarProduct<Dim, Real>::computation(Coordinates, v.Coordinates);
 }
 
 // Adds value of coordinates of another Point
 template <unsigned int Dim, typename Real>
-Vertex<Dim, Real>& Vertex<Dim, Real>::operator +=(const Vertex<Dim, Real>& v){
+Vector<Dim, Real>& Vector<Dim, Real>::operator +=(const Vector<Dim, Real>& v){
     inlineAddition<Dim, Real>::computation(Coordinates, v.Coordinates);
     return *this;
 }
 
 // Subtracts value of coordinates of another Point
 template <unsigned int Dim, typename Real>
-Vertex<Dim, Real>& Vertex<Dim, Real>::operator -=(const Vertex<Dim, Real>& v){
+Vector<Dim, Real>& Vector<Dim, Real>::operator -=(const Vector<Dim, Real>& v){
     inlineSubtraction<Dim, Real>::computation(Coordinates, v.Coordinates);
     return *this;
 }
@@ -139,21 +170,21 @@ Vertex<Dim, Real>& Vertex<Dim, Real>::operator -=(const Vertex<Dim, Real>& v){
 
 // Adds value of coordinates of another Point
 template <unsigned int Dim, typename Real>
-Vertex<Dim, Real>& Vertex<Dim, Real>::operator *=(const Real& x){
+Vector<Dim, Real>& Vector<Dim, Real>::operator *=(const Real& x){
     inlineMultiplication<Dim, Real>::computation(Coordinates, x);
     return *this;
 }
 
 // Subtracts value of coordinates of another Point
 template <unsigned int Dim, typename Real>
-Vertex<Dim, Real>& Vertex<Dim, Real>::operator /=(const Real& x){
+Vector<Dim, Real>& Vector<Dim, Real>::operator /=(const Real& x){
     this->operator*=(Real(1.0)/x);
     return *this;
 }
 
 // Compares two points wether they are the same
 template <unsigned int Dim, typename Real>
-bool Vertex<Dim, Real>::operator ==(const Vertex<Dim, Real>& v) const {
+bool Vector<Dim, Real>::operator ==(const Vector<Dim, Real>& v) const {
     for(unsigned int i = 0; i < Dim; i++) {
         if(this->operator[](i) != v[i]){
             return false;
@@ -164,12 +195,12 @@ bool Vertex<Dim, Real>::operator ==(const Vertex<Dim, Real>& v) const {
 
 // Compares two points wether they are not the same
 template <unsigned int Dim, typename Real>
-bool Vertex<Dim, Real>::operator !=(const Vertex<Dim, Real>& v) const {
+bool Vector<Dim, Real>::operator !=(const Vector<Dim, Real>& v) const {
     return !(*this == v);
 }
 
 template <unsigned int Dim, typename Real = double>
-std::ostream& operator <<(std::ostream& ost, const Vertex<Dim,Real>& v) {
+std::ostream& operator <<(std::ostream& ost, const Vector<Dim,Real>& v) {
     for (unsigned int i = 0; i < Dim; i++) {
         ost << v[i] << ' ';
     }
@@ -179,7 +210,7 @@ std::ostream& operator <<(std::ostream& ost, const Vertex<Dim,Real>& v) {
 
 
 template <unsigned int Dim, typename Real = double>
-std::istream& operator >>(std::istream& ist, Vertex<Dim,Real>& v) {
+std::istream& operator >>(std::istream& ist, Vector<Dim,Real>& v) {
     for (unsigned int i = 0; i < Dim; i++) {
         ist >> v[i];
     }
@@ -187,4 +218,5 @@ std::istream& operator >>(std::istream& ist, Vertex<Dim,Real>& v) {
 }
 
 
-#endif // VERTEX_H
+
+#endif // VECTOR_H

@@ -1,5 +1,5 @@
 TEMPLATE = app
-CONFIG += console c++11
+CONFIG += console c++14
 CONFIG -= app_bundle
 CONFIG -= qt
 
@@ -12,7 +12,11 @@ HEADERS += \
     cellconnection.h \
     ../debug/debug.h \
     ../debug/htmllogger.h \
+    computationaly_significant_element.h \
+    inline_array_operations.h \
     mesh_element.h \
+    mesh_functions.h \
     unstructed_mesh_define.h \
     unstructuredmesh.h \
+    vector.h \
     vertex.h
