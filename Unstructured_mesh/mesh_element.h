@@ -109,6 +109,9 @@ struct emptyStruct{};
 struct emptyStruct2{};
 
 
+
+
+
 template <unsigned int MeshDim, unsigned int ElementDim, typename IndexType, typename Real, unsigned int Reserve = 0>
 class MeshElement : public MeshElementBase<IndexType>,
                     public std::conditional<ElementDim == MeshDim - 1,CellBoundaryConnection<IndexType>, emptyStruct>::type,
@@ -139,15 +142,6 @@ public:
     }
     */
 };
-
-
-
-
-
-
-
-
-
 
 
 
@@ -346,35 +340,130 @@ public:
         return GetElements<Dimension>();
     }
 
-private:
-    template<unsigned int _Dimension, typename Dummy = void>
-    struct MeshSubelementIterator : public SubelementContainer<IndexType, reserve<_Dimension>>
-    {
 
-    };
-
-    template<typename Dummy>
-    struct MeshSubelementIterator<Dimension, Dummy> : public std::iterator<std::forward_iterator_tag, IndexType>
+    struct CellSubelementIterator: public std::iterator<std::forward_iterator_tag, IndexType>
     {
 
         IndexType Actual;
         IndexType FirstBElem;
         IndexType Cell;
+        MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh;
     public:
-        MeshSubelementIterator(IndexType ci, IndexType act = INVALID_INDEX(IndexType)):Cell(ci){
-            FirstBElem = act == INVALID_INDEX(IndexType) ? GetCells().at(Cell).GetBElemeIndex() : act;
+        CellSubelementIterator(IndexType ci, IndexType act, MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh):Cell(ci){
+            FirstBElem = act;
             Actual = FirstBElem;
+            this->parentMesh = parentMesh;
         }
-        MeshSubelementIterator& operator++ () {Actual = GetFaces().at(Actual).GetNextBElem(Cell) == FirstBElem ? INVALID_INDEX(IndexType) : GetFaces().at(Actual).GetNextBElem(Cell); return *this;}
-        MeshSubelementIterator& operator++ (int) {Actual = GetFaces().at(Actual).GetNextBElem(Cell) == FirstBElem ? INVALID_INDEX(IndexType) : GetFaces().at(Actual).GetNextBElem(Cell); return *this;}
+        CellSubelementIterator& operator++ () {Actual = parentMesh->GetFaces().at(Actual).GetNextBElem(Cell) == FirstBElem ? INVALID_INDEX(IndexType) : parentMesh->GetFaces().at(Actual).GetNextBElem(Cell); return *this;}
+        CellSubelementIterator& operator++ (int) {Actual = parentMesh->GetFaces().at(Actual).GetNextBElem(Cell) == FirstBElem ? INVALID_INDEX(IndexType) : parentMesh->GetFaces().at(Actual).GetNextBElem(Cell); return *this;}
         IndexType operator* (){return Actual;}
-        bool operator== (MeshSubelementIterator& it) {return Actual == it.Actual;}
-        bool operator!= (MeshSubelementIterator& it) {return Actual != it.Actual;}
+        bool operator== (CellSubelementIterator& it) {return Actual == it.Actual;}
+        bool operator!= (CellSubelementIterator& it) {return Actual != it.Actual;}
+    };
+
+    class CellSubelements {
+        IndexType cellIndex;
+        MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh;
+    public:
+        CellSubelements(MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh, IndexType cellIndex){
+            this->cellIndex = cellIndex;
+            this->parentMesh = parentMesh;
+        }
+
+        CellSubelementIterator begin() {
+            return CellSubelementIterator(cellIndex, parentMesh->GetCells()[cellIndex].GetBoundaryElementIndex(), parentMesh);
+        }
+
+        CellSubelementIterator end() {
+            return CellSubelementIterator(cellIndex, INVALID_INDEX(IndexType), parentMesh);
+        }
+    };
+
+public:
+    template<unsigned int ElementDim, typename Dummy = void>
+    class MeshElementWrap {
+        IndexType elementIndex;
+        MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh;
+    public:
+        MeshElementWrap(MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh, MeshElement<Dimension, ElementDim, IndexType, Real, reserve<ElementDim>()>& meshElement){
+            elementIndex = meshElement.GetIndex();
+            this->parentMesh = parentMesh;
+        }
+
+        MeshElementWrap(MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh, IndexType elementIndex){
+            this->elementIndex = elementIndex;
+            this->parentMesh = parentMesh;
+        }
+
+        IndexType GetIndex(){
+            return elementIndex;
+        }
+
+        SubelementContainer<IndexType, reserve<ElementDim>()>& GetSubelements(){
+            return parentMesh->template GetElements<ElementDim>()[elementIndex].GetSubelements();
+        }
+    };
+
+
+    template<typename Dummy>
+    class MeshElementWrap<Dimension, Dummy> {
+        IndexType elementIndex;
+        MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh;
+    public:
+        MeshElementWrap(MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh, MeshElement<Dimension, Dimension, IndexType, Real, 0>& meshElement){
+            elementIndex = meshElement.GetIndex();
+            this->parentMesh = parentMesh;
+        }
+
+        MeshElementWrap(MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh, IndexType elementIndex){
+            this->elementIndex = elementIndex;
+            this->parentMesh = parentMesh;
+        }
+
+        IndexType GetIndex(){
+            return elementIndex;
+        }
+
+        CellSubelements GetSubelements(){
+            return CellSubelements(parentMesh, elementIndex);
+        }
+    };
+
+
+
+
+    template<typename Dummy>
+    class MeshElementWrap<1, Dummy> {
+        IndexType elementIndex;
+    public:
+        MeshElementWrap(MeshElement<Dimension, 1, IndexType, Real, 0>& meshElement){
+            elementIndex = meshElement.GetIndex();
+        }
+
+        MeshElementWrap(IndexType elementIndex){
+            this->elementIndex = elementIndex;
+        }
+
+        IndexType GetIndex(){
+            return elementIndex;
+        }
+
+
     };
 
 
 
 };
+
+
+
+
+
+
+
+
+
+
 
 
 
