@@ -9,11 +9,15 @@
 template <unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
 class UnstructuredMesh : public MeshElements<Dimension, IndexType, Real, Reserve...>{
 
+
 public:
+    Real CalculateCellDist(IndexType cellIndex1, IndexType cellIndex2){
+        return (this->GetCells().at(cellIndex1).GetCenter() - this->GetCells().at(cellIndex2).GetCenter()).NormEukleid();
+    }
 };
 
 template <typename IndexType, typename Real, unsigned int ...Reserve>
-class UnstructuredMesh<2, IndexType, Real, Reserve...> : public MeshElements<2, IndexType, Real, 0>{
+class UnstructuredMesh<2, IndexType, Real, Reserve...> : public MeshElements<2, IndexType, Real, Reserve...>{
 
 public:
 
@@ -61,8 +65,17 @@ public:
 
         return volume;
     }
+/*
+template <typename data_t, unsigned int ...dimensions>
+    struct data : public data<lowerdim, higherdim -1, data_t>{
+        std::vector<data_t> vec;
+    };
+    template <unsigned int lowerdim, typename data_t>
+        struct data<lowerdim, lowerdim, data_t>{
+            std::vector<data_t> vec;
+        };
 
-
+*/
 
     void InitializeCenters(){
         auto& vertices = this->GetVertices();
@@ -89,8 +102,25 @@ public:
         return CalculateEdgeMeasure(edgeIndex) / CalculateCellDist(edge.GetCellLeftIndex(), edge.GetCellRightIndex());
 
     }
+
+    /**
+      Jak udělat metodu, která by byla schopná prosházet elementy sítě v rozmezí nějakých dimenzí (obarvení grafu) (samostatná specializovaná třída volaná metodou)
+      Jak veřejnit typy přístupné pomocí proměnné (using na typ)
+      Jak zavést některé metody, které budou obecné a nemuset je přepisovat do specializací (asi to tam prostě okopírovat)
+      Jak udělat procházení podelementů šablonově v závislosti na dimenzi elementu (výpočet některých vlastností sítě)
+      Jak například vyrobit pomocné datové struktury jako centra elementů (asi šablonovým děděním)
+        (mohl bych navrhnout třídu, která by vytvářela na míru vektory dlouhé jako dané vektory meshelement)
+
+
+      Jak dobře koncipovat metody (počítání objemu...), zmínit i wrappery
+
+      */
 };
+/*
+class CellWrap{
+    UnstructuredMesh<2,size_t, double> *m;
+    size_t cellIndex;
 
-
-
+};
+*/
 #endif // UNSTRUCTUREDMESH_H

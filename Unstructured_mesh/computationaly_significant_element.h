@@ -3,13 +3,13 @@
 #include "vertex.h"
 
 template <unsigned int MeshDim, typename Real>
-class ComputationalySignificantElement
+class ComputationallySignificantElement
 {
 protected:
     Vertex<MeshDim, Real> Center;
     int Flag;
 public:
-    ComputationalySignificantElement() {
+    ComputationallySignificantElement() {
         Center = {};
         Flag = int();
     }
