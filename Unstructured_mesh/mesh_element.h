@@ -305,7 +305,7 @@ public:
     using Cell = MeshElement<Dimension, Dimension, IndexType, Real, 0>;
 
     template <unsigned int dim>
-    struct ElemType
+    struct ElemType //lze nahradit šablonovým using
     {
         using type = MeshElement<Dimension, dim, IndexType, Real, reserve<dim>()>;
     };

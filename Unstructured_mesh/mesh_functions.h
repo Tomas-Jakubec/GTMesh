@@ -96,13 +96,19 @@ public:
         Alocator<sizeof... (Dimensions) - 1>::AlocateMemory(*this, mesh);
     }
 
+    template <unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
+    MeshDataContainer(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh, std::integer_sequence<unsigned int,Dimensions...>, DataType){
+        DBGVAR(sizeof... (Dimensions))
+        Alocator<sizeof... (Dimensions) - 1>::AlocateMemory(*this, mesh);
+    }
 };
 
 
-template <unsigned int dim, unsigned int Dimension>
+
+template <unsigned int dim, unsigned int Dimension, unsigned int... DataDimensions>
 struct _ComputeCenters{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
-    static void compute(MeshDataContainer<Vertex<Dimension, Real>, 3,2,1>& centers,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+    static void compute(MeshDataContainer<Vertex<Dimension, Real>, DataDimensions...>& centers,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
 
         auto& elemCenters = centers.template GetDataDim<dim>();
         auto& subElemCenters = centers.template GetDataDim<dim - 1>();
@@ -121,15 +127,15 @@ struct _ComputeCenters{
         }
 
         DBGMSG(dim);
-        _ComputeCenters<dim + 1, Dimension>::compute(centers, mesh);
+        _ComputeCenters<dim + 1, Dimension, DataDimensions...>::compute(centers, mesh);
     }
 
 };
 
-template <unsigned int Dimension>
-struct _ComputeCenters<Dimension, Dimension>{
+template <unsigned int Dimension, unsigned int... DataDimensions>
+struct _ComputeCenters<Dimension, Dimension, DataDimensions...>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
-    static void compute(MeshDataContainer<Vertex<Dimension, Real>, 3,2,1>& centers,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+    static void compute(MeshDataContainer<Vertex<Dimension, Real>, DataDimensions...>& centers,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
 
         auto& elemCenters = centers.template GetDataDim<Dimension>();
         auto& subElemCenters = centers.template GetDataDim<Dimension - 1>();
@@ -139,14 +145,12 @@ struct _ComputeCenters<Dimension, Dimension>{
             auto& element = mesh.template GetElements<Dimension>().at(i);
 
             Real subElemCnt = 0;
-
             IndexType tmpFaceIndex = element.GetBoundaryElementIndex();
             do {
                 elemCenters.at(i) +=  subElemCenters.at(tmpFaceIndex);
                 subElemCnt++;
+                tmpFaceIndex = mesh.GetFaces()[tmpFaceIndex].GetNextBElem(i);
             } while (tmpFaceIndex != element.GetBoundaryElementIndex());
-
-
 
             elemCenters.at(i) /= subElemCnt;
         }
@@ -155,10 +159,10 @@ struct _ComputeCenters<Dimension, Dimension>{
 
 };
 
-template <unsigned int Dimension>
-struct _ComputeCenters<1, Dimension>{
+template <unsigned int Dimension, unsigned int... DataDimensions>
+struct _ComputeCenters<1, Dimension, DataDimensions...>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
-    static void compute(MeshDataContainer<Vertex<Dimension, Real>, 3,2,1>& centers,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+    static void compute(MeshDataContainer<Vertex<Dimension, Real>, DataDimensions...>& centers,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
 
         std::vector<Vertex<Dimension, Real>>& edgeCenters = centers.template GetDataDim<1>();
 
@@ -169,21 +173,22 @@ struct _ComputeCenters<1, Dimension>{
         }
 
         DBGMSG("1");
-        _ComputeCenters<2, Dimension>::compute(centers, mesh);
+        _ComputeCenters<2, Dimension, DataDimensions...>::compute(centers, mesh);
     }
 };
 
 
 
 
-template <unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
-MeshDataContainer<Vertex<Dimension, Real>, std::make_integer_sequence<unsigned int, Dimension + 1>{}> ComputeCenters(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
-
-    MeshDataContainer<Vertex<Dimension, Real>, std::make_index_sequence<Dimension + 1>{}> centers(mesh);
+template <unsigned int Dimension,typename IndexType, typename Real, unsigned int ...Reserve>
+auto __ComputeCenters(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+/*
+    MeshDataContainer centers(mesh, std::make_integer_sequence<unsigned int, Dimension + 1>{},Vertex<Dimension, Real>{});
 
     _ComputeCenters<1, Dimension>::compute(centers, mesh);
 
-    return centers;
+    return centers;*/
+    return 0;
 }
 
 
