@@ -4,6 +4,8 @@
 #include "mesh_functions.h"
 using namespace std;
 
+
+
 int main()
 {
     using sit = UnstructuredMesh<2, size_t, double>;
@@ -56,7 +58,7 @@ int main()
         size_t edge = mesh.GetCells().at(i).GetBoundaryElementIndex();
         size_t tmp_edge = edge;
         do {
-            DBGVAR(tmp_edge, mesh.GetFaces().at(tmp_edge).VertexA,mesh.GetFaces().at(tmp_edge).VertexB,mesh.GetVertices().at(mesh.GetFaces().at(tmp_edge).VertexA), mesh.GetVertices().at(mesh.GetFaces().at(tmp_edge).VertexB), mesh.CalculateEdgeMeasure(tmp_edge));
+            DBGVAR(tmp_edge, mesh.GetFaces().at(tmp_edge).VertexA,mesh.GetFaces().at(tmp_edge).VertexB,mesh.GetVertices().at(mesh.GetFaces().at(tmp_edge).VertexA), mesh.GetVertices().at(mesh.GetFaces().at(tmp_edge).VertexB), mesh.CalculateEdgeMeasure(tmp_edge))
             tmp_edge = mesh.GetFaces().at(tmp_edge).GetNextBElem(i);
         } while(edge != tmp_edge);
 
@@ -66,11 +68,11 @@ int main()
         DBGVAR(mesh.GetCells().at(i).GetCenter(), mesh.CalculateCellMeasure(i))
         DBGVAR(mesh.GetCells().at(i).GetFlag())
     }
-    DBGVAR(mesh.CalculateEdgeMeasure(2)/mesh.CalculateCellDist(0,1));
-    DBGVAR(mesh.CalculateFaceMeasureOverCellDist(2));
+    DBGVAR(mesh.CalculateEdgeMeasure(2)/mesh.CalculateCellDist(0,1))
+    DBGVAR(mesh.CalculateFaceMeasureOverCellDist(2))
 
 
-    sit::MeshElementWrap<1> ele(mesh.GetEdges().at(0));
+    sit::MeshElementWrap<1> ele(&mesh, mesh.GetEdges().at(0));
     sit::MeshElementWrap<2> cell(&mesh, mesh.GetCells().at(0));
 
     DBGMSG("cell boundary iterator test");
@@ -80,7 +82,19 @@ int main()
     }
 
 
+    for(auto i : mesh.GetElement<2>(1).GetSubelements()){
+        DBGVAR(i)
+    }
 
+    DBGMSG("cell vertices using iterator");
+    for(size_t i = 0; i < mesh.GetCells().size(); i++){
+        for(auto j : mesh.GetElement<2>(i).GetSubelements()){
+            auto e = mesh.GetElement<1>(j);
+            DBGVAR(e.GetElement().GetVertexAIndex(), e.GetElement().GetVertexBIndex())
+        }
+    }
+
+    CellsVertices<2,2,size_t, double>::run(mesh);
 
     DBGMSG("3D test");
 
@@ -155,11 +169,11 @@ DBGCHECK;
     size_t tmp_face = mesh3.GetCells().at(0).GetBoundaryElementIndex();
 
     do {
-        DBGVAR(tmp_face);
+        DBGVAR(tmp_face)
         for (auto& sube : mesh3.GetFaces().at(tmp_face).GetSubelements()) {
-            DBGVAR(sube.index);
+            DBGVAR(sube.index)
             if (sube.index < 12 ){
-                DBGVAR(sube.index, mesh3.GetVertices().at(mesh3.GetEdges().at(sube.index).GetVertexAIndex()),mesh3.GetVertices().at(mesh3.GetEdges().at(sube.index).GetVertexBIndex()));
+                DBGVAR(sube.index, mesh3.GetVertices().at(mesh3.GetEdges().at(sube.index).GetVertexAIndex()),mesh3.GetVertices().at(mesh3.GetEdges().at(sube.index).GetVertexBIndex()))
             }
         }
 
@@ -171,17 +185,34 @@ DBGCHECK;
     DBGMSG("Iterator wrapper test");
     sit3::MeshElementWrap<2> elem(&mesh3, mesh3.GetFaces().at(0));
     for(auto i : elem.GetSubelements()){
-        DBGVAR(i.index);
+        DBGVAR(i.index)
     }
 
-    MeshDataContainer<double, 3,2> cont(mesh3);
+    DBGMSG("3D cell vertices");
+    CellsVertices<3,3,size_t, double, 6>::run(mesh3);
+
+
+
+    DBGMSG("mesh conatiner test");
+    MeshDataContainer<double, 3,2,1,0> cont(mesh3);
 
     //cont.GetDataDim<3>().resize(20);
     DBG(cont.GetDataPos<1>().size());
 
     DBG(cont.GetDataPos<0>().size());
 
-    //auto centers = ComputeCenters(mesh3);
+    DBGMSG("faceCenters");
+    MeshDataContainer<Vertex<3,double>, 3,2,1> centers(mesh3);
+    _ComputeCenters<1,3>::compute<size_t, double, 6>(centers, mesh3);
+
+    auto& faceCent = centers.GetDataDim<2>();
+    for(auto& center : faceCent) {
+        DBGVAR(center)
+    }
+    DBGMSG("cellCenter");
+    DBGVAR(centers.GetDataDim<3>().at(0))
+
+    //DBGVAR(centers.template GetDataDim<3>().at(0))
 
     //DBGVAR(centers.template GetDataDim<3>().at(0));
 }

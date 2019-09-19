@@ -435,23 +435,56 @@ public:
     template<typename Dummy>
     class MeshElementWrap<1, Dummy> {
         IndexType elementIndex;
+        MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh;
     public:
-        MeshElementWrap(MeshElement<Dimension, 1, IndexType, Real, 0>& meshElement){
+        MeshElementWrap(MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh, MeshElement<Dimension, 1, IndexType, Real, 0>& meshElement){
             elementIndex = meshElement.GetIndex();
+            this->parentMesh = parentMesh;
         }
 
-        MeshElementWrap(IndexType elementIndex){
+        MeshElementWrap(MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh, IndexType elementIndex){
             this->elementIndex = elementIndex;
+            this->parentMesh = parentMesh;
         }
 
         IndexType GetIndex(){
             return elementIndex;
         }
 
+        Edge& GetElement() {
+            return parentMesh->GetEdges()[elementIndex];
+        }
 
     };
 
+    template<typename Dummy>
+    class MeshElementWrap<0, Dummy> {
+        IndexType elementIndex;
+        MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh;
+    public:
+        MeshElementWrap(MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh, Vertex& meshElement){
+            elementIndex = meshElement.GetIndex();
+            this->parentMesh = parentMesh;
+        }
 
+        MeshElementWrap(MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh, IndexType elementIndex){
+            this->elementIndex = elementIndex;
+            this->parentMesh = parentMesh;
+        }
+
+        IndexType GetIndex(){
+            return elementIndex;
+        }
+
+        Vertex& GetElement() {
+            return parentMesh->GetVertices()[elementIndex];
+        }
+    };
+
+    template<unsigned int ElementDim>
+    MeshElementWrap<ElementDim> GetElement(IndexType elementIndex){
+        return MeshElementWrap<ElementDim>(this, elementIndex);
+    }
 
 };
 

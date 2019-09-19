@@ -1,7 +1,7 @@
 #ifndef MESH_FUNCTIONS_H
 #define MESH_FUNCTIONS_H
 #include "mesh_element.h"
-
+#include "../debug/debug.h"
 
 /**
  * @brief The MeshDataContainer struct
@@ -102,24 +102,25 @@ public:
 template <unsigned int dim, unsigned int Dimension>
 struct _ComputeCenters{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
-    void compute(MeshDataContainer<Vertex<Dimension, Real>, std::make_index_sequence<Dimension + 1>{}>& centers,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+    static void compute(MeshDataContainer<Vertex<Dimension, Real>, 3,2,1>& centers,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
 
         auto& elemCenters = centers.template GetDataDim<dim>();
         auto& subElemCenters = centers.template GetDataDim<dim - 1>();
 
 
-        for (IndexType i = 0; i < mesh.template GetElements<1>().size(); i++) {
+        for (IndexType i = 0; i < mesh.template GetElements<dim>().size(); i++) {
             auto& element = mesh.template GetElements<dim>().at(i);
 
             Real subElemCnt = 0;
-            for(IndexType sub : elemCenters.GetSubelements()){
-                elemCenters.at(i) +=  subElemCenters.at(sub);
+            for(auto& sub : element.GetSubelements()){
+                elemCenters.at(i) +=  subElemCenters.at(sub.index);
                 subElemCnt++;
             }
 
             elemCenters.at(i) /= subElemCnt;
         }
 
+        DBGMSG(dim);
         _ComputeCenters<dim + 1, Dimension>::compute(centers, mesh);
     }
 
@@ -128,28 +129,28 @@ struct _ComputeCenters{
 template <unsigned int Dimension>
 struct _ComputeCenters<Dimension, Dimension>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
-    void compute(MeshDataContainer<Vertex<Dimension, Real>, std::make_index_sequence<Dimension + 1>{}>& centers,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+    static void compute(MeshDataContainer<Vertex<Dimension, Real>, 3,2,1>& centers,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
 
         auto& elemCenters = centers.template GetDataDim<Dimension>();
         auto& subElemCenters = centers.template GetDataDim<Dimension - 1>();
 
 
-        for (IndexType i = 0; i < mesh.template GetElements<1>().size(); i++) {
+        for (IndexType i = 0; i < mesh.template GetElements<Dimension>().size(); i++) {
             auto& element = mesh.template GetElements<Dimension>().at(i);
 
             Real subElemCnt = 0;
 
-            IndexType tmpFaceIndex = element.GetBElemIndex();
+            IndexType tmpFaceIndex = element.GetBoundaryElementIndex();
             do {
                 elemCenters.at(i) +=  subElemCenters.at(tmpFaceIndex);
                 subElemCnt++;
-            } while (tmpFaceIndex != element.GetBElemIndex());
+            } while (tmpFaceIndex != element.GetBoundaryElementIndex());
 
 
 
             elemCenters.at(i) /= subElemCnt;
         }
-
+        DBGMSG(Dimension);
     }
 
 };
@@ -157,20 +158,23 @@ struct _ComputeCenters<Dimension, Dimension>{
 template <unsigned int Dimension>
 struct _ComputeCenters<1, Dimension>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
-    void compute(MeshDataContainer<Vertex<Dimension, Real>, std::make_index_sequence<Dimension + 1>{}>& centers,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+    static void compute(MeshDataContainer<Vertex<Dimension, Real>, 3,2,1>& centers,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
 
-        auto & edgeCenters = centers.template GetDataDim<1>();
+        std::vector<Vertex<Dimension, Real>>& edgeCenters = centers.template GetDataDim<1>();
 
-        for (IndexType i = 0; i < mesh.template GetElements<1>().size(); i++) {
-            auto& edge = mesh.template GetElements<1>().at(i);
-            edgeCenters.at(i) = 0.5 * (mesh.template GetElements<0>().at(edge.GetVertexAIndex) +
-                                mesh.template GetElements<0>().at(edge.GetVertexAIndex));
+        for (auto& edge : mesh.template GetElements<1>()) {
+
+            edgeCenters.at(edge.GetIndex()) = (mesh.template GetElements<0>().at(edge.GetVertexAIndex()) +
+                                mesh.template GetElements<0>().at(edge.GetVertexBIndex())) * 0.5;
         }
 
+        DBGMSG("1");
         _ComputeCenters<2, Dimension>::compute(centers, mesh);
     }
-
 };
+
+
+
 
 template <unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
 MeshDataContainer<Vertex<Dimension, Real>, std::make_integer_sequence<unsigned int, Dimension + 1>{}> ComputeCenters(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
@@ -181,5 +185,40 @@ MeshDataContainer<Vertex<Dimension, Real>, std::make_integer_sequence<unsigned i
 
     return centers;
 }
+
+
+template<unsigned int MeshDimension, unsigned int ElementDim,typename IndexType, typename Real, unsigned int ...Reserve>
+struct CellsVertices {
+    static void run(MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh, IndexType index){
+        DBGMSG("face number "<<index);
+        for(auto i : mesh.template GetElement<ElementDim>(index).GetSubelements()) {
+            CellsVertices<MeshDimension, ElementDim - 1, IndexType, Real, Reserve...>::run(mesh, i.index);
+        }
+    }
+};
+
+
+template<unsigned int MeshDimension,typename IndexType, typename Real, unsigned int ...Reserve>
+struct CellsVertices<MeshDimension, MeshDimension, IndexType, Real, Reserve...> {
+    static void run(MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh){
+        for(IndexType i = 0; i < mesh.GetCells().size(); i++){
+            DBGMSG("cell number "<<i);
+            for(auto j : mesh.template GetElement<MeshDimension>(i).GetSubelements()) {
+                CellsVertices<MeshDimension, MeshDimension - 1, IndexType, Real, Reserve...>::run(mesh, j);
+            }
+        }
+    }
+};
+
+
+template<unsigned int MeshDimension,typename IndexType, typename Real, unsigned int ...Reserve>
+struct CellsVertices<MeshDimension, 1, IndexType, Real, Reserve...> {
+    static void run(MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh, IndexType index){
+
+            auto e = mesh.template GetElement<1>(index);
+            DBGVAR(mesh.GetVertices()[e.GetElement().GetVertexAIndex()], mesh.GetVertices()[e.GetElement().GetVertexBIndex()])
+
+    }
+};
 
 #endif // MESH_FUNCTIONS_H
