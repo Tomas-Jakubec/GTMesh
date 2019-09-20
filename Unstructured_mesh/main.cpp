@@ -164,37 +164,94 @@ void twoPrisms(UnstructuredMesh<3, size_t, double, 6>& mesh3){
     DBGCHECK;
 }
 
-template <typename Type, Type startIndex, Type EndIndex, int increment = 1, Type... t>
-struct MakeCustomIntegerSequence : public MakeCustomIntegerSequence<Type, startIndex + increment, EndIndex, increment, t..., startIndex> {
-};
-template <typename Type, Type EndIndex, int increment, Type... t>
-struct MakeCustomIntegerSequence<Type, EndIndex, EndIndex, increment, t...> {
-    using type = std::integer_sequence<Type, t..., EndIndex>;
-};
+void twoDeformedPrisms(UnstructuredMesh<3, size_t, double, 6>& mesh3){
+    DBGCHECK;
+        mesh3.GetVertices().push_back({0, {0,0,1}});
+        mesh3.GetVertices().push_back({1, {1,0,0}});
+        mesh3.GetVertices().push_back({2, {0,1,0}});
+        mesh3.GetVertices().push_back({3, {1,1,0}});
+        mesh3.GetVertices().push_back({4, {0,0,2}});
+        mesh3.GetVertices().push_back({5, {1,0,1}});
+        mesh3.GetVertices().push_back({6, {0,1,1}});
+        mesh3.GetVertices().push_back({7, {1,1,2}});
+    DBGCHECK;
+        mesh3.GetEdges().push_back({0,0,1});
+        mesh3.GetEdges().push_back({1,0,2});
+        mesh3.GetEdges().push_back({2,1,3});
+        mesh3.GetEdges().push_back({3,2,3});
+        mesh3.GetEdges().push_back({4,0,4});
+        mesh3.GetEdges().push_back({5,1,5});
+        mesh3.GetEdges().push_back({6,3,7});
+        mesh3.GetEdges().push_back({7,2,6});
+        mesh3.GetEdges().push_back({8,4,5});
+        mesh3.GetEdges().push_back({9,5,7});
+        mesh3.GetEdges().push_back({10,6,7});
+        mesh3.GetEdges().push_back({11,4,6});
+        mesh3.GetEdges().push_back({12,6,5});
+        mesh3.GetEdges().push_back({13,2,1});
+    DBGCHECK;
+    size_t index = 0;
+        mesh3.GetFaces().push_back(index);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(0,true);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(1,true);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(13,true);
+        mesh3.GetFaces().push_back(++index);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(13,true);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(2,true);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(3,true);
+        mesh3.GetFaces().push_back(++index);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(0,true);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(5,true);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(8,true);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(4,true);
+        mesh3.GetFaces().push_back(++index);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(1,true);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(4,true);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(11,true);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(7,true);
+        mesh3.GetFaces().push_back(++index);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(3,true);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(6,true);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(10,true);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(7,true);
+        mesh3.GetFaces().push_back(++index);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(2,true);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(6,true);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(9,true);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(5,true);
+        mesh3.GetFaces().push_back(++index);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(8,true);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(12,true);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(11,true);
+        mesh3.GetFaces().push_back(++index);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(9,true);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(10,true);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(12,true);
+        mesh3.GetFaces().push_back(++index);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(12,true);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(7,true);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(13,true);
+        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(5,true);
+    DBGCHECK;
 
-template<typename Type, Type startIndex, Type EndIndex, int increment = 1>
-using make_custom_integer_sequence = typename MakeCustomIntegerSequence<Type, startIndex, EndIndex, increment>::type;
+        mesh3.GetFaces().at(0).SetNextBElem(2,0);
+        mesh3.GetFaces().at(2).SetNextBElem(3,0);
+        mesh3.GetFaces().at(3).SetNextBElem(8,0);
+        mesh3.GetFaces().at(8).SetNextBElem(6,0);
+        mesh3.GetFaces().at(6).SetNextBElem(0,0);
+        mesh3.GetCells().push_back(0);
+        mesh3.GetCells().at(0).SetBoundaryElementIndex(0);
 
+        mesh3.GetFaces().at(1).SetNextBElem(5,1);
+        mesh3.GetFaces().at(5).SetNextBElem(4,1);
+        mesh3.GetFaces().at(4).SetNextBElem(8,1);
+        mesh3.GetFaces().at(8).SetNextBElem(7,1);
+        mesh3.GetFaces().at(7).SetNextBElem(1,1);
+        mesh3.GetCells().push_back(1);
+        mesh3.GetCells().at(1).SetBoundaryElementIndex(1);
 
-template <unsigned int Dimension,typename IndexType, typename Real, unsigned int ...Reserve, unsigned int ... Dimensions>
-MeshDataContainer<Vertex<Dimension, double>, Dimensions...>
-___ComputeCenters(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh, std::integer_sequence<unsigned int, Dimensions...>){
-
-    MeshDataContainer<Vertex<Dimension, double>, Dimensions...> centers(mesh);
-
-    _ComputeCenters<1, Dimension, Dimensions...>::compute(centers, mesh);
-
-    return centers;
+    DBGCHECK;
 }
-
-
-template <unsigned int Dimension,typename IndexType, typename Real, unsigned int ...Reserve>
-auto ComputeCenters(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
-
-    return ___ComputeCenters(mesh, make_custom_integer_sequence<unsigned int, 1, Dimension>{});
-}
-
-
 
 void testMesh2D() {
     using sit = UnstructuredMesh<2, size_t, double>;
@@ -296,6 +353,21 @@ void testMesh2D() {
     for(sit::Cell& cell : mesh.GetCells()){
         DBGVAR(centers.GetDataDim<2>().at(cell.GetIndex()))
     }
+
+/*
+    DBGMSG("computing measures");
+
+    auto measures = ComputeMeasures(mesh);
+
+
+    for(double edgeM :measures.GetDataDim<1>()) {
+        DBGVAR(edgeM)
+    }
+
+    for(double cellM :measures.GetDataDim<2>()) {
+        DBGVAR(cellM)
+    }
+*/
 }
 
 
@@ -350,15 +422,29 @@ void testMesh3D() {
     //_ComputeCenters<1,3, 3,2,1>::compute<size_t, double, 6>(centers, mesh3);
     auto centers = ComputeCenters(mesh3);
 
-    auto& faceCent = centers.GetDataDim<2>();
-    for(auto& center : faceCent) {
-        DBGVAR(center)
+    for(auto& face : mesh3.GetFaces()) {
+        face.SetCenter(centers.template GetDataDim<2>().at(face.GetIndex()));
+        DBGVAR(face.GetCenter())
     }
     DBGMSG("cellCenter");
-    for(sit3::Cell& cell : mesh3.GetCells()){
-        DBGVAR(centers.GetDataDim<3>().at(cell.GetIndex()))
+    for(auto& cell : mesh3.GetCells()) {
+        cell.SetCenter(centers.template GetDataDim<3>().at(cell.GetIndex()));
+        DBGVAR(cell.GetCenter())
     }
 
+    DBGMSG("measure computation");
+
+    auto measures = ComputeMeasures(mesh3);
+    for(double edgeM : measures.GetDataDim<1>()) {
+        DBGVAR(edgeM)
+    }
+    for(double faceM : measures.GetDataDim<2>()) {
+        DBGVAR(faceM)
+    }
+
+    for(double cellM : measures.GetDataDim<3>()) {
+        DBGVAR(cellM)
+    }
 
     //DBGVAR(centers.template GetDataDim<3>().at(0))
 
@@ -366,6 +452,63 @@ void testMesh3D() {
 }
 
 
+
+void test3DMeshDeformedPrisms() {
+    UnstructuredMesh<3, size_t, double, 6> mesh3;
+    twoDeformedPrisms(mesh3);
+
+    //_ComputeCenters<1,3, 3,2,1>::compute<size_t, double, 6>(centers, mesh3);
+    auto centers = ComputeCenters(mesh3);
+
+    for(auto& face : mesh3.GetFaces()) {
+        face.SetCenter(centers[face]);
+        DBGVAR(face.GetCenter())
+    }
+    DBGMSG("cellCenter");
+    for(auto& cell : mesh3.GetCells()) {
+        cell.SetCenter(centers[cell]);
+        DBGVAR(cell.GetCenter())
+    }
+
+    DBGMSG("measure computation");
+
+    auto measures = ComputeMeasures(mesh3);
+    for(double edgeM : measures.GetDataDim<1>()) {
+        DBGVAR(edgeM)
+    }
+    for(double faceM : measures.GetDataDim<2>()) {
+        DBGVAR(faceM)
+    }
+
+    for(double cellM : measures.GetDataDim<3>()) {
+        DBGVAR(cellM)
+    }
+}
+
+
+
+
+
+
+
+
+void testMeshDataContainer() {
+    UnstructuredMesh<3, size_t, double, 6> mesh3;
+    twoDeformedPrisms(mesh3);
+
+
+    MeshDataContainer<std::tuple<int, double, char, double>, 3,2,0> container(mesh3);
+
+
+
+    for(auto& c : container.GetDataDim<0>()) {
+        c=42;
+    }
+
+    for(auto& v : mesh3.GetVertices()){
+        DBGVAR(container.at(v))
+    }
+}
 
 template <unsigned int ... Is>
 class ClassA
@@ -379,13 +522,53 @@ class ClassA
 
  };
 
+
+//template <typename ... t> class ClassB{};
+
+template<typename  Tuple, unsigned int ... Is>
+class ClassB
+ {
+   public:
+      ClassB (const std::integer_sequence<unsigned int, Is...>, Tuple t)
+      {std::tuple_element_t<0,Tuple> typ = 0;
+          DBGVAR(sizeof... (Is), std::get<0>(std::array<size_t, sizeof...(Is)>{Is...}), std::get<0>(t), typ) }
+
+ };
+
+
+template <typename ... t> class ClassC{};
+
+template<unsigned int ... Is, typename ...Types>
+class ClassC<std::integer_sequence<unsigned int,Is...>, std::tuple<Types...>>
+ {
+   public:
+      ClassC (const std::integer_sequence<unsigned int, Is...>, std::tuple<Types...>)
+      {std::tuple_element_t<0,std::tuple<Types...>> typ = 0;
+          DBGVAR(sizeof... (Is), std::get<0>(std::array<size_t, sizeof...(Is)>{Is...}), typ) }
+
+      ClassC () {
+          std::tuple_element_t<0,std::tuple<Types...>> typ = 42.15;
+          std::tuple_element_t<1,std::tuple<Types...>> typ2 = 42.15;
+          DBGVAR(sizeof... (Is), std::get<0>(std::array<size_t, sizeof...(Is)>{Is...}), typ, typ2)
+      }
+ };
+
+
+
 void testTemplate() {
     ClassA n(std::make_integer_sequence<unsigned int, 3>{});
     UnstructuredMesh<3,size_t, double,6> mesh3;
     //MeshDataContainer<Vertex<3, double>, 0,1,2> centers2(mesh3,std::make_integer_sequence<unsigned int, 3>{}, Vertex<3, double>{});
     //ComputeCenters(mesh3);
-    ClassA u(make_custom_integer_sequence<unsigned int, 10, 0, -2>{});
 
+    ClassA p(make_custom_integer_sequence<unsigned int, 10, 0, -2>{});
+    std::tuple<double, char> t{};
+    t={1,2};
+    ClassB u(make_custom_integer_sequence<unsigned int, 2, 0, -2>{}, t);
+
+    ClassC<std::integer_sequence<unsigned int, 2,0>, std::tuple<double, char>> c(make_custom_integer_sequence<unsigned int, 2, 0, -2>{}, std::tuple<double, char>{});
+    ClassC<std::integer_sequence<unsigned int, 2,0>, std::tuple<double, char>> cc;
+    ClassC<std::integer_sequence<unsigned int, 2,0>, decltype(std::make_tuple(1.0, 'a'))> ccc;
 }
 
 
@@ -394,7 +577,9 @@ void testTemplate() {
 
 int main()
 {
-    testMesh2D();
-    testMesh3D();
+    //testMesh2D();
+    //testMesh3D();
+    //test3DMeshDeformedPrisms();
+    testMeshDataContainer();
     //testTemplate();
 }

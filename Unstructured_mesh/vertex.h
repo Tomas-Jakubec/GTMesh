@@ -47,6 +47,15 @@ public:
 
     Vertex<Dim, Real> operator/(const Real&) const;
 
+    /**
+     * @brief operator *
+     *
+     * Scalar product of two vectors
+     * @param v
+     * @return
+     */
+    Real operator*(const Vertex<Dim, Real>& v);
+
 
     Vertex<Dim, Real>& operator+=(const Vertex<Dim, Real>&);
     Vertex<Dim, Real>& operator-=(const Vertex<Dim, Real>&);
@@ -121,6 +130,15 @@ template <unsigned int Dim, typename Real>
 Vertex<Dim, Real> Vertex<Dim, Real>::operator /(const Real& x) const {
     return this->operator*(Real(1.0)/x);
 }
+
+
+template<unsigned int Dim, typename Real>
+Real Vertex<Dim, Real>::operator*(const Vertex<Dim, Real> &v)
+{
+    return inlineScalarProduct<Dim, Real>::computation(Coordinates, v.Coordinates);
+}
+
+
 
 // Adds value of coordinates of another Point
 template <unsigned int Dim, typename Real>

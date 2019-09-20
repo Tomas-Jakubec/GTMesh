@@ -30,7 +30,6 @@ public:
     HtmlLogger(const char* fileName)
         :HtmlLogger(){
         logFileName = fileName;
-        create(fileName);
     }
 
     ~HtmlLogger(){

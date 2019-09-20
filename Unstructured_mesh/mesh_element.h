@@ -131,16 +131,7 @@ public:
         :MeshElementBase<IndexType>(index), CellBoundaryConnection<IndexType> () {
         Subelements.fill({INVALID_INDEX(IndexType), false});
     }
-    /*
-    Vertex<3, Real> ComputeCenter(const MeshElements<3, IndexType, Real, Reserve>& ref){
 
-        Vertex<3,Real> tmpCenter = {};
-        for(unsigned char i = 0; i < numberOfElements; i++){
-            tmpCenter += ref.template GetElements<1>().at(subElements[i]).ComputeCenter(ref);
-        }
-        ComputationalySignificantElement<3, Real>::Center = tmpCenter * (1.0 / numberOfElements);
-    }
-    */
 };
 
 
@@ -238,21 +229,7 @@ public:
     void SetBoundaryElementIndex(IndexType index){
         BoundaryElement = index;
     }
-/*
-    Vertex<MeshDim, Real> ComputeCenter(MeshElements<MeshDim, IndexType, Real, Reserve>& ref){
-        IndexType boundary = this->BoundaryElement;
-        size_t tmp_boundary = boundary;
-        Vertex<MeshDim, Real> tmpCenter = {};
-        int numberOfBoundaries = 0;
-        do {
-            numberOfBoundaries++;
-            tmpCenter += ref.GetFaces().at(tmp_boundary).ComputeCenter(ref);
-            tmp_boundary = ref.GetFaces().at(tmp_boundary).GetNextBElem(this->GetIndex());
-        } while(boundary != tmp_boundary);
-        ComputationalySignificantElement<MeshDim, Real>::Center = tmpCenter * (1.0 / numberOfBoundaries);
-        return ComputationalySignificantElement<MeshDim, Real>::Center;
-    }
-*/
+
 };
 
 
