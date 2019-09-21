@@ -300,23 +300,6 @@ void testMesh2D() {
 
     mesh.InitializeCenters();
 
-    for (size_t i = 0; i < 2; i++) {
-        DBGMSG("Cell number" << i);
-        size_t edge = mesh.GetCells().at(i).GetBoundaryElementIndex();
-        size_t tmp_edge = edge;
-        do {
-            DBGVAR(tmp_edge, mesh.GetFaces().at(tmp_edge).VertexA,mesh.GetFaces().at(tmp_edge).VertexB,mesh.GetVertices().at(mesh.GetFaces().at(tmp_edge).VertexA), mesh.GetVertices().at(mesh.GetFaces().at(tmp_edge).VertexB), mesh.CalculateEdgeMeasure(tmp_edge))
-            tmp_edge = mesh.GetFaces().at(tmp_edge).GetNextBElem(i);
-        } while(edge != tmp_edge);
-
-    }
-
-    for(size_t i = 0; i < 2; i++) {
-        DBGVAR(mesh.GetCells().at(i).GetCenter(), mesh.CalculateCellMeasure(i))
-        DBGVAR(mesh.GetCells().at(i).GetFlag())
-    }
-    DBGVAR(mesh.CalculateEdgeMeasure(2)/mesh.CalculateCellDist(0,1))
-    DBGVAR(mesh.CalculateFaceMeasureOverCellDist(2))
 
 
     sit::MeshElementWrap<1> ele(&mesh, mesh.GetEdges().at(0));
@@ -354,10 +337,10 @@ void testMesh2D() {
         DBGVAR(centers.GetDataDim<2>().at(cell.GetIndex()))
     }
 
-/*
+
     DBGMSG("computing measures");
 
-    auto measures = ComputeMeasures(mesh);
+    auto measures = mesh.ComputeElementMeasures();
 
 
     for(double edgeM :measures.GetDataDim<1>()) {
@@ -367,7 +350,7 @@ void testMesh2D() {
     for(double cellM :measures.GetDataDim<2>()) {
         DBGVAR(cellM)
     }
-*/
+
 }
 
 
@@ -577,9 +560,11 @@ void testTemplate() {
 
 int main()
 {
-    //testMesh2D();
-    //testMesh3D();
-    //test3DMeshDeformedPrisms();
+    testMesh2D();
+    testMesh3D();
+    test3DMeshDeformedPrisms();
     testMeshDataContainer();
     //testTemplate();
+    UnstructuredMesh<5, size_t, double, 6,5,4> m;
+    m.ComputeElementMeasures();
 }

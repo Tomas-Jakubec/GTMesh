@@ -3,6 +3,7 @@
 #include "mesh_element.h"
 #include "../debug/debug.h"
 
+
 /**
  * @brief The MeshDataContainer struct
  *
@@ -114,8 +115,6 @@ public:
         Alocator<sizeof... (Dimensions) - 1>::AlocateMemory(*this, mesh);
     }
 };
-
-
 
 
 
@@ -402,7 +401,7 @@ struct _ComputeMeasures<3, 3, DataDimensions...>{
             IndexType tmpFace = cell.GetBoundaryElementIndex();
             Real measure = Real();
             Vertex<3,Real>& cellCenter = cell.GetCenter();
-            HTMLDBGCOND(cell.GetIndex() == 0, cellCenter[0], cellCenter[1], cellCenter[2]);
+
             do {
                 // select 3 different vertices
                 IndexType vAIndex = mesh.GetEdges().at(mesh.GetFaces().at(tmpFace).GetSubelements()[0].index).GetVertexAIndex();
@@ -471,21 +470,21 @@ struct _ComputeMeasures<2, 2, DataDimensions...>{
 
 
 
-template <unsigned int Dimension,unsigned int... DataDimensions>
-struct _ComputeMeasures<2, Dimension, DataDimensions...>{
+template <unsigned int... DataDimensions>
+struct _ComputeMeasures<2, 3, DataDimensions...>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
-    static void compute(MeshDataContainer< Real, DataDimensions...>& measures,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+    static void compute(MeshDataContainer< Real, DataDimensions...>& measures,MeshElements<3, IndexType, Real, Reserve...>& mesh){
 
         auto& surfaceMeasures = measures.template GetDataDim<2>();
 
-        for (typename MeshElements<Dimension, IndexType, Real, Reserve...>::template ElemType<2>::type& face : mesh.template GetElements<2>()) {
+        for (typename MeshElements<3, IndexType, Real, Reserve...>::template ElemType<2>::type& face : mesh.template GetElements<2>()) {
 
             Real measure = Real();
-            Vertex<Dimension,Real>& faceCenter = face.GetCenter();
+            Vertex<3,Real>& faceCenter = face.GetCenter();
             for(auto sube : face.GetSubelements()){
 
-                Vertex<Dimension,Real>& a = mesh.GetVertices().at(mesh.GetEdges().at(sube.index).GetVertexAIndex());
-                Vertex<Dimension,Real>& b = mesh.GetVertices().at(mesh.GetEdges().at(sube.index).GetVertexBIndex());
+                Vertex<3,Real>& a = mesh.GetVertices().at(mesh.GetEdges().at(sube.index).GetVertexAIndex());
+                Vertex<3,Real>& b = mesh.GetVertices().at(mesh.GetEdges().at(sube.index).GetVertexBIndex());
 
                 Real distance = Real();
 
@@ -498,7 +497,7 @@ struct _ComputeMeasures<2, Dimension, DataDimensions...>{
             }
             surfaceMeasures.at(face.GetIndex()) = measure;
         }
-        _ComputeMeasures<3, Dimension, DataDimensions...>::compute(measures, mesh);
+        _ComputeMeasures<3, 3, DataDimensions...>::compute(measures, mesh);
     }
 };
 
