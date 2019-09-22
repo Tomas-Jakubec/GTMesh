@@ -233,6 +233,26 @@ public:
 
 
 
+/**
+ * MakeMeshDataContainer
+ */
+template<typename... Params>
+struct MakeMeshDataContainer {};
+
+template<typename Type, unsigned int... Dimensions>
+struct MakeMeshDataContainer<Type, std::integer_sequence<unsigned int, Dimensions...>>{
+    using type = MeshDataContainer<Type, Dimensions...>;
+};
+
+
+template<typename... Types, unsigned int... Dimensions>
+struct MakeMeshDataContainer<std::tuple<Types...>, std::integer_sequence<unsigned int, Dimensions...>>{
+    using type = MeshDataContainer<std::tuple<Types...>, Dimensions...>;
+};
+
+
+template<typename... T>
+using MakeMeshDataContainer_t = typename MakeMeshDataContainer<T...>::type;
 
 
 template <typename Type, Type startIndex, Type EndIndex, int increment = 1, Type... t>
@@ -245,7 +265,7 @@ struct MakeCustomIntegerSequence<Type, EndIndex, EndIndex, increment, t...> {
 };
 
 template<typename Type, Type startIndex, Type EndIndex, int increment = 1>
-using make_custom_integer_sequence = typename MakeCustomIntegerSequence<Type, startIndex, EndIndex, increment>::type;
+using make_custom_integer_sequence_t = typename MakeCustomIntegerSequence<Type, startIndex, EndIndex, increment>::type;
 
 
 
@@ -269,10 +289,12 @@ using make_custom_integer_sequence = typename MakeCustomIntegerSequence<Type, st
 
 
 
-template <unsigned int dim, unsigned int Dimension, unsigned int... DataDimensions>
+template <unsigned int dim, unsigned int Dimension>
 struct _ComputeCenters{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
-    static void compute(MeshDataContainer<Vertex<Dimension, Real>, DataDimensions...>& centers,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+    static void compute(
+            MakeMeshDataContainer_t<Vertex<Dimension, Real>, make_custom_integer_sequence_t<unsigned int, 1, Dimension>>& centers,
+            MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
 
         auto& elemCenters = centers.template GetDataDim<dim>();
         auto& subElemCenters = centers.template GetDataDim<dim - 1>();
@@ -291,14 +313,14 @@ struct _ComputeCenters{
         }
 
         DBGMSG(dim);
-        _ComputeCenters<dim + 1, Dimension, DataDimensions...>::compute(centers, mesh);
+        _ComputeCenters<dim + 1, Dimension>::compute(centers, mesh);
     }
 };
 
-template <unsigned int Dimension, unsigned int... DataDimensions>
-struct _ComputeCenters<Dimension, Dimension, DataDimensions...>{
+template <unsigned int Dimension>
+struct _ComputeCenters<Dimension, Dimension>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
-    static void compute(MeshDataContainer<Vertex<Dimension, Real>, DataDimensions...>& centers,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+    static void compute(MakeMeshDataContainer_t<Vertex<Dimension, Real>, make_custom_integer_sequence_t<unsigned int, 1, Dimension>>& centers,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
 
         auto& elemCenters = centers.template GetDataDim<Dimension>();
         auto& subElemCenters = centers.template GetDataDim<Dimension - 1>();
@@ -322,10 +344,12 @@ struct _ComputeCenters<Dimension, Dimension, DataDimensions...>{
 
 };
 
-template <unsigned int Dimension, unsigned int... DataDimensions>
-struct _ComputeCenters<1, Dimension, DataDimensions...>{
+template <unsigned int Dimension>
+struct _ComputeCenters<1, Dimension>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
-    static void compute(MeshDataContainer<Vertex<Dimension, Real>, DataDimensions...>& centers,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+    static void compute(
+            MakeMeshDataContainer_t<Vertex<Dimension, Real>, make_custom_integer_sequence_t<unsigned int, 1, Dimension>>& centers,
+            MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
 
         std::vector<Vertex<Dimension, Real>>& edgeCenters = centers.template GetDataDim<1>();
 
@@ -336,30 +360,25 @@ struct _ComputeCenters<1, Dimension, DataDimensions...>{
         }
 
         DBGMSG("1");
-        _ComputeCenters<2, Dimension, DataDimensions...>::compute(centers, mesh);
+        _ComputeCenters<2, Dimension>::compute(centers, mesh);
     }
 };
 
 
 
 
-template <unsigned int Dimension,typename IndexType, typename Real, unsigned int ...Reserve, unsigned int ... Dimensions>
-MeshDataContainer<Vertex<Dimension, double>, Dimensions...>
-___ComputeCenters(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh, std::integer_sequence<unsigned int, Dimensions...>){
+template <unsigned int Dimension,typename IndexType, typename Real, unsigned int ...Reserve>
+MakeMeshDataContainer_t<Vertex<Dimension, Real>, make_custom_integer_sequence_t<unsigned int, 1, Dimension>>
+ComputeCenters(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
 
-    MeshDataContainer<Vertex<Dimension, double>, Dimensions...> centers(mesh);
+     MakeMeshDataContainer_t<Vertex<Dimension, Real>, make_custom_integer_sequence_t<unsigned int, 1, Dimension>> centers(mesh);
 
-    _ComputeCenters<1, Dimension, Dimensions...>::compute(centers, mesh);
+    _ComputeCenters<1, Dimension>::compute(centers, mesh);
 
     return centers;
 }
 
 
-template <unsigned int Dimension,typename IndexType, typename Real, unsigned int ...Reserve>
-auto ComputeCenters(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
-
-    return ___ComputeCenters(mesh, make_custom_integer_sequence<unsigned int, 1, Dimension>{});
-}
 
 
 
@@ -377,12 +396,10 @@ auto ComputeCenters(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
 
 
 
-
-
-template <unsigned int dim, unsigned int Dimension, unsigned int... DataDimensions>
+template <unsigned int dim, unsigned int Dimension>
 struct _ComputeMeasures{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
-    static void compute(MeshDataContainer< Real, DataDimensions...>&,MeshElements<Dimension, IndexType, Real, Reserve...>&){
+    static void compute(MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, Dimension>>&,MeshElements<Dimension, IndexType, Real, Reserve...>&){
         static_assert (Dimension > 3,"The measure computation of mesh of dimension higher than 3 is not implemented yet.");
         throw std::runtime_error("The measure computation of mesh of dimension higher than 3 is not implemented yet.");
     }
@@ -390,10 +407,10 @@ struct _ComputeMeasures{
 
 
 
-template <unsigned int... DataDimensions>
-struct _ComputeMeasures<3, 3, DataDimensions...>{
+template <>
+struct _ComputeMeasures<3, 3>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
-    static void compute(MeshDataContainer< Real, DataDimensions...>& measures,MeshElements<3, IndexType, Real, Reserve...>& mesh){
+    static void compute(MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, 3>>& measures,MeshElements<3, IndexType, Real, Reserve...>& mesh){
 
         auto& cellMeasures = measures.template GetDataDim<3>();
 
@@ -442,10 +459,10 @@ struct _ComputeMeasures<3, 3, DataDimensions...>{
     }
 };
 
-template <unsigned int... DataDimensions>
-struct _ComputeMeasures<2, 2, DataDimensions...>{
+template <>
+struct _ComputeMeasures<2, 2>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
-    static void compute(MeshDataContainer< Real, DataDimensions...>& measures,MeshElements<2, IndexType, Real, Reserve...>& mesh){
+    static void compute(MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, 2>>& measures,MeshElements<2, IndexType, Real, Reserve...>& mesh){
 
         auto& surfaceMeasures = measures.template GetDataDim<2>();
 
@@ -470,10 +487,10 @@ struct _ComputeMeasures<2, 2, DataDimensions...>{
 
 
 
-template <unsigned int... DataDimensions>
-struct _ComputeMeasures<2, 3, DataDimensions...>{
+template <>
+struct _ComputeMeasures<2, 3>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
-    static void compute(MeshDataContainer< Real, DataDimensions...>& measures,MeshElements<3, IndexType, Real, Reserve...>& mesh){
+    static void compute(MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, 3>>& measures,MeshElements<3, IndexType, Real, Reserve...>& mesh){
 
         auto& surfaceMeasures = measures.template GetDataDim<2>();
 
@@ -497,7 +514,7 @@ struct _ComputeMeasures<2, 3, DataDimensions...>{
             }
             surfaceMeasures.at(face.GetIndex()) = measure;
         }
-        _ComputeMeasures<3, 3, DataDimensions...>::compute(measures, mesh);
+        _ComputeMeasures<3, 3>::compute(measures, mesh);
     }
 };
 
@@ -507,10 +524,10 @@ struct _ComputeMeasures<2, 3, DataDimensions...>{
 
 
 
-template <unsigned int Dimension, unsigned int... DataDimensions>
-struct _ComputeMeasures<1, Dimension, DataDimensions...>{
+template <unsigned int Dimension>
+struct _ComputeMeasures<1, Dimension>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
-    static void compute(MeshDataContainer< Real, DataDimensions...>& measures,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+    static void compute(MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, Dimension>>& measures,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
 
         auto& edgeLengths = measures.template GetDataDim<1>();
 
@@ -519,29 +536,20 @@ struct _ComputeMeasures<1, Dimension, DataDimensions...>{
                                                mesh.GetVertices().at(edge.GetVertexBIndex())).NormEukleid();
         }
 
-        _ComputeMeasures<2, Dimension, DataDimensions...>::compute(measures, mesh);
+        _ComputeMeasures<2, Dimension>::compute(measures, mesh);
     }
 };
 
 
 
 
-template <unsigned int Dimension,typename IndexType, typename Real, unsigned int ...Reserve, unsigned int ... Dimensions>
-MeshDataContainer<Real, Dimensions...>
-___ComputeMeasures(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh, std::integer_sequence<unsigned int, Dimensions...>){
+template <unsigned int Dimension,typename IndexType, typename Real, unsigned int ...Reserve>
+MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, Dimension>> ComputeMeasures(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+    MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, Dimension>> measures(mesh);
 
-    MeshDataContainer<Real, Dimensions...> measures(mesh);
-
-    _ComputeMeasures<1, Dimension, Dimensions...>::compute(measures, mesh);
+    _ComputeMeasures<1, Dimension>::compute(measures, mesh);
 
     return measures;
-}
-
-
-template <unsigned int Dimension,typename IndexType, typename Real, unsigned int ...Reserve>
-auto ComputeMeasures(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
-
-    return ___ComputeMeasures(mesh, make_custom_integer_sequence<unsigned int, 1, Dimension>{});
 }
 
 

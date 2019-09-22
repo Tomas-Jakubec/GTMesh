@@ -544,12 +544,12 @@ void testTemplate() {
     //MeshDataContainer<Vertex<3, double>, 0,1,2> centers2(mesh3,std::make_integer_sequence<unsigned int, 3>{}, Vertex<3, double>{});
     //ComputeCenters(mesh3);
 
-    ClassA p(make_custom_integer_sequence<unsigned int, 10, 0, -2>{});
+    ClassA p(make_custom_integer_sequence_t<unsigned int, 10, 0, -2>{});
     std::tuple<double, char> t{};
     t={1,2};
-    ClassB u(make_custom_integer_sequence<unsigned int, 2, 0, -2>{}, t);
+    ClassB u(make_custom_integer_sequence_t<unsigned int, 2, 0, -2>{}, t);
 
-    ClassC<std::integer_sequence<unsigned int, 2,0>, std::tuple<double, char>> c(make_custom_integer_sequence<unsigned int, 2, 0, -2>{}, std::tuple<double, char>{});
+    ClassC<std::integer_sequence<unsigned int, 2,0>, std::tuple<double, char>> c(make_custom_integer_sequence_t<unsigned int, 2, 0, -2>{}, std::tuple<double, char>{});
     ClassC<std::integer_sequence<unsigned int, 2,0>, std::tuple<double, char>> cc;
     ClassC<std::integer_sequence<unsigned int, 2,0>, decltype(std::make_tuple(1.0, 'a'))> ccc;
 }
