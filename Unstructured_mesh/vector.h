@@ -7,6 +7,7 @@
 #include "inline_array_operations.h"
 
 
+
 template <unsigned int Dim, typename Real = double>
 class Vector {
     /**
@@ -64,6 +65,7 @@ public:
 
     bool operator==(const Vector<Dim, Real>&) const;
     bool operator!=(const Vector<Dim, Real>&) const;
+    //friend Vertex<Dim, Real>;
 };
 
 

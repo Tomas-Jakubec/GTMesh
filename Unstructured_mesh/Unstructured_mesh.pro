@@ -16,6 +16,7 @@ HEADERS += \
     inline_array_operations.h \
     mesh_element.h \
     mesh_functions.h \
+    meshdatacontainer.h \
     unstructed_mesh_define.h \
     unstructuredmesh.h \
     vector.h \

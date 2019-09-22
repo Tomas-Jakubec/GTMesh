@@ -270,14 +270,14 @@ void testMesh2D() {
     mesh.GetVertices().at(3) = {1,1};
 
     mesh.GetFaces().resize(5);
-    mesh.GetFaces().at(0).VertexA = 0;
-    mesh.GetFaces().at(0).VertexB = 1;
+    mesh.GetFaces().at(0).VertexA = 1;
+    mesh.GetFaces().at(0).VertexB = 0;
     mesh.GetFaces().at(1).VertexA = 0;
     mesh.GetFaces().at(1).VertexB = 2;
-    mesh.GetFaces().at(2).VertexA = 1;
-    mesh.GetFaces().at(2).VertexB = 2;
-    mesh.GetFaces().at(3).VertexA = 1;
-    mesh.GetFaces().at(3).VertexB = 3;
+    mesh.GetFaces().at(2).VertexA = 2;
+    mesh.GetFaces().at(2).VertexB = 1;
+    mesh.GetFaces().at(3).VertexA = 3;
+    mesh.GetFaces().at(3).VertexB = 1;
     mesh.GetFaces().at(4).VertexA = 2;
     mesh.GetFaces().at(4).VertexB = 3;
     for(size_t i = 0; i < 5; i++)
@@ -349,6 +349,22 @@ void testMesh2D() {
 
     for(double cellM :measures.GetDataDim<2>()) {
         DBGVAR(cellM)
+    }
+
+
+
+    DBGMSG("2D normals test");
+
+    auto normals = ComputeFaceNormals(mesh);
+    for(auto& edge : mesh.GetEdges()){
+        DBGVAR(edge.GetIndex(),normals.at(edge))
+    }
+
+    DBGMSG("2D cells distances");
+
+    auto distances = ComputeCellsDistance(mesh);
+    for(auto& edge : mesh.GetEdges()){
+        DBGVAR(edge.GetIndex(),distances.at(edge))
     }
 
 }
@@ -429,9 +445,13 @@ void testMesh3D() {
         DBGVAR(cellM)
     }
 
-    //DBGVAR(centers.template GetDataDim<3>().at(0))
 
-    //DBGVAR(centers.template GetDataDim<3>().at(0));
+    DBGMSG("2D normals test");
+
+    auto normals = mesh3.ComputeFaceNormals();
+    for(auto& face : mesh3.GetFaces()){
+        DBGVAR(face.GetIndex(),normals.at(face))
+    }
 }
 
 

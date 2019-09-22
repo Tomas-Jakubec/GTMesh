@@ -21,8 +21,12 @@ public:
         }
     }
 
-    auto ComputeElementMeasures() {
+    MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, Dimension>> ComputeElementMeasures() {
         return ComputeMeasures(*this);
+    }
+
+    MeshDataContainer<Vector<Dimension, Real>, Dimension-1> ComputeFaceNormals() {
+        return ::ComputeFaceNormals(*this);
     }
 
 /*

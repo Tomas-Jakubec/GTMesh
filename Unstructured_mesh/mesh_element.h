@@ -272,9 +272,9 @@ private:
 
 
 
-public:
     _MeshElements<Dimension, Dimension, IndexType, Real, Reserve...> Refs;
     std::vector<MeshElement<Dimension, Dimension, IndexType, Real, 0>> BoundaryCells;
+public:
 
     using Vertex = MeshElement<Dimension, 0, IndexType, Real, 0>;
     using Edge = MeshElement<Dimension, 1, IndexType, Real, 0>;
@@ -317,6 +317,39 @@ public:
         return GetElements<Dimension>();
     }
 
+    std::vector<Cell>& GetBoundaryCells() {
+        return BoundaryCells;
+    }
+
+    void AppendBoundaryCell(IndexType cellIndex, IndexType faceIndex){
+        Cell c;
+        c.SetIndex(cellIndex);
+        c.SetBoundaryElementIndex(faceIndex);
+        BoundaryCells.push_back(c);
+    }
+
+    void SetupBoundaryCells(){
+        for (Face& face : GetFaces()){
+            if (face.GetCellLeftIndex == INVALID_INDEX(IndexType)){
+                IndexType cellIndex = BoundaryCells.size() | BOUNDARY_INDEX(IndexType);
+                face.SetCellLeftIndex(cellIndex);
+                AppendBoundaryCell(cellIndex, face.GetIndex());
+            }
+            if (face.GetCellRightIndex == INVALID_INDEX(IndexType)){
+                IndexType cellIndex = BoundaryCells.size() | BOUNDARY_INDEX(IndexType);
+                face.SetCellRightIndex(cellIndex);
+                AppendBoundaryCell(cellIndex, face.GetIndex());
+            }
+        }
+        BoundaryCells.shrink_to_fit();
+    }
+
+
+    void SetupBoundaryCellsCenters() {
+        for(Cell& cell : BoundaryCells){
+            cell.SetCenter(GetFaces().at(cell.GetBoundaryElementIndex()).GetCenter());
+        }
+    }
 
     struct CellSubelementIterator: public std::iterator<std::forward_iterator_tag, IndexType>
     {

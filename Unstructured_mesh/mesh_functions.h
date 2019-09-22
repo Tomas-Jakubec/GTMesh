@@ -1,259 +1,8 @@
 #ifndef MESH_FUNCTIONS_H
 #define MESH_FUNCTIONS_H
 #include "mesh_element.h"
-#include "../debug/debug.h"
-
-
-/**
- * @brief The MeshDataContainer struct
- *
- * A struct designed to manage data boud to mesh.
- * Creates a serie of vectors sized acording to dimension.
- */
-template <typename DataType, unsigned int ...Dimensions>
-struct MeshDataContainer{
-private:
-
-    template<unsigned int dim, unsigned int pos, unsigned int _dim>
-    struct DimensionPos : DimensionPos<dim, pos + 1,std::get<pos + 1>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...})>{};
-
-    template<unsigned int dim, unsigned int pos>
-    struct DimensionPos<dim, pos, dim>{
-        static constexpr unsigned int res(){return pos;}
-    };
-
-
-    template<unsigned int dim>
-    static constexpr unsigned int DimIndex(){
-        return DimensionPos<dim, 0, std::get<0>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...})>::res();
-    }
-
-    template<typename _DataType, unsigned int _Dim>
-    struct _DataContainer : _DataContainer<_DataType,_Dim - 1>{
-        std::vector<_DataType> _data;
-    };
-
-    template<typename _DataType>
-    struct _DataContainer<_DataType, 0>{
-        std::vector<_DataType> _data;
-    };
-
-    template<unsigned int pos, typename dummy = void>
-    struct Alocator{
-        MeshDataContainer<DataType, Dimensions...>& parent;
-        template<unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
-        static void AlocateMemory(MeshDataContainer<DataType, Dimensions...>& parent ,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh) {
-            parent.template GetDataPos<pos>().resize(
-                        mesh.template GetElements<std::get<pos>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...})>().size());
-            Alocator<pos - 1>::AlocateMemory(parent, mesh);
-        }
-    };
-
-    template<typename dummy>
-    struct Alocator<0, dummy>{
-        template<unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
-        static void AlocateMemory(MeshDataContainer<DataType, Dimensions...>& parent ,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh) {
-
-            parent.template GetDataPos<0>().resize(
-                        mesh.template GetElements<std::get<0>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...})>().size());
-
-        }
-    };
-
-
-
-
-    /**
-     * @brief data
-     * A structure containing vectors of specified type
-     * alocated to match the mesh elements.
-     */
-    _DataContainer<DataType, sizeof... (Dimensions) - 1> data;
-
-
-public:
-
-    /**
-     * @brief GetDataDim
-     * @return
-     */
-    template<unsigned int dim>
-    std::vector<DataType>& GetDataDim(){
-        return data._DataContainer<DataType, DimIndex<dim>()>::_data;
-    }
-
-
-    /**
-     * @brief GetDataPos
-     * @return
-     */
-    template<unsigned int pos>
-    std::vector<DataType>& GetDataPos(){
-        return data._DataContainer<DataType,pos>::_data;
-    }
-
-    template <unsigned int ElementDim, unsigned int Dimension, typename IndexType, typename Real, unsigned int Reserve>
-    DataType& at(MeshElement<Dimension, ElementDim, IndexType, Real, Reserve>& element) {
-        return GetDataDim<ElementDim>().at(element.GetIndex());
-    }
-
-    template <unsigned int ElementDim, unsigned int Dimension, typename IndexType, typename Real, unsigned int Reserve>
-    DataType& operator[](MeshElement<Dimension, ElementDim, IndexType, Real, Reserve>& element) {
-        return GetDataDim<ElementDim>()[element.GetIndex()];
-    }
-
-
-
-    template <unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
-    MeshDataContainer(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
-        Alocator<sizeof... (Dimensions) - 1>::AlocateMemory(*this, mesh);
-    }
-
-    template <unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
-    MeshDataContainer(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh, std::integer_sequence<unsigned int,Dimensions...>, DataType){
-        DBGVAR(sizeof... (Dimensions))
-        Alocator<sizeof... (Dimensions) - 1>::AlocateMemory(*this, mesh);
-    }
-};
-
-
-
-
-/**
- * @brief The MeshDataContainer struct
- *
- * A struct designed to manage data boud to mesh.
- * Creates a serie of vectors sized acording to dimension.
- */
-template <typename ...DataTypes, unsigned int ...Dimensions>
-struct MeshDataContainer<std::tuple<DataTypes...>, Dimensions...>{
-private:
-
-    template<unsigned int dim, unsigned int pos, unsigned int _dim>
-    struct DimensionPos : DimensionPos<dim, pos + 1,std::get<pos + 1>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...})>{};
-
-    template<unsigned int dim, unsigned int pos>
-    struct DimensionPos<dim, pos, dim>{
-        static constexpr unsigned int res(){return pos;}
-    };
-
-public:
-    template<unsigned int dim>
-    static constexpr unsigned int DimIndex(){
-        return DimensionPos<dim, 0, std::get<0>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...})>::res();
-    }
-public:
-
-    template<unsigned int pos>
-    using DataType = typename std::tuple_element<pos,std::tuple<DataTypes...>>::type;
-
-    template<unsigned int _Dim, typename Dummy = void>
-    struct _DataContainer : _DataContainer<_Dim - 1, Dummy>{
-        std::vector<DataType<_Dim>> _data;
-    };
-
-    template<typename Dummy>
-    struct _DataContainer<0, Dummy>{
-        std::vector<DataType<0>> _data;
-    };
-
-    template<unsigned int pos, typename dummy = void>
-    struct Alocator{
-        MeshDataContainer<std::tuple<DataTypes...>, Dimensions...>& parent;
-        template<unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
-        static void AlocateMemory(MeshDataContainer<std::tuple<DataTypes...>, Dimensions...>& parent ,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh) {
-            parent.template GetDataPos<pos>().resize(
-                        mesh.template GetElements<std::get<pos>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...})>().size());
-            Alocator<pos - 1>::AlocateMemory(parent, mesh);
-        }
-    };
-
-    template<typename dummy>
-    struct Alocator<0, dummy>{
-        template<unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
-        static void AlocateMemory(MeshDataContainer<std::tuple<DataTypes...>, Dimensions...>& parent ,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh) {
-
-            parent.template GetDataPos<0>().resize(
-                        mesh.template GetElements<std::get<0>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...})>().size());
-
-        }
-    };
-
-
-
-
-    /**
-     * @brief data
-     * A structure containing vectors of specified type
-     * alocated to match the mesh elements.
-     */
-    _DataContainer<sizeof... (Dimensions) - 1> data;
-
-
-public:
-
-    /**
-     * @brief GetDataDim
-     * @return
-     */
-    template<unsigned int dim>
-    std::vector<std::tuple_element_t<DimIndex<dim>(), std::tuple<DataTypes...>>>& GetDataDim(){
-        return data._DataContainer<DimIndex<dim>()>::_data;
-    }
-
-
-    /**
-     * @brief GetDataPos
-     * @return
-     */
-    template<unsigned int pos>
-    std::vector<DataType<pos>>& GetDataPos(){
-        return data._DataContainer<pos>::_data;
-    }
-
-    template <unsigned int ElementDim, unsigned int Dimension, typename IndexType, typename Real, unsigned int Reserve>
-    std::tuple_element_t<DimIndex<ElementDim>(), std::tuple<DataTypes...>>& at(MeshElement<Dimension, ElementDim, IndexType, Real, Reserve>& element) {
-        return GetDataDim<ElementDim>().at(element.GetIndex());
-    }
-
-    template <unsigned int ElementDim, unsigned int Dimension, typename IndexType, typename Real, unsigned int Reserve>
-    std::tuple_element_t<DimIndex<ElementDim>(), std::tuple<DataTypes...>>& operator[](MeshElement<Dimension, ElementDim, IndexType, Real, Reserve>& element) {
-        return GetDataDim<ElementDim>()[element.GetIndex()];
-    }
-
-
-
-    template <unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
-    MeshDataContainer(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
-        Alocator<sizeof... (Dimensions) - 1>::AlocateMemory(*this, mesh);
-    }
-
-};
-
-
-
-
-/**
- * MakeMeshDataContainer
- */
-template<typename... Params>
-struct MakeMeshDataContainer {};
-
-template<typename Type, unsigned int... Dimensions>
-struct MakeMeshDataContainer<Type, std::integer_sequence<unsigned int, Dimensions...>>{
-    using type = MeshDataContainer<Type, Dimensions...>;
-};
-
-
-template<typename... Types, unsigned int... Dimensions>
-struct MakeMeshDataContainer<std::tuple<Types...>, std::integer_sequence<unsigned int, Dimensions...>>{
-    using type = MeshDataContainer<std::tuple<Types...>, Dimensions...>;
-};
-
-
-template<typename... T>
-using MakeMeshDataContainer_t = typename MakeMeshDataContainer<T...>::type;
-
+#include "meshdatacontainer.h"
+#include "vector.h"
 
 template <typename Type, Type startIndex, Type EndIndex, int increment = 1, Type... t>
 struct MakeCustomIntegerSequence : public MakeCustomIntegerSequence<Type, startIndex + increment, EndIndex, increment, t..., startIndex> {
@@ -266,20 +15,6 @@ struct MakeCustomIntegerSequence<Type, EndIndex, EndIndex, increment, t...> {
 
 template<typename Type, Type startIndex, Type EndIndex, int increment = 1>
 using make_custom_integer_sequence_t = typename MakeCustomIntegerSequence<Type, startIndex, EndIndex, increment>::type;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -557,7 +292,147 @@ MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, Di
 
 
 
+template <unsigned int Dimension>
+struct _ComputeNormals{
+    template <typename IndexType, typename Real, unsigned int ...Reserve>
+    static void compute(MeshDataContainer<Vector<Dimension, Real>, Dimension-1>&,MeshElements<Dimension, IndexType, Real, Reserve...>&){
+        static_assert (Dimension > 3,"The measure computation of mesh of dimension higher than 3 is not implemented yet.");
+        throw std::runtime_error("The computation of face normal vectors of mesh of dimension higher than 3 is not implemented yet.");
+    }
+};
 
+
+template <>
+struct _ComputeNormals<2>{
+    template <typename IndexType, typename Real, unsigned int ...Reserve>
+    static void compute(MeshDataContainer<Vector<2, Real>, 1>& normals,MeshElements<2, IndexType, Real, Reserve...>& mesh){
+        for (auto& face : mesh.GetEdges()) {
+            Vertex<2,Real> a = mesh.GetVertices().at(face.GetVertexAIndex());
+            Vertex<2,Real> b = mesh.GetVertices().at(face.GetVertexBIndex());
+            Vertex<2,Real> dif = b-a;
+            normals[face][0] = dif[1];
+            normals[face][1] = -dif[0];
+            normals[face] /= dif.NormEukleid();
+        }
+    }
+};
+
+
+template <>
+struct _ComputeNormals<3>{
+    template <typename IndexType, typename Real, unsigned int ...Reserve>
+    static void compute(MeshDataContainer<Vector<3, Real>, 2>& normals,MeshElements<3, IndexType, Real, Reserve...>& mesh){
+        for (auto& face : mesh.GetFaces()) {
+
+            bool vectorSign = true;
+            IndexType cellIndex = face.GetCellLeftIndex();
+            if (cellIndex == INVALID_INDEX(IndexType)) {
+                vectorSign = false;
+                cellIndex = face.GetCellRightIndex();
+            }
+
+            Vertex<3,Real>& cellCenter = mesh.GetCells().at(cellIndex).GetCenter();
+
+
+            // select 3 different vertices
+            IndexType vAIndex = mesh.GetEdges().at(face.GetSubelements()[0].index).GetVertexAIndex();
+            IndexType vBIndex = mesh.GetEdges().at(face.GetSubelements()[0].index).GetVertexBIndex();
+            IndexType vCIndex = mesh.GetEdges().at(face.GetSubelements()[1].index).GetVertexAIndex();
+            if(vCIndex == vAIndex || vCIndex == vBIndex) {
+                vCIndex = mesh.GetEdges().at(face.GetSubelements()[1].index).GetVertexBIndex();
+            }
+
+            Vertex<3,Real>& a = mesh.GetVertices().at(vAIndex);
+            Vertex<3,Real>& b = mesh.GetVertices().at(vBIndex);
+            Vertex<3,Real>& c = mesh.GetVertices().at(vCIndex);
+
+            // preparing quiantities
+            Vertex<3,Real> vAmcC = (a-cellCenter);
+            Vertex<3,Real> vBmA = (b-a);
+            Vertex<3,Real> vCmA = (c-a);
+            Real inv_sqrBmA = 1.0 / vBmA.SumOfSquares();
+            Real inv_sqrCmA = 1.0 / vCmA.SumOfSquares();
+
+            Real denominator = 1.0 / (1.0 - (pow(vCmA*vBmA,2) * inv_sqrBmA * inv_sqrCmA));
+
+
+            Real param_t = -denominator * (((vAmcC*vBmA) * inv_sqrBmA) - (inv_sqrBmA*inv_sqrCmA*(vAmcC * vCmA)*(vCmA*vBmA)));
+            //param_t *= inv_sqrBmA;
+            Real param_s = -denominator * (((vAmcC*vCmA) * inv_sqrCmA) - (inv_sqrBmA*inv_sqrCmA*(vAmcC * vBmA)*(vCmA*vBmA)));
+
+            Vertex<3, Real> faceNormal = vAmcC + (vBmA * param_t) + (vCmA * param_s);
+            faceNormal /= faceNormal.NormEukleid();
+
+            if (!vectorSign) {
+                faceNormal *= -1;
+            }
+
+            normals.at(face)[0] = fabs(faceNormal[0]) < 1e-8 ? 0 : faceNormal[0];
+            normals.at(face)[1] = fabs(faceNormal[1]) < 1e-8 ? 0 : faceNormal[1];
+            normals.at(face)[2] = fabs(faceNormal[2]) < 1e-8 ? 0 : faceNormal[2];
+        }
+    }
+};
+
+
+
+template <unsigned int Dimension,typename IndexType, typename Real, unsigned int ...Reserve>
+MeshDataContainer<Vector<Dimension, Real>, Dimension-1> ComputeFaceNormals(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+
+    MeshDataContainer<Vector<Dimension, Real>, Dimension-1> normals(mesh);
+
+    _ComputeNormals<Dimension>::compute(normals, mesh);
+
+    return normals;
+}
+
+
+
+
+template <unsigned int Dimension,typename IndexType, typename Real, unsigned int ...Reserve>
+MeshDataContainer<Real, Dimension-1> ComputeCellsDistance(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+
+    MeshDataContainer<Real, Dimension-1> distances(mesh);
+
+    if(mesh.GetBoundaryCells().empty()){
+        for(auto& face : mesh.GetFaces()) {
+            if (face.GetCellLeftIndex() != INVALID_INDEX(IndexType) &&
+                face.GetCellRightIndex() != INVALID_INDEX(IndexType)){
+
+                distances.at(face) = (mesh.GetCells().at(face.GetCellLeftIndex()).GetCenter() -
+                                      mesh.GetCells().at(face.GetCellRightIndex()).GetCenter()).NormEukleid();
+
+            } else if(face.GetCellLeftIndex() != INVALID_INDEX(IndexType) &&
+                      face.GetCellRightIndex() == INVALID_INDEX(IndexType)){
+
+                distances.at(face) = (mesh.GetCells().at(face.GetCellLeftIndex()).GetCenter() -
+                                      face.GetCenter()).NormEukleid();
+
+            } else if(face.GetCellLeftIndex() == INVALID_INDEX(IndexType) &&
+                      face.GetCellRightIndex() != INVALID_INDEX(IndexType)){
+
+                distances.at(face) = (mesh.GetCells().at(face.GetCellRightIndex()).GetCenter() -
+                                      face.GetCenter()).NormEukleid();
+            }
+        }
+
+    } else {
+
+        for(auto& face : mesh.GetFaces()) {
+            auto& cellLeft = (face.GetCellLeftIndex() & BOUNDARY_INDEX(IndexType)) == BOUNDARY_INDEX(IndexType)?
+                      mesh.GetBoundaryCells().at(face.GetCellLeftIndex()&EXTRACTING_INDEX(IndexType)):
+                      mesh.GetCells().at(face.GetCellLeftIndex());
+            auto& cellRight = (face.GetCellRightIndex() & BOUNDARY_INDEX(IndexType)) == BOUNDARY_INDEX(IndexType)?
+                      mesh.GetBoundaryCells().at(face.GetCellRightIndex()&EXTRACTING_INDEX(IndexType)):
+                      mesh.GetCells().at(face.GetCellRightIndex());
+
+            distances.at(face) = (cellLeft.GetCenter() - cellRight.GetCenter()).NormEukleid();
+        }
+    }
+
+
+    return distances;
+}
 
 
 
