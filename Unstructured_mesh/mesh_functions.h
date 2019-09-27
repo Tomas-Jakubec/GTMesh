@@ -1,8 +1,11 @@
+
 #ifndef MESH_FUNCTIONS_H
 #define MESH_FUNCTIONS_H
 #include "mesh_element.h"
 #include "meshdatacontainer.h"
 #include "vector.h"
+#include <valarray>
+#include <set>
 
 template <typename Type, Type startIndex, Type EndIndex, int increment = 1, Type... t>
 struct MakeCustomIntegerSequence : public MakeCustomIntegerSequence<Type, startIndex + increment, EndIndex, increment, t..., startIndex> {
@@ -121,10 +124,12 @@ ComputeCenters(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
 
 
 
+/* TODO implement GS to compute volume and normal vector
+template <unsigned int Dimension,typename IndexType, typename Real>
+std::vector<Vertex<Dimension, Real>> GrammSchmidt(std::vector<Vertex<Dimension, Real>> vectors){
 
-
-
-
+}
+*/
 
 
 
@@ -326,7 +331,10 @@ struct _ComputeNormals<3>{
 
             bool vectorSign = true;
             IndexType cellIndex = face.GetCellLeftIndex();
-            if (cellIndex == INVALID_INDEX(IndexType)) {
+            if (
+                    cellIndex == INVALID_INDEX(IndexType) ||
+                    (cellIndex & BOUNDARY_INDEX(IndexType)) == BOUNDARY_INDEX(IndexType)
+                ) {
                 vectorSign = false;
                 cellIndex = face.GetCellRightIndex();
             }
@@ -439,40 +447,212 @@ MeshDataContainer<Real, Dimension-1> ComputeCellsDistance(MeshElements<Dimension
 
 
 
+namespace temp1 {
+
+template <unsigned int CurrentDimension, unsigned int StartDimension, unsigned int TargetDimension, unsigned int MeshDimension, bool End, bool Ascend>
+struct MeshRun {
+
+    template<typename Func, typename IndexType, typename Real, unsigned int ...Reserve>
+    static void run(MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh,
+                    IndexType origElementIndex,
+                    IndexType index,
+                    Func fun){
 
 
-template<unsigned int MeshDimension, unsigned int ElementDim,typename IndexType, typename Real, unsigned int ...Reserve>
-struct CellsVertices {
-    static void run(MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh, IndexType index){
-        DBGMSG("face number "<<index);
-        for(auto i : mesh.template GetElement<ElementDim>(index).GetSubelements()) {
-            CellsVertices<MeshDimension, ElementDim - 1, IndexType, Real, Reserve...>::run(mesh, i.index);
+        auto i = mesh.template GetElements<CurrentDimension>().at(index);
+        for (auto sube: mesh.template GetElement<CurrentDimension>(i.GetIndex()).GetSubelements())
+        MeshRun< CurrentDimension - 1, StartDimension, TargetDimension, MeshDimension, TargetDimension == CurrentDimension - 1, Ascend>::run(mesh, origElementIndex, sube.index, fun);
+
+
+    }
+};
+
+template <unsigned int StartDimension, unsigned int TargetDimension, unsigned int MeshDimension, bool Ascend>
+struct MeshRun<MeshDimension, StartDimension, TargetDimension, MeshDimension, false, Ascend> {
+
+    template<typename Func, typename IndexType, typename Real, unsigned int ...Reserve>
+    static void run(MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh,
+                    IndexType origElementIndex,
+                    IndexType index,
+                    Func fun){
+
+        auto& cell = mesh.GetCells().at(index);
+        IndexType tmpFace = cell.GetBoundaryElementIndex();
+        do {
+            MeshRun<MeshDimension - 1, StartDimension, TargetDimension, MeshDimension, TargetDimension == MeshDimension - 1, Ascend>::run(mesh, origElementIndex, tmpFace, fun);
+            tmpFace = mesh.GetFaces().at(tmpFace).GetNextBElem(cell.GetIndex());
+        } while (tmpFace != cell.GetBoundaryElementIndex());
+
+    }
+};
+
+
+template <unsigned int StartDimension, unsigned int TargetDimension, unsigned int MeshDimension, bool Ascend>
+struct MeshRun<1, StartDimension, TargetDimension, MeshDimension, false, Ascend> {
+
+    template<typename Func, typename IndexType, typename Real, unsigned int ...Reserve>
+    static void run(MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh,
+                    IndexType origElementIndex,
+                    IndexType index,
+                    Func fun){
+
+        auto& edge = mesh.GetEdges().at(index);
+        MeshRun<0, StartDimension, TargetDimension, MeshDimension, TargetDimension == 0, Ascend>::run(mesh, origElementIndex, edge.GetVertexAIndex(), fun);
+        MeshRun<0, StartDimension, TargetDimension, MeshDimension, TargetDimension == 0, Ascend>::run(mesh, origElementIndex, edge.GetVertexBIndex(), fun);
+    }
+};
+
+
+
+template <unsigned int CurrentDimension,unsigned int StartDimension, unsigned int TargetDimension, unsigned int MeshDimension, bool Ascend>
+struct MeshRun<CurrentDimension, StartDimension, TargetDimension, MeshDimension, true, Ascend> {
+
+    template<typename Func, typename IndexType, typename Real, unsigned int ...Reserve>
+    static void run(MeshElements<MeshDimension, IndexType, Real, Reserve...>& ,
+                    IndexType origElementIndex,
+                    IndexType index,
+                    Func fun){
+        if(Ascend){
+            fun(StartDimension, TargetDimension, origElementIndex, index);
+        }else{
+            fun(TargetDimension, StartDimension, index, origElementIndex);
         }
     }
 };
 
 
-template<unsigned int MeshDimension,typename IndexType, typename Real, unsigned int ...Reserve>
-struct CellsVertices<MeshDimension, MeshDimension, IndexType, Real, Reserve...> {
-    static void run(MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh){
-        for(IndexType i = 0; i < mesh.GetCells().size(); i++){
-            DBGMSG("cell number "<<i);
-            for(auto j : mesh.template GetElement<MeshDimension>(i).GetSubelements()) {
-                CellsVertices<MeshDimension, MeshDimension - 1, IndexType, Real, Reserve...>::run(mesh, j);
+
+
+
+template <unsigned int StartDimension, unsigned int TargetDimension, unsigned int MeshDimension>
+struct MeshApply {
+    template<typename Functor, typename IndexType, typename Real, unsigned int ...Reserve>
+    static void apply(MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh,
+                      Functor f) {
+        for (auto& startElement : mesh.template GetElements<(StartDimension > TargetDimension) ? StartDimension : TargetDimension>()){
+            MeshRun<
+                    (StartDimension > TargetDimension) ? StartDimension : TargetDimension,
+                    (StartDimension > TargetDimension) ? StartDimension : TargetDimension,
+                    (StartDimension > TargetDimension) ? TargetDimension : StartDimension,
+                    MeshDimension,
+                    false,
+                    (StartDimension > TargetDimension)>::run(mesh, startElement.GetIndex(), startElement.GetIndex(), f);
+        }
+    }
+};
+
+
+template<unsigned int StartDim, unsigned int TargetDim>
+struct MeshConnections {
+    template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
+    static MeshDataContainer<std::set<IndexType>, StartDim> connections(
+            MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
+            ) {
+        MeshDataContainer<std::set<IndexType>, StartDim> result(mesh);
+        MeshApply<StartDim, TargetDim, MeshDimension>::apply(mesh, [&result](unsigned int, unsigned int, IndexType ori, IndexType element){
+            result.template GetDataPos<0>().at(ori).insert(element);
+        });
+
+        return result;
+    }
+};
+
+template<unsigned int FromDim, unsigned int ToDim, bool Descend = true>
+struct MeshColouring {
+
+    template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
+    static MeshDataContainer<unsigned int, FromDim> colour(
+            MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
+            ) {
+        MeshDataContainer<unsigned int, FromDim> result(mesh);
+
+        DBGMSG("starting the coloring procedure");
+        unsigned int reserve = 16;
+        MeshDataContainer<std::valarray<bool>, ToDim> attachedColours(mesh, std::valarray<bool>(false, reserve));
+
+
+
+        for (auto& startElement : mesh.template GetElements<FromDim>()){
+            std::valarray<bool> possibleColours(true,reserve);
+            MeshRun<FromDim, FromDim, ToDim, MeshDimension, false, true>::
+                run(mesh,
+                    startElement.GetIndex(),
+                    startElement.GetIndex(),
+                    [&possibleColours, &attachedColours](unsigned int, unsigned int, IndexType, IndexType element){
+                        DBGTRY(possibleColours &= !attachedColours.template GetDataPos<0>().at(element);)
+                    }
+                );
+
+            // Select the first possible colour
+            unsigned int selectedColour = 0;
+            while (!possibleColours[selectedColour]) {
+                selectedColour++;
+            }
+            result.template GetDataPos<0>().at(startElement.GetIndex()) = selectedColour;
+            MeshRun<FromDim, FromDim, ToDim, MeshDimension, false, true>::
+                run(mesh,
+                    startElement.GetIndex(),
+                    startElement.GetIndex(),
+                    [selectedColour, &attachedColours](unsigned int, unsigned int, IndexType, IndexType element){
+                        DBGTRY(attachedColours.template GetDataPos<0>().at(element)[selectedColour] = true;)
+                    }
+                );
+        }
+        return result;
+    }
+};
+
+
+template<unsigned int FromDim, unsigned int ToDim>
+struct MeshColouring <FromDim, ToDim, false> {
+    template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
+    static MeshDataContainer<unsigned int, FromDim> colour(
+            MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
+            ) {
+        MeshDataContainer<unsigned int, FromDim> result(mesh);
+
+        DBGMSG("starting the coloring procedure");
+        unsigned int reserve = 16;
+        MeshDataContainer<std::valarray<bool>, ToDim> attachedColours(mesh, std::valarray<bool>(false, reserve));
+
+        auto connections = MeshConnections<FromDim, ToDim>::connections(mesh);
+
+        for (auto& startElement : mesh.template GetElements<FromDim>()){
+            std::valarray<bool> possibleColours(true,reserve);
+            for (IndexType element : connections.at(startElement)){
+
+                DBGTRY(possibleColours &= !attachedColours.template GetDataPos<0>().at(element);)
+
+            }
+
+            unsigned int selectedColour = 0;
+            while (!possibleColours[selectedColour]) {
+                selectedColour++;
+            }
+
+            result.template GetDataPos<0>().at(startElement.GetIndex()) = selectedColour;
+
+            for (IndexType element : connections.at(startElement)){
+                DBGTRY(attachedColours.template GetDataPos<0>().at(element)[selectedColour] = true;)
             }
         }
+        return result;
     }
 };
 
 
-template<unsigned int MeshDimension,typename IndexType, typename Real, unsigned int ...Reserve>
-struct CellsVertices<MeshDimension, 1, IndexType, Real, Reserve...> {
-    static void run(MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh, IndexType index){
+template <unsigned int FromDim, unsigned int ToDim>
+struct ColourMesh{
 
-            auto e = mesh.template GetElement<1>(index);
-            DBGVAR(mesh.GetVertices()[e.GetElement().GetVertexAIndex()], mesh.GetVertices()[e.GetElement().GetVertexBIndex()])
-
-    }
+template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
+static MeshDataContainer<unsigned int, FromDim> colour(
+        MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
+        ){
+    return MeshColouring<FromDim, ToDim, (FromDim > ToDim)>::colour(mesh);
+}
 };
+
+}
+
 
 #endif // MESH_FUNCTIONS_H

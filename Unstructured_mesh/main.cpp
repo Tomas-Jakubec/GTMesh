@@ -324,7 +324,18 @@ void testMesh2D() {
         }
     }
 
-    CellsVertices<2,2,size_t, double>::run(mesh);
+    MeshDataContainer<std::set<size_t>, 2> vertices(mesh);
+
+    DBGMSG("vertices of cells in 2D");
+    for (auto& cell : mesh.GetCells()){
+        std::set<size_t>& _set = vertices.at(cell);
+        DBGVAR(cell.GetIndex())
+        for (size_t index: _set){
+            DBGVAR(index)
+        }
+    }
+
+
 
     auto centers = ComputeCenters(mesh);
 
@@ -398,13 +409,14 @@ void testMesh3D() {
         DBGVAR(i.index)
     }
 
-    DBGMSG("3D cell vertices");
-    CellsVertices<3,3,size_t, double, 6>::run(mesh3);
 
 
 
     DBGMSG("mesh conatiner test");
     MeshDataContainer<double, 3,2,1,0> cont(mesh3);
+
+    MakeMeshDataContainer_t<double, make_custom_integer_sequence_t<unsigned int, 0,3>> cont1(mesh3);
+
 
     //cont.GetDataDim<3>().resize(20);
     DBGVAR(cont.GetDataPos<1>().size())
@@ -451,6 +463,47 @@ void testMesh3D() {
     auto normals = mesh3.ComputeFaceNormals();
     for(auto& face : mesh3.GetFaces()){
         DBGVAR(face.GetIndex(),normals.at(face))
+    }
+
+    DBGMSG("mesh apply test");
+    temp1::MeshApply<3, 2, 3>::apply(mesh3, [](unsigned int S, unsigned int T, size_t ori, size_t i){
+        DBGVAR(S,T,ori,i)
+    });
+    DBGMSG("mesh apply test");
+    temp1::MeshApply<2, 3, 3>::apply(mesh3,[](unsigned int S, unsigned int T, size_t ori, size_t i){
+        DBGVAR(S,T,ori,i)
+    });
+
+
+    DBGMSG("connection test");
+    auto con = temp1::MeshConnections<3,0>::connections(mesh3);
+    for (auto& cell : mesh3.GetCells()){
+        DBGVAR(cell.GetIndex())
+        for(size_t i : con[cell]){
+            DBGVAR(i)
+        }
+    }
+
+
+    DBGMSG("connection test oposite");
+    auto con1 = temp1::MeshConnections<0,3>::connections(mesh3);
+    for (auto& vert : mesh3.GetVertices()){
+        DBGVAR(vert.GetIndex())
+        for(size_t i : con1[vert]){
+            DBGVAR(i)
+        }
+    }
+
+    DBGMSG("face to vertex colouring");
+    auto colours = temp1::ColourMesh<2,0>::colour(mesh3);
+    for (auto& face : mesh3.GetFaces()){
+        DBGVAR(face.GetIndex(), colours.at(face))
+    }
+
+    DBGMSG("vertex to face colouring");
+    auto colours1 = temp1::ColourMesh<0,2>::colour(mesh3);
+    for (auto& vert : mesh3.GetVertices()){
+        DBGVAR(vert.GetIndex(), colours1.at(vert))
     }
 }
 
@@ -510,6 +563,24 @@ void testMeshDataContainer() {
 
     for(auto& v : mesh3.GetVertices()){
         DBGVAR(container.at(v))
+    }
+
+    MeshDataContainer<std::tuple<int, double, char, int>, 3, 2, 0, 2> containerIni(mesh3,3, 42.15, 'a', 15);
+
+    for (auto& val : containerIni.GetDataPos<0>()){
+        DBGVAR(val)
+    }
+
+    for (auto& val : containerIni.GetDataPos<1>()){
+        DBGVAR(val)
+    }
+
+    for (auto& val : containerIni.GetDataPos<2>()){
+        DBGVAR(val)
+    }
+
+    for (auto& val : containerIni.GetDataPos<3>()){
+        DBGVAR(val)
     }
 }
 
@@ -580,11 +651,11 @@ void testTemplate() {
 
 int main()
 {
-    testMesh2D();
-    testMesh3D();
-    test3DMeshDeformedPrisms();
+    //testMesh2D();
+    //testMesh3D();
+    //test3DMeshDeformedPrisms();
     testMeshDataContainer();
     //testTemplate();
     UnstructuredMesh<5, size_t, double, 6,5,4> m;
-    m.ComputeElementMeasures();
+    //m.ComputeElementMeasures();
 }
