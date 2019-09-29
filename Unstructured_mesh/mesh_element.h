@@ -13,30 +13,29 @@
 template<typename IndexType>
 class MeshElementBase{
     /**
-     * @brief Index
-     *
+     * @brief elementIndex<HR>
      * Index of the element in the mesh or in mesh component
      */
-    IndexType ElementIndex;
+    IndexType elementIndex;
 
     /**
-     * @brief LocalElementIndex
+     * @brief globalElementIndex
      *
      * Global index of element in the mesh component
      */
-    //IndexType GobalElementIndex;
+    //IndexType gobalElementIndex;
 public:
 
     MeshElementBase(IndexType index = INVALID_INDEX(IndexType)){
-        ElementIndex = index;
+        elementIndex = index;
     }
 
     IndexType GetIndex(){
-        return ElementIndex;
+        return elementIndex;
     }
 
     void SetIndex(IndexType index){
-        ElementIndex = index;
+        elementIndex = index;
     }
 /*
     IndexType GetGlobalIndex(){
