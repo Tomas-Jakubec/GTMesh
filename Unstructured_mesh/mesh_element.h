@@ -39,11 +39,11 @@ public:
     }
 /*
     IndexType GetGlobalIndex(){
-        return GlobalElementIndex;
+        return globalElementIndex;
     }
 
     void SetGlobalIndex(IndexType index){
-        GlobalElementIndex = index;
+        globalElementIndex = index;
     }
 */
 };
@@ -58,19 +58,19 @@ struct Subelement{
 
 template <typename IndexType, unsigned int Reserve>
 class SubelementContainer : public std::array<Subelement<IndexType>, Reserve>{
-    unsigned char NumberOfElements = 0;
+    unsigned char numberOfElements = 0;
 
 public:
     unsigned char GetNumberOfSubElements(){
-        return NumberOfElements;
+        return numberOfElements;
     }
 
 
     void AddSubelement(IndexType index, bool isLeft) {
-        if (NumberOfElements < Reserve){
-            this->at(NumberOfElements).index = index;
-            this->at(NumberOfElements).isLeft = isLeft;
-            NumberOfElements++;
+        if (numberOfElements < Reserve){
+            this->at(numberOfElements).index = index;
+            this->at(numberOfElements).isLeft = isLeft;
+            numberOfElements++;
         } else {
             throw(std::runtime_error(//"In face element (" + std::to_string(MeshElementBase<IndexType>::GetIndex()) +
                                      ") number of edges overgrew the number of reserved indexes (" + std::to_string(Reserve)
@@ -80,16 +80,16 @@ public:
     }
 
     void RemoveSubelement(unsigned char atIndex){
-        if (atIndex < NumberOfElements){
-            for(unsigned char i = atIndex; i < NumberOfElements - 1; i++){
+        if (atIndex < numberOfElements){
+            for(unsigned char i = atIndex; i < numberOfElements - 1; i++){
                 this->at(i) = this->at(i+1);
             }
-            this->at(NumberOfElements) = {INVALID_INDEX(IndexType), false};
-            NumberOfElements--;
+            this->at(numberOfElements) = {INVALID_INDEX(IndexType), false};
+            numberOfElements--;
         } else {
             throw(std::runtime_error(//"In face element (" + std::to_string(MeshElementBase<IndexType>::GetIndex()) +
                                      ") removing index " + std::to_string(atIndex)
-                                     +" is greather than number of subelements " + std::to_string(NumberOfElements)+ "."));
+                                     +" is greather than number of subelements " + std::to_string(numberOfElements)+ "."));
         }
     }
 
@@ -115,20 +115,20 @@ template <unsigned int MeshDim, unsigned int ElementDim, typename IndexType, typ
 class MeshElement : public MeshElementBase<IndexType>,
                     public std::conditional<ElementDim == MeshDim - 1,CellBoundaryConnection<IndexType>, emptyStruct>::type,
                     public std::conditional<ElementDim == MeshDim - 1,ComputationallySignificantElement<MeshDim, Real>, emptyStruct2>::type{
-    SubelementContainer<IndexType, Reserve> Subelements;
+    SubelementContainer<IndexType, Reserve> subelements;
 public:
 
     SubelementContainer<IndexType, Reserve>& GetSubelements(){
-        return Subelements;
+        return subelements;
     }
 
     const SubelementContainer<IndexType, Reserve>& GetSubelements() const {
-        return Subelements;
+        return subelements;
     }
 
     MeshElement(IndexType index = INVALID_INDEX(IndexType))
         :MeshElementBase<IndexType>(index), CellBoundaryConnection<IndexType> () {
-        Subelements.fill({INVALID_INDEX(IndexType), false});
+        subelements.fill({INVALID_INDEX(IndexType), false});
     }
 
 };
@@ -163,8 +163,8 @@ class MeshElement<MeshDim, 1, IndexType, Real, Reserve>
           public std::conditional<MeshDim == 2,CellBoundaryConnection<IndexType>, emptyStruct>::type,
           public std::conditional<MeshDim == 2,ComputationallySignificantElement<MeshDim, Real>, emptyStruct2>::type{
 public:
-    IndexType VertexA;
-    IndexType VertexB;
+    IndexType vertexAIndex;
+    IndexType vertexBIndex;
 public:
 
     MeshElement(IndexType index = INVALID_INDEX(IndexType),
@@ -178,20 +178,20 @@ public:
 
 
     IndexType GetVertexAIndex(){
-        return VertexA;
+        return vertexAIndex;
     }
 
     IndexType GetVertexBIndex(){
-        return VertexB;
+        return vertexBIndex;
     }
 
     void SetVertexAIndex(IndexType index){
-        VertexA = index;
+        vertexAIndex = index;
     }
 
 
     void SetVertexBIndex(IndexType index){
-        VertexB = index;
+        vertexBIndex = index;
     }
 
 };
@@ -213,7 +213,7 @@ class MeshElement<MeshDim, MeshDim, IndexType, Real, Reserve>
         : public MeshElementBase<IndexType>,
           public ComputationallySignificantElement<MeshDim, Real>{
 
-    IndexType BoundaryElement;
+    IndexType boundaryElementIndex;
 public:
 //GetBoundaryElement
     MeshElement(IndexType index = INVALID_INDEX(IndexType))
@@ -222,11 +222,11 @@ public:
     }
 
     IndexType GetBoundaryElementIndex(){
-        return BoundaryElement;
+        return boundaryElementIndex;
     }
 
     void SetBoundaryElementIndex(IndexType index){
-        BoundaryElement = index;
+        boundaryElementIndex = index;
     }
 
 };
@@ -353,21 +353,21 @@ public:
     struct CellSubelementIterator: public std::iterator<std::forward_iterator_tag, IndexType>
     {
 
-        IndexType Actual;
-        IndexType FirstBElem;
-        IndexType Cell;
+        IndexType actual;
+        IndexType firstBElem;
+        IndexType cellIndex;
         MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh;
     public:
-        CellSubelementIterator(IndexType ci, IndexType act, MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh):Cell(ci){
-            FirstBElem = act;
-            Actual = FirstBElem;
+        CellSubelementIterator(IndexType ci, IndexType act, MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh):cellIndex(ci){
+            firstBElem = act;
+            actual = firstBElem;
             this->parentMesh = parentMesh;
         }
-        CellSubelementIterator& operator++ () {Actual = parentMesh->GetFaces().at(Actual).GetNextBElem(Cell) == FirstBElem ? INVALID_INDEX(IndexType) : parentMesh->GetFaces().at(Actual).GetNextBElem(Cell); return *this;}
-        CellSubelementIterator& operator++ (int) {Actual = parentMesh->GetFaces().at(Actual).GetNextBElem(Cell) == FirstBElem ? INVALID_INDEX(IndexType) : parentMesh->GetFaces().at(Actual).GetNextBElem(Cell); return *this;}
-        IndexType operator* (){return Actual;}
-        bool operator== (CellSubelementIterator& it) {return Actual == it.Actual;}
-        bool operator!= (CellSubelementIterator& it) {return Actual != it.Actual;}
+        CellSubelementIterator& operator++ () {actual = parentMesh->GetFaces().at(actual).GetNextBElem(cellIndex) == firstBElem ? INVALID_INDEX(IndexType) : parentMesh->GetFaces().at(actual).GetNextBElem(cellIndex); return *this;}
+        CellSubelementIterator& operator++ (int) {actual = parentMesh->GetFaces().at(actual).GetNextBElem(cellIndex) == firstBElem ? INVALID_INDEX(IndexType) : parentMesh->GetFaces().at(actual).GetNextBElem(cellIndex); return *this;}
+        IndexType operator* (){return actual;}
+        bool operator== (CellSubelementIterator& it) {return actual == it.actual;}
+        bool operator!= (CellSubelementIterator& it) {return actual != it.actual;}
     };
 
     class CellSubelements {

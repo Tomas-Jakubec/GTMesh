@@ -5,7 +5,7 @@
 template <unsigned int N, typename Real>
 struct inlineScalarProduct {
     static inline Real computation(const Real *x, const Real *y){
-        return x[N-1] * y[N-1] + inlineScalarProduct<N-1, Real>::computation(x, y);
+        return inlineScalarProduct<N-1, Real>::computation(x, y) + x[N-1] * y[N-1];
     }
 };
 
@@ -24,12 +24,12 @@ struct inlineScalarProduct<1, Real>
 template <unsigned int N, typename Real>
 struct inlineAddition{
     static inline void computation(Real *res, const Real *x, const Real *y){
-        res[N-1] = x[N-1] + y[N-1];
         inlineAddition<N-1, Real>::computation(res, x, y);
+        res[N-1] = x[N-1] + y[N-1];
     }
     static inline void computation(Real *x, const Real *y){
-        x[N-1] += y[N-1];
         inlineAddition<N-1, Real>::computation(x, y);
+        x[N-1] += y[N-1];
     }
 };
 
@@ -47,12 +47,12 @@ struct inlineAddition<1, Real>{
 template <unsigned int N, typename Real>
 struct inlineSubtraction{
     static inline void computation(Real *res, const Real *x, const Real *y){
-        res[N-1] = x[N-1] - y[N-1];
         inlineSubtraction<N-1, Real>::computation(res, x, y);
+        res[N-1] = x[N-1] - y[N-1];
     }
     static inline void computation(Real *x, const Real *y){
-        x[N-1] -= y[N-1];
         inlineSubtraction<N-1, Real>::computation(x, y);
+        x[N-1] -= y[N-1];
     }
 };
 
@@ -71,12 +71,12 @@ struct inlineSubtraction<1, Real>{
 template <unsigned int N, typename Real>
 struct inlineMultiplication{
     static inline void computation(Real *res, const Real *x, const Real& alpha){
-        res[N-1] = x[N-1] * alpha;
         inlineMultiplication<N-1, Real>::computation(res, x, alpha);
+        res[N-1] = x[N-1] * alpha;
     }
     static inline void computation(Real *x, const Real alpha){
-        x[N-1] *= alpha;
         inlineMultiplication<N-1, Real>::computation(x, alpha);
+        x[N-1] *= alpha;
     }
 };
 

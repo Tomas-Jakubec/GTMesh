@@ -270,16 +270,16 @@ void testMesh2D() {
     mesh.GetVertices().at(3) = {1,1};
 
     mesh.GetFaces().resize(5);
-    mesh.GetFaces().at(0).VertexA = 1;
-    mesh.GetFaces().at(0).VertexB = 0;
-    mesh.GetFaces().at(1).VertexA = 0;
-    mesh.GetFaces().at(1).VertexB = 2;
-    mesh.GetFaces().at(2).VertexA = 2;
-    mesh.GetFaces().at(2).VertexB = 1;
-    mesh.GetFaces().at(3).VertexA = 3;
-    mesh.GetFaces().at(3).VertexB = 1;
-    mesh.GetFaces().at(4).VertexA = 2;
-    mesh.GetFaces().at(4).VertexB = 3;
+    mesh.GetFaces().at(0).vertexAIndex = 1;
+    mesh.GetFaces().at(0).vertexBIndex = 0;
+    mesh.GetFaces().at(1).vertexAIndex = 0;
+    mesh.GetFaces().at(1).vertexBIndex = 2;
+    mesh.GetFaces().at(2).vertexAIndex = 2;
+    mesh.GetFaces().at(2).vertexBIndex = 1;
+    mesh.GetFaces().at(3).vertexAIndex = 3;
+    mesh.GetFaces().at(3).vertexBIndex = 1;
+    mesh.GetFaces().at(4).vertexAIndex = 2;
+    mesh.GetFaces().at(4).vertexBIndex = 3;
     for(size_t i = 0; i < 5; i++)
         mesh.GetFaces().at(i).SetIndex(i);
 
@@ -651,9 +651,9 @@ void testTemplate() {
 
 int main()
 {
-    //testMesh2D();
-    //testMesh3D();
-    //test3DMeshDeformedPrisms();
+    testMesh2D();
+    testMesh3D();
+    test3DMeshDeformedPrisms();
     testMeshDataContainer();
     //testTemplate();
     UnstructuredMesh<5, size_t, double, 6,5,4> m;
