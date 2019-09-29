@@ -42,7 +42,7 @@ struct _ComputeCenters{
             auto& element = mesh.template GetElements<dim>().at(i);
 
             Real subElemCnt = 0;
-            for(auto& sub : element.GetSubelements()){
+            for(auto& sub : element.getSubelements()){
                 elemCenters.at(i) +=  subElemCenters.at(sub.index);
                 subElemCnt++;
             }
@@ -68,12 +68,12 @@ struct _ComputeCenters<Dimension, Dimension>{
             auto& element = mesh.template GetElements<Dimension>().at(i);
 
             Real subElemCnt = 0;
-            IndexType tmpFaceIndex = element.GetBoundaryElementIndex();
+            IndexType tmpFaceIndex = element.getBoundaryElementIndex();
             do {
                 elemCenters.at(i) +=  subElemCenters.at(tmpFaceIndex);
                 subElemCnt++;
-                tmpFaceIndex = mesh.GetFaces()[tmpFaceIndex].GetNextBElem(i);
-            } while (tmpFaceIndex != element.GetBoundaryElementIndex());
+                tmpFaceIndex = mesh.GetFaces()[tmpFaceIndex].getNextBElem(i);
+            } while (tmpFaceIndex != element.getBoundaryElementIndex());
 
             elemCenters.at(i) /= subElemCnt;
         }
@@ -155,17 +155,17 @@ struct _ComputeMeasures<3, 3>{
         auto& cellMeasures = measures.template GetDataDim<3>();
 
         for (typename MeshElements<3, IndexType, Real, Reserve...>::template ElemType<3>::type& cell : mesh.GetCells()) {
-            IndexType tmpFace = cell.GetBoundaryElementIndex();
+            IndexType tmpFace = cell.getBoundaryElementIndex();
             Real measure = Real();
-            Vertex<3,Real>& cellCenter = cell.GetCenter();
+            Vertex<3,Real>& cellCenter = cell.getCenter();
 
             do {
                 // select 3 different vertices
-                IndexType vAIndex = mesh.GetEdges().at(mesh.GetFaces().at(tmpFace).GetSubelements()[0].index).GetVertexAIndex();
-                IndexType vBIndex = mesh.GetEdges().at(mesh.GetFaces().at(tmpFace).GetSubelements()[0].index).GetVertexBIndex();
-                IndexType vCIndex = mesh.GetEdges().at(mesh.GetFaces().at(tmpFace).GetSubelements()[1].index).GetVertexAIndex();
+                IndexType vAIndex = mesh.GetEdges().at(mesh.GetFaces().at(tmpFace).getSubelements()[0].index).GetVertexAIndex();
+                IndexType vBIndex = mesh.GetEdges().at(mesh.GetFaces().at(tmpFace).getSubelements()[0].index).GetVertexBIndex();
+                IndexType vCIndex = mesh.GetEdges().at(mesh.GetFaces().at(tmpFace).getSubelements()[1].index).GetVertexAIndex();
                 if(vCIndex == vAIndex || vCIndex == vBIndex) {
-                    vCIndex = mesh.GetEdges().at(mesh.GetFaces().at(tmpFace).GetSubelements()[1].index).GetVertexBIndex();
+                    vCIndex = mesh.GetEdges().at(mesh.GetFaces().at(tmpFace).getSubelements()[1].index).GetVertexBIndex();
                 }
 
                 Vertex<3,Real>& a = mesh.GetVertices().at(vAIndex);
@@ -176,8 +176,8 @@ struct _ComputeMeasures<3, 3>{
                 Vertex<3,Real> vAmcC = (a-cellCenter);
                 Vertex<3,Real> vBmA = (b-a);
                 Vertex<3,Real> vCmA = (c-a);
-                Real inv_sqrBmA = 1.0 / vBmA.SumOfSquares();
-                Real inv_sqrCmA = 1.0 / vCmA.SumOfSquares();
+                Real inv_sqrBmA = 1.0 / vBmA.sumOfSquares();
+                Real inv_sqrCmA = 1.0 / vCmA.sumOfSquares();
 
                 Real denominator = 1.0 / (1.0 - (pow(vCmA*vBmA,2) * inv_sqrBmA * inv_sqrCmA));
 
@@ -186,13 +186,13 @@ struct _ComputeMeasures<3, 3>{
                 //param_t *= inv_sqrBmA;
                 Real param_s = -denominator * (((vAmcC*vCmA) * inv_sqrCmA) - (inv_sqrBmA*inv_sqrCmA*(vAmcC * vBmA)*(vCmA*vBmA)));
 
-                Real distance = (vAmcC + (vBmA * param_t) + (vCmA * param_s)).NormEukleid();
+                Real distance = (vAmcC + (vBmA * param_t) + (vCmA * param_s)).normEukleid();
 
                 Real tmp = distance * measures.template GetDataDim<2>().at(tmpFace);
                 measure += tmp / 3.0;
 
-                tmpFace = mesh.GetFaces().at(tmpFace).GetNextBElem(cell.GetIndex());
-            } while (tmpFace != cell.GetBoundaryElementIndex());
+                tmpFace = mesh.GetFaces().at(tmpFace).getNextBElem(cell.GetIndex());
+            } while (tmpFace != cell.getBoundaryElementIndex());
 
             cellMeasures.at(cell.GetIndex()) = measure;
         }
@@ -207,9 +207,9 @@ struct _ComputeMeasures<2, 2>{
         auto& surfaceMeasures = measures.template GetDataDim<2>();
 
         for (typename MeshElements<2, IndexType, Real, Reserve...>::template ElemType<2>::type& cell : mesh.GetCells()) {
-            IndexType tmpEdge = cell.GetBoundaryElementIndex();
+            IndexType tmpEdge = cell.getBoundaryElementIndex();
             Real measure = Real();
-            Vertex<2,Real>& cellCenter = cell.GetCenter();
+            Vertex<2,Real>& cellCenter = cell.getCenter();
             do {
                 Vertex<2,Real>& a = mesh.GetVertices().at(mesh.GetEdges().at(tmpEdge).GetVertexAIndex());
                 Vertex<2,Real>& b = mesh.GetVertices().at(mesh.GetEdges().at(tmpEdge).GetVertexBIndex());
@@ -217,8 +217,8 @@ struct _ComputeMeasures<2, 2>{
                 tmp -= (cellCenter[1] - a[1]) * (b[0] - a[0]);
                 measure += 0.5 * fabs(tmp);
 
-                tmpEdge = mesh.GetEdges().at(tmpEdge).GetNextBElem(cell.GetIndex());
-            } while (tmpEdge != cell.GetBoundaryElementIndex());
+                tmpEdge = mesh.GetEdges().at(tmpEdge).getNextBElem(cell.GetIndex());
+            } while (tmpEdge != cell.getBoundaryElementIndex());
 
             surfaceMeasures.at(cell.GetIndex()) = measure;
         }
@@ -237,17 +237,17 @@ struct _ComputeMeasures<2, 3>{
         for (typename MeshElements<3, IndexType, Real, Reserve...>::template ElemType<2>::type& face : mesh.template GetElements<2>()) {
 
             Real measure = Real();
-            Vertex<3,Real>& faceCenter = face.GetCenter();
-            for(auto sube : face.GetSubelements()){
+            Vertex<3,Real>& faceCenter = face.getCenter();
+            for(auto sube : face.getSubelements()){
 
                 Vertex<3,Real>& a = mesh.GetVertices().at(mesh.GetEdges().at(sube.index).GetVertexAIndex());
                 Vertex<3,Real>& b = mesh.GetVertices().at(mesh.GetEdges().at(sube.index).GetVertexBIndex());
 
                 Real distance = Real();
 
-                Real param = -1.0*(((a-faceCenter)*(b-a))/((b-a).SumOfSquares()));
+                Real param = -1.0*(((a-faceCenter)*(b-a))/((b-a).sumOfSquares()));
 
-                distance = (a-faceCenter+(b-a)*param).NormEukleid();
+                distance = (a-faceCenter+(b-a)*param).normEukleid();
 
                 Real tmp = distance * measures.template GetDataDim<1>().at(sube.index);
                 measure += tmp * 0.5;
@@ -273,7 +273,7 @@ struct _ComputeMeasures<1, Dimension>{
 
         for (auto& edge : mesh.GetEdges()) {
             edgeLengths.at(edge.GetIndex()) = (mesh.GetVertices().at(edge.GetVertexAIndex()) -
-                                               mesh.GetVertices().at(edge.GetVertexBIndex())).NormEukleid();
+                                               mesh.GetVertices().at(edge.GetVertexBIndex())).normEukleid();
         }
 
         _ComputeMeasures<2, Dimension>::compute(measures, mesh);
@@ -317,7 +317,7 @@ struct _ComputeNormals<2>{
             Vertex<2,Real> dif = b-a;
             normals[face][0] = dif[1];
             normals[face][1] = -dif[0];
-            normals[face] /= dif.NormEukleid();
+            normals[face] /= dif.normEukleid();
         }
     }
 };
@@ -330,24 +330,24 @@ struct _ComputeNormals<3>{
         for (auto& face : mesh.GetFaces()) {
 
             bool vectorSign = true;
-            IndexType cellIndex = face.GetCellLeftIndex();
+            IndexType cellIndex = face.getCellLeftIndex();
             if (
                     cellIndex == INVALID_INDEX(IndexType) ||
                     (cellIndex & BOUNDARY_INDEX(IndexType)) == BOUNDARY_INDEX(IndexType)
                 ) {
                 vectorSign = false;
-                cellIndex = face.GetCellRightIndex();
+                cellIndex = face.getCellRightIndex();
             }
 
-            Vertex<3,Real>& cellCenter = mesh.GetCells().at(cellIndex).GetCenter();
+            Vertex<3,Real>& cellCenter = mesh.GetCells().at(cellIndex).getCenter();
 
 
             // select 3 different vertices
-            IndexType vAIndex = mesh.GetEdges().at(face.GetSubelements()[0].index).GetVertexAIndex();
-            IndexType vBIndex = mesh.GetEdges().at(face.GetSubelements()[0].index).GetVertexBIndex();
-            IndexType vCIndex = mesh.GetEdges().at(face.GetSubelements()[1].index).GetVertexAIndex();
+            IndexType vAIndex = mesh.GetEdges().at(face.getSubelements()[0].index).GetVertexAIndex();
+            IndexType vBIndex = mesh.GetEdges().at(face.getSubelements()[0].index).GetVertexBIndex();
+            IndexType vCIndex = mesh.GetEdges().at(face.getSubelements()[1].index).GetVertexAIndex();
             if(vCIndex == vAIndex || vCIndex == vBIndex) {
-                vCIndex = mesh.GetEdges().at(face.GetSubelements()[1].index).GetVertexBIndex();
+                vCIndex = mesh.GetEdges().at(face.getSubelements()[1].index).GetVertexBIndex();
             }
 
             Vertex<3,Real>& a = mesh.GetVertices().at(vAIndex);
@@ -358,8 +358,8 @@ struct _ComputeNormals<3>{
             Vertex<3,Real> vAmcC = (a-cellCenter);
             Vertex<3,Real> vBmA = (b-a);
             Vertex<3,Real> vCmA = (c-a);
-            Real inv_sqrBmA = 1.0 / vBmA.SumOfSquares();
-            Real inv_sqrCmA = 1.0 / vCmA.SumOfSquares();
+            Real inv_sqrBmA = 1.0 / vBmA.sumOfSquares();
+            Real inv_sqrCmA = 1.0 / vCmA.sumOfSquares();
 
             Real denominator = 1.0 / (1.0 - (pow(vCmA*vBmA,2) * inv_sqrBmA * inv_sqrCmA));
 
@@ -369,7 +369,7 @@ struct _ComputeNormals<3>{
             Real param_s = -denominator * (((vAmcC*vCmA) * inv_sqrCmA) - (inv_sqrBmA*inv_sqrCmA*(vAmcC * vBmA)*(vCmA*vBmA)));
 
             Vertex<3, Real> faceNormal = vAmcC + (vBmA * param_t) + (vCmA * param_s);
-            faceNormal /= faceNormal.NormEukleid();
+            faceNormal /= faceNormal.normEukleid();
 
             if (!vectorSign) {
                 faceNormal *= -1;
@@ -404,37 +404,37 @@ MeshDataContainer<Real, Dimension-1> ComputeCellsDistance(MeshElements<Dimension
 
     if(mesh.GetBoundaryCells().empty()){
         for(auto& face : mesh.GetFaces()) {
-            if (face.GetCellLeftIndex() != INVALID_INDEX(IndexType) &&
-                face.GetCellRightIndex() != INVALID_INDEX(IndexType)){
+            if (face.getCellLeftIndex() != INVALID_INDEX(IndexType) &&
+                face.getCellRightIndex() != INVALID_INDEX(IndexType)){
 
-                distances.at(face) = (mesh.GetCells().at(face.GetCellLeftIndex()).GetCenter() -
-                                      mesh.GetCells().at(face.GetCellRightIndex()).GetCenter()).NormEukleid();
+                distances.at(face) = (mesh.GetCells().at(face.getCellLeftIndex()).getCenter() -
+                                      mesh.GetCells().at(face.getCellRightIndex()).getCenter()).normEukleid();
 
-            } else if(face.GetCellLeftIndex() != INVALID_INDEX(IndexType) &&
-                      face.GetCellRightIndex() == INVALID_INDEX(IndexType)){
+            } else if(face.getCellLeftIndex() != INVALID_INDEX(IndexType) &&
+                      face.getCellRightIndex() == INVALID_INDEX(IndexType)){
 
-                distances.at(face) = (mesh.GetCells().at(face.GetCellLeftIndex()).GetCenter() -
-                                      face.GetCenter()).NormEukleid();
+                distances.at(face) = (mesh.GetCells().at(face.getCellLeftIndex()).getCenter() -
+                                      face.getCenter()).normEukleid();
 
-            } else if(face.GetCellLeftIndex() == INVALID_INDEX(IndexType) &&
-                      face.GetCellRightIndex() != INVALID_INDEX(IndexType)){
+            } else if(face.getCellLeftIndex() == INVALID_INDEX(IndexType) &&
+                      face.getCellRightIndex() != INVALID_INDEX(IndexType)){
 
-                distances.at(face) = (mesh.GetCells().at(face.GetCellRightIndex()).GetCenter() -
-                                      face.GetCenter()).NormEukleid();
+                distances.at(face) = (mesh.GetCells().at(face.getCellRightIndex()).getCenter() -
+                                      face.getCenter()).normEukleid();
             }
         }
 
     } else {
 
         for(auto& face : mesh.GetFaces()) {
-            auto& cellLeft = (face.GetCellLeftIndex() & BOUNDARY_INDEX(IndexType)) == BOUNDARY_INDEX(IndexType)?
-                      mesh.GetBoundaryCells().at(face.GetCellLeftIndex()&EXTRACTING_INDEX(IndexType)):
-                      mesh.GetCells().at(face.GetCellLeftIndex());
-            auto& cellRight = (face.GetCellRightIndex() & BOUNDARY_INDEX(IndexType)) == BOUNDARY_INDEX(IndexType)?
-                      mesh.GetBoundaryCells().at(face.GetCellRightIndex()&EXTRACTING_INDEX(IndexType)):
-                      mesh.GetCells().at(face.GetCellRightIndex());
+            auto& cellLeft = (face.getCellLeftIndex() & BOUNDARY_INDEX(IndexType)) == BOUNDARY_INDEX(IndexType)?
+                      mesh.GetBoundaryCells().at(face.getCellLeftIndex()&EXTRACTING_INDEX(IndexType)):
+                      mesh.GetCells().at(face.getCellLeftIndex());
+            auto& cellRight = (face.getCellRightIndex() & BOUNDARY_INDEX(IndexType)) == BOUNDARY_INDEX(IndexType)?
+                      mesh.GetBoundaryCells().at(face.getCellRightIndex()&EXTRACTING_INDEX(IndexType)):
+                      mesh.GetCells().at(face.getCellRightIndex());
 
-            distances.at(face) = (cellLeft.GetCenter() - cellRight.GetCenter()).NormEukleid();
+            distances.at(face) = (cellLeft.getCenter() - cellRight.getCenter()).normEukleid();
         }
     }
 
@@ -460,7 +460,7 @@ struct MeshRun {
 
 
         auto i = mesh.template GetElements<CurrentDimension>().at(index);
-        for (auto sube: mesh.template GetElement<CurrentDimension>(i.GetIndex()).GetSubelements())
+        for (auto sube: mesh.template GetElement<CurrentDimension>(i.GetIndex()).getSubelements())
         MeshRun< CurrentDimension - 1, StartDimension, TargetDimension, MeshDimension, TargetDimension == CurrentDimension - 1, Ascend>::run(mesh, origElementIndex, sube.index, fun);
 
 
@@ -477,11 +477,11 @@ struct MeshRun<MeshDimension, StartDimension, TargetDimension, MeshDimension, fa
                     Func fun){
 
         auto& cell = mesh.GetCells().at(index);
-        IndexType tmpFace = cell.GetBoundaryElementIndex();
+        IndexType tmpFace = cell.getBoundaryElementIndex();
         do {
             MeshRun<MeshDimension - 1, StartDimension, TargetDimension, MeshDimension, TargetDimension == MeshDimension - 1, Ascend>::run(mesh, origElementIndex, tmpFace, fun);
-            tmpFace = mesh.GetFaces().at(tmpFace).GetNextBElem(cell.GetIndex());
-        } while (tmpFace != cell.GetBoundaryElementIndex());
+            tmpFace = mesh.GetFaces().at(tmpFace).getNextBElem(cell.GetIndex());
+        } while (tmpFace != cell.getBoundaryElementIndex());
 
     }
 };

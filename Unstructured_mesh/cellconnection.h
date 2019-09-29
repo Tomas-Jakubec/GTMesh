@@ -10,7 +10,7 @@
     class CellConnection {
         // Indexes to two cells which neighbours
         // with this edge
-        indexType CellRightIndex, CellLeftIndex;
+        indexType cellRightIndex, cellLeftIndex;
     public:
     /**
      * @brief CellConnection
@@ -21,35 +21,35 @@
                    indexType cellRight = INVALID_INDEX(indexType));
 
     /**
-     * @brief SetCellRightIndex
+     * @brief setCellRightIndex
      * @param cellIndex
      */
-    void SetCellRightIndex(indexType cellIndex);
+    void setCellRightIndex(indexType cellIndex);
 
     /**
      * @brief SetCellLeftIndex
      * @param cellIndex
      */
-    void SetCellLeftIndex(indexType cellIndex);
+    void setCellLeftIndex(indexType cellIndex);
 
     /**
      * @brief SetCellIndex
      * @param cellIndex
      * @return
      */
-    bool SetCellIndex(indexType cellIndex);
+    bool setCellIndex(indexType cellIndex);
 
     /**
      * @brief GetCellRightIndex
      * @return
      */
-    indexType GetCellRightIndex() const;
+    indexType getCellRightIndex() const;
 
     /**
      * @brief GetCellLeftIndex
      * @return
      */
-    indexType GetCellLeftIndex() const;
+    indexType getCellLeftIndex() const;
 
     // Returns the other Cell than sent by parameter
     /**
@@ -57,14 +57,14 @@
      * @param cellIndex
      * @return
      */
-    indexType GetOtherCellIndex(indexType cellIndex) const;
+    indexType getOtherCellIndex(indexType cellIndex) const;
 
 
     /**
      * @brief CellsOK
      * @return true if both cell indexes are set
      */
-    bool CellsOK() const;
+    bool cellsOK() const;
 
 
     /**
@@ -72,7 +72,7 @@
      *
      * swaps the left and right cell indexes
      */
-    void SwapCellsLR();
+    void swapCellsLR();
 
 };
 
@@ -85,22 +85,22 @@
 
 template<typename indexType>
 CellConnection<indexType>::CellConnection(indexType cellLeft, indexType cellRight){
-    CellRightIndex = cellRight;
-    CellLeftIndex = cellLeft;
+    cellRightIndex = cellRight;
+    cellLeftIndex = cellLeft;
 }
 
 template<typename indexType>
-void CellConnection<indexType>::SetCellRightIndex(indexType cellIndex){
-    CellRightIndex = cellIndex;
+void CellConnection<indexType>::setCellRightIndex(indexType cellIndex){
+    cellRightIndex = cellIndex;
 }
 
 template<typename indexType>
-void CellConnection<indexType>::SetCellLeftIndex(indexType cellIndex){
-    CellLeftIndex = cellIndex;
+void CellConnection<indexType>::setCellLeftIndex(indexType cellIndex){
+    cellLeftIndex = cellIndex;
 }
 
 template<typename indexType>
-bool CellConnection<indexType>::SetCellIndex(indexType cellIndex){
+bool CellConnection<indexType>::setCellIndex(indexType cellIndex){
     // If the parameter cell is nullptr then ret false
     if (cellIndex == INVALID_INDEX(indexType)){
         return false;
@@ -108,17 +108,17 @@ bool CellConnection<indexType>::SetCellIndex(indexType cellIndex){
 
     // If the CellLeftIndex is lower than 0
     // then set CellLeftIndex as cellIndex, ret true
-    if (GetCellLeftIndex() == INVALID_INDEX(indexType)) {
+    if (getCellLeftIndex() == INVALID_INDEX(indexType)) {
 
-        SetCellLeftIndex(cellIndex);
+        setCellLeftIndex(cellIndex);
 
         return true;
         // If the CellRightIndex is valid
         // and CellLeftIndex is not
         // then set CellRightIndex as cellIndex
-    } else if (GetCellRightIndex() == INVALID_INDEX(indexType)) {
+    } else if (getCellRightIndex() == INVALID_INDEX(indexType)) {
 
-        SetCellRightIndex(cellIndex);
+        setCellRightIndex(cellIndex);
 
         return true;
         // If both CellLeftIndex and CellRightIndex are >= 0
@@ -133,37 +133,37 @@ bool CellConnection<indexType>::SetCellIndex(indexType cellIndex){
 }
 
 template<typename indexType>
-indexType CellConnection<indexType>::GetCellRightIndex() const {
-    return CellRightIndex;
+indexType CellConnection<indexType>::getCellRightIndex() const {
+    return cellRightIndex;
 }
 
 template<typename indexType>
-indexType CellConnection<indexType>::GetCellLeftIndex() const {
-    return CellLeftIndex;
+indexType CellConnection<indexType>::getCellLeftIndex() const {
+    return cellLeftIndex;
 }
 
 template<typename indexType>
-indexType CellConnection<indexType>::GetOtherCellIndex(indexType cellIndex) const{
-    if (cellIndex == GetCellLeftIndex()) {
-        return GetCellRightIndex();
-    } else if (cellIndex == GetCellRightIndex()){
-        return GetCellLeftIndex();
+indexType CellConnection<indexType>::getOtherCellIndex(indexType cellIndex) const{
+    if (cellIndex == getCellLeftIndex()) {
+        return getCellRightIndex();
+    } else if (cellIndex == getCellRightIndex()){
+        return getCellLeftIndex();
     }
     return INVALID_INDEX(indexType);
 }
 
 template<typename indexType>
-bool CellConnection<indexType>::CellsOK() const {
-    return GetCellRightIndex() != INVALID_INDEX(indexType) && GetCellLeftIndex() != INVALID_INDEX(indexType);
+bool CellConnection<indexType>::cellsOK() const {
+    return getCellRightIndex() != INVALID_INDEX(indexType) && getCellLeftIndex() != INVALID_INDEX(indexType);
 }
 
 template<typename indexType>
-void CellConnection<indexType>::SwapCellsLR() {
+void CellConnection<indexType>::swapCellsLR() {
 
 
-    indexType cellLeftIndex = GetCellRightIndex();
-    SetCellRightIndex(GetCellLeftIndex());
-    SetCellLeftIndex(cellLeftIndex);
+    indexType cellLeftIndex = getCellRightIndex();
+    setCellRightIndex(getCellLeftIndex());
+    setCellLeftIndex(cellLeftIndex);
 
 
 }

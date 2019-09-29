@@ -32,46 +32,46 @@ void cube(UnstructuredMesh<3, size_t, double, 6>& mesh3){
         mesh3.GetEdges().push_back({11,4,6});
     DBGCHECK;
         mesh3.GetFaces().push_back(0);
-        mesh3.GetFaces().at(0).GetSubelements().AddSubelement(0,true);
-        mesh3.GetFaces().at(0).GetSubelements().AddSubelement(1,true);
-        mesh3.GetFaces().at(0).GetSubelements().AddSubelement(2,true);
-        mesh3.GetFaces().at(0).GetSubelements().AddSubelement(3,true);
+        mesh3.GetFaces().at(0).getSubelements().addSubelement(0,true);
+        mesh3.GetFaces().at(0).getSubelements().addSubelement(1,true);
+        mesh3.GetFaces().at(0).getSubelements().addSubelement(2,true);
+        mesh3.GetFaces().at(0).getSubelements().addSubelement(3,true);
         mesh3.GetFaces().push_back(1);
-        mesh3.GetFaces().at(1).GetSubelements().AddSubelement(0,true);
-        mesh3.GetFaces().at(1).GetSubelements().AddSubelement(5,true);
-        mesh3.GetFaces().at(1).GetSubelements().AddSubelement(8,true);
-        mesh3.GetFaces().at(1).GetSubelements().AddSubelement(4,true);
+        mesh3.GetFaces().at(1).getSubelements().addSubelement(0,true);
+        mesh3.GetFaces().at(1).getSubelements().addSubelement(5,true);
+        mesh3.GetFaces().at(1).getSubelements().addSubelement(8,true);
+        mesh3.GetFaces().at(1).getSubelements().addSubelement(4,true);
         mesh3.GetFaces().push_back(2);
-        mesh3.GetFaces().at(2).GetSubelements().AddSubelement(1,true);
-        mesh3.GetFaces().at(2).GetSubelements().AddSubelement(4,true);
-        mesh3.GetFaces().at(2).GetSubelements().AddSubelement(11,true);
-        mesh3.GetFaces().at(2).GetSubelements().AddSubelement(7,true);
+        mesh3.GetFaces().at(2).getSubelements().addSubelement(1,true);
+        mesh3.GetFaces().at(2).getSubelements().addSubelement(4,true);
+        mesh3.GetFaces().at(2).getSubelements().addSubelement(11,true);
+        mesh3.GetFaces().at(2).getSubelements().addSubelement(7,true);
         mesh3.GetFaces().push_back(3);
-        mesh3.GetFaces().at(3).GetSubelements().AddSubelement(3,true);
-        mesh3.GetFaces().at(3).GetSubelements().AddSubelement(6,true);
-        mesh3.GetFaces().at(3).GetSubelements().AddSubelement(10,true);
-        mesh3.GetFaces().at(3).GetSubelements().AddSubelement(7,true);
+        mesh3.GetFaces().at(3).getSubelements().addSubelement(3,true);
+        mesh3.GetFaces().at(3).getSubelements().addSubelement(6,true);
+        mesh3.GetFaces().at(3).getSubelements().addSubelement(10,true);
+        mesh3.GetFaces().at(3).getSubelements().addSubelement(7,true);
         mesh3.GetFaces().push_back(4);
-        mesh3.GetFaces().at(4).GetSubelements().AddSubelement(2,true);
-        mesh3.GetFaces().at(4).GetSubelements().AddSubelement(6,true);
-        mesh3.GetFaces().at(4).GetSubelements().AddSubelement(9,true);
-        mesh3.GetFaces().at(4).GetSubelements().AddSubelement(5,true);
+        mesh3.GetFaces().at(4).getSubelements().addSubelement(2,true);
+        mesh3.GetFaces().at(4).getSubelements().addSubelement(6,true);
+        mesh3.GetFaces().at(4).getSubelements().addSubelement(9,true);
+        mesh3.GetFaces().at(4).getSubelements().addSubelement(5,true);
         mesh3.GetFaces().push_back(5);
-        mesh3.GetFaces().at(5).GetSubelements().AddSubelement(8,true);
-        mesh3.GetFaces().at(5).GetSubelements().AddSubelement(9,true);
-        mesh3.GetFaces().at(5).GetSubelements().AddSubelement(10,true);
-        mesh3.GetFaces().at(5).GetSubelements().AddSubelement(11,true);
+        mesh3.GetFaces().at(5).getSubelements().addSubelement(8,true);
+        mesh3.GetFaces().at(5).getSubelements().addSubelement(9,true);
+        mesh3.GetFaces().at(5).getSubelements().addSubelement(10,true);
+        mesh3.GetFaces().at(5).getSubelements().addSubelement(11,true);
     DBGCHECK;
 
-        mesh3.GetFaces().at(0).SetNextBElem(1,0);
-        mesh3.GetFaces().at(1).SetNextBElem(2,0);
-        mesh3.GetFaces().at(2).SetNextBElem(3,0);
-        mesh3.GetFaces().at(3).SetNextBElem(4,0);
-        mesh3.GetFaces().at(4).SetNextBElem(5,0);
-        mesh3.GetFaces().at(5).SetNextBElem(0,0);
+        mesh3.GetFaces().at(0).setNextBElem(1,0);
+        mesh3.GetFaces().at(1).setNextBElem(2,0);
+        mesh3.GetFaces().at(2).setNextBElem(3,0);
+        mesh3.GetFaces().at(3).setNextBElem(4,0);
+        mesh3.GetFaces().at(4).setNextBElem(5,0);
+        mesh3.GetFaces().at(5).setNextBElem(0,0);
 
         mesh3.GetCells().push_back(0);
-        mesh3.GetCells().at(0).SetBoundaryElementIndex(3);
+        mesh3.GetCells().at(0).setBoundaryElementIndex(3);
     DBGCHECK;
 }
 
@@ -103,63 +103,63 @@ void twoPrisms(UnstructuredMesh<3, size_t, double, 6>& mesh3){
     DBGCHECK;
     size_t index = 0;
         mesh3.GetFaces().push_back(index);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(0,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(1,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(13,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(0,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(1,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(13,true);
         mesh3.GetFaces().push_back(++index);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(13,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(2,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(3,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(13,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(2,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(3,true);
         mesh3.GetFaces().push_back(++index);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(0,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(5,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(8,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(4,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(0,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(5,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(8,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(4,true);
         mesh3.GetFaces().push_back(++index);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(1,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(4,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(11,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(7,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(1,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(4,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(11,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(7,true);
         mesh3.GetFaces().push_back(++index);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(3,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(6,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(10,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(7,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(3,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(6,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(10,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(7,true);
         mesh3.GetFaces().push_back(++index);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(2,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(6,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(9,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(5,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(2,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(6,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(9,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(5,true);
         mesh3.GetFaces().push_back(++index);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(8,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(12,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(11,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(8,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(12,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(11,true);
         mesh3.GetFaces().push_back(++index);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(9,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(10,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(12,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(9,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(10,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(12,true);
         mesh3.GetFaces().push_back(++index);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(12,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(7,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(13,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(5,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(12,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(7,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(13,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(5,true);
     DBGCHECK;
 
-        mesh3.GetFaces().at(0).SetNextBElem(2,0);
-        mesh3.GetFaces().at(2).SetNextBElem(3,0);
-        mesh3.GetFaces().at(3).SetNextBElem(8,0);
-        mesh3.GetFaces().at(8).SetNextBElem(6,0);
-        mesh3.GetFaces().at(6).SetNextBElem(0,0);
+        mesh3.GetFaces().at(0).setNextBElem(2,0);
+        mesh3.GetFaces().at(2).setNextBElem(3,0);
+        mesh3.GetFaces().at(3).setNextBElem(8,0);
+        mesh3.GetFaces().at(8).setNextBElem(6,0);
+        mesh3.GetFaces().at(6).setNextBElem(0,0);
         mesh3.GetCells().push_back(0);
-        mesh3.GetCells().at(0).SetBoundaryElementIndex(0);
+        mesh3.GetCells().at(0).setBoundaryElementIndex(0);
 
-        mesh3.GetFaces().at(1).SetNextBElem(5,1);
-        mesh3.GetFaces().at(5).SetNextBElem(4,1);
-        mesh3.GetFaces().at(4).SetNextBElem(8,1);
-        mesh3.GetFaces().at(8).SetNextBElem(7,1);
-        mesh3.GetFaces().at(7).SetNextBElem(1,1);
+        mesh3.GetFaces().at(1).setNextBElem(5,1);
+        mesh3.GetFaces().at(5).setNextBElem(4,1);
+        mesh3.GetFaces().at(4).setNextBElem(8,1);
+        mesh3.GetFaces().at(8).setNextBElem(7,1);
+        mesh3.GetFaces().at(7).setNextBElem(1,1);
         mesh3.GetCells().push_back(1);
-        mesh3.GetCells().at(1).SetBoundaryElementIndex(1);
+        mesh3.GetCells().at(1).setBoundaryElementIndex(1);
 
     DBGCHECK;
 }
@@ -192,63 +192,63 @@ void twoDeformedPrisms(UnstructuredMesh<3, size_t, double, 6>& mesh3){
     DBGCHECK;
     size_t index = 0;
         mesh3.GetFaces().push_back(index);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(0,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(1,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(13,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(0,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(1,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(13,true);
         mesh3.GetFaces().push_back(++index);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(13,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(2,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(3,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(13,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(2,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(3,true);
         mesh3.GetFaces().push_back(++index);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(0,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(5,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(8,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(4,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(0,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(5,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(8,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(4,true);
         mesh3.GetFaces().push_back(++index);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(1,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(4,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(11,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(7,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(1,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(4,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(11,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(7,true);
         mesh3.GetFaces().push_back(++index);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(3,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(6,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(10,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(7,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(3,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(6,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(10,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(7,true);
         mesh3.GetFaces().push_back(++index);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(2,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(6,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(9,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(5,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(2,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(6,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(9,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(5,true);
         mesh3.GetFaces().push_back(++index);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(8,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(12,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(11,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(8,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(12,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(11,true);
         mesh3.GetFaces().push_back(++index);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(9,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(10,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(12,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(9,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(10,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(12,true);
         mesh3.GetFaces().push_back(++index);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(12,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(7,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(13,true);
-        mesh3.GetFaces().at(index).GetSubelements().AddSubelement(5,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(12,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(7,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(13,true);
+        mesh3.GetFaces().at(index).getSubelements().addSubelement(5,true);
     DBGCHECK;
 
-        mesh3.GetFaces().at(0).SetNextBElem(2,0);
-        mesh3.GetFaces().at(2).SetNextBElem(3,0);
-        mesh3.GetFaces().at(3).SetNextBElem(8,0);
-        mesh3.GetFaces().at(8).SetNextBElem(6,0);
-        mesh3.GetFaces().at(6).SetNextBElem(0,0);
+        mesh3.GetFaces().at(0).setNextBElem(2,0);
+        mesh3.GetFaces().at(2).setNextBElem(3,0);
+        mesh3.GetFaces().at(3).setNextBElem(8,0);
+        mesh3.GetFaces().at(8).setNextBElem(6,0);
+        mesh3.GetFaces().at(6).setNextBElem(0,0);
         mesh3.GetCells().push_back(0);
-        mesh3.GetCells().at(0).SetBoundaryElementIndex(0);
+        mesh3.GetCells().at(0).setBoundaryElementIndex(0);
 
-        mesh3.GetFaces().at(1).SetNextBElem(5,1);
-        mesh3.GetFaces().at(5).SetNextBElem(4,1);
-        mesh3.GetFaces().at(4).SetNextBElem(8,1);
-        mesh3.GetFaces().at(8).SetNextBElem(7,1);
-        mesh3.GetFaces().at(7).SetNextBElem(1,1);
+        mesh3.GetFaces().at(1).setNextBElem(5,1);
+        mesh3.GetFaces().at(5).setNextBElem(4,1);
+        mesh3.GetFaces().at(4).setNextBElem(8,1);
+        mesh3.GetFaces().at(8).setNextBElem(7,1);
+        mesh3.GetFaces().at(7).setNextBElem(1,1);
         mesh3.GetCells().push_back(1);
-        mesh3.GetCells().at(1).SetBoundaryElementIndex(1);
+        mesh3.GetCells().at(1).setBoundaryElementIndex(1);
 
     DBGCHECK;
 }
@@ -283,19 +283,19 @@ void testMesh2D() {
     for(size_t i = 0; i < 5; i++)
         mesh.GetFaces().at(i).SetIndex(i);
 
-    mesh.GetFaces().at(0).SetNextBElem(1,0);
-    mesh.GetFaces().at(1).SetNextBElem(2,0);
-    mesh.GetFaces().at(2).SetNextBElem(0,0);
+    mesh.GetFaces().at(0).setNextBElem(1,0);
+    mesh.GetFaces().at(1).setNextBElem(2,0);
+    mesh.GetFaces().at(2).setNextBElem(0,0);
 
-    mesh.GetFaces().at(2).SetNextBElem(3,1);
-    mesh.GetFaces().at(3).SetNextBElem(4,1);
-    mesh.GetFaces().at(4).SetNextBElem(2,1);
+    mesh.GetFaces().at(2).setNextBElem(3,1);
+    mesh.GetFaces().at(3).setNextBElem(4,1);
+    mesh.GetFaces().at(4).setNextBElem(2,1);
 
 
     mesh.GetCells().resize(2);
-    mesh.GetCells().at(0).SetBoundaryElementIndex(0);
+    mesh.GetCells().at(0).setBoundaryElementIndex(0);
     mesh.GetCells().at(0).SetIndex(0);
-    mesh.GetCells().at(1).SetBoundaryElementIndex(2);
+    mesh.GetCells().at(1).setBoundaryElementIndex(2);
     mesh.GetCells().at(1).SetIndex(1);
 
     mesh.InitializeCenters();
@@ -307,18 +307,18 @@ void testMesh2D() {
 
     DBGMSG("cell boundary iterator test");
 
-    for(auto i : cell.GetSubelements()){
+    for(auto i : cell.getSubelements()){
         DBGVAR(i)
     }
 
 
-    for(auto i : mesh.GetElement<2>(1).GetSubelements()){
+    for(auto i : mesh.GetElement<2>(1).getSubelements()){
         DBGVAR(i)
     }
 
     DBGMSG("cell vertices using iterator");
     for(size_t i = 0; i < mesh.GetCells().size(); i++){
-        for(auto j : mesh.GetElement<2>(i).GetSubelements()){
+        for(auto j : mesh.GetElement<2>(i).getSubelements()){
             auto e = mesh.GetElement<1>(j);
             DBGVAR(e.GetElement().GetVertexAIndex(), e.GetElement().GetVertexBIndex())
         }
@@ -387,25 +387,25 @@ void testMesh3D() {
     using sit3 = UnstructuredMesh<3, size_t, double, 6>;
     UnstructuredMesh<3, size_t, double, 6> mesh3;
     twoPrisms(mesh3);
-    size_t tmp_face = mesh3.GetCells().at(0).GetBoundaryElementIndex();
+    size_t tmp_face = mesh3.GetCells().at(0).getBoundaryElementIndex();
 
     do {
         DBGVAR(tmp_face)
-        for (auto& sube : mesh3.GetFaces().at(tmp_face).GetSubelements()) {
+        for (auto& sube : mesh3.GetFaces().at(tmp_face).getSubelements()) {
             DBGVAR(sube.index)
             if (sube.index != INVALID_INDEX(size_t) ){
                 DBGVAR(sube.index, mesh3.GetVertices().at(mesh3.GetEdges().at(sube.index).GetVertexAIndex()),mesh3.GetVertices().at(mesh3.GetEdges().at(sube.index).GetVertexBIndex()))
             }
         }
 
-        tmp_face = mesh3.GetFaces().at(tmp_face).GetNextBElem(0);
-    } while (tmp_face != mesh3.GetCells().at(0).GetBoundaryElementIndex());
+        tmp_face = mesh3.GetFaces().at(tmp_face).getNextBElem(0);
+    } while (tmp_face != mesh3.GetCells().at(0).getBoundaryElementIndex());
 //    mesh3.GetElements<0>().at(0).;
 
 
     DBGMSG("Iterator wrapper test");
     sit3::MeshElementWrap<2> elem(&mesh3, mesh3.GetFaces().at(0));
-    for(auto i : elem.GetSubelements()){
+    for(auto i : elem.getSubelements()){
         DBGVAR(i.index)
     }
 
@@ -434,13 +434,13 @@ void testMesh3D() {
     auto centers = ComputeCenters(mesh3);
 
     for(auto& face : mesh3.GetFaces()) {
-        face.SetCenter(centers.template GetDataDim<2>().at(face.GetIndex()));
-        DBGVAR(face.GetCenter())
+        face.setCenter(centers.template GetDataDim<2>().at(face.GetIndex()));
+        DBGVAR(face.getCenter())
     }
     DBGMSG("cellCenter");
     for(auto& cell : mesh3.GetCells()) {
-        cell.SetCenter(centers.template GetDataDim<3>().at(cell.GetIndex()));
-        DBGVAR(cell.GetCenter())
+        cell.setCenter(centers.template GetDataDim<3>().at(cell.GetIndex()));
+        DBGVAR(cell.getCenter())
     }
 
     DBGMSG("measure computation");
@@ -517,13 +517,13 @@ void test3DMeshDeformedPrisms() {
     auto centers = ComputeCenters(mesh3);
 
     for(auto& face : mesh3.GetFaces()) {
-        face.SetCenter(centers[face]);
-        DBGVAR(face.GetCenter())
+        face.setCenter(centers[face]);
+        DBGVAR(face.getCenter())
     }
     DBGMSG("cellCenter");
     for(auto& cell : mesh3.GetCells()) {
-        cell.SetCenter(centers[cell]);
-        DBGVAR(cell.GetCenter())
+        cell.setCenter(centers[cell]);
+        DBGVAR(cell.getCenter())
     }
 
     DBGMSG("measure computation");

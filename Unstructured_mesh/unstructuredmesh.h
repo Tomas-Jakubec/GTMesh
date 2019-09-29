@@ -14,10 +14,10 @@ public:
         auto centers = ComputeCenters(*this);
 
         for (auto& face : this->GetFaces()){
-            face.SetCenter(centers[face]);
+            face.setCenter(centers[face]);
         }
         for (auto& cell : this->GetCells()){
-            cell.SetCenter(centers[cell]);
+            cell.setCenter(centers[cell]);
         }
     }
 

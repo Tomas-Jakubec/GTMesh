@@ -61,12 +61,12 @@ class SubelementContainer : public std::array<Subelement<IndexType>, Reserve>{
     unsigned char numberOfElements = 0;
 
 public:
-    unsigned char GetNumberOfSubElements(){
+    unsigned char getNumberOfSubElements(){
         return numberOfElements;
     }
 
 
-    void AddSubelement(IndexType index, bool isLeft) {
+    void addSubelement(IndexType index, bool isLeft) {
         if (numberOfElements < Reserve){
             this->at(numberOfElements).index = index;
             this->at(numberOfElements).isLeft = isLeft;
@@ -79,7 +79,7 @@ public:
 
     }
 
-    void RemoveSubelement(unsigned char atIndex){
+    void removeSubelement(unsigned char atIndex){
         if (atIndex < numberOfElements){
             for(unsigned char i = atIndex; i < numberOfElements - 1; i++){
                 this->at(i) = this->at(i+1);
@@ -94,11 +94,11 @@ public:
     }
 
     typename std::array<Subelement<IndexType>, Reserve>::iterator end(){
-        return this->begin() + GetNumberOfSubElements();
+        return this->begin() + getNumberOfSubElements();
     }
 
     typename std::array<Subelement<IndexType>, Reserve>::const_iterator cend(){
-        return this->cbegin() + GetNumberOfSubElements();
+        return this->cbegin() + getNumberOfSubElements();
     }
 };
 
@@ -118,11 +118,11 @@ class MeshElement : public MeshElementBase<IndexType>,
     SubelementContainer<IndexType, Reserve> subelements;
 public:
 
-    SubelementContainer<IndexType, Reserve>& GetSubelements(){
+    SubelementContainer<IndexType, Reserve>& getSubelements(){
         return subelements;
     }
 
-    const SubelementContainer<IndexType, Reserve>& GetSubelements() const {
+    const SubelementContainer<IndexType, Reserve>& getSubelements() const {
         return subelements;
     }
 
@@ -221,11 +221,11 @@ public:
 
     }
 
-    IndexType GetBoundaryElementIndex(){
+    IndexType getBoundaryElementIndex(){
         return boundaryElementIndex;
     }
 
-    void SetBoundaryElementIndex(IndexType index){
+    void setBoundaryElementIndex(IndexType index){
         boundaryElementIndex = index;
     }
 
@@ -346,7 +346,7 @@ public:
 
     void SetupBoundaryCellsCenters() {
         for(Cell& cell : BoundaryCells){
-            cell.SetCenter(GetFaces().at(cell.GetBoundaryElementIndex()).GetCenter());
+            cell.SetCenter(GetFaces().at(cell.getBoundaryElementIndex()).GetCenter());
         }
     }
 
@@ -363,8 +363,8 @@ public:
             actual = firstBElem;
             this->parentMesh = parentMesh;
         }
-        CellSubelementIterator& operator++ () {actual = parentMesh->GetFaces().at(actual).GetNextBElem(cellIndex) == firstBElem ? INVALID_INDEX(IndexType) : parentMesh->GetFaces().at(actual).GetNextBElem(cellIndex); return *this;}
-        CellSubelementIterator& operator++ (int) {actual = parentMesh->GetFaces().at(actual).GetNextBElem(cellIndex) == firstBElem ? INVALID_INDEX(IndexType) : parentMesh->GetFaces().at(actual).GetNextBElem(cellIndex); return *this;}
+        CellSubelementIterator& operator++ () {actual = parentMesh->GetFaces().at(actual).getNextBElem(cellIndex) == firstBElem ? INVALID_INDEX(IndexType) : parentMesh->GetFaces().at(actual).getNextBElem(cellIndex); return *this;}
+        CellSubelementIterator& operator++ (int) {actual = parentMesh->GetFaces().at(actual).getNextBElem(cellIndex) == firstBElem ? INVALID_INDEX(IndexType) : parentMesh->GetFaces().at(actual).getNextBElem(cellIndex); return *this;}
         IndexType operator* (){return actual;}
         bool operator== (CellSubelementIterator& it) {return actual == it.actual;}
         bool operator!= (CellSubelementIterator& it) {return actual != it.actual;}
@@ -380,7 +380,7 @@ public:
         }
 
         CellSubelementIterator begin() {
-            return CellSubelementIterator(cellIndex, parentMesh->GetCells()[cellIndex].GetBoundaryElementIndex(), parentMesh);
+            return CellSubelementIterator(cellIndex, parentMesh->GetCells()[cellIndex].getBoundaryElementIndex(), parentMesh);
         }
 
         CellSubelementIterator end() {
@@ -408,8 +408,8 @@ public:
             return elementIndex;
         }
 
-        SubelementContainer<IndexType, reserve<ElementDim>()>& GetSubelements(){
-            return parentMesh->template GetElements<ElementDim>()[elementIndex].GetSubelements();
+        SubelementContainer<IndexType, reserve<ElementDim>()>& getSubelements(){
+            return parentMesh->template GetElements<ElementDim>()[elementIndex].getSubelements();
         }
     };
 
@@ -433,7 +433,7 @@ public:
             return elementIndex;
         }
 
-        CellSubelements GetSubelements(){
+        CellSubelements getSubelements(){
             return CellSubelements(parentMesh, elementIndex);
         }
     };

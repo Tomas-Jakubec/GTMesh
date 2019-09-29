@@ -23,7 +23,7 @@ public:
 
     Vector<Dim, Real>& operator =(std::initializer_list<Real> l);
 
-    void SetCoordinate(Real coord, unsigned int pos){
+    void setCoordinate(Real coord, unsigned int pos){
         Coordinates[pos] = coord;
     }
 
@@ -35,9 +35,9 @@ public:
         return Coordinates[pos];
     }
 
-    Real NormEukleid();
+    Real normEukleid();
 
-    inline Real SumOfSquares() {
+    inline Real sumOfSquares() {
         return  inlineScalarProduct<Dim, Real>::computation(Coordinates, Coordinates);
     }
 
@@ -90,7 +90,7 @@ Vector<Dim, Real>& Vector<Dim, Real>::operator =(std::initializer_list<Real> l){
 }
 
 template <typename Real>
-Vector<3, Real> VectorProduct(const Vector<3, Real>& v1, const Vector<3, Real>& v2){
+Vector<3, Real> vectorProduct(const Vector<3, Real>& v1, const Vector<3, Real>& v2){
     Vector<3,Real> res = {};
     res[0] = v1[1]*v2[2] - v1[2]*v2[1];
     res[1] = v1[2]*v2[0] - v1[0]*v2[2];
@@ -105,8 +105,8 @@ Vector<3, Real> VectorProduct(const Vector<3, Real>& v1, const Vector<3, Real>& 
 ** Calculates the Eucleid norm of the point
 */
 template <unsigned int Dim, typename Real>
-Real Vector<Dim, Real>::NormEukleid(){
-    return sqrt(SumOfSquares());
+Real Vector<Dim, Real>::normEukleid(){
+    return sqrt(sumOfSquares());
 }
 
 

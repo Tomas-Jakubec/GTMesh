@@ -6,32 +6,32 @@ template <unsigned int MeshDim, typename Real>
 class ComputationallySignificantElement
 {
 protected:
-    Vertex<MeshDim, Real> Center;
-    int Flag;
+    Vertex<MeshDim, Real> center;
+    int flag;
 public:
     ComputationallySignificantElement() {
-        Center = {};
-        Flag = int();
+        center = {};
+        flag = int();
     }
 
-    Vertex<MeshDim, Real>& GetCenter(){
-        return Center;
+    Vertex<MeshDim, Real>& getCenter(){
+        return center;
     }
 
-    const Vertex<MeshDim, Real>& GetCenter() const {
-        return Center;
+    const Vertex<MeshDim, Real>& getCenter() const {
+        return center;
     }
 
-    void SetCenter(const Vertex<MeshDim, Real>& v) {
-        Center = v;
+    void setCenter(const Vertex<MeshDim, Real>& v) {
+        center = v;
     }
 
-    int& GetFlag() {
-        return Flag;
+    int& getFlag() {
+        return flag;
     }
 
-    const int& GetFlag() const {
-        return Flag;
+    const int& getFlag() const {
+        return flag;
     }
 };
 
