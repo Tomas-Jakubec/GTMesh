@@ -10,7 +10,7 @@ template <unsigned int Dimension, typename IndexType, typename Real, unsigned in
 class UnstructuredMesh : public MeshElements<Dimension, IndexType, Real, Reserve...>{
 
 public:
-    void InitializeCenters(){
+    void initializeCenters(){
         auto centers = ComputeCenters(*this);
 
         for (auto& face : this->getFaces()){
@@ -21,11 +21,11 @@ public:
         }
     }
 
-    MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, Dimension>> ComputeElementMeasures() {
+    MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, Dimension>> computeElementMeasures() {
         return ComputeMeasures(*this);
     }
 
-    MeshDataContainer<Vector<Dimension, Real>, Dimension-1> ComputeFaceNormals() {
+    MeshDataContainer<Vector<Dimension, Real>, Dimension-1> computeFaceNormals() {
         return ::ComputeFaceNormals(*this);
     }
 
@@ -38,7 +38,7 @@ public:
     }
   */
 public:
-    Real ComputeCellDist(IndexType cellIndex1, IndexType cellIndex2){
+    Real computeCellDist(IndexType cellIndex1, IndexType cellIndex2){
         return (this->getCells().at(cellIndex1).GetCenter() - this->getCells().at(cellIndex2).GetCenter()).NormEukleid();
     }
 };

@@ -11,9 +11,9 @@
 template <unsigned int Dim, typename Real = double>
 class Vector {
     /**
-     * @brief Coordinates
+     * @brief coordinates
      */
-    Real Coordinates[Dim] = {};
+    Real coordinates[Dim] = {};
 
 public:
     Vector(){}
@@ -24,21 +24,21 @@ public:
     Vector<Dim, Real>& operator =(std::initializer_list<Real> l);
 
     void setCoordinate(Real coord, unsigned int pos){
-        Coordinates[pos] = coord;
+        coordinates[pos] = coord;
     }
 
     Real& operator[](unsigned int pos){
-        return Coordinates[pos];
+        return coordinates[pos];
     }
 
     const Real& operator[](unsigned int pos) const {
-        return Coordinates[pos];
+        return coordinates[pos];
     }
 
     Real normEukleid();
 
     inline Real sumOfSquares() {
-        return  inlineScalarProduct<Dim, Real>::computation(Coordinates, Coordinates);
+        return  inlineScalarProduct<Dim, Real>::computation(coordinates, coordinates);
     }
 
     Vector<Dim, Real> operator-(const Vector<Dim, Real>&) const;
@@ -75,7 +75,7 @@ Vector<Dim, Real>& Vector<Dim, Real>::operator =(std::initializer_list<Real> l){
 
     for(Real x : l){
         if (i < Dim){
-            Coordinates[i] = x;
+            coordinates[i] = x;
         }else{
             break;
         }
@@ -83,7 +83,7 @@ Vector<Dim, Real>& Vector<Dim, Real>::operator =(std::initializer_list<Real> l){
     }
     if (i < Dim){
         for (; i < Dim; i++) {
-            Coordinates[i] = Real();
+            coordinates[i] = Real();
         }
     }
     return *this;
@@ -119,7 +119,7 @@ Real Vector<Dim, Real>::normEukleid(){
 template <unsigned int Dim, typename Real>
 Vector<Dim, Real> Vector<Dim, Real>::operator -(const Vector<Dim, Real>& v) const {
     Vector<Dim, Real> res;
-    inlineSubtraction<Dim, Real>::computation(res.Coordinates, this->Coordinates, v.Coordinates);
+    inlineSubtraction<Dim, Real>::computation(res.coordinates, this->coordinates, v.coordinates);
     return res;
 }
 
@@ -127,7 +127,7 @@ Vector<Dim, Real> Vector<Dim, Real>::operator -(const Vector<Dim, Real>& v) cons
 template <unsigned int Dim, typename Real>
 Vector<Dim, Real> Vector<Dim, Real>::operator +(const Vector<Dim, Real>& v) const {
     Vector<Dim, Real> res;
-    inlineAddition<Dim, Real>::computation(res.Coordinates, this->Coordinates, v.Coordinates);
+    inlineAddition<Dim, Real>::computation(res.coordinates, this->coordinates, v.coordinates);
     return res;
 }
 
@@ -135,7 +135,7 @@ Vector<Dim, Real> Vector<Dim, Real>::operator +(const Vector<Dim, Real>& v) cons
 template <unsigned int Dim, typename Real>
 Vector<Dim, Real> Vector<Dim, Real>::operator *(const Real& x) const {
     Vector<Dim, Real> res;
-    inlineMultiplication<Dim, Real>::computation(res.Coordinates, this->Coordinates, x);
+    inlineMultiplication<Dim, Real>::computation(res.coordinates, this->coordinates, x);
     return res;
 }
 
@@ -152,20 +152,20 @@ Vector<Dim, Real> Vector<Dim, Real>::operator /(const Real& x) const {
 template<unsigned int Dim, typename Real>
 Real Vector<Dim, Real>::operator*(const Vector &v)
 {
-    return inlineScalarProduct<Dim, Real>::computation(Coordinates, v.Coordinates);
+    return inlineScalarProduct<Dim, Real>::computation(coordinates, v.coordinates);
 }
 
 // Adds value of coordinates of another Point
 template <unsigned int Dim, typename Real>
 Vector<Dim, Real>& Vector<Dim, Real>::operator +=(const Vector<Dim, Real>& v){
-    inlineAddition<Dim, Real>::computation(Coordinates, v.Coordinates);
+    inlineAddition<Dim, Real>::computation(coordinates, v.coordinates);
     return *this;
 }
 
 // Subtracts value of coordinates of another Point
 template <unsigned int Dim, typename Real>
 Vector<Dim, Real>& Vector<Dim, Real>::operator -=(const Vector<Dim, Real>& v){
-    inlineSubtraction<Dim, Real>::computation(Coordinates, v.Coordinates);
+    inlineSubtraction<Dim, Real>::computation(coordinates, v.coordinates);
     return *this;
 }
 
@@ -173,7 +173,7 @@ Vector<Dim, Real>& Vector<Dim, Real>::operator -=(const Vector<Dim, Real>& v){
 // Adds value of coordinates of another Point
 template <unsigned int Dim, typename Real>
 Vector<Dim, Real>& Vector<Dim, Real>::operator *=(const Real& x){
-    inlineMultiplication<Dim, Real>::computation(Coordinates, x);
+    inlineMultiplication<Dim, Real>::computation(coordinates, x);
     return *this;
 }
 

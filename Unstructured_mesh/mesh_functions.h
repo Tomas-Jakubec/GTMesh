@@ -34,8 +34,8 @@ struct _ComputeCenters{
             MakeMeshDataContainer_t<Vertex<Dimension, Real>, make_custom_integer_sequence_t<unsigned int, 1, Dimension>>& centers,
             MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
 
-        auto& elemCenters = centers.template GetDataDim<dim>();
-        auto& subElemCenters = centers.template GetDataDim<dim - 1>();
+        auto& elemCenters = centers.template getDataByDim<dim>();
+        auto& subElemCenters = centers.template getDataByDim<dim - 1>();
 
 
         for (IndexType i = 0; i < mesh.template getElements<dim>().size(); i++) {
@@ -60,8 +60,8 @@ struct _ComputeCenters<Dimension, Dimension>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
     static void compute(MakeMeshDataContainer_t<Vertex<Dimension, Real>, make_custom_integer_sequence_t<unsigned int, 1, Dimension>>& centers,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
 
-        auto& elemCenters = centers.template GetDataDim<Dimension>();
-        auto& subElemCenters = centers.template GetDataDim<Dimension - 1>();
+        auto& elemCenters = centers.template getDataByDim<Dimension>();
+        auto& subElemCenters = centers.template getDataByDim<Dimension - 1>();
 
 
         for (IndexType i = 0; i < mesh.template getElements<Dimension>().size(); i++) {
@@ -89,7 +89,7 @@ struct _ComputeCenters<1, Dimension>{
             MakeMeshDataContainer_t<Vertex<Dimension, Real>, make_custom_integer_sequence_t<unsigned int, 1, Dimension>>& centers,
             MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
 
-        std::vector<Vertex<Dimension, Real>>& edgeCenters = centers.template GetDataDim<1>();
+        std::vector<Vertex<Dimension, Real>>& edgeCenters = centers.template getDataByDim<1>();
 
         for (auto& edge : mesh.template getElements<1>()) {
 
@@ -152,7 +152,7 @@ struct _ComputeMeasures<3, 3>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
     static void compute(MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, 3>>& measures,MeshElements<3, IndexType, Real, Reserve...>& mesh){
 
-        auto& cellMeasures = measures.template GetDataDim<3>();
+        auto& cellMeasures = measures.template getDataByDim<3>();
 
         for (typename MeshElements<3, IndexType, Real, Reserve...>::template ElementType<3>& cell : mesh.getCells()) {
             IndexType tmpFace = cell.getBoundaryElementIndex();
@@ -188,7 +188,7 @@ struct _ComputeMeasures<3, 3>{
 
                 Real distance = (vAmcC + (vBmA * param_t) + (vCmA * param_s)).normEukleid();
 
-                Real tmp = distance * measures.template GetDataDim<2>().at(tmpFace);
+                Real tmp = distance * measures.template getDataByDim<2>().at(tmpFace);
                 measure += tmp / 3.0;
 
                 tmpFace = mesh.getFaces().at(tmpFace).getNextBElem(cell.getIndex());
@@ -204,7 +204,7 @@ struct _ComputeMeasures<2, 2>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
     static void compute(MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, 2>>& measures,MeshElements<2, IndexType, Real, Reserve...>& mesh){
 
-        auto& surfaceMeasures = measures.template GetDataDim<2>();
+        auto& surfaceMeasures = measures.template getDataByDim<2>();
 
         for (typename MeshElements<2, IndexType, Real, Reserve...>::template ElementType<2>& cell : mesh.getCells()) {
             IndexType tmpEdge = cell.getBoundaryElementIndex();
@@ -232,7 +232,7 @@ struct _ComputeMeasures<2, 3>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
     static void compute(MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, 3>>& measures,MeshElements<3, IndexType, Real, Reserve...>& mesh){
 
-        auto& surfaceMeasures = measures.template GetDataDim<2>();
+        auto& surfaceMeasures = measures.template getDataByDim<2>();
 
         for (typename MeshElements<3, IndexType, Real, Reserve...>::template ElementType<2>& face : mesh.template getElements<2>()) {
 
@@ -249,7 +249,7 @@ struct _ComputeMeasures<2, 3>{
 
                 distance = (a-faceCenter+(b-a)*param).normEukleid();
 
-                Real tmp = distance * measures.template GetDataDim<1>().at(sube.index);
+                Real tmp = distance * measures.template getDataByDim<1>().at(sube.index);
                 measure += tmp * 0.5;
             }
             surfaceMeasures.at(face.getIndex()) = measure;
@@ -269,7 +269,7 @@ struct _ComputeMeasures<1, Dimension>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
     static void compute(MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, Dimension>>& measures,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
 
-        auto& edgeLengths = measures.template GetDataDim<1>();
+        auto& edgeLengths = measures.template getDataByDim<1>();
 
         for (auto& edge : mesh.getEdges()) {
             edgeLengths.at(edge.getIndex()) = (mesh.getVertices().at(edge.getVertexAIndex()) -
@@ -550,7 +550,7 @@ struct MeshConnections {
             ) {
         MeshDataContainer<std::set<IndexType>, StartDim> result(mesh);
         MeshApply<StartDim, TargetDim, MeshDimension>::apply(mesh, [&result](unsigned int, unsigned int, IndexType ori, IndexType element){
-            result.template GetDataPos<0>().at(ori).insert(element);
+            result.template getDataByPos<0>().at(ori).insert(element);
         });
 
         return result;
@@ -579,7 +579,7 @@ struct MeshColouring {
                     startElement.getIndex(),
                     startElement.getIndex(),
                     [&possibleColours, &attachedColours](unsigned int, unsigned int, IndexType, IndexType element){
-                        DBGTRY(possibleColours &= !attachedColours.template GetDataPos<0>().at(element);)
+                        DBGTRY(possibleColours &= !attachedColours.template getDataByPos<0>().at(element);)
                     }
                 );
 
@@ -588,13 +588,13 @@ struct MeshColouring {
             while (!possibleColours[selectedColour]) {
                 selectedColour++;
             }
-            result.template GetDataPos<0>().at(startElement.getIndex()) = selectedColour;
+            result.template getDataByPos<0>().at(startElement.getIndex()) = selectedColour;
             MeshRun<FromDim, FromDim, ToDim, MeshDimension, false, true>::
                 run(mesh,
                     startElement.getIndex(),
                     startElement.getIndex(),
                     [selectedColour, &attachedColours](unsigned int, unsigned int, IndexType, IndexType element){
-                        DBGTRY(attachedColours.template GetDataPos<0>().at(element)[selectedColour] = true;)
+                        DBGTRY(attachedColours.template getDataByPos<0>().at(element)[selectedColour] = true;)
                     }
                 );
         }
@@ -621,7 +621,7 @@ struct MeshColouring <FromDim, ToDim, false> {
             std::valarray<bool> possibleColours(true,reserve);
             for (IndexType element : connections.at(startElement)){
 
-                DBGTRY(possibleColours &= !attachedColours.template GetDataPos<0>().at(element);)
+                DBGTRY(possibleColours &= !attachedColours.template getDataByPos<0>().at(element);)
 
             }
 
@@ -630,10 +630,10 @@ struct MeshColouring <FromDim, ToDim, false> {
                 selectedColour++;
             }
 
-            result.template GetDataPos<0>().at(startElement.getIndex()) = selectedColour;
+            result.template getDataByPos<0>().at(startElement.getIndex()) = selectedColour;
 
             for (IndexType element : connections.at(startElement)){
-                DBGTRY(attachedColours.template GetDataPos<0>().at(element)[selectedColour] = true;)
+                DBGTRY(attachedColours.template getDataByPos<0>().at(element)[selectedColour] = true;)
             }
         }
         return result;

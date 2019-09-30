@@ -298,7 +298,7 @@ void testMesh2D() {
     mesh.getCells().at(1).setBoundaryElementIndex(2);
     mesh.getCells().at(1).setIndex(1);
 
-    mesh.InitializeCenters();
+    mesh.initializeCenters();
 
 
 
@@ -339,26 +339,26 @@ void testMesh2D() {
 
     auto centers = ComputeCenters(mesh);
 
-    auto& faceCent = centers.GetDataDim<1>();
+    auto& faceCent = centers.getDataByDim<1>();
     for(auto& center : faceCent) {
         DBGVAR(center)
     }
     DBGMSG("cellCenter");
     for(sit::Cell& cell : mesh.getCells()){
-        DBGVAR(centers.GetDataDim<2>().at(cell.getIndex()))
+        DBGVAR(centers.getDataByDim<2>().at(cell.getIndex()))
     }
 
 
     DBGMSG("computing measures");
 
-    auto measures = mesh.ComputeElementMeasures();
+    auto measures = mesh.computeElementMeasures();
 
 
-    for(double edgeM :measures.GetDataDim<1>()) {
+    for(double edgeM :measures.getDataByDim<1>()) {
         DBGVAR(edgeM)
     }
 
-    for(double cellM :measures.GetDataDim<2>()) {
+    for(double cellM :measures.getDataByDim<2>()) {
         DBGVAR(cellM)
     }
 
@@ -418,12 +418,12 @@ void testMesh3D() {
     MakeMeshDataContainer_t<double, make_custom_integer_sequence_t<unsigned int, 0,3>> cont1(mesh3);
 
 
-    //cont.GetDataDim<3>().resize(20);
-    DBGVAR(cont.GetDataPos<1>().size())
+    //cont.getDataByDim<3>().resize(20);
+    DBGVAR(cont.getDataByPos<1>().size())
 
-    DBGVAR(cont.GetDataPos<0>().size())
+    DBGVAR(cont.getDataByPos<0>().size())
 
-    DBGVAR(cont.GetDataDim<3>().size())
+    DBGVAR(cont.getDataByDim<3>().size())
 
 
     DBGMSG("faceCenters");
@@ -434,33 +434,33 @@ void testMesh3D() {
     auto centers = ComputeCenters(mesh3);
 
     for(auto& face : mesh3.getFaces()) {
-        face.setCenter(centers.template GetDataDim<2>().at(face.getIndex()));
+        face.setCenter(centers.template getDataByDim<2>().at(face.getIndex()));
         DBGVAR(face.getCenter())
     }
     DBGMSG("cellCenter");
     for(auto& cell : mesh3.getCells()) {
-        cell.setCenter(centers.template GetDataDim<3>().at(cell.getIndex()));
+        cell.setCenter(centers.template getDataByDim<3>().at(cell.getIndex()));
         DBGVAR(cell.getCenter())
     }
 
     DBGMSG("measure computation");
 
     auto measures = ComputeMeasures(mesh3);
-    for(double edgeM : measures.GetDataDim<1>()) {
+    for(double edgeM : measures.getDataByDim<1>()) {
         DBGVAR(edgeM)
     }
-    for(double faceM : measures.GetDataDim<2>()) {
+    for(double faceM : measures.getDataByDim<2>()) {
         DBGVAR(faceM)
     }
 
-    for(double cellM : measures.GetDataDim<3>()) {
+    for(double cellM : measures.getDataByDim<3>()) {
         DBGVAR(cellM)
     }
 
 
     DBGMSG("2D normals test");
 
-    auto normals = mesh3.ComputeFaceNormals();
+    auto normals = mesh3.computeFaceNormals();
     for(auto& face : mesh3.getFaces()){
         DBGVAR(face.getIndex(),normals.at(face))
     }
@@ -529,14 +529,14 @@ void test3DMeshDeformedPrisms() {
     DBGMSG("measure computation");
 
     auto measures = ComputeMeasures(mesh3);
-    for(double edgeM : measures.GetDataDim<1>()) {
+    for(double edgeM : measures.getDataByDim<1>()) {
         DBGVAR(edgeM)
     }
-    for(double faceM : measures.GetDataDim<2>()) {
+    for(double faceM : measures.getDataByDim<2>()) {
         DBGVAR(faceM)
     }
 
-    for(double cellM : measures.GetDataDim<3>()) {
+    for(double cellM : measures.getDataByDim<3>()) {
         DBGVAR(cellM)
     }
 }
@@ -557,7 +557,7 @@ void testMeshDataContainer() {
 
 
 
-    for(auto& c : container.GetDataDim<0>()) {
+    for(auto& c : container.getDataByDim<0>()) {
         c=42;
     }
 
@@ -567,19 +567,19 @@ void testMeshDataContainer() {
 
     MeshDataContainer<std::tuple<int, double, char, int>, 3, 2, 0, 2> containerIni(mesh3,3, 42.15, 'a', 15);
 
-    for (auto& val : containerIni.GetDataPos<0>()){
+    for (auto& val : containerIni.getDataByPos<0>()){
         DBGVAR(val)
     }
 
-    for (auto& val : containerIni.GetDataPos<1>()){
+    for (auto& val : containerIni.getDataByPos<1>()){
         DBGVAR(val)
     }
 
-    for (auto& val : containerIni.GetDataPos<2>()){
+    for (auto& val : containerIni.getDataByPos<2>()){
         DBGVAR(val)
     }
 
-    for (auto& val : containerIni.GetDataPos<3>()){
+    for (auto& val : containerIni.getDataByPos<3>()){
         DBGVAR(val)
     }
 }
