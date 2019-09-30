@@ -13,10 +13,10 @@ public:
     void InitializeCenters(){
         auto centers = ComputeCenters(*this);
 
-        for (auto& face : this->GetFaces()){
+        for (auto& face : this->getFaces()){
             face.setCenter(centers[face]);
         }
-        for (auto& cell : this->GetCells()){
+        for (auto& cell : this->getCells()){
             cell.setCenter(centers[cell]);
         }
     }
@@ -32,14 +32,14 @@ public:
 /*
     Real CalculateFaceMeasureOverCellDist(IndexType edgeIndex, MeshDataContainer){
 
-        const auto& edge = this->GetEdges().at(edgeIndex);
+        const auto& edge = this->getEdges().at(edgeIndex);
         return CalculateEdgeMeasure(edgeIndex) / CalculateCellDist(edge.GetCellLeftIndex(), edge.GetCellRightIndex());
 
     }
   */
 public:
     Real ComputeCellDist(IndexType cellIndex1, IndexType cellIndex2){
-        return (this->GetCells().at(cellIndex1).GetCenter() - this->GetCells().at(cellIndex2).GetCenter()).NormEukleid();
+        return (this->getCells().at(cellIndex1).GetCenter() - this->getCells().at(cellIndex2).GetCenter()).NormEukleid();
     }
 };
 

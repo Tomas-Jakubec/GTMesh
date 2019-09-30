@@ -38,8 +38,8 @@ struct _ComputeCenters{
         auto& subElemCenters = centers.template GetDataDim<dim - 1>();
 
 
-        for (IndexType i = 0; i < mesh.template GetElements<dim>().size(); i++) {
-            auto& element = mesh.template GetElements<dim>().at(i);
+        for (IndexType i = 0; i < mesh.template getElements<dim>().size(); i++) {
+            auto& element = mesh.template getElements<dim>().at(i);
 
             Real subElemCnt = 0;
             for(auto& sub : element.getSubelements()){
@@ -64,15 +64,15 @@ struct _ComputeCenters<Dimension, Dimension>{
         auto& subElemCenters = centers.template GetDataDim<Dimension - 1>();
 
 
-        for (IndexType i = 0; i < mesh.template GetElements<Dimension>().size(); i++) {
-            auto& element = mesh.template GetElements<Dimension>().at(i);
+        for (IndexType i = 0; i < mesh.template getElements<Dimension>().size(); i++) {
+            auto& element = mesh.template getElements<Dimension>().at(i);
 
             Real subElemCnt = 0;
             IndexType tmpFaceIndex = element.getBoundaryElementIndex();
             do {
                 elemCenters.at(i) +=  subElemCenters.at(tmpFaceIndex);
                 subElemCnt++;
-                tmpFaceIndex = mesh.GetFaces()[tmpFaceIndex].getNextBElem(i);
+                tmpFaceIndex = mesh.getFaces()[tmpFaceIndex].getNextBElem(i);
             } while (tmpFaceIndex != element.getBoundaryElementIndex());
 
             elemCenters.at(i) /= subElemCnt;
@@ -91,10 +91,10 @@ struct _ComputeCenters<1, Dimension>{
 
         std::vector<Vertex<Dimension, Real>>& edgeCenters = centers.template GetDataDim<1>();
 
-        for (auto& edge : mesh.template GetElements<1>()) {
+        for (auto& edge : mesh.template getElements<1>()) {
 
-            edgeCenters.at(edge.GetIndex()) = (mesh.template GetElements<0>().at(edge.GetVertexAIndex()) +
-                                mesh.template GetElements<0>().at(edge.GetVertexBIndex())) * 0.5;
+            edgeCenters.at(edge.getIndex()) = (mesh.template getElements<0>().at(edge.getVertexAIndex()) +
+                                mesh.template getElements<0>().at(edge.getVertexBIndex())) * 0.5;
         }
 
         DBGMSG("1");
@@ -154,23 +154,23 @@ struct _ComputeMeasures<3, 3>{
 
         auto& cellMeasures = measures.template GetDataDim<3>();
 
-        for (typename MeshElements<3, IndexType, Real, Reserve...>::template ElemType<3>::type& cell : mesh.GetCells()) {
+        for (typename MeshElements<3, IndexType, Real, Reserve...>::template ElementType<3>& cell : mesh.getCells()) {
             IndexType tmpFace = cell.getBoundaryElementIndex();
             Real measure = Real();
             Vertex<3,Real>& cellCenter = cell.getCenter();
 
             do {
                 // select 3 different vertices
-                IndexType vAIndex = mesh.GetEdges().at(mesh.GetFaces().at(tmpFace).getSubelements()[0].index).GetVertexAIndex();
-                IndexType vBIndex = mesh.GetEdges().at(mesh.GetFaces().at(tmpFace).getSubelements()[0].index).GetVertexBIndex();
-                IndexType vCIndex = mesh.GetEdges().at(mesh.GetFaces().at(tmpFace).getSubelements()[1].index).GetVertexAIndex();
+                IndexType vAIndex = mesh.getEdges().at(mesh.getFaces().at(tmpFace).getSubelements()[0].index).getVertexAIndex();
+                IndexType vBIndex = mesh.getEdges().at(mesh.getFaces().at(tmpFace).getSubelements()[0].index).getVertexBIndex();
+                IndexType vCIndex = mesh.getEdges().at(mesh.getFaces().at(tmpFace).getSubelements()[1].index).getVertexAIndex();
                 if(vCIndex == vAIndex || vCIndex == vBIndex) {
-                    vCIndex = mesh.GetEdges().at(mesh.GetFaces().at(tmpFace).getSubelements()[1].index).GetVertexBIndex();
+                    vCIndex = mesh.getEdges().at(mesh.getFaces().at(tmpFace).getSubelements()[1].index).getVertexBIndex();
                 }
 
-                Vertex<3,Real>& a = mesh.GetVertices().at(vAIndex);
-                Vertex<3,Real>& b = mesh.GetVertices().at(vBIndex);
-                Vertex<3,Real>& c = mesh.GetVertices().at(vCIndex);
+                Vertex<3,Real>& a = mesh.getVertices().at(vAIndex);
+                Vertex<3,Real>& b = mesh.getVertices().at(vBIndex);
+                Vertex<3,Real>& c = mesh.getVertices().at(vCIndex);
 
                 // preparing quiantities
                 Vertex<3,Real> vAmcC = (a-cellCenter);
@@ -191,10 +191,10 @@ struct _ComputeMeasures<3, 3>{
                 Real tmp = distance * measures.template GetDataDim<2>().at(tmpFace);
                 measure += tmp / 3.0;
 
-                tmpFace = mesh.GetFaces().at(tmpFace).getNextBElem(cell.GetIndex());
+                tmpFace = mesh.getFaces().at(tmpFace).getNextBElem(cell.getIndex());
             } while (tmpFace != cell.getBoundaryElementIndex());
 
-            cellMeasures.at(cell.GetIndex()) = measure;
+            cellMeasures.at(cell.getIndex()) = measure;
         }
     }
 };
@@ -206,21 +206,21 @@ struct _ComputeMeasures<2, 2>{
 
         auto& surfaceMeasures = measures.template GetDataDim<2>();
 
-        for (typename MeshElements<2, IndexType, Real, Reserve...>::template ElemType<2>::type& cell : mesh.GetCells()) {
+        for (typename MeshElements<2, IndexType, Real, Reserve...>::template ElementType<2>& cell : mesh.getCells()) {
             IndexType tmpEdge = cell.getBoundaryElementIndex();
             Real measure = Real();
             Vertex<2,Real>& cellCenter = cell.getCenter();
             do {
-                Vertex<2,Real>& a = mesh.GetVertices().at(mesh.GetEdges().at(tmpEdge).GetVertexAIndex());
-                Vertex<2,Real>& b = mesh.GetVertices().at(mesh.GetEdges().at(tmpEdge).GetVertexBIndex());
+                Vertex<2,Real>& a = mesh.getVertices().at(mesh.getEdges().at(tmpEdge).getVertexAIndex());
+                Vertex<2,Real>& b = mesh.getVertices().at(mesh.getEdges().at(tmpEdge).getVertexBIndex());
                 double tmp = (cellCenter[0] - a[0]) * (b[1] - a[1]);
                 tmp -= (cellCenter[1] - a[1]) * (b[0] - a[0]);
                 measure += 0.5 * fabs(tmp);
 
-                tmpEdge = mesh.GetEdges().at(tmpEdge).getNextBElem(cell.GetIndex());
+                tmpEdge = mesh.getEdges().at(tmpEdge).getNextBElem(cell.getIndex());
             } while (tmpEdge != cell.getBoundaryElementIndex());
 
-            surfaceMeasures.at(cell.GetIndex()) = measure;
+            surfaceMeasures.at(cell.getIndex()) = measure;
         }
     }
 };
@@ -234,14 +234,14 @@ struct _ComputeMeasures<2, 3>{
 
         auto& surfaceMeasures = measures.template GetDataDim<2>();
 
-        for (typename MeshElements<3, IndexType, Real, Reserve...>::template ElemType<2>::type& face : mesh.template GetElements<2>()) {
+        for (typename MeshElements<3, IndexType, Real, Reserve...>::template ElementType<2>& face : mesh.template getElements<2>()) {
 
             Real measure = Real();
             Vertex<3,Real>& faceCenter = face.getCenter();
             for(auto sube : face.getSubelements()){
 
-                Vertex<3,Real>& a = mesh.GetVertices().at(mesh.GetEdges().at(sube.index).GetVertexAIndex());
-                Vertex<3,Real>& b = mesh.GetVertices().at(mesh.GetEdges().at(sube.index).GetVertexBIndex());
+                Vertex<3,Real>& a = mesh.getVertices().at(mesh.getEdges().at(sube.index).getVertexAIndex());
+                Vertex<3,Real>& b = mesh.getVertices().at(mesh.getEdges().at(sube.index).getVertexBIndex());
 
                 Real distance = Real();
 
@@ -252,7 +252,7 @@ struct _ComputeMeasures<2, 3>{
                 Real tmp = distance * measures.template GetDataDim<1>().at(sube.index);
                 measure += tmp * 0.5;
             }
-            surfaceMeasures.at(face.GetIndex()) = measure;
+            surfaceMeasures.at(face.getIndex()) = measure;
         }
         _ComputeMeasures<3, 3>::compute(measures, mesh);
     }
@@ -271,9 +271,9 @@ struct _ComputeMeasures<1, Dimension>{
 
         auto& edgeLengths = measures.template GetDataDim<1>();
 
-        for (auto& edge : mesh.GetEdges()) {
-            edgeLengths.at(edge.GetIndex()) = (mesh.GetVertices().at(edge.GetVertexAIndex()) -
-                                               mesh.GetVertices().at(edge.GetVertexBIndex())).normEukleid();
+        for (auto& edge : mesh.getEdges()) {
+            edgeLengths.at(edge.getIndex()) = (mesh.getVertices().at(edge.getVertexAIndex()) -
+                                               mesh.getVertices().at(edge.getVertexBIndex())).normEukleid();
         }
 
         _ComputeMeasures<2, Dimension>::compute(measures, mesh);
@@ -311,9 +311,9 @@ template <>
 struct _ComputeNormals<2>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
     static void compute(MeshDataContainer<Vector<2, Real>, 1>& normals,MeshElements<2, IndexType, Real, Reserve...>& mesh){
-        for (auto& face : mesh.GetEdges()) {
-            Vertex<2,Real> a = mesh.GetVertices().at(face.GetVertexAIndex());
-            Vertex<2,Real> b = mesh.GetVertices().at(face.GetVertexBIndex());
+        for (auto& face : mesh.getEdges()) {
+            Vertex<2,Real> a = mesh.getVertices().at(face.getVertexAIndex());
+            Vertex<2,Real> b = mesh.getVertices().at(face.getVertexBIndex());
             Vertex<2,Real> dif = b-a;
             normals[face][0] = dif[1];
             normals[face][1] = -dif[0];
@@ -327,7 +327,7 @@ template <>
 struct _ComputeNormals<3>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
     static void compute(MeshDataContainer<Vector<3, Real>, 2>& normals,MeshElements<3, IndexType, Real, Reserve...>& mesh){
-        for (auto& face : mesh.GetFaces()) {
+        for (auto& face : mesh.getFaces()) {
 
             bool vectorSign = true;
             IndexType cellIndex = face.getCellLeftIndex();
@@ -339,20 +339,20 @@ struct _ComputeNormals<3>{
                 cellIndex = face.getCellRightIndex();
             }
 
-            Vertex<3,Real>& cellCenter = mesh.GetCells().at(cellIndex).getCenter();
+            Vertex<3,Real>& cellCenter = mesh.getCells().at(cellIndex).getCenter();
 
 
             // select 3 different vertices
-            IndexType vAIndex = mesh.GetEdges().at(face.getSubelements()[0].index).GetVertexAIndex();
-            IndexType vBIndex = mesh.GetEdges().at(face.getSubelements()[0].index).GetVertexBIndex();
-            IndexType vCIndex = mesh.GetEdges().at(face.getSubelements()[1].index).GetVertexAIndex();
+            IndexType vAIndex = mesh.getEdges().at(face.getSubelements()[0].index).getVertexAIndex();
+            IndexType vBIndex = mesh.getEdges().at(face.getSubelements()[0].index).getVertexBIndex();
+            IndexType vCIndex = mesh.getEdges().at(face.getSubelements()[1].index).getVertexAIndex();
             if(vCIndex == vAIndex || vCIndex == vBIndex) {
-                vCIndex = mesh.GetEdges().at(face.getSubelements()[1].index).GetVertexBIndex();
+                vCIndex = mesh.getEdges().at(face.getSubelements()[1].index).getVertexBIndex();
             }
 
-            Vertex<3,Real>& a = mesh.GetVertices().at(vAIndex);
-            Vertex<3,Real>& b = mesh.GetVertices().at(vBIndex);
-            Vertex<3,Real>& c = mesh.GetVertices().at(vCIndex);
+            Vertex<3,Real>& a = mesh.getVertices().at(vAIndex);
+            Vertex<3,Real>& b = mesh.getVertices().at(vBIndex);
+            Vertex<3,Real>& c = mesh.getVertices().at(vCIndex);
 
             // preparing quiantities
             Vertex<3,Real> vAmcC = (a-cellCenter);
@@ -402,37 +402,37 @@ MeshDataContainer<Real, Dimension-1> ComputeCellsDistance(MeshElements<Dimension
 
     MeshDataContainer<Real, Dimension-1> distances(mesh);
 
-    if(mesh.GetBoundaryCells().empty()){
-        for(auto& face : mesh.GetFaces()) {
+    if(mesh.getBoundaryCells().empty()){
+        for(auto& face : mesh.getFaces()) {
             if (face.getCellLeftIndex() != INVALID_INDEX(IndexType) &&
                 face.getCellRightIndex() != INVALID_INDEX(IndexType)){
 
-                distances.at(face) = (mesh.GetCells().at(face.getCellLeftIndex()).getCenter() -
-                                      mesh.GetCells().at(face.getCellRightIndex()).getCenter()).normEukleid();
+                distances.at(face) = (mesh.getCells().at(face.getCellLeftIndex()).getCenter() -
+                                      mesh.getCells().at(face.getCellRightIndex()).getCenter()).normEukleid();
 
             } else if(face.getCellLeftIndex() != INVALID_INDEX(IndexType) &&
                       face.getCellRightIndex() == INVALID_INDEX(IndexType)){
 
-                distances.at(face) = (mesh.GetCells().at(face.getCellLeftIndex()).getCenter() -
+                distances.at(face) = (mesh.getCells().at(face.getCellLeftIndex()).getCenter() -
                                       face.getCenter()).normEukleid();
 
             } else if(face.getCellLeftIndex() == INVALID_INDEX(IndexType) &&
                       face.getCellRightIndex() != INVALID_INDEX(IndexType)){
 
-                distances.at(face) = (mesh.GetCells().at(face.getCellRightIndex()).getCenter() -
+                distances.at(face) = (mesh.getCells().at(face.getCellRightIndex()).getCenter() -
                                       face.getCenter()).normEukleid();
             }
         }
 
     } else {
 
-        for(auto& face : mesh.GetFaces()) {
+        for(auto& face : mesh.getFaces()) {
             auto& cellLeft = (face.getCellLeftIndex() & BOUNDARY_INDEX(IndexType)) == BOUNDARY_INDEX(IndexType)?
-                      mesh.GetBoundaryCells().at(face.getCellLeftIndex()&EXTRACTING_INDEX(IndexType)):
-                      mesh.GetCells().at(face.getCellLeftIndex());
+                      mesh.getBoundaryCells().at(face.getCellLeftIndex()&EXTRACTING_INDEX(IndexType)):
+                      mesh.getCells().at(face.getCellLeftIndex());
             auto& cellRight = (face.getCellRightIndex() & BOUNDARY_INDEX(IndexType)) == BOUNDARY_INDEX(IndexType)?
-                      mesh.GetBoundaryCells().at(face.getCellRightIndex()&EXTRACTING_INDEX(IndexType)):
-                      mesh.GetCells().at(face.getCellRightIndex());
+                      mesh.getBoundaryCells().at(face.getCellRightIndex()&EXTRACTING_INDEX(IndexType)):
+                      mesh.getCells().at(face.getCellRightIndex());
 
             distances.at(face) = (cellLeft.getCenter() - cellRight.getCenter()).normEukleid();
         }
@@ -459,8 +459,8 @@ struct MeshRun {
                     Func fun){
 
 
-        auto i = mesh.template GetElements<CurrentDimension>().at(index);
-        for (auto sube: mesh.template GetElement<CurrentDimension>(i.GetIndex()).getSubelements())
+        auto i = mesh.template getElements<CurrentDimension>().at(index);
+        for (auto sube: mesh.template getElement<CurrentDimension>(i.getIndex()).getSubelements())
         MeshRun< CurrentDimension - 1, StartDimension, TargetDimension, MeshDimension, TargetDimension == CurrentDimension - 1, Ascend>::run(mesh, origElementIndex, sube.index, fun);
 
 
@@ -476,11 +476,11 @@ struct MeshRun<MeshDimension, StartDimension, TargetDimension, MeshDimension, fa
                     IndexType index,
                     Func fun){
 
-        auto& cell = mesh.GetCells().at(index);
+        auto& cell = mesh.getCells().at(index);
         IndexType tmpFace = cell.getBoundaryElementIndex();
         do {
             MeshRun<MeshDimension - 1, StartDimension, TargetDimension, MeshDimension, TargetDimension == MeshDimension - 1, Ascend>::run(mesh, origElementIndex, tmpFace, fun);
-            tmpFace = mesh.GetFaces().at(tmpFace).getNextBElem(cell.GetIndex());
+            tmpFace = mesh.getFaces().at(tmpFace).getNextBElem(cell.getIndex());
         } while (tmpFace != cell.getBoundaryElementIndex());
 
     }
@@ -496,9 +496,9 @@ struct MeshRun<1, StartDimension, TargetDimension, MeshDimension, false, Ascend>
                     IndexType index,
                     Func fun){
 
-        auto& edge = mesh.GetEdges().at(index);
-        MeshRun<0, StartDimension, TargetDimension, MeshDimension, TargetDimension == 0, Ascend>::run(mesh, origElementIndex, edge.GetVertexAIndex(), fun);
-        MeshRun<0, StartDimension, TargetDimension, MeshDimension, TargetDimension == 0, Ascend>::run(mesh, origElementIndex, edge.GetVertexBIndex(), fun);
+        auto& edge = mesh.getEdges().at(index);
+        MeshRun<0, StartDimension, TargetDimension, MeshDimension, TargetDimension == 0, Ascend>::run(mesh, origElementIndex, edge.getVertexAIndex(), fun);
+        MeshRun<0, StartDimension, TargetDimension, MeshDimension, TargetDimension == 0, Ascend>::run(mesh, origElementIndex, edge.getVertexBIndex(), fun);
     }
 };
 
@@ -529,14 +529,14 @@ struct MeshApply {
     template<typename Functor, typename IndexType, typename Real, unsigned int ...Reserve>
     static void apply(MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh,
                       Functor f) {
-        for (auto& startElement : mesh.template GetElements<(StartDimension > TargetDimension) ? StartDimension : TargetDimension>()){
+        for (auto& startElement : mesh.template getElements<(StartDimension > TargetDimension) ? StartDimension : TargetDimension>()){
             MeshRun<
                     (StartDimension > TargetDimension) ? StartDimension : TargetDimension,
                     (StartDimension > TargetDimension) ? StartDimension : TargetDimension,
                     (StartDimension > TargetDimension) ? TargetDimension : StartDimension,
                     MeshDimension,
                     false,
-                    (StartDimension > TargetDimension)>::run(mesh, startElement.GetIndex(), startElement.GetIndex(), f);
+                    (StartDimension > TargetDimension)>::run(mesh, startElement.getIndex(), startElement.getIndex(), f);
         }
     }
 };
@@ -572,12 +572,12 @@ struct MeshColouring {
 
 
 
-        for (auto& startElement : mesh.template GetElements<FromDim>()){
+        for (auto& startElement : mesh.template getElements<FromDim>()){
             std::valarray<bool> possibleColours(true,reserve);
             MeshRun<FromDim, FromDim, ToDim, MeshDimension, false, true>::
                 run(mesh,
-                    startElement.GetIndex(),
-                    startElement.GetIndex(),
+                    startElement.getIndex(),
+                    startElement.getIndex(),
                     [&possibleColours, &attachedColours](unsigned int, unsigned int, IndexType, IndexType element){
                         DBGTRY(possibleColours &= !attachedColours.template GetDataPos<0>().at(element);)
                     }
@@ -588,11 +588,11 @@ struct MeshColouring {
             while (!possibleColours[selectedColour]) {
                 selectedColour++;
             }
-            result.template GetDataPos<0>().at(startElement.GetIndex()) = selectedColour;
+            result.template GetDataPos<0>().at(startElement.getIndex()) = selectedColour;
             MeshRun<FromDim, FromDim, ToDim, MeshDimension, false, true>::
                 run(mesh,
-                    startElement.GetIndex(),
-                    startElement.GetIndex(),
+                    startElement.getIndex(),
+                    startElement.getIndex(),
                     [selectedColour, &attachedColours](unsigned int, unsigned int, IndexType, IndexType element){
                         DBGTRY(attachedColours.template GetDataPos<0>().at(element)[selectedColour] = true;)
                     }
@@ -617,7 +617,7 @@ struct MeshColouring <FromDim, ToDim, false> {
 
         auto connections = MeshConnections<FromDim, ToDim>::connections(mesh);
 
-        for (auto& startElement : mesh.template GetElements<FromDim>()){
+        for (auto& startElement : mesh.template getElements<FromDim>()){
             std::valarray<bool> possibleColours(true,reserve);
             for (IndexType element : connections.at(startElement)){
 
@@ -630,7 +630,7 @@ struct MeshColouring <FromDim, ToDim, false> {
                 selectedColour++;
             }
 
-            result.template GetDataPos<0>().at(startElement.GetIndex()) = selectedColour;
+            result.template GetDataPos<0>().at(startElement.getIndex()) = selectedColour;
 
             for (IndexType element : connections.at(startElement)){
                 DBGTRY(attachedColours.template GetDataPos<0>().at(element)[selectedColour] = true;)

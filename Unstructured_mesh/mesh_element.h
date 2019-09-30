@@ -30,19 +30,19 @@ public:
         elementIndex = index;
     }
 
-    IndexType GetIndex(){
+    IndexType getIndex(){
         return elementIndex;
     }
 
-    void SetIndex(IndexType index){
+    void setIndex(IndexType index){
         elementIndex = index;
     }
 /*
-    IndexType GetGlobalIndex(){
+    IndexType getGlobalIndex(){
         return globalElementIndex;
     }
 
-    void SetGlobalIndex(IndexType index){
+    void setGlobalIndex(IndexType index){
         globalElementIndex = index;
     }
 */
@@ -171,26 +171,26 @@ public:
                 IndexType vertexAIndex = INVALID_INDEX(IndexType),
                 IndexType vertexBIndex = INVALID_INDEX(IndexType))
         :MeshElementBase<IndexType>(index) {
-        SetVertexAIndex(vertexAIndex);
-        SetVertexBIndex(vertexBIndex);
+        setVertexAIndex(vertexAIndex);
+        setVertexBIndex(vertexBIndex);
     }
 
 
 
-    IndexType GetVertexAIndex(){
+    IndexType getVertexAIndex(){
         return vertexAIndex;
     }
 
-    IndexType GetVertexBIndex(){
+    IndexType getVertexBIndex(){
         return vertexBIndex;
     }
 
-    void SetVertexAIndex(IndexType index){
+    void setVertexAIndex(IndexType index){
         vertexAIndex = index;
     }
 
 
-    void SetVertexBIndex(IndexType index){
+    void setVertexBIndex(IndexType index){
         vertexBIndex = index;
     }
 
@@ -280,73 +280,71 @@ public:
     using Face = MeshElement<Dimension, Dimension - 1, IndexType, Real, reserve<Dimension - 1>()>;
     using Cell = MeshElement<Dimension, Dimension, IndexType, Real, 0>;
 
-    template <unsigned int dim>
-    struct ElemType //lze nahradit šablonovým using
-    {
-        using type = MeshElement<Dimension, dim, IndexType, Real, reserve<dim>()>;
-    };
+    template<unsigned int ElementDimension>
+    using ElementType = MeshElement<Dimension, ElementDimension, IndexType, Real, reserve<ElementDimension>()>;
+
 
     template<unsigned int dim>
-    std::vector<typename ElemType<dim>::type>& GetElements(){
+    std::vector<ElementType<dim>>& getElements(){
         static_assert (Dimension >= dim, "In GetElements template parameter dim must be less or equal to Dimension.");
         return Refs._MeshElements<Dimension, dim, IndexType, Real, Reserve...>::elements;
     }
 
 
     template<unsigned int dim>
-    const std::vector<typename ElemType<dim>::type>&  GetElements() const {
+    const std::vector<ElementType<dim>>&  getElements() const {
         static_assert (Dimension >= dim, "In GetElements template parameter dim must be less or equal to Dimension.");
         return Refs._MeshElements<Dimension, dim, IndexType, Real, Reserve...>::elements;
     }
 
-    std::vector<Vertex>& GetVertices(){
-        return GetElements<0>();
+    std::vector<Vertex>& getVertices(){
+        return getElements<0>();
     }
 
 
-    std::vector<Edge>& GetEdges(){
-        return GetElements<1>();
+    std::vector<Edge>& getEdges(){
+        return getElements<1>();
     }
 
-    std::vector<Face>& GetFaces(){
-        return GetElements<Dimension - 1>();
+    std::vector<Face>& getFaces(){
+        return getElements<Dimension - 1>();
     }
 
-    std::vector<Cell>& GetCells(){
-        return GetElements<Dimension>();
+    std::vector<Cell>& getCells(){
+        return getElements<Dimension>();
     }
 
-    std::vector<Cell>& GetBoundaryCells() {
+    std::vector<Cell>& getBoundaryCells() {
         return BoundaryCells;
     }
 
-    void AppendBoundaryCell(IndexType cellIndex, IndexType faceIndex){
+    void appendBoundaryCell(IndexType cellIndex, IndexType faceIndex){
         Cell c;
-        c.SetIndex(cellIndex);
+        c.setIndex(cellIndex);
         c.SetBoundaryElementIndex(faceIndex);
         BoundaryCells.push_back(c);
     }
 
-    void SetupBoundaryCells(){
-        for (Face& face : GetFaces()){
+    void setupBoundaryCells(){
+        for (Face& face : getFaces()){
             if (face.GetCellLeftIndex == INVALID_INDEX(IndexType)){
                 IndexType cellIndex = BoundaryCells.size() | BOUNDARY_INDEX(IndexType);
                 face.SetCellLeftIndex(cellIndex);
-                AppendBoundaryCell(cellIndex, face.GetIndex());
+                appendBoundaryCell(cellIndex, face.getIndex());
             }
             if (face.GetCellRightIndex == INVALID_INDEX(IndexType)){
                 IndexType cellIndex = BoundaryCells.size() | BOUNDARY_INDEX(IndexType);
                 face.SetCellRightIndex(cellIndex);
-                AppendBoundaryCell(cellIndex, face.GetIndex());
+                appendBoundaryCell(cellIndex, face.getIndex());
             }
         }
         BoundaryCells.shrink_to_fit();
     }
 
 
-    void SetupBoundaryCellsCenters() {
+    void setupBoundaryCellsCenters() {
         for(Cell& cell : BoundaryCells){
-            cell.SetCenter(GetFaces().at(cell.getBoundaryElementIndex()).GetCenter());
+            cell.SetCenter(getFaces().at(cell.getBoundaryElementIndex()).GetCenter());
         }
     }
 
@@ -363,8 +361,8 @@ public:
             actual = firstBElem;
             this->parentMesh = parentMesh;
         }
-        CellSubelementIterator& operator++ () {actual = parentMesh->GetFaces().at(actual).getNextBElem(cellIndex) == firstBElem ? INVALID_INDEX(IndexType) : parentMesh->GetFaces().at(actual).getNextBElem(cellIndex); return *this;}
-        CellSubelementIterator& operator++ (int) {actual = parentMesh->GetFaces().at(actual).getNextBElem(cellIndex) == firstBElem ? INVALID_INDEX(IndexType) : parentMesh->GetFaces().at(actual).getNextBElem(cellIndex); return *this;}
+        CellSubelementIterator& operator++ () {actual = parentMesh->getFaces().at(actual).getNextBElem(cellIndex) == firstBElem ? INVALID_INDEX(IndexType) : parentMesh->getFaces().at(actual).getNextBElem(cellIndex); return *this;}
+        CellSubelementIterator& operator++ (int) {actual = parentMesh->getFaces().at(actual).getNextBElem(cellIndex) == firstBElem ? INVALID_INDEX(IndexType) : parentMesh->getFaces().at(actual).getNextBElem(cellIndex); return *this;}
         IndexType operator* (){return actual;}
         bool operator== (CellSubelementIterator& it) {return actual == it.actual;}
         bool operator!= (CellSubelementIterator& it) {return actual != it.actual;}
@@ -380,7 +378,7 @@ public:
         }
 
         CellSubelementIterator begin() {
-            return CellSubelementIterator(cellIndex, parentMesh->GetCells()[cellIndex].getBoundaryElementIndex(), parentMesh);
+            return CellSubelementIterator(cellIndex, parentMesh->getCells()[cellIndex].getBoundaryElementIndex(), parentMesh);
         }
 
         CellSubelementIterator end() {
@@ -395,7 +393,7 @@ public:
         MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh;
     public:
         MeshElementWrap(MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh, MeshElement<Dimension, ElementDim, IndexType, Real, reserve<ElementDim>()>& meshElement){
-            elementIndex = meshElement.GetIndex();
+            elementIndex = meshElement.getIndex();
             this->parentMesh = parentMesh;
         }
 
@@ -404,12 +402,12 @@ public:
             this->parentMesh = parentMesh;
         }
 
-        IndexType GetIndex(){
+        IndexType getIndex(){
             return elementIndex;
         }
 
         SubelementContainer<IndexType, reserve<ElementDim>()>& getSubelements(){
-            return parentMesh->template GetElements<ElementDim>()[elementIndex].getSubelements();
+            return parentMesh->template getElements<ElementDim>()[elementIndex].getSubelements();
         }
     };
 
@@ -420,7 +418,7 @@ public:
         MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh;
     public:
         MeshElementWrap(MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh, MeshElement<Dimension, Dimension, IndexType, Real, 0>& meshElement){
-            elementIndex = meshElement.GetIndex();
+            elementIndex = meshElement.getIndex();
             this->parentMesh = parentMesh;
         }
 
@@ -429,7 +427,7 @@ public:
             this->parentMesh = parentMesh;
         }
 
-        IndexType GetIndex(){
+        IndexType getIndex(){
             return elementIndex;
         }
 
@@ -447,7 +445,7 @@ public:
         MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh;
     public:
         MeshElementWrap(MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh, MeshElement<Dimension, 1, IndexType, Real, 0>& meshElement){
-            elementIndex = meshElement.GetIndex();
+            elementIndex = meshElement.getIndex();
             this->parentMesh = parentMesh;
         }
 
@@ -456,12 +454,12 @@ public:
             this->parentMesh = parentMesh;
         }
 
-        IndexType GetIndex(){
+        IndexType getIndex(){
             return elementIndex;
         }
 
-        Edge& GetElement() {
-            return parentMesh->GetEdges()[elementIndex];
+        Edge& getElement() {
+            return parentMesh->getEdges()[elementIndex];
         }
 
     };
@@ -472,7 +470,7 @@ public:
         MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh;
     public:
         MeshElementWrap(MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh, Vertex& meshElement){
-            elementIndex = meshElement.GetIndex();
+            elementIndex = meshElement.getIndex();
             this->parentMesh = parentMesh;
         }
 
@@ -481,29 +479,21 @@ public:
             this->parentMesh = parentMesh;
         }
 
-        IndexType GetIndex(){
+        IndexType getIndex(){
             return elementIndex;
         }
 
-        Vertex& GetElement() {
+        Vertex& getElement() {
             return parentMesh->GetVertices()[elementIndex];
         }
     };
 
     template<unsigned int ElementDim>
-    MeshElementWrap<ElementDim> GetElement(IndexType elementIndex){
+    MeshElementWrap<ElementDim> getElement(IndexType elementIndex){
         return MeshElementWrap<ElementDim>(this, elementIndex);
     }
 
 };
-
-
-
-
-
-
-
-
 
 
 
