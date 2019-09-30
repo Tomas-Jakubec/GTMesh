@@ -1,7 +1,7 @@
 #include <iostream>
 #include "../debug/debug.h"
-#include "unstructuredmesh.h"
-#include "mesh_functions.h"
+#include "UnstructuredMesh.h"
+#include "MeshFunctions.h"
 using namespace std;
 
 

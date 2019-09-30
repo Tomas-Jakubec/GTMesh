@@ -1,7 +1,7 @@
 #ifndef CELLBOUNDARYCONNECTION_H
 #define CELLBOUNDARYCONNECTION_H
-#include "unstructed_mesh_define.h"
-#include "cellconnection.h"
+#include "UnstructedMeshDefine.h"
+#include "CellConnection.h"
 
 template<typename indexType>
 class CellBoundaryConnection : public CellConnection<indexType> {

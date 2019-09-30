@@ -1,15 +1,20 @@
 #ifndef MESH_ELEMENT_H
 #define MESH_ELEMENT_H
-#include "unstructed_mesh_define.h"
-#include "vertex.h"
-#include "cellboundaryconnection.h"
-#include "computationaly_significant_element.h"
+#include "UnstructedMeshDefine.h"
+#include "Vertex.h"
+#include "CellBoundaryConnection.h"
+#include "ComputationalySignificantElement.h"
 #include "type_traits"
 #include "tuple"
 #include <array>
 #include <stdexcept>
 #include <vector>
 
+/**
+ * @brief The MeshElementBase class provides the basic property
+ * of mesh element classes (its index)
+ * @see MeshElement
+ */
 template<typename IndexType>
 class MeshElementBase{
     /**

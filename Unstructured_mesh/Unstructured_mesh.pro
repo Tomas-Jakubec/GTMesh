@@ -8,16 +8,17 @@ SOURCES += \
     ../debug/debug.cpp
 
 HEADERS += \
-    cellboundaryconnection.h \
-    cellconnection.h \
+    CellBoundaryConnection.h \
+    CellConnection.h \
+    ComputationalySignificantElement.h \
+    InlineArrayOperations.h \
+    MeshDataContainer.h \
+    MeshElement.h \
+    MeshFunctions.h \
+    MeshReader.h \
+    UnstructedMeshDefine.h \
+    UnstructuredMesh.h \
+    Vector.h \
     ../debug/debug.h \
     ../debug/htmllogger.h \
-    computationaly_significant_element.h \
-    inline_array_operations.h \
-    mesh_element.h \
-    mesh_functions.h \
-    meshdatacontainer.h \
-    unstructed_mesh_define.h \
-    unstructuredmesh.h \
-    vector.h \
-    vertex.h
+    Vertex.h

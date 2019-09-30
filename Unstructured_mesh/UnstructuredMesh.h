@@ -1,9 +1,9 @@
 #ifndef UNSTRUCTUREDMESH_H
 #define UNSTRUCTUREDMESH_H
-#include "mesh_element.h"
+#include "MeshElement.h"
 #include "vector"
 #include <type_traits>
-#include "mesh_functions.h"
+#include "MeshFunctions.h"
 
 
 template <unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>

@@ -1,6 +1,6 @@
 #ifndef CELLCONNECTION_H
 #define CELLCONNECTION_H
-#include "unstructed_mesh_define.h"
+#include "UnstructedMeshDefine.h"
 
 
 /**

@@ -1,9 +1,9 @@
 
 #ifndef MESH_FUNCTIONS_H
 #define MESH_FUNCTIONS_H
-#include "mesh_element.h"
-#include "meshdatacontainer.h"
-#include "vector.h"
+#include "MeshElement.h"
+#include "MeshDataContainer.h"
+#include "Vector.h"
 #include <valarray>
 #include <set>
 
