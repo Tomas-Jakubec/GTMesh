@@ -18,7 +18,8 @@ HEADERS += \
     MeshReader.h \
     UnstructedMeshDefine.h \
     UnstructuredMesh.h \
-    Vector.h \
+    VTKMeshReader.h \
     ../debug/debug.h \
     ../debug/htmllogger.h \
+    Vector.h \
     Vertex.h

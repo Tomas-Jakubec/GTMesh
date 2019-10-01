@@ -2,9 +2,22 @@
 #define MESHREADER_H
 
 
-template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
+template<unsigned int MeshDimension>
 class MeshReader{
 
 };
 
+
+template <>
+class MeshReader<2> {
+public:
+    enum ElementType{
+        LINE = 1,
+        TRIANGLE,
+        QUAD,
+        POLYGON
+    };
+
+
+};
 #endif // MESHREADER_H
