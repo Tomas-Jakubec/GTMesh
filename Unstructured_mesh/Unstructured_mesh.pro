@@ -15,11 +15,14 @@ HEADERS += \
     MeshDataContainer.h \
     MeshElement.h \
     MeshFunctions.h \
+    MeshNativeType.h \
     MeshReader.h \
+    MeshWriter.h \
     UnstructedMeshDefine.h \
     UnstructuredMesh.h \
     VTKMeshReader.h \
     ../debug/debug.h \
     ../debug/htmllogger.h \
+    VTKMeshWriter.h \
     Vector.h \
     Vertex.h

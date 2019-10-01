@@ -21,17 +21,17 @@ public:
 template<typename IndexType, typename Real, unsigned int... Reserve>
 class VTKMeshReader<2, IndexType, Real, Reserve...> : public MeshReader<2, IndexType, Real>{
     using reader = MeshReader<2, IndexType, Real>;
-    std::map<int, typename reader::ElementType> TypeConversionTable{
-        {3, reader::ElementType::LINE},
-        {5, reader::ElementType::TRIANGLE},
-        {8, reader::ElementType::QUAD},
-        {9, reader::ElementType::QUAD},
-        {7, reader::ElementType::POLYGON},
+    std::map<int, typename reader::type::ElementType> TypeConversionTable{
+        {3, reader::type::ElementType::LINE},
+        {5, reader::type::ElementType::TRIANGLE},
+        {8, reader::type::ElementType::QUAD},
+        {9, reader::type::ElementType::QUAD},
+        {7, reader::type::ElementType::POLYGON},
     };
 
     std::unordered_map<std::string, IndexType> edges;
 
-    MeshDataContainer<typename reader::ElementType, 2> cellTypes;
+    MeshDataContainer<typename reader::type::ElementType, 2> cellTypes;
     // file indexing
     //
 
@@ -41,37 +41,44 @@ public:
     VTKMeshReader() = default;
     VTKMeshReader(const MeshElements<2, IndexType, Real, Reserve...>&){}
 
+    MeshDataContainer<typename reader::type::ElementType, 2> getCellTypes() {
+        return cellTypes;
+    }
+
     void loadPoints(std::istream& ist, MeshElements<2, IndexType, Real, Reserve...>& mesh){
         IndexType numPoints;
         ist >> numPoints;
+        Real dummy = 0;
         mesh.getVertices().resize(numPoints);
-        for (IndexType i = 0; i < numPoints; i++) {
-            ist >> mesh.getVertices().at(i)[0];
-            ist >> mesh.getVertices().at(i)[1];
-            ist.ignore(50, ' ');
+        ist.ignore(20, '\n');
+        for (IndexType vertIndex = 0; vertIndex < numPoints; vertIndex++) {
+            mesh.getVertices().at(vertIndex).setIndex(vertIndex);
+            ist >> mesh.getVertices().at(vertIndex)[0];
+            ist >> mesh.getVertices().at(vertIndex)[1];
+            ist >> dummy;
         }
     }
 
     void loadCells(std::istream& ist, MeshElements<2, IndexType, Real, Reserve...>& mesh){
         IndexType numCells;
         ist >> numCells;
-        mesh.getVertices().resize(numCells);
+        mesh.getCells().resize(numCells);
         // Skip the total number of numbers
         ist.ignore(50, '\n');
         for (IndexType cellIndex = 0; cellIndex < numCells; cellIndex++) {
+            mesh.getCells().at(cellIndex).setIndex(cellIndex);
             IndexType numVert;
             ist >> numVert;
+
             std::vector<IndexType> vertices(numVert);
             for(IndexType j = 0; j < numVert; j++){
                 ist >> vertices.at(j);
             }
 
-
-
             IndexType prevEdge = INVALID_INDEX(IndexType);
             for(IndexType j = 0; j < numVert; j++){
                 IndexType iA = vertices.at(j), iB = vertices.at((j+1)%numVert);
-                std::string edgeKey = iA < iB ? std::to_string(iA) + std::to_string(iB) : std::to_string(iB) + std::to_string(iA);
+                std::string edgeKey = iA < iB ? std::to_string(iA) +";"+ std::to_string(iB) : std::to_string(iB) +";"+ std::to_string(iA);
                 typename std::unordered_map<std::string, IndexType>::iterator edgeIt = edges.find(edgeKey);
 
                 IndexType edgeIndex = IndexType();
@@ -82,6 +89,7 @@ public:
                     mesh.getEdges().push_back({});
                     mesh.getEdges().at(edgeIndex).setVertexAIndex(iA);
                     mesh.getEdges().at(edgeIndex).setVertexBIndex(iB);
+                    mesh.getEdges().at(edgeIndex).setIndex(edgeIndex);
 
                     mesh.getEdges().at(edgeIndex).setCellLeftIndex(cellIndex);
                 } else {
@@ -99,7 +107,7 @@ public:
                 if (j == numVert - 1) {
                     mesh.getEdges().at(edgeIndex).setNextBElem(mesh.getCells().at(cellIndex).getBoundaryElementIndex(), cellIndex);
                 }
-                prevEdge = edgeIt->second;
+                prevEdge = edgeIndex;
             }
 
         }
@@ -113,7 +121,7 @@ public:
         for (IndexType i = 0; i < numCells; i++) {
             int vtkType = 0;
             ist >> vtkType;
-            typename std::map<int, typename reader::ElementType>::iterator typeIt = TypeConversionTable.find(vtkType);
+            typename std::map<int, typename reader::type::ElementType>::iterator typeIt = TypeConversionTable.find(vtkType);
             if (typeIt != TypeConversionTable.end()){
                 cellTypes.template getDataByPos<0>().at(i) = typeIt->second;
             } else {
@@ -125,13 +133,10 @@ public:
 
     void loadFromStream(std::istream& ist,MeshElements<2, IndexType, Real, Reserve...>& mesh){
         ist.seekg(ist.beg);
-        DBGCHECK;
         // Ignore first row "# vtk DataFile Version 2.0"
         ist.ignore(1024, '\n');
-        DBGCHECK;
         // Ignore name of the data set
         ist.ignore(1024, '\n');
-        DBGCHECK;
         // ASCII or BINARY
         std::string buf;
         std::getline(ist, buf);
@@ -140,37 +145,37 @@ public:
         }
 
         ist >> buf;
-        DBGVAR(buf)
         if (buf != "DATASET"){
             throw std::runtime_error("the keyword DATASET expected");
         }
 
         ist >> buf;
-
-        DBGVAR(buf)
         if (buf != "UNSTRUCTURED_GRID"){
             throw std::runtime_error("only unstructured grid is supported but got " + buf);
         }
 
 
         ist >> buf;
-
-        DBGVAR(buf)
         if (buf == "POINTS") {
             loadPoints(ist, mesh);
         }
 
         ist >> buf;
-        DBGVAR(buf)
         if (buf == "CELLS") {
             loadCells(ist, mesh);
         }
 
         ist >> buf;
-        DBGVAR(buf)
         if (buf == "CELL_TYPES") {
             loadCellTypes(ist, mesh);
         }
+
+    }
+
+    MeshElements<2, IndexType, Real, Reserve...> loadFromStream(std::istream& ist){
+        MeshElements<2, IndexType, Real, Reserve...> resultMesh;
+        loadFromStream(ist, resultMesh);
+        return resultMesh;
     }
 };
 

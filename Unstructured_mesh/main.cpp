@@ -3,6 +3,7 @@
 #include "UnstructuredMesh.h"
 #include "MeshFunctions.h"
 #include "VTKMeshReader.h"
+#include "VTKMeshWriter.h"
 #include <fstream>
 using namespace std;
 
@@ -384,16 +385,32 @@ void testMesh2D() {
 
 
 
-void testMesh2DLoad(){
+void testMesh2DLoadAndWrite(){
     using Mesh = UnstructuredMesh<2, size_t, double>;
     Mesh mesh;
     DBGMSG("load from vtk file test");
-    VTKMeshReader reader(mesh);
+    VTKMeshReader<2, size_t, double> reader;
     ifstream ifst("Test_obdelnik.vtk");
     DBGVAR(bool(ifst))
     reader.loadFromStream(ifst, mesh);
 
-    DBGVAR(mesh.getCells().size())
+    DBGVAR(mesh.getVertices().size(), mesh.getVertices().at(4),mesh.getCells().size())
+
+
+    DBGMSG("mesh apply test");
+    temp1::MeshRun<2, 2, 0, 2,false, true>::run(mesh,size_t(4), size_t(4), [](unsigned int S, unsigned int T, size_t ori, size_t i){
+        DBGVAR(S,T,ori,i)
+    });
+
+    mesh.initializeCenters();
+    auto normals = mesh.computeFaceNormals();
+    auto measures = mesh.computeElementMeasures();
+    DBGVAR(normals.getDataByPos<0>().at(0), measures.getDataByDim<2>().at(100), measures.getDataByDim<1>().at(100), mesh.getCells().at(100).getCenter())
+
+    VTKMeshWriter<2,size_t, double> writer;
+    ofstream ofst("test_mesh_export.vtk");
+    writer.writeHeader(ofst, "superData");
+    writer.writeToStream(ofst, mesh, reader.getCellTypes());
 }
 
 void testMesh3D() {
@@ -473,7 +490,7 @@ void testMesh3D() {
     }
 
 
-    DBGMSG("2D normals test");
+    DBGMSG("3D normals test");
 
     auto normals = mesh3.computeFaceNormals();
     for(auto& face : mesh3.getFaces()){
@@ -668,7 +685,7 @@ void testTemplate() {
 int main()
 {
     //testMesh2D();
-    testMesh2DLoad();
+    testMesh2DLoadAndWrite();
     //testMesh3D();
     //test3DMeshDeformedPrisms();
     //testMeshDataContainer();

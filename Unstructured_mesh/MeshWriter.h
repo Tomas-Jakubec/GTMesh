@@ -1,18 +1,20 @@
-#ifndef MESHREADER_H
-#define MESHREADER_H
+#ifndef MESHWRITER_H
+#define MESHWRITER_H
 #include "MeshNativeType.h"
 
 template<unsigned int MeshDimension, typename IndexType, typename Real>
-class MeshReader{
+class MeshWriter{
 
 };
 
+enum {
+    hmmm
+};
 
 template <typename IndexType, typename Real>
-class MeshReader<2, IndexType, Real> {
+class MeshWriter<2, IndexType, Real> {
 public:
     using type = MeshNativeType<2>;
 
-
 };
-#endif // MESHREADER_H
+#endif // MESHWRITER_H
