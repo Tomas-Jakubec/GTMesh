@@ -2,6 +2,8 @@
 #include "../debug/debug.h"
 #include "UnstructuredMesh.h"
 #include "MeshFunctions.h"
+#include "VTKMeshReader.h"
+#include <fstream>
 using namespace std;
 
 
@@ -381,6 +383,19 @@ void testMesh2D() {
 }
 
 
+
+void testMesh2DLoad(){
+    using Mesh = UnstructuredMesh<2, size_t, double>;
+    Mesh mesh;
+    DBGMSG("load from vtk file test");
+    VTKMeshReader reader(mesh);
+    ifstream ifst("Test_obdelnik.vtk");
+    DBGVAR(bool(ifst))
+    reader.loadFromStream(ifst, mesh);
+
+    DBGVAR(mesh.getCells().size())
+}
+
 void testMesh3D() {
     DBGMSG("3D test");
 
@@ -506,6 +521,7 @@ void testMesh3D() {
         DBGVAR(vert.getIndex(), colours1.at(vert))
     }
 }
+
 
 
 
@@ -651,10 +667,11 @@ void testTemplate() {
 
 int main()
 {
-    testMesh2D();
-    testMesh3D();
-    test3DMeshDeformedPrisms();
-    testMeshDataContainer();
+    //testMesh2D();
+    testMesh2DLoad();
+    //testMesh3D();
+    //test3DMeshDeformedPrisms();
+    //testMeshDataContainer();
     //testTemplate();
     UnstructuredMesh<5, size_t, double, 6,5,4> m;
     //m.ComputeElementMeasures();

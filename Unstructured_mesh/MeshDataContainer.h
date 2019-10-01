@@ -115,7 +115,7 @@ public:
         return getDataByDim<ElementDim>()[element.getIndex()];
     }
 
-
+    MeshDataContainer(){}
 
     template <unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
     MeshDataContainer(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
@@ -285,6 +285,8 @@ public:
     }
 
 
+
+    MeshDataContainer(){}
 
     template <unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
     MeshDataContainer(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){

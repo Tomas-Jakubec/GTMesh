@@ -2,14 +2,14 @@
 #define MESHREADER_H
 
 
-template<unsigned int MeshDimension>
+template<unsigned int MeshDimension, typename IndexType, typename Real>
 class MeshReader{
 
 };
 
 
-template <>
-class MeshReader<2> {
+template <typename IndexType, typename Real>
+class MeshReader<2, IndexType, Real> {
 public:
     enum ElementType{
         LINE = 1,
