@@ -75,6 +75,7 @@
 #ifndef UNDEBUG
 #include <iostream>
 #include "htmllogger.h"
+#include "consolelogger.h"
 #include <stdexcept>
 /*
 ** Macros intended for sending
@@ -109,7 +110,7 @@ __LINE__ << " variable " << #var \
 #define SINGLE_DBGVAR_SC(var) SINGLE_DBGVAR(var);
 
 
-#define DBGVAR(...) FOR_EACH(SINGLE_DBGVAR_SC, __VA_ARGS__)
+#define DBGVAR(...) ConsoleLogger::writeVar(__LINE__, __FILE__ FOR_EACH(STRVAR, __VA_ARGS__))
 #define DBGVARCOND(condition, ...) if(condition) {DBGVAR(__VA_ARGS__)}
 
 #ifdef __linux__

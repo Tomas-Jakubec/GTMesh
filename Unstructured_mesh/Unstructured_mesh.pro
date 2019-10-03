@@ -8,6 +8,7 @@ SOURCES += \
     ../debug/debug.cpp
 
 HEADERS += \
+    ../debug/consolelogger.h \
     CellBoundaryConnection.h \
     CellConnection.h \
     ComputationalySignificantElement.h \

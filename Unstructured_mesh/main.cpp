@@ -5,6 +5,7 @@
 #include "VTKMeshReader.h"
 #include "VTKMeshWriter.h"
 #include <fstream>
+#include <list>
 using namespace std;
 
 
@@ -311,19 +312,19 @@ void testMesh2D() {
     DBGMSG("cell boundary iterator test");
 
     for(auto i : cell.getSubelements()){
-        DBGVAR(i)
+        DBGVAR(i);
     }
 
 
     for(auto i : mesh.getElement<2>(1).getSubelements()){
-        DBGVAR(i)
+        DBGVAR(i);
     }
 
     DBGMSG("cell vertices using iterator");
     for(size_t i = 0; i < mesh.getCells().size(); i++){
         for(auto j : mesh.getElement<2>(i).getSubelements()){
             auto e = mesh.getElement<1>(j);
-            DBGVAR(e.getElement().getVertexAIndex(), e.getElement().getVertexBIndex())
+            DBGVAR(e.getElement().getVertexAIndex(), e.getElement().getVertexBIndex());
         }
     }
 
@@ -332,9 +333,9 @@ void testMesh2D() {
     DBGMSG("vertices of cells in 2D");
     for (auto& cell : mesh.getCells()){
         std::set<size_t>& _set = vertices.at(cell);
-        DBGVAR(cell.getIndex())
+        DBGVAR(cell.getIndex());
         for (size_t index: _set){
-            DBGVAR(index)
+            DBGVAR(index);
         }
     }
 
@@ -344,11 +345,11 @@ void testMesh2D() {
 
     auto& faceCent = centers.getDataByDim<1>();
     for(auto& center : faceCent) {
-        DBGVAR(center)
+        DBGVAR(center);
     }
     DBGMSG("cellCenter");
     for(sit::Cell& cell : mesh.getCells()){
-        DBGVAR(centers.getDataByDim<2>().at(cell.getIndex()))
+        DBGVAR(centers.getDataByDim<2>().at(cell.getIndex()));
     }
 
 
@@ -358,11 +359,11 @@ void testMesh2D() {
 
 
     for(double edgeM :measures.getDataByDim<1>()) {
-        DBGVAR(edgeM)
+        DBGVAR(edgeM);
     }
 
     for(double cellM :measures.getDataByDim<2>()) {
-        DBGVAR(cellM)
+        DBGVAR(cellM);
     }
 
 
@@ -371,14 +372,14 @@ void testMesh2D() {
 
     auto normals = ComputeFaceNormals(mesh);
     for(auto& edge : mesh.getEdges()){
-        DBGVAR(edge.getIndex(),normals.at(edge))
+        DBGVAR(edge.getIndex(),normals.at(edge));
     }
 
     DBGMSG("2D cells distances");
 
     auto distances = ComputeCellsDistance(mesh);
     for(auto& edge : mesh.getEdges()){
-        DBGVAR(edge.getIndex(),distances.at(edge))
+        DBGVAR(edge.getIndex(),distances.at(edge));
     }
 
 }
@@ -391,21 +392,21 @@ void testMesh2DLoadAndWrite(){
     DBGMSG("load from vtk file test");
     VTKMeshReader<2, size_t, double> reader;
     ifstream ifst("Test_obdelnik.vtk");
-    DBGVAR(bool(ifst))
+    DBGVAR(bool(ifst));
     reader.loadFromStream(ifst, mesh);
 
-    DBGVAR(mesh.getVertices().size(), mesh.getVertices().at(4),mesh.getCells().size())
+    DBGVAR(mesh.getVertices().size(), mesh.getVertices().at(4),mesh.getCells().size());
 
 
     DBGMSG("mesh apply test");
     temp1::MeshRun<2, 2, 0, 2,false, true>::run(mesh,size_t(4), size_t(4), [](unsigned int S, unsigned int T, size_t ori, size_t i){
-        DBGVAR(S,T,ori,i)
+        DBGVAR(S,T,ori,i);
     });
 
     mesh.initializeCenters();
     auto normals = mesh.computeFaceNormals();
     auto measures = mesh.computeElementMeasures();
-    DBGVAR(normals.getDataByPos<0>().at(0), measures.getDataByDim<2>().at(100), measures.getDataByDim<1>().at(100), mesh.getCells().at(100).getCenter())
+    DBGVAR(normals.getDataByPos<0>().at(0), measures.getDataByDim<2>().at(100), measures.getDataByDim<1>().at(100), mesh.getCells().at(100).getCenter());
 
     VTKMeshWriter<2,size_t, double> writer;
     ofstream ofst("test_mesh_export.vtk");
@@ -422,11 +423,11 @@ void testMesh3D() {
     size_t tmp_face = mesh3.getCells().at(0).getBoundaryElementIndex();
 
     do {
-        DBGVAR(tmp_face)
+        DBGVAR(tmp_face);
         for (auto& sube : mesh3.getFaces().at(tmp_face).getSubelements()) {
-            DBGVAR(sube.index)
+            DBGVAR(sube.index);
             if (sube.index != INVALID_INDEX(size_t) ){
-                DBGVAR(sube.index, mesh3.getVertices().at(mesh3.getEdges().at(sube.index).getVertexAIndex()),mesh3.getVertices().at(mesh3.getEdges().at(sube.index).getVertexBIndex()))
+                DBGVAR(sube.index, mesh3.getVertices().at(mesh3.getEdges().at(sube.index).getVertexAIndex()),mesh3.getVertices().at(mesh3.getEdges().at(sube.index).getVertexBIndex()));
             }
         }
 
@@ -438,7 +439,7 @@ void testMesh3D() {
     DBGMSG("Iterator wrapper test");
     sit3::MeshElementWrap<2> elem(&mesh3, mesh3.getFaces().at(0));
     for(auto i : elem.getSubelements()){
-        DBGVAR(i.index)
+        DBGVAR(i.index);
     }
 
 
@@ -451,11 +452,11 @@ void testMesh3D() {
 
 
     //cont.getDataByDim<3>().resize(20);
-    DBGVAR(cont.getDataByPos<1>().size())
+    DBGVAR(cont.getDataByPos<1>().size());
 
-    DBGVAR(cont.getDataByPos<0>().size())
+    DBGVAR(cont.getDataByPos<0>().size());
 
-    DBGVAR(cont.getDataByDim<3>().size())
+    DBGVAR(cont.getDataByDim<3>().size());
 
 
     DBGMSG("faceCenters");
@@ -467,26 +468,26 @@ void testMesh3D() {
 
     for(auto& face : mesh3.getFaces()) {
         face.setCenter(centers.template getDataByDim<2>().at(face.getIndex()));
-        DBGVAR(face.getCenter())
+        DBGVAR(face.getCenter());
     }
     DBGMSG("cellCenter");
     for(auto& cell : mesh3.getCells()) {
         cell.setCenter(centers.template getDataByDim<3>().at(cell.getIndex()));
-        DBGVAR(cell.getCenter())
+        DBGVAR(cell.getCenter());
     }
 
     DBGMSG("measure computation");
 
     auto measures = ComputeMeasures(mesh3);
     for(double edgeM : measures.getDataByDim<1>()) {
-        DBGVAR(edgeM)
+        DBGVAR(edgeM);
     }
     for(double faceM : measures.getDataByDim<2>()) {
-        DBGVAR(faceM)
+        DBGVAR(faceM);
     }
 
     for(double cellM : measures.getDataByDim<3>()) {
-        DBGVAR(cellM)
+        DBGVAR(cellM);
     }
 
 
@@ -494,25 +495,25 @@ void testMesh3D() {
 
     auto normals = mesh3.computeFaceNormals();
     for(auto& face : mesh3.getFaces()){
-        DBGVAR(face.getIndex(),normals.at(face))
+        DBGVAR(face.getIndex(),normals.at(face));
     }
 
     DBGMSG("mesh apply test");
     temp1::MeshApply<3, 2, 3>::apply(mesh3, [](unsigned int S, unsigned int T, size_t ori, size_t i){
-        DBGVAR(S,T,ori,i)
+        DBGVAR(S,T,ori,i);
     });
     DBGMSG("mesh apply test");
     temp1::MeshApply<2, 3, 3>::apply(mesh3,[](unsigned int S, unsigned int T, size_t ori, size_t i){
-        DBGVAR(S,T,ori,i)
+        DBGVAR(S,T,ori,i);
     });
 
 
     DBGMSG("connection test");
     auto con = temp1::MeshConnections<3,0>::connections(mesh3);
     for (auto& cell : mesh3.getCells()){
-        DBGVAR(cell.getIndex())
+        DBGVAR(cell.getIndex());
         for(size_t i : con[cell]){
-            DBGVAR(i)
+            DBGVAR(i);
         }
     }
 
@@ -520,22 +521,22 @@ void testMesh3D() {
     DBGMSG("connection test oposite");
     auto con1 = temp1::MeshConnections<0,3>::connections(mesh3);
     for (auto& vert : mesh3.getVertices()){
-        DBGVAR(vert.getIndex())
+        DBGVAR(vert.getIndex());
         for(size_t i : con1[vert]){
-            DBGVAR(i)
+            DBGVAR(i);
         }
     }
 
     DBGMSG("face to vertex colouring");
     auto colours = temp1::ColourMesh<2,0>::colour(mesh3);
     for (auto& face : mesh3.getFaces()){
-        DBGVAR(face.getIndex(), colours.at(face))
+        DBGVAR(face.getIndex(), colours.at(face));
     }
 
     DBGMSG("vertex to face colouring");
     auto colours1 = temp1::ColourMesh<0,2>::colour(mesh3);
     for (auto& vert : mesh3.getVertices()){
-        DBGVAR(vert.getIndex(), colours1.at(vert))
+        DBGVAR(vert.getIndex(), colours1.at(vert));
     }
 }
 
@@ -551,26 +552,26 @@ void test3DMeshDeformedPrisms() {
 
     for(auto& face : mesh3.getFaces()) {
         face.setCenter(centers[face]);
-        DBGVAR(face.getCenter())
+        DBGVAR(face.getCenter());
     }
     DBGMSG("cellCenter");
     for(auto& cell : mesh3.getCells()) {
         cell.setCenter(centers[cell]);
-        DBGVAR(cell.getCenter())
+        DBGVAR(cell.getCenter());
     }
 
     DBGMSG("measure computation");
 
     auto measures = ComputeMeasures(mesh3);
     for(double edgeM : measures.getDataByDim<1>()) {
-        DBGVAR(edgeM)
+        DBGVAR(edgeM);
     }
     for(double faceM : measures.getDataByDim<2>()) {
-        DBGVAR(faceM)
+        DBGVAR(faceM);
     }
 
     for(double cellM : measures.getDataByDim<3>()) {
-        DBGVAR(cellM)
+        DBGVAR(cellM);
     }
 }
 
@@ -595,25 +596,25 @@ void testMeshDataContainer() {
     }
 
     for(auto& v : mesh3.getVertices()){
-        DBGVAR(container.at(v))
+        DBGVAR(container.at(v));
     }
 
     MeshDataContainer<std::tuple<int, double, char, int>, 3, 2, 0, 2> containerIni(mesh3,3, 42.15, 'a', 15);
 
     for (auto& val : containerIni.getDataByPos<0>()){
-        DBGVAR(val)
+        DBGVAR(val);
     }
 
     for (auto& val : containerIni.getDataByPos<1>()){
-        DBGVAR(val)
+        DBGVAR(val);
     }
 
     for (auto& val : containerIni.getDataByPos<2>()){
-        DBGVAR(val)
+        DBGVAR(val);
     }
 
     for (auto& val : containerIni.getDataByPos<3>()){
-        DBGVAR(val)
+        DBGVAR(val);
     }
 }
 
@@ -622,10 +623,10 @@ class ClassA
  {
    public:
       ClassA (std::integer_sequence<unsigned int,Is...>)
-      {DBGVAR(sizeof... (Is), std::get<0>(std::array<size_t, sizeof...(Is)>{Is...})) }
+      {DBGVAR(sizeof... (Is), std::get<0>(std::array<size_t, sizeof...(Is)>{Is...})); }
 
       static void fun (std::index_sequence<Is...>)
-      {DBGVAR(sizeof... (Is), std::get<0>(std::array<size_t, sizeof...(Is)>{Is...})) }
+      {DBGVAR(sizeof... (Is), std::get<0>(std::array<size_t, sizeof...(Is)>{Is...})); }
 
  };
 
@@ -638,7 +639,7 @@ class ClassB
    public:
       ClassB (const std::integer_sequence<unsigned int, Is...>, Tuple t)
       {std::tuple_element_t<0,Tuple> typ = 0;
-          DBGVAR(sizeof... (Is), std::get<0>(std::array<size_t, sizeof...(Is)>{Is...}), std::get<0>(t), typ) }
+          DBGVAR(sizeof... (Is), std::get<0>(std::array<size_t, sizeof...(Is)>{Is...}), std::get<0>(t), typ); }
 
  };
 
@@ -651,12 +652,12 @@ class ClassC<std::integer_sequence<unsigned int,Is...>, std::tuple<Types...>>
    public:
       ClassC (const std::integer_sequence<unsigned int, Is...>, std::tuple<Types...>)
       {std::tuple_element_t<0,std::tuple<Types...>> typ = 0;
-          DBGVAR(sizeof... (Is), std::get<0>(std::array<size_t, sizeof...(Is)>{Is...}), typ) }
+          DBGVAR(sizeof... (Is), std::get<0>(std::array<size_t, sizeof...(Is)>{Is...}), typ); }
 
       ClassC () {
           std::tuple_element_t<0,std::tuple<Types...>> typ = 42.15;
           std::tuple_element_t<1,std::tuple<Types...>> typ2 = 42.15;
-          DBGVAR(sizeof... (Is), std::get<0>(std::array<size_t, sizeof...(Is)>{Is...}), typ, typ2)
+          DBGVAR(sizeof... (Is), std::get<0>(std::array<size_t, sizeof...(Is)>{Is...}), typ, typ2);
       }
  };
 
@@ -679,17 +680,32 @@ void testTemplate() {
 }
 
 
-
+void testDebug() {
+    double r = 42.15;
+    int i = 15;
+    char c = 42;
+    bool b = false;
+    std::list<int> list = {1,2,3};
+    std::vector<std::list<int>> vec(5, list);
+    std::map<std::string, size_t> m{
+        {"prvni", 1},
+        {"druhy", 2},
+        {"treti", 3}
+    };
+    ConsoleLogger::writeVar(__LINE__, __FILE__, "r", r, "i", i, "c", c, "list", list, "vec", vec, "b", b, "map", m);
+    DBGVAR(r, i, c, list, vec, b, m);
+}
 
 
 int main()
 {
     //testMesh2D();
-    testMesh2DLoadAndWrite();
-    //testMesh3D();
+    //testMesh2DLoadAndWrite();
+    testMesh3D();
     //test3DMeshDeformedPrisms();
     //testMeshDataContainer();
     //testTemplate();
-    UnstructuredMesh<5, size_t, double, 6,5,4> m;
+    //UnstructuredMesh<5, size_t, double, 6,5,4> m;
     //m.ComputeElementMeasures();
+
 }

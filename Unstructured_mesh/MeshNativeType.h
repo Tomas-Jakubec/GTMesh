@@ -9,10 +9,22 @@ struct MeshNativeType{
 template<>
 struct MeshNativeType<2>{
     enum ElementType{
-        LINE = 1,
+        LINE = 200,
         TRIANGLE,
         QUAD,
         POLYGON
+    };
+};
+
+template<>
+struct MeshNativeType<3>{
+    enum ElementType{
+        TETRA = 300,
+        HEXAHEDRON,
+        WEDGE,
+        PYRAMID,
+        N_PYRAMID,
+        POLYHEDRON
     };
 };
 
