@@ -76,8 +76,11 @@ class ConsoleLogger {
 
     template<typename T>
     static auto _writeWar(const T &list)
-      -> typename std::enable_if<std::is_class<
-             decltype(std::declval<const T&>().begin())>::value &&
+      -> typename std::enable_if<
+             !std::is_same<
+                decltype(std::declval<const T&>().begin()),
+                void
+             >::value &&
              !std::is_same<T, std::string>::value
          >::type
     {

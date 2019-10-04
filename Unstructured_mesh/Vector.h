@@ -5,7 +5,7 @@
 #include <iostream>
 #include <initializer_list>
 #include "InlineArrayOperations.h"
-
+#include <array>
 
 
 template <unsigned int Dim, typename Real = double>
@@ -13,7 +13,7 @@ class Vector {
     /**
      * @brief coordinates
      */
-    Real coordinates[Dim] = {};
+    std::array<Real, Dim> coordinates = {};
 
 public:
     Vector(){}
@@ -27,6 +27,11 @@ public:
         coordinates[pos] = coord;
     }
 
+
+    std::array<Real, Dim>& getCoordinates() {
+        return coordinates;
+    }
+
     Real& operator[](unsigned int pos){
         return coordinates[pos];
     }
@@ -38,7 +43,7 @@ public:
     Real normEukleid();
 
     inline Real sumOfSquares() {
-        return  inlineScalarProduct<Dim, Real>::computation(coordinates, coordinates);
+        return  inlineScalarProduct<Dim, Real>::computation(coordinates.data(), coordinates.data());
     }
 
     Vector<Dim, Real> operator-(const Vector<Dim, Real>&) const;
@@ -119,7 +124,7 @@ Real Vector<Dim, Real>::normEukleid(){
 template <unsigned int Dim, typename Real>
 Vector<Dim, Real> Vector<Dim, Real>::operator -(const Vector<Dim, Real>& v) const {
     Vector<Dim, Real> res;
-    inlineSubtraction<Dim, Real>::computation(res.coordinates, this->coordinates, v.coordinates);
+    inlineSubtraction<Dim, Real>::computation(res.coordinates.data(), this->coordinates.data(), v.coordinates.data());
     return res;
 }
 
@@ -127,7 +132,7 @@ Vector<Dim, Real> Vector<Dim, Real>::operator -(const Vector<Dim, Real>& v) cons
 template <unsigned int Dim, typename Real>
 Vector<Dim, Real> Vector<Dim, Real>::operator +(const Vector<Dim, Real>& v) const {
     Vector<Dim, Real> res;
-    inlineAddition<Dim, Real>::computation(res.coordinates, this->coordinates, v.coordinates);
+    inlineAddition<Dim, Real>::computation(res.coordinates.data(), this->coordinates.data(), v.coordinates.data());
     return res;
 }
 
@@ -135,7 +140,7 @@ Vector<Dim, Real> Vector<Dim, Real>::operator +(const Vector<Dim, Real>& v) cons
 template <unsigned int Dim, typename Real>
 Vector<Dim, Real> Vector<Dim, Real>::operator *(const Real& x) const {
     Vector<Dim, Real> res;
-    inlineMultiplication<Dim, Real>::computation(res.coordinates, this->coordinates, x);
+    inlineMultiplication<Dim, Real>::computation(res.coordinates.data(), this->coordinates.data(), x);
     return res;
 }
 
@@ -152,20 +157,20 @@ Vector<Dim, Real> Vector<Dim, Real>::operator /(const Real& x) const {
 template<unsigned int Dim, typename Real>
 Real Vector<Dim, Real>::operator*(const Vector &v)
 {
-    return inlineScalarProduct<Dim, Real>::computation(coordinates, v.coordinates);
+    return inlineScalarProduct<Dim, Real>::computation(coordinates.data(), v.coordinates.data());
 }
 
 // Adds value of coordinates of another Point
 template <unsigned int Dim, typename Real>
 Vector<Dim, Real>& Vector<Dim, Real>::operator +=(const Vector<Dim, Real>& v){
-    inlineAddition<Dim, Real>::computation(coordinates, v.coordinates);
+    inlineAddition<Dim, Real>::computation(coordinates.data(), v.coordinates.data());
     return *this;
 }
 
 // Subtracts value of coordinates of another Point
 template <unsigned int Dim, typename Real>
 Vector<Dim, Real>& Vector<Dim, Real>::operator -=(const Vector<Dim, Real>& v){
-    inlineSubtraction<Dim, Real>::computation(coordinates, v.coordinates);
+    inlineSubtraction<Dim, Real>::computation(coordinates.data(), v.coordinates.data());
     return *this;
 }
 
@@ -173,7 +178,7 @@ Vector<Dim, Real>& Vector<Dim, Real>::operator -=(const Vector<Dim, Real>& v){
 // Adds value of coordinates of another Point
 template <unsigned int Dim, typename Real>
 Vector<Dim, Real>& Vector<Dim, Real>::operator *=(const Real& x){
-    inlineMultiplication<Dim, Real>::computation(coordinates, x);
+    inlineMultiplication<Dim, Real>::computation(coordinates.data(), x);
     return *this;
 }
 

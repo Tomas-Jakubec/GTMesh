@@ -4,7 +4,7 @@
 #include <iostream>
 #include <initializer_list>
 #include "InlineArrayOperations.h"
-
+#include <array>
 
 template <unsigned int Dim, typename Real = double>
 class Vertex {
@@ -12,7 +12,7 @@ class Vertex {
      * @brief coordinates<HR>
      * coordinates of the vertex in the space
      */
-    Real coordinates[Dim] = {};
+    std::array<Real, Dim> coordinates = {};
 
 public:
     Vertex(){}
@@ -26,6 +26,10 @@ public:
         coordinates[pos] = coord;
     }
 
+    std::array<Real, Dim>& getCoordinates() {
+        return coordinates;
+    }
+
     Real& operator[](unsigned int pos){
         return coordinates[pos];
     }
@@ -37,7 +41,7 @@ public:
     Real normEukleid();
 
     inline Real sumOfSquares() {
-        return  inlineScalarProduct<Dim, Real>::computation(coordinates, coordinates);
+        return  inlineScalarProduct<Dim, Real>::computation(coordinates.data(), coordinates.data());
     }
 
     Vertex<Dim, Real> operator-(const Vertex<Dim, Real>&) const;
@@ -105,7 +109,7 @@ Real Vertex<Dim, Real>::normEukleid(){
 template <unsigned int Dim, typename Real>
 Vertex<Dim, Real> Vertex<Dim, Real>::operator -(const Vertex<Dim, Real>& v) const {
     Vertex<Dim, Real> res;
-    inlineSubtraction<Dim, Real>::computation(res.coordinates, this->coordinates, v.coordinates);
+    inlineSubtraction<Dim, Real>::computation(res.coordinates.data(), this->coordinates.data(), v.coordinates.data());
     return res;
 }
 
@@ -113,7 +117,7 @@ Vertex<Dim, Real> Vertex<Dim, Real>::operator -(const Vertex<Dim, Real>& v) cons
 template <unsigned int Dim, typename Real>
 Vertex<Dim, Real> Vertex<Dim, Real>::operator +(const Vertex<Dim, Real>& v) const {
     Vertex<Dim, Real> res;
-    inlineAddition<Dim, Real>::computation(res.coordinates, this->coordinates, v.coordinates);
+    inlineAddition<Dim, Real>::computation(res.coordinates.data(), this->coordinates.data(), v.coordinates.data());
     return res;
 }
 
@@ -121,7 +125,7 @@ Vertex<Dim, Real> Vertex<Dim, Real>::operator +(const Vertex<Dim, Real>& v) cons
 template <unsigned int Dim, typename Real>
 Vertex<Dim, Real> Vertex<Dim, Real>::operator *(const Real& x) const {
     Vertex<Dim, Real> res;
-    inlineMultiplication<Dim, Real>::computation(res.coordinates, this->coordinates, x);
+    inlineMultiplication<Dim, Real>::computation(res.coordinates.data(), this->coordinates.data(), x);
     return res;
 }
 
@@ -136,7 +140,7 @@ Vertex<Dim, Real> Vertex<Dim, Real>::operator /(const Real& x) const {
 template<unsigned int Dim, typename Real>
 Real Vertex<Dim, Real>::operator*(const Vertex<Dim, Real> &v)
 {
-    return inlineScalarProduct<Dim, Real>::computation(coordinates, v.coordinates);
+    return inlineScalarProduct<Dim, Real>::computation(coordinates.data(), v.coordinates.data());
 }
 
 
@@ -144,14 +148,14 @@ Real Vertex<Dim, Real>::operator*(const Vertex<Dim, Real> &v)
 // Adds value of coordinates of another Point
 template <unsigned int Dim, typename Real>
 Vertex<Dim, Real>& Vertex<Dim, Real>::operator +=(const Vertex<Dim, Real>& v){
-    inlineAddition<Dim, Real>::computation(coordinates, v.coordinates);
+    inlineAddition<Dim, Real>::computation(coordinates.data(), v.coordinates.data());
     return *this;
 }
 
 // Subtracts value of coordinates of another Point
 template <unsigned int Dim, typename Real>
 Vertex<Dim, Real>& Vertex<Dim, Real>::operator -=(const Vertex<Dim, Real>& v){
-    inlineSubtraction<Dim, Real>::computation(coordinates, v.coordinates);
+    inlineSubtraction<Dim, Real>::computation(coordinates.data(), v.coordinates.data());
     return *this;
 }
 
@@ -159,7 +163,7 @@ Vertex<Dim, Real>& Vertex<Dim, Real>::operator -=(const Vertex<Dim, Real>& v){
 // Adds value of coordinates of another Point
 template <unsigned int Dim, typename Real>
 Vertex<Dim, Real>& Vertex<Dim, Real>::operator *=(const Real& x){
-    inlineMultiplication<Dim, Real>::computation(coordinates, x);
+    inlineMultiplication<Dim, Real>::computation(coordinates.data(), x);
     return *this;
 }
 

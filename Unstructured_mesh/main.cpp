@@ -695,6 +695,9 @@ void testDebug() {
     ConsoleLogger::writeVar(__LINE__, __FILE__, "r", r, "i", i, "c", c, "list", list, "vec", vec, "b", b, "map", m);
     ConsoleLogger::writeVar(__LINE__, __FILE__,"---", {5,4,3,2});
     DBGVAR(r, i, c, list, vec, b, m);
+
+    Vertex<7, double> vert;
+    DBGVAR(vert.getCoordinates());
 }
 
 
@@ -710,6 +713,6 @@ int main()
     //testTemplate();
     //UnstructuredMesh<5, size_t, double, 6,5,4> m;
     //m.ComputeElementMeasures();
-    testDebug();
+    //testDebug();
 
 }
