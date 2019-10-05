@@ -93,6 +93,7 @@ public:
                     mesh.getEdges().at(edgeIndex).setIndex(edgeIndex);
 
                     mesh.getEdges().at(edgeIndex).setCellLeftIndex(cellIndex);
+                    edges[edgeKey] = edgeIndex;
                 } else {
                     edgeIndex = edgeIt->second;
                     mesh.getEdges().at(edgeIt->second).setCellRightIndex(cellIndex);
@@ -228,7 +229,7 @@ class VTKMeshReader<3, IndexType, Real, Reserve...> : public MeshReader<3, Index
                     {0,2,1},
                     {0,4,8,3},
                     {1,4,7,5},
-                    {3,5,6,3},
+                    {3,5,6,2},
                     {6,7,8}
                 }
             }
@@ -273,7 +274,6 @@ public:
     void loadPoints(std::istream& ist, MeshElements<3, IndexType, Real, Reserve...>& mesh){
         IndexType numPoints;
         ist >> numPoints;
-        Real dummy = 0;
         mesh.getVertices().resize(numPoints);
         ist.ignore(20, '\n');
         for (IndexType vertIndex = 0; vertIndex < numPoints; vertIndex++) {
@@ -321,6 +321,7 @@ public:
                     mesh.getEdges().at(edgeIndex).setVertexBIndex(iB);
                     mesh.getEdges().at(edgeIndex).setIndex(edgeIndex);
                     edgeIndexes.push_back({edgeIndex, true});
+                    edges[edgeKey] = edgeIndex;
                 } else {
                     edgeIndexes.push_back({edgeIt->second, iA == mesh.getEdges().at(edgeIt->second).getVertexAIndex()});
                 }
@@ -347,9 +348,10 @@ public:
                     faceIndex = mesh.getFaces().size();
                     mesh.getFaces().push_back({});
                     for (int& index : f) {
-                        mesh.getFaces().at(faceIndex).addSublement(edgeIndexes.at(index));
+                        mesh.getFaces().at(faceIndex).getSubelements().addSubelement(edgeIndexes.at(index).first,edgeIndexes.at(index).second);
                     }
                     mesh.getFaces().at(faceIndex).setCellLeftIndex(cellIndex);
+                    mesh.getFaces().at(faceIndex).setIndex(faceIndex);
                 } else {
                     faceIndex = faceIt->second;
                     mesh.getFaces().at(faceIndex).setCellRightIndex(cellIndex);
@@ -362,8 +364,9 @@ public:
                     mesh.getCells().at(cellIndex).setBoundaryElementIndex(faceIndex);
                 }
                 if (fi == faceOrder.size() - 1) {
-                    mesh.getEdges().at(faceIndex).setNextBElem(mesh.getCells().at(cellIndex).getBoundaryElementIndex(), cellIndex);
+                    mesh.getFaces().at(faceIndex).setNextBElem(mesh.getCells().at(cellIndex).getBoundaryElementIndex(), cellIndex);
                 }
+                faces[faceKey] = faceIndex;
                 prevFaceIndex = faceIndex;
             }
         }

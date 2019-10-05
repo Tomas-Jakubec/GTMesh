@@ -1,4 +1,5 @@
 #include <iostream>
+//#define UNDEBUG
 #include "../debug/debug.h"
 #include "UnstructuredMesh.h"
 #include "MeshFunctions.h"
@@ -507,24 +508,25 @@ void testMesh3D() {
         DBGVAR(S,T,ori,i);
     });
 
+    DBGMSG("3D edge orientation");
+    temp1::MeshApply<2, 1, 3>::apply(mesh3,[&mesh3](unsigned int , unsigned int , size_t faceIndex, size_t edgeIndex){
+        DBGVAR(faceIndex,
+               edgeIndex,
+               temp1::edgeIsLeft(mesh3,faceIndex, edgeIndex));
+    });
+
 
     DBGMSG("connection test");
     auto con = temp1::MeshConnections<3,0>::connections(mesh3);
     for (auto& cell : mesh3.getCells()){
-        DBGVAR(cell.getIndex());
-        for(size_t i : con[cell]){
-            DBGVAR(i);
-        }
+            DBGVAR(cell.getIndex(), con[cell]);
     }
 
 
     DBGMSG("connection test oposite");
     auto con1 = temp1::MeshConnections<0,3>::connections(mesh3);
     for (auto& vert : mesh3.getVertices()){
-        DBGVAR(vert.getIndex());
-        for(size_t i : con1[vert]){
-            DBGVAR(i);
-        }
+        DBGVAR(vert.getIndex(), con1[vert]);
     }
 
     DBGMSG("face to vertex colouring");
@@ -701,7 +703,46 @@ void testDebug() {
 }
 
 
+void test3DMeshLoad() {
+    UnstructuredMesh<3, size_t, double, 6> mesh;
+    VTKMeshReader<3, size_t, double, 6> reader;
 
+    ifstream file("test_3Dmesh.vtk");
+    reader.loadFromStream(file, mesh);
+
+DBGVAR(mesh.getVertices().size(),mesh.getEdges().size(), mesh.getFaces().size(), mesh.getCells().size());
+    DBGVAR(mesh.getVertices());
+
+
+    DBGMSG("connection test");
+    auto con2 = temp1::MeshConnections<1,0>::connections(mesh);
+    for (auto& edge : mesh.getEdges()){
+            DBGVAR(edge.getIndex(), con2[edge]);
+    }
+
+    for (auto& face : mesh.getFaces()) {
+        DBGVAR(face.getIndex());
+        for (auto& sube : face.getSubelements()){
+            DBGVAR(sube.index);
+        }
+    }
+
+    DBGMSG("connection test");
+    auto con1 = temp1::MeshConnections<2,1>::connections(mesh);
+    for (auto& face : mesh.getFaces()){
+            DBGVAR(face.getIndex(), con1[face]);
+    }
+
+    DBGMSG("connection test");
+    auto con = temp1::MeshConnections<3,2>::connections(mesh);
+    for (auto& cell : mesh.getCells()){
+            DBGVAR(cell.getIndex(), con[cell]);
+    }
+
+    mesh.initializeCenters();
+    DBGVAR(mesh.computeElementMeasures().getDataByDim<3>(),ComputeCenters(mesh).getDataByDim<2>(),mesh.computeFaceNormals().getDataByPos<0>());
+
+}
 
 int main()
 {
@@ -714,5 +755,5 @@ int main()
     //UnstructuredMesh<5, size_t, double, 6,5,4> m;
     //m.ComputeElementMeasures();
     //testDebug();
-
+    test3DMeshLoad();
 }

@@ -646,11 +646,50 @@ struct ColourMesh{
 
 template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
 static MeshDataContainer<unsigned int, FromDim> colour(
-        MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
+            MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
         ){
     return MeshColouring<FromDim, ToDim, (FromDim > ToDim)>::colour(mesh);
 }
 };
+
+
+
+template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
+bool edgeIsLeft(MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh,
+                typename MeshElements<MeshDimension, IndexType, Real, Reserve...>::template ElementType<2>& face,
+                typename MeshElements<MeshDimension, IndexType, Real, Reserve...>::Edge& edge
+                ) {
+
+    Vertex<MeshDimension, Real> AminC = mesh.getVertices().at(edge.getVertexAIndex()) - face.getCenter();
+    Vertex<MeshDimension, Real> BminC = mesh.getVertices().at(edge.getVertexBIndex()) - face.getCenter();
+
+
+    for (IndexType i = 0; i < MeshDimension; i++){
+        IndexType ipo = (i+1)%(MeshDimension);
+        IndexType ipt = (i+2)%(MeshDimension);
+        Real res = AminC[ipo]*BminC[ipt]-BminC[ipo]*AminC[ipt];
+        if ((MeshDimension + i + 1)% 2 == 0)
+            res *= -1;
+        if (abs(res) > 1e-4) {
+            return res > 0;
+        }
+    }
+    throw std::runtime_error("can not determine orientation of edge " +
+                             std::to_string(edge.getIndex()) + " wrt face: " + std::to_string(face.getIndex()));
+}
+
+template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
+bool edgeIsLeft(MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh, IndexType faceIndex, IndexType edgeIndex) {
+
+    typename MeshElements<MeshDimension, IndexType, Real, Reserve...>::Edge& edge = mesh.getEdges().at(edgeIndex);
+    typename MeshElements<MeshDimension, IndexType, Real, Reserve...>::template ElementType<2>& face = mesh.template getElements<2>().at(faceIndex);
+
+    return edgeIsLeft(mesh, face, edge);
+
+}
+
+
+
 
 }
 
