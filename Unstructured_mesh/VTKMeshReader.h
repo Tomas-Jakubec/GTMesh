@@ -238,7 +238,7 @@ class VTKMeshReader<3, IndexType, Real, Reserve...> : public MeshReader<3, Index
                 {// edges (first)
                     {0,1},//0
                     {1,2},//1
-                    {2,0},//2
+                    {2,3},//2
                     {3,0},//3
                     {0,4},//4
                     {1,4},//5
