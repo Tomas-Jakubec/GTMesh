@@ -114,7 +114,7 @@ struct VariableExport {
 
 
     template<typename T1, typename T2>
-    static auto _writeWar(std::ostream& ost, const std::pair<T1,T2>& b)
+    static auto _writeWar(std::ostream& ost, const std::pair<T1,T2>& b) -> void
     {
         ost << "{ ";
         _writeWar(ost, b.first);

@@ -40,7 +40,7 @@ public:
 
 #ifdef __linux__
         std::cerr << "In file " << cppFile << " at line " << line << " variable \033[0;33m" << name << "\033[0m has value of \033[0;31m";
-        _writeWar(value);
+        VariableExport::_writeWar(std::cerr, value);
         std::cerr << "\033[0m\n";
 #else
         std::cerr << "In file " << cppFile << " at line " << line << " variable " << name << " has value of ";
@@ -54,7 +54,7 @@ public:
 
 #ifdef __linux__
         std::cerr << "In file " << cppFile << " at line " << line << " variable \033[0;33m" << name << "\033[0m has value of \033[0;31m";
-        _writeWar(value);
+        VariableExport::_writeWar(std::cerr, value);
         std::cerr << "\033[0m\n";
 #else
         std::cerr << "In file " << cppFile << " at line " << line << " variable " << name << " has value of ";

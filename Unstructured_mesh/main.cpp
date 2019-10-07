@@ -511,7 +511,7 @@ void testMesh3D() {
     DBGMSG("3D edge orientation");
     temp1::MeshApply<2, 1, 3>::apply(mesh3,[&mesh3](unsigned int , unsigned int , size_t faceIndex, size_t edgeIndex){
         size_t iA = mesh3.getEdges().at(edgeIndex).getVertexAIndex(), iB =mesh3.getEdges().at(edgeIndex).getVertexBIndex();
-        DBGVAR(faceIndex,
+        HTMLDBGVAR(faceIndex,
                edgeIndex,
                iA, iB,
                temp1::edgeIsLeft(mesh3,faceIndex, edgeIndex));
@@ -767,13 +767,13 @@ int main()
 {
     //testMesh2D();
     //testMesh2DLoadAndWrite();
-    //testMesh3D();
+    testMesh3D();
     //test3DMeshDeformedPrisms();
     //testMeshDataContainer();
     //testTemplate();
     //UnstructuredMesh<5, size_t, double, 6,5,4> m;
     //m.ComputeElementMeasures();
-    testDebug();
+    //testDebug();
     //test3DMeshLoad();
 
 }
