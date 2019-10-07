@@ -1,6 +1,6 @@
 #include <iostream>
 //#define UNDEBUG
-#include "../debug/debug.h"
+#include "../debug/Debug.h"
 #include "UnstructuredMesh.h"
 #include "MeshFunctions.h"
 #include "VTKMeshReader.h"

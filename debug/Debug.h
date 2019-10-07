@@ -74,8 +74,8 @@
 
 #ifndef UNDEBUG
 #include <iostream>
-#include "htmllogger.h"
-#include "consolelogger.h"
+#include "HTMLLogger.h"
+#include "ConsoleLogger.h"
 #include <stdexcept>
 /*
 ** Macros intended for sending
