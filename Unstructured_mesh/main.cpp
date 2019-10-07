@@ -510,8 +510,10 @@ void testMesh3D() {
 
     DBGMSG("3D edge orientation");
     temp1::MeshApply<2, 1, 3>::apply(mesh3,[&mesh3](unsigned int , unsigned int , size_t faceIndex, size_t edgeIndex){
+        size_t iA = mesh3.getEdges().at(edgeIndex).getVertexAIndex(), iB =mesh3.getEdges().at(edgeIndex).getVertexBIndex();
         DBGVAR(faceIndex,
                edgeIndex,
+               iA, iB,
                temp1::edgeIsLeft(mesh3,faceIndex, edgeIndex));
     });
 
@@ -699,7 +701,24 @@ void testDebug() {
     DBGVAR(r, i, c, list, vec, b, m);
 
     Vertex<7, double> vert;
-    DBGVAR(vert.getCoordinates());
+    DBGVAR(vert, vert.getCoordinates());
+
+    DBGVAR((Detail::is_exportable<decltype(vec)>::value));
+
+    DBGVAR((Detail::is_exportable<double>::value));
+
+    DBGVAR(Detail::is_indexable<double>::value);
+
+    DBGVAR(Detail::is_indexable<decltype(vec)>::value);
+
+    DBGVAR(Detail::is_indexable<decltype(vert)>::value);
+
+    Subelement<size_t> s({1,true});
+    DBGVAR(s);
+
+    HTMLDBGVAR(r, i, c, list, vec, b, m);
+
+    HTMLDBGVAR(r+1, i+1, char(c+1), list, vec[0], b, m["prvni"]);
 }
 
 
@@ -754,6 +773,7 @@ int main()
     //testTemplate();
     //UnstructuredMesh<5, size_t, double, 6,5,4> m;
     //m.ComputeElementMeasures();
-    //testDebug();
-    test3DMeshLoad();
+    testDebug();
+    //test3DMeshLoad();
+
 }

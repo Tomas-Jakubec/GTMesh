@@ -40,6 +40,10 @@ public:
         return coordinates[pos];
     }
 
+    unsigned int size() const {
+        return Dim;
+    }
+
     Real normEukleid();
 
     inline Real sumOfSquares() {
@@ -206,23 +210,6 @@ bool Vector<Dim, Real>::operator !=(const Vector<Dim, Real>& v) const {
     return !(*this == v);
 }
 
-template <unsigned int Dim, typename Real = double>
-std::ostream& operator <<(std::ostream& ost, const Vector<Dim,Real>& v) {
-    for (unsigned int i = 0; i < Dim; i++) {
-        ost << v[i] << ' ';
-    }
-
-    return ost;
-}
-
-
-template <unsigned int Dim, typename Real = double>
-std::istream& operator >>(std::istream& ist, Vector<Dim,Real>& v) {
-    for (unsigned int i = 0; i < Dim; i++) {
-        ist >> v[i];
-    }
-    return ist;
-}
 
 
 
