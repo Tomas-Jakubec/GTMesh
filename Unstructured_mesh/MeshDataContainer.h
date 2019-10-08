@@ -57,7 +57,7 @@ public:
 
     template<typename _DataType>
     struct _DataContainer<_DataType, 0> : public std::vector<_DataType>{
-        DataContainer<_DataType, 0, dimensionAt<0>()> _data;
+        DataContainer<_DataType, 0, dimensionAt<0U>()> _data;
     };
 private:
     template<unsigned int pos, typename dummy = void>
@@ -117,13 +117,13 @@ public:
 
     template<unsigned int dim>
     std::vector<DataType>& getDataByDim(){
-        return data._DataContainer<DataType, dimensionIndex<dim>>._data;
+        return data._DataContainer<DataType, dimensionIndex<dim>>::_data;
     }
 
 
     template<unsigned int pos>
     std::vector<DataType>& getDataByPos(){
-        return data._DataContainer<DataType,pos>._data;
+        return data._DataContainer<DataType,pos>::_data;
     }
 
     template <unsigned int ElementDim, unsigned int Dimension, typename IndexType, typename Real, unsigned int Reserve>
