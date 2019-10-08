@@ -665,7 +665,13 @@ class ClassC<std::integer_sequence<unsigned int,Is...>, std::tuple<Types...>>
       }
  };
 
-
+//The concept implementation
+template<typename T>
+class NeedIterator{
+    static_assert (Detail::is_iterable<T>::value, "The type must be iterable");
+public:
+    NeedIterator(const T&){}
+};
 
 void testTemplate() {
     ClassA n(std::make_integer_sequence<unsigned int, 3>{});
@@ -681,6 +687,9 @@ void testTemplate() {
     ClassC<std::integer_sequence<unsigned int, 2,0>, std::tuple<double, char>> c(make_custom_integer_sequence_t<unsigned int, 2, 0, -2>{}, std::tuple<double, char>{});
     ClassC<std::integer_sequence<unsigned int, 2,0>, std::tuple<double, char>> cc;
     ClassC<std::integer_sequence<unsigned int, 2,0>, decltype(std::make_tuple(1.0, 'a'))> ccc;
+
+    NeedIterator valid(mesh3.getCells());
+    //NeedIterator invalid(0.0);
 }
 
 
