@@ -5,6 +5,21 @@
 #include "../debug/Debug.h"
 
 
+
+template<typename DataType, unsigned int Position, unsigned int MappedDimenion>
+struct DataContainer : public std::vector<DataType> {
+    using type = DataType;
+
+    constexpr unsigned int getPosition() {
+        return Position;
+    }
+
+    constexpr unsigned int getMappedDimension() {
+        return MappedDimenion;
+    }
+};
+
+
 /**
  * @brief The MeshDataContainer struct
  *
@@ -29,16 +44,22 @@ private:
         return DimensionPos<dim, 0, std::get<0>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...})>::res();
     }
 
+    template<unsigned int pos>
+    static constexpr unsigned int dimensionAt(){
+        return std::get<pos>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...});
+    }
+public:
+
     template<typename _DataType, unsigned int _Dim>
-    struct _DataContainer : _DataContainer<_DataType,_Dim - 1>{
-        std::vector<_DataType> _data;
+    struct _DataContainer : _DataContainer<_DataType,_Dim - 1> {
+        DataContainer<_DataType, _Dim, dimensionAt<_Dim>()> _data;
     };
 
     template<typename _DataType>
-    struct _DataContainer<_DataType, 0>{
-        std::vector<_DataType> _data;
+    struct _DataContainer<_DataType, 0> : public std::vector<_DataType>{
+        DataContainer<_DataType, 0, dimensionAt<0>()> _data;
     };
-
+private:
     template<unsigned int pos, typename dummy = void>
     struct Alocator{
         MeshDataContainer<DataType, Dimensions...>& parent;
@@ -96,13 +117,13 @@ public:
 
     template<unsigned int dim>
     std::vector<DataType>& getDataByDim(){
-        return data._DataContainer<DataType, dimensionIndex<dim>()>::_data;
+        return data._DataContainer<DataType, dimensionIndex<dim>>._data;
     }
 
 
     template<unsigned int pos>
     std::vector<DataType>& getDataByPos(){
-        return data._DataContainer<DataType,pos>::_data;
+        return data._DataContainer<DataType,pos>._data;
     }
 
     template <unsigned int ElementDim, unsigned int Dimension, typename IndexType, typename Real, unsigned int Reserve>
