@@ -453,7 +453,7 @@ void testMesh3D() {
 
 
     //cont.getDataByDim<3>().resize(20);
-    DBGVAR(cont.getDataByPos<1>().size());
+    DBGVAR(cont.getDataByPos<1>().size(), cont.getDataByPos<1>().getMappedDimension());
 
     DBGVAR(cont.getDataByPos<0>().size());
 

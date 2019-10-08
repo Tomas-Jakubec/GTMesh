@@ -116,13 +116,13 @@ private:
 public:
 
     template<unsigned int dim>
-    std::vector<DataType>& getDataByDim(){
-        return data._DataContainer<DataType, dimensionIndex<dim>>::_data;
+    DataContainer<DataType, dimensionIndex<dim>(), dim>& getDataByDim(){
+        return data._DataContainer<DataType, dimensionIndex<dim>()>::_data;
     }
 
 
     template<unsigned int pos>
-    std::vector<DataType>& getDataByPos(){
+    DataContainer<DataType, pos, dimensionAt<pos>()>& getDataByPos(){
         return data._DataContainer<DataType,pos>::_data;
     }
 
@@ -205,6 +205,11 @@ public:
     static constexpr unsigned int dimensionIndex(){
         return DimensionPos<dim, 0, std::get<0>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...})>::res();
     }
+
+    template<unsigned int pos>
+    static constexpr unsigned int dimensionAt(){
+        return std::get<pos>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...});
+    }
 public:
 
     template<unsigned int pos>
@@ -212,12 +217,14 @@ public:
 
     template<unsigned int Pos, typename Dummy = void>
     struct _DataContainer : _DataContainer<Pos - 1, Dummy>{
-        std::vector<DataType<Pos>> _data;
+        DataContainer<DataType<Pos>, Pos, dimensionAt<Pos>()> _data;
+        //std::vector<DataType<Pos>> _data;
     };
 
     template<typename Dummy>
     struct _DataContainer<0, Dummy>{
-        std::vector<DataType<0>> _data;
+        DataContainer<DataType<0>, 0, dimensionAt<0>()> _data;
+        //std::vector<DataType<0>> _data;
     };
 
     template<unsigned int pos, typename _DataType, typename... _DataTypes>
@@ -281,7 +288,8 @@ public:
      * @return
      */
     template<unsigned int dim>
-    std::vector<std::tuple_element_t<dimensionIndex<dim>(), std::tuple<DataTypes...>>>& getDataByDim(){
+    DataContainer<std::tuple_element_t<dimensionIndex<dim>(), std::tuple<DataTypes...>>, dimensionIndex<dim>(), dim>&
+        getDataByDim(){
         return data._DataContainer<dimensionIndex<dim>()>::_data;
     }
 
@@ -291,7 +299,7 @@ public:
      * @return
      */
     template<unsigned int pos>
-    std::vector<DataType<pos>>& getDataByPos(){
+    DataContainer<DataType<pos>, pos, dimensionAt<pos>()>& getDataByPos(){
         return data._DataContainer<pos>::_data;
     }
 
