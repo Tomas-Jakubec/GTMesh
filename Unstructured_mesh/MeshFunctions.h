@@ -449,7 +449,8 @@ MeshDataContainer<Real, Dimension-1> ComputeCellsDistance(MeshElements<Dimension
 
 namespace temp1 {
 
-template <unsigned int CurrentDimension, unsigned int StartDimension, unsigned int TargetDimension, unsigned int MeshDimension, bool End, bool Ascend>
+
+template <unsigned int CurrentDimension, unsigned int StartDimension, unsigned int TargetDimension, unsigned int MeshDimension, bool End, bool Descend>
 struct MeshRun {
 
     template<typename Func, typename IndexType, typename Real, unsigned int ...Reserve>
@@ -461,14 +462,14 @@ struct MeshRun {
 
         auto i = mesh.template getElements<CurrentDimension>().at(index);
         for (auto sube: mesh.template getElement<CurrentDimension>(i.getIndex()).getSubelements())
-        MeshRun< CurrentDimension - 1, StartDimension, TargetDimension, MeshDimension, TargetDimension == CurrentDimension - 1, Ascend>::run(mesh, origElementIndex, sube.index, fun);
+        MeshRun< CurrentDimension - 1, StartDimension, TargetDimension, MeshDimension, TargetDimension == CurrentDimension - 1, Descend>::run(mesh, origElementIndex, sube.index, fun);
 
 
     }
 };
 
-template <unsigned int StartDimension, unsigned int TargetDimension, unsigned int MeshDimension, bool Ascend>
-struct MeshRun<MeshDimension, StartDimension, TargetDimension, MeshDimension, false, Ascend> {
+template <unsigned int StartDimension, unsigned int TargetDimension, unsigned int MeshDimension, bool Descend>
+struct MeshRun<MeshDimension, StartDimension, TargetDimension, MeshDimension, false, Descend> {
 
     template<typename Func, typename IndexType, typename Real, unsigned int ...Reserve>
     static void run(MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh,
@@ -479,7 +480,7 @@ struct MeshRun<MeshDimension, StartDimension, TargetDimension, MeshDimension, fa
         auto& cell = mesh.getCells().at(index);
         IndexType tmpFace = cell.getBoundaryElementIndex();
         do {
-            MeshRun<MeshDimension - 1, StartDimension, TargetDimension, MeshDimension, TargetDimension == MeshDimension - 1, Ascend>::run(mesh, origElementIndex, tmpFace, fun);
+            MeshRun<MeshDimension - 1, StartDimension, TargetDimension, MeshDimension, TargetDimension == MeshDimension - 1, Descend>::run(mesh, origElementIndex, tmpFace, fun);
             tmpFace = mesh.getFaces().at(tmpFace).getNextBElem(cell.getIndex());
         } while (tmpFace != cell.getBoundaryElementIndex());
 
@@ -487,8 +488,8 @@ struct MeshRun<MeshDimension, StartDimension, TargetDimension, MeshDimension, fa
 };
 
 
-template <unsigned int StartDimension, unsigned int TargetDimension, unsigned int MeshDimension, bool Ascend>
-struct MeshRun<1, StartDimension, TargetDimension, MeshDimension, false, Ascend> {
+template <unsigned int StartDimension, unsigned int TargetDimension, unsigned int MeshDimension, bool Descend>
+struct MeshRun<1, StartDimension, TargetDimension, MeshDimension, false, Descend> {
 
     template<typename Func, typename IndexType, typename Real, unsigned int ...Reserve>
     static void run(MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh,
@@ -497,25 +498,25 @@ struct MeshRun<1, StartDimension, TargetDimension, MeshDimension, false, Ascend>
                     Func fun){
 
         auto& edge = mesh.getEdges().at(index);
-        MeshRun<0, StartDimension, TargetDimension, MeshDimension, TargetDimension == 0, Ascend>::run(mesh, origElementIndex, edge.getVertexAIndex(), fun);
-        MeshRun<0, StartDimension, TargetDimension, MeshDimension, TargetDimension == 0, Ascend>::run(mesh, origElementIndex, edge.getVertexBIndex(), fun);
+        MeshRun<0, StartDimension, TargetDimension, MeshDimension, TargetDimension == 0, Descend>::run(mesh, origElementIndex, edge.getVertexAIndex(), fun);
+        MeshRun<0, StartDimension, TargetDimension, MeshDimension, TargetDimension == 0, Descend>::run(mesh, origElementIndex, edge.getVertexBIndex(), fun);
     }
 };
 
 
 
-template <unsigned int CurrentDimension,unsigned int StartDimension, unsigned int TargetDimension, unsigned int MeshDimension, bool Ascend>
-struct MeshRun<CurrentDimension, StartDimension, TargetDimension, MeshDimension, true, Ascend> {
+template <unsigned int CurrentDimension,unsigned int StartDimension, unsigned int TargetDimension, unsigned int MeshDimension, bool Descend>
+struct MeshRun<CurrentDimension, StartDimension, TargetDimension, MeshDimension, true, Descend> {
 
     template<typename Func, typename IndexType, typename Real, unsigned int ...Reserve>
     static void run(MeshElements<MeshDimension, IndexType, Real, Reserve...>& ,
                     IndexType origElementIndex,
                     IndexType index,
                     Func fun){
-        if(Ascend){
-            fun(StartDimension, TargetDimension, origElementIndex, index);
+        if(Descend){
+            fun(origElementIndex, index);
         }else{
-            fun(TargetDimension, StartDimension, index, origElementIndex);
+            fun(index, origElementIndex);
         }
     }
 };
@@ -549,7 +550,7 @@ struct MeshConnections {
             MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
             ) {
         MeshDataContainer<std::set<IndexType>, StartDim> result(mesh);
-        MeshApply<StartDim, TargetDim, MeshDimension>::apply(mesh, [&result](unsigned int, unsigned int, IndexType ori, IndexType element){
+        MeshApply<StartDim, TargetDim, MeshDimension>::apply(mesh, [&result](IndexType ori, IndexType element){
             result.template getDataByPos<0>().at(ori).insert(element);
         });
 
@@ -578,7 +579,7 @@ struct MeshColouring {
                 run(mesh,
                     startElement.getIndex(),
                     startElement.getIndex(),
-                    [&possibleColours, &attachedColours](unsigned int, unsigned int, IndexType, IndexType element){
+                    [&possibleColours, &attachedColours](IndexType, IndexType element){
                         DBGTRY(possibleColours &= !attachedColours.template getDataByPos<0>().at(element);)
                     }
                 );
@@ -593,7 +594,7 @@ struct MeshColouring {
                 run(mesh,
                     startElement.getIndex(),
                     startElement.getIndex(),
-                    [selectedColour, &attachedColours](unsigned int, unsigned int, IndexType, IndexType element){
+                    [selectedColour, &attachedColours](IndexType, IndexType element){
                         DBGTRY(attachedColours.template getDataByPos<0>().at(element)[selectedColour] = true;)
                     }
                 );

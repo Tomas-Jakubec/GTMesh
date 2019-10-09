@@ -400,8 +400,8 @@ void testMesh2DLoadAndWrite(){
 
 
     DBGMSG("mesh apply test");
-    temp1::MeshRun<2, 2, 0, 2,false, true>::run(mesh,size_t(4), size_t(4), [](unsigned int S, unsigned int T, size_t ori, size_t i){
-        DBGVAR(S,T,ori,i);
+    temp1::MeshRun<2, 2, 0, 2,false, true>::run(mesh,size_t(4), size_t(4), [](size_t ori, size_t i){
+        DBGVAR(ori,i);
     });
 
     mesh.initializeCenters();
@@ -500,16 +500,16 @@ void testMesh3D() {
     }
 
     DBGMSG("mesh apply test");
-    temp1::MeshApply<3, 2, 3>::apply(mesh3, [](unsigned int S, unsigned int T, size_t ori, size_t i){
-        DBGVAR(S,T,ori,i);
+    temp1::MeshApply<3, 2, 3>::apply(mesh3, [](size_t ori, size_t i){
+        DBGVAR(ori,i);
     });
     DBGMSG("mesh apply test");
-    temp1::MeshApply<2, 3, 3>::apply(mesh3,[](unsigned int S, unsigned int T, size_t ori, size_t i){
-        DBGVAR(S,T,ori,i);
+    temp1::MeshApply<2, 3, 3>::apply(mesh3,[](size_t ori, size_t i){
+        DBGVAR(ori,i);
     });
 
     DBGMSG("3D edge orientation");
-    temp1::MeshApply<2, 1, 3>::apply(mesh3,[&mesh3](unsigned int , unsigned int , size_t faceIndex, size_t edgeIndex){
+    temp1::MeshApply<2, 1, 3>::apply(mesh3,[&mesh3](size_t faceIndex, size_t edgeIndex){
         size_t iA = mesh3.getEdges().at(edgeIndex).getVertexAIndex(), iB =mesh3.getEdges().at(edgeIndex).getVertexBIndex();
         HTMLDBGVAR(faceIndex,
                edgeIndex,
