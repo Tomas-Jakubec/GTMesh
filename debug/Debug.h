@@ -111,7 +111,7 @@ __LINE__ << " variable " << #var \
 
 
 #define DBGVAR(...) ConsoleLogger::writeVar(__LINE__, __FILE__ FOR_EACH(STRVAR, __VA_ARGS__))
-#define DBGVARCOND(condition, ...) if(condition) {DBGVAR(__VA_ARGS__);}
+#define DBGVARCOND(condition, ...) if(condition) DBGVAR(__VA_ARGS__)
 
 #ifdef __linux__
 #define DBGMSG(message)       \

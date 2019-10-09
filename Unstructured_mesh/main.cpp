@@ -622,113 +622,7 @@ void testMeshDataContainer() {
     }
 }
 
-template <unsigned int ... Is>
-class ClassA
- {
-   public:
-      ClassA (std::integer_sequence<unsigned int,Is...>)
-      {DBGVAR(sizeof... (Is), std::get<0>(std::array<size_t, sizeof...(Is)>{Is...})); }
 
-      static void fun (std::index_sequence<Is...>)
-      {DBGVAR(sizeof... (Is), std::get<0>(std::array<size_t, sizeof...(Is)>{Is...})); }
-
- };
-
-
-//template <typename ... t> class ClassB{};
-
-template<typename  Tuple, unsigned int ... Is>
-class ClassB
- {
-   public:
-      ClassB (const std::integer_sequence<unsigned int, Is...>, Tuple t)
-      {std::tuple_element_t<0,Tuple> typ = 0;
-          DBGVAR(sizeof... (Is), std::get<0>(std::array<size_t, sizeof...(Is)>{Is...}), std::get<0>(t), typ); }
-
- };
-
-
-template <typename ... t> class ClassC{};
-
-template<unsigned int ... Is, typename ...Types>
-class ClassC<std::integer_sequence<unsigned int,Is...>, std::tuple<Types...>>
- {
-   public:
-      ClassC (const std::integer_sequence<unsigned int, Is...>, std::tuple<Types...>)
-      {std::tuple_element_t<0,std::tuple<Types...>> typ = 0;
-          DBGVAR(sizeof... (Is), std::get<0>(std::array<size_t, sizeof...(Is)>{Is...}), typ); }
-
-      ClassC () {
-          std::tuple_element_t<0,std::tuple<Types...>> typ = 42.15;
-          std::tuple_element_t<1,std::tuple<Types...>> typ2 = 42.15;
-          DBGVAR(sizeof... (Is), std::get<0>(std::array<size_t, sizeof...(Is)>{Is...}), typ, typ2);
-      }
- };
-
-//The concept implementation
-template<typename T>
-class NeedIterator{
-    static_assert (Detail::is_iterable<T>::value, "The type must be iterable");
-public:
-    NeedIterator(const T&){}
-};
-
-void testTemplate() {
-    ClassA n(std::make_integer_sequence<unsigned int, 3>{});
-    UnstructuredMesh<3,size_t, double,6> mesh3;
-    //MeshDataContainer<Vertex<3, double>, 0,1,2> centers2(mesh3,std::make_integer_sequence<unsigned int, 3>{}, Vertex<3, double>{});
-    //ComputeCenters(mesh3);
-
-    ClassA p(make_custom_integer_sequence_t<unsigned int, 10, 0, -2>{});
-    std::tuple<double, char> t{};
-    t={1,2};
-    ClassB u(make_custom_integer_sequence_t<unsigned int, 2, 0, -2>{}, t);
-
-    ClassC<std::integer_sequence<unsigned int, 2,0>, std::tuple<double, char>> c(make_custom_integer_sequence_t<unsigned int, 2, 0, -2>{}, std::tuple<double, char>{});
-    ClassC<std::integer_sequence<unsigned int, 2,0>, std::tuple<double, char>> cc;
-    ClassC<std::integer_sequence<unsigned int, 2,0>, decltype(std::make_tuple(1.0, 'a'))> ccc;
-
-    NeedIterator valid(mesh3.getCells());
-    //NeedIterator invalid(0.0);
-}
-
-
-void testDebug() {
-    double r = 42.15;
-    int i = 15;
-    char c = 42;
-    bool b = false;
-    std::list<int> list = {1,2,3};
-    std::vector<std::list<int>> vec(5, list);
-    std::map<std::string, size_t> m{
-        {"prvni", 1},
-        {"druhy", 2},
-        {"treti", 3}
-    };
-    ConsoleLogger::writeVar(__LINE__, __FILE__, "r", r, "i", i, "c", c, "list", list, "vec", vec, "b", b, "map", m);
-    ConsoleLogger::writeVar(__LINE__, __FILE__,"---", {5,4,3,2});
-    DBGVAR(r, i, c, list, vec, b, m);
-
-    Vertex<7, double> vert;
-    DBGVAR(vert, vert.getCoordinates());
-
-    DBGVAR((Detail::is_exportable<decltype(vec)>::value));
-
-    DBGVAR((Detail::is_exportable<double>::value));
-
-    DBGVAR(Detail::is_indexable<double>::value);
-
-    DBGVAR(Detail::is_indexable<decltype(vec)>::value);
-
-    DBGVAR(Detail::is_indexable<decltype(vert)>::value);
-
-    Subelement<size_t> s({1,true});
-    DBGVAR(s);
-
-    HTMLDBGVAR(r, i, c, list, vec, b, m);
-
-    HTMLDBGVAR(r+1, i+1, char(c+1), list, vec[0], b, m["prvni"]);
-}
 
 
 void test3DMeshLoad() {
@@ -772,17 +666,22 @@ DBGVAR(mesh.getVertices().size(),mesh.getEdges().size(), mesh.getFaces().size(),
 
 }
 
+
+
+
+
+
+
 int main()
 {
     //testMesh2D();
     //testMesh2DLoadAndWrite();
-    testMesh3D();
+    //testMesh3D();
     //test3DMeshDeformedPrisms();
     //testMeshDataContainer();
-    //testTemplate();
     //UnstructuredMesh<5, size_t, double, 6,5,4> m;
     //m.ComputeElementMeasures();
-    //testDebug();
     //test3DMeshLoad();
+
 
 }
