@@ -447,7 +447,7 @@ MeshDataContainer<Real, Dimension-1> ComputeCellsDistance(MeshElements<Dimension
 
 
 
-namespace temp1 {
+
 
 
 template <unsigned int CurrentDimension, unsigned int StartDimension, unsigned int TargetDimension, unsigned int MeshDimension, bool End, bool Descend>
@@ -715,10 +715,24 @@ bool edgeIsLeft(MeshElements<3, IndexType, Real, Reserve...>& mesh, IndexType fa
 
 }
 
+template<typename IndexType, typename Real, unsigned int ...Reserve>
+MeshDataContainer<std::vector<bool>, 2> edgesOrientation(MeshElements<3, IndexType, Real, Reserve...>& mesh) {
 
+    MeshDataContainer<std::vector<bool>, 2> orientations(mesh);
+    auto normals = ComputeFaceNormals(mesh);
 
+    for (auto& face : mesh.getFaces()) {
+        orientations[face].resize(face.getSubelements().getNumberOfSubElements());
+        for (IndexType i = 0; i < face.getSubelements().getNumberOfSubElements(); i++){
+            typename MeshElements<3, IndexType, Real, Reserve...>::Edge& edge = mesh.getEdges().at(face.getSubelements()[i].index);
 
+            orientations[face][i] = edgeIsLeft(mesh, face, edge, normals[face]);
+        }
+    }
+    return orientations;
 }
+
+
 
 
 #endif // MESH_FUNCTIONS_H

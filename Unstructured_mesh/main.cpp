@@ -400,7 +400,7 @@ void testMesh2DLoadAndWrite(){
 
 
     DBGMSG("mesh apply test");
-    temp1::MeshRun<2, 2, 0, 2,false, true>::run(mesh,size_t(4), size_t(4), [](size_t ori, size_t i){
+    MeshRun<2, 2, 0, 2,false, true>::run(mesh,size_t(4), size_t(4), [](size_t ori, size_t i){
         DBGVAR(ori,i);
     });
 
@@ -500,48 +500,61 @@ void testMesh3D() {
     }
 
     DBGMSG("mesh apply test");
-    temp1::MeshApply<3, 2, 3>::apply(mesh3, [](size_t ori, size_t i){
+    MeshApply<3, 2, 3>::apply(mesh3, [](size_t ori, size_t i){
         DBGVAR(ori,i);
     });
     DBGMSG("mesh apply test");
-    temp1::MeshApply<2, 3, 3>::apply(mesh3,[](size_t ori, size_t i){
+    MeshApply<2, 3, 3>::apply(mesh3,[](size_t ori, size_t i){
         DBGVAR(ori,i);
     });
 
     DBGMSG("3D edge orientation");
-    temp1::MeshApply<2, 1, 3>::apply(mesh3,[&mesh3](size_t faceIndex, size_t edgeIndex){
+    MeshApply<2, 1, 3>::apply(mesh3,[&mesh3](size_t faceIndex, size_t edgeIndex){
         size_t iA = mesh3.getEdges().at(edgeIndex).getVertexAIndex(), iB =mesh3.getEdges().at(edgeIndex).getVertexBIndex();
-        HTMLDBGVAR(faceIndex,
+        DBGVAR(faceIndex,
                edgeIndex,
                iA, iB,
-               temp1::edgeIsLeft(mesh3,faceIndex, edgeIndex));
+               edgeIsLeft(mesh3,faceIndex, edgeIndex));
     });
 
 
+    auto orientation =  edgesOrientation(mesh3);
+    for(auto & face : mesh3.getFaces()){
+        DBGVAR(face.getIndex(),orientation[face]);
+    }
+
+
     DBGMSG("connection test");
-    auto con = temp1::MeshConnections<3,0>::connections(mesh3);
+    auto con = MeshConnections<3,0>::connections(mesh3);
     for (auto& cell : mesh3.getCells()){
             DBGVAR(cell.getIndex(), con[cell]);
     }
 
 
     DBGMSG("connection test oposite");
-    auto con1 = temp1::MeshConnections<0,3>::connections(mesh3);
+    auto con1 = MeshConnections<0,3>::connections(mesh3);
     for (auto& vert : mesh3.getVertices()){
         DBGVAR(vert.getIndex(), con1[vert]);
     }
 
     DBGMSG("face to vertex colouring");
-    auto colours = temp1::ColourMesh<2,0>::colour(mesh3);
+    auto colours = ColourMesh<2,0>::colour(mesh3);
     for (auto& face : mesh3.getFaces()){
         DBGVAR(face.getIndex(), colours.at(face));
     }
 
     DBGMSG("vertex to face colouring");
-    auto colours1 = temp1::ColourMesh<0,2>::colour(mesh3);
+    auto colours1 = ColourMesh<0,2>::colour(mesh3);
     for (auto& vert : mesh3.getVertices()){
         DBGVAR(vert.getIndex(), colours1.at(vert));
     }
+
+    MeshDataContainer<MeshNativeType<3>::ElementType,3> types(mesh3, MeshNativeType<3>::ElementType::WEDGE);
+
+    VTKMeshWriter<3, size_t, double, 6> writer;
+    ofstream out3D("3D_test_mesh_two_prisms.vtk");
+    writer.writeHeader(out3D, "test data");
+    writer.writeToStream(out3D, mesh3, types);
 }
 
 
@@ -637,7 +650,7 @@ DBGVAR(mesh.getVertices().size(),mesh.getEdges().size(), mesh.getFaces().size(),
 
 
     DBGMSG("connection test");
-    auto con2 = temp1::MeshConnections<1,0>::connections(mesh);
+    auto con2 = MeshConnections<1,0>::connections(mesh);
     for (auto& edge : mesh.getEdges()){
             DBGVAR(edge.getIndex(), con2[edge]);
     }
@@ -650,13 +663,13 @@ DBGVAR(mesh.getVertices().size(),mesh.getEdges().size(), mesh.getFaces().size(),
     }
 
     DBGMSG("connection test");
-    auto con1 = temp1::MeshConnections<2,1>::connections(mesh);
+    auto con1 = MeshConnections<2,1>::connections(mesh);
     for (auto& face : mesh.getFaces()){
             DBGVAR(face.getIndex(), con1[face]);
     }
 
     DBGMSG("connection test");
-    auto con = temp1::MeshConnections<3,2>::connections(mesh);
+    auto con = MeshConnections<3,2>::connections(mesh);
     for (auto& cell : mesh.getCells()){
             DBGVAR(cell.getIndex(), con[cell]);
     }
@@ -674,9 +687,9 @@ DBGVAR(mesh.getVertices().size(),mesh.getEdges().size(), mesh.getFaces().size(),
 
 int main()
 {
-    //testMesh2D();
+    testMesh2D();
     //testMesh2DLoadAndWrite();
-    //testMesh3D();
+    testMesh3D();
     //test3DMeshDeformedPrisms();
     //testMeshDataContainer();
     //UnstructuredMesh<5, size_t, double, 6,5,4> m;
