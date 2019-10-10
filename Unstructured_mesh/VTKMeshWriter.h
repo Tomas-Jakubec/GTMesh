@@ -130,6 +130,7 @@ public:
     std::vector<IndexType> writeFace(std::ostream& ost,
                    MeshElements<3, IndexType, Real, Reserve...>& mesh,
                    typename MeshElements<3, IndexType, Real, Reserve...>::Face& face,
+                   typename MeshElements<3, IndexType, Real, Reserve...>::Cell& cell,
                    MeshDataContainer<std::vector<bool>, 2>& faceEdgeOri){
 
         std::vector<IndexType> verticesWritten;
@@ -137,7 +138,7 @@ public:
 
         IndexType startVertex = INVALID_INDEX(IndexType);
         IndexType nextVertex = INVALID_INDEX(IndexType);
-        if (faceEdgeOri[face][0] == true){ // the edge is left to the face
+        if (faceEdgeOri[face][0] == true && cell.getIndex() == face.getCellLeftIndex()){ // the edge is left to the face
             startVertex = mesh.getEdges().at(face.getSubelements()[0].index).getVertexBIndex();
             ost << startVertex << ' ';
             nextVertex = mesh.getEdges().at(face.getSubelements()[0].index).getVertexAIndex();
@@ -153,13 +154,14 @@ public:
         while (startVertex != nextVertex){
             for (auto& sube : face.getSubelements()) {
                 auto &edge = mesh.getEdges().at(sube.index);
+
                 if (edge.getIndex() != lastWrittenEdge) {
                     if (edge.getVertexAIndex() == nextVertex) {
                         lastWrittenEdge = edge.getIndex();
                         ost << edge.getVertexAIndex() << ' ';
                         verticesWritten.push_back(edge.getVertexAIndex());
                         nextVertex = edge.getVertexBIndex();
-                    } else if (edge.getVertexAIndex() == nextVertex) {
+                    } else if (edge.getVertexBIndex() == nextVertex) {
                         lastWrittenEdge = edge.getIndex();
                         ost << edge.getVertexBIndex() << ' ';
                         verticesWritten.push_back(edge.getVertexBIndex());
@@ -173,7 +175,7 @@ public:
 
     void writeToStream(std::ostream& ost,
                        MeshElements<3, IndexType, Real, Reserve...>& mesh,
-                       MeshDataContainer<typename writer::type::ElementType, 3>& cellTypes){
+                       MeshDataContainer<typename writer::type::ElementType, 3> cellTypes){
         // first write verices
         ost << "POINTS " << mesh.getVertices().size() <<
                " double" << std::endl;
@@ -183,6 +185,9 @@ public:
         }
         ost << std::endl;
 
+
+        // write cells of the mesh
+        // prepare connections
         auto cellVert = MeshConnections<3,0>::connections(mesh);
         auto cellFace = MeshConnections<3,2>::connections(mesh);
         auto faceVert = MeshConnections<2,0>::connections(mesh);
@@ -199,7 +204,7 @@ public:
         for (auto cell : mesh.getCells()){
             ost << cellVert.at(cell).size() << " ";
 
-
+            DBGVAR(cell.getIndex());
 
             switch (cellTypes.template getDataByPos<0>().at(cell.getIndex())) {
 
@@ -207,9 +212,9 @@ public:
                 // write vertices of one face
                 auto& face = mesh.getFaces().at(cell.getBoundaryElementIndex());
 
-                std::vector<IndexType> vertWrit = writeFace(ost,mesh,face, faceEdgeOri);
+                std::vector<IndexType> vertWrit = writeFace(ost,mesh,face, cell, faceEdgeOri);
 
-                for (IndexType index : faceVert[face]) {
+                for (IndexType index : cellVert[cell]) {
                     bool vertOK = true;
                     for (IndexType i : vertWrit){
                        if (i == index){
@@ -233,9 +238,9 @@ public:
                     }
                 }
 
-                std::vector<IndexType> vertWrit = writeFace(ost, mesh, *face, faceEdgeOri);
+                std::vector<IndexType> vertWrit = writeFace(ost, mesh, *face, cell, faceEdgeOri);
                 // write the last vertex
-                for (IndexType index : faceVert.at(*face)) {
+                for (IndexType index : cellVert.at(cell)) {
                     bool vertOK = true;
                     for (IndexType i : vertWrit){
                        if (i == index){
@@ -253,14 +258,17 @@ public:
                 // write vertices of one face
                 typename MeshElements<3, IndexType, Real, Reserve...>::Face* face = nullptr;
                 // search for the base face
-                for (IndexType faceIndex : cellFace[cell]){
+
+                for (IndexType faceIndex : mesh.template getElement<3>(cell.getIndex()).getSubelements()){
                     if (faceVert.template getDataByPos<0>().at(faceIndex).size() == 3){
                         face = &mesh.getFaces().at(faceIndex);
+                        break;
                     }
                 }
-
-                std::vector<IndexType> vertWrit = writeFace(ost, mesh, *face, faceEdgeOri);
+                DBGVAR(face->getIndex());
+                std::vector<IndexType> vertWrit = writeFace(ost, mesh, *face, cell, faceEdgeOri);
                 // write vertices of the oposite triangular side
+                DBGVAR(vertWrit);
                 for (IndexType index : vertWrit) {
                     MeshRun<3,3,1,3,false, true>::run(mesh, cell.getIndex(),cell.getIndex(),
                         [&ost,&mesh,&index,&vertWrit](IndexType, IndexType edgeIndex){
@@ -293,6 +301,9 @@ public:
                         }
                     }
                     );
+                    if (vertWrit.size() == 6) {
+                        break;
+                    }
                 }
             }break;
 
@@ -300,7 +311,7 @@ public:
                 // write vertices of one face
                 auto& face = mesh.getFaces().at(cell.getBoundaryElementIndex());
 
-                std::vector<IndexType> vertWrit = writeFace(ost, mesh, face, faceEdgeOri);
+                std::vector<IndexType> vertWrit = writeFace(ost, mesh, face, cell, faceEdgeOri);
                 // write vertices of the oposite triangular side
                 for (IndexType index : vertWrit) {
                     MeshRun<3,3,1,3,false, true>::run(mesh, cell.getIndex(),cell.getIndex(),
@@ -334,6 +345,9 @@ public:
                         }
                     }
                     );
+                    if (vertWrit.size() == 8) {
+                        break;
+                    }
                 }
             }break;
             default: throw std::runtime_error("it is not possible yet to write any object into VTK");
@@ -343,7 +357,7 @@ public:
         }
         ost << std::endl;
 
-        ost << "CELL_TYPES" << mesh.getCells().size() << std::endl;
+        ost << "CELL_TYPES " << mesh.getCells().size() << std::endl;
         for (typename writer::type::ElementType type : cellTypes.template getDataByPos<0>()) {
             ost << TypeConversionTable.at(type) << "\n";
         }

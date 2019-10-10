@@ -677,6 +677,12 @@ DBGVAR(mesh.getVertices().size(),mesh.getEdges().size(), mesh.getFaces().size(),
     mesh.initializeCenters();
     DBGVAR(mesh.computeElementMeasures().getDataByDim<3>(),ComputeCenters(mesh).getDataByDim<2>(),mesh.computeFaceNormals().getDataByPos<0>());
 
+
+
+    VTKMeshWriter<3, size_t, double, 6> writer;
+    ofstream out3D("3D_test_mesh_output.vtk");
+    writer.writeHeader(out3D, "test data");
+    writer.writeToStream(out3D, mesh, reader.getCellTypes());
 }
 
 
@@ -687,14 +693,14 @@ DBGVAR(mesh.getVertices().size(),mesh.getEdges().size(), mesh.getFaces().size(),
 
 int main()
 {
-    testMesh2D();
+    //testMesh2D();
     //testMesh2DLoadAndWrite();
-    testMesh3D();
+    //testMesh3D();
     //test3DMeshDeformedPrisms();
     //testMeshDataContainer();
     //UnstructuredMesh<5, size_t, double, 6,5,4> m;
     //m.ComputeElementMeasures();
-    //test3DMeshLoad();
+    test3DMeshLoad();
 
 
 }
