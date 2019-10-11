@@ -558,6 +558,15 @@ void testMesh3D() {
     ofstream out3D("3D_test_mesh_two_prisms.vtk");
     writer.writeHeader(out3D, "test data");
     writer.writeToStream(out3D, mesh3, types);
+
+
+    MeshDataContainer<MeshNativeType<3>::ElementType,3> types1(mesh3, MeshNativeType<3>::ElementType::POLYHEDRON);
+
+    VTKMeshWriter<3, size_t, double, 6> writer1;
+    ofstream out3D1("3D_test_mesh_two_prisms_split.vtk");
+    writer1.writeHeader(out3D1, "test data");
+    writer1.writeToStream(out3D1, mesh3, types1);
+    DBGVAR(writer1.backwardCellIndexMapping);
 }
 
 
@@ -601,6 +610,7 @@ void test3DMeshDeformedPrisms() {
     ofstream out3D("3D_test_mesh_two_deformed_prisms.vtk");
     writer.writeHeader(out3D, "test data");
     writer.writeToStream(out3D, mesh3, types);
+
 }
 
 

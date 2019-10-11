@@ -198,12 +198,19 @@ public:
      * Vertices of all cells in correct order for vtk export.
      */
     MeshDataContainer<std::vector<IndexType>, 3> cellVert;
+    MeshDataContainer<typename writer::type::ElementType, 3> cellTypes;
 
     /**
      * @brief totalNumberOfWrittenElements<HR>
      * Information required by VTK format.
      */
     IndexType totalNumberOfWrittenElements = 0;
+
+
+    std::vector<Vertex<3, Real>> appendedVertices;
+
+    std::map<IndexType, IndexType> backwardCellIndexMapping;
+
 
     /**
      * @brief indexFace<HR>
@@ -265,7 +272,6 @@ public:
             return;
         }
         lastHash = curHash;
-
 DBGMSG("indexing mesh");
         // write cells of the mesh
         // prepare connections
@@ -276,12 +282,8 @@ DBGMSG("indexing mesh");
         // this is very expensive procedure
         auto faceEdgeOri = edgesOrientation(mesh);
 
-        int cnt = 0;
-        for (auto verts : cellVert.template getDataByPos<0>()){
-            cnt += verts.size() + 1;
-        }
+        std::map<std::string, IndexType> appendedVertPos;
 
-        totalNumberOfWrittenElements = cnt;
 
 
         std::vector<IndexType> vertWrit;
@@ -310,6 +312,8 @@ DBGMSG("indexing mesh");
                         vertWrit.push_back(index);
                     }
                 }
+                this->cellVert.template getDataByPos<0>().push_back(vertWrit);
+                this->cellTypes.template getDataByPos<0>().push_back(cellTypes.at(cell));
             }break;
 
             case writer::type::ElementType::PYRAMID :{
@@ -335,6 +339,8 @@ DBGMSG("indexing mesh");
                         vertWrit.push_back(index);
                     }
                 }
+                this->cellVert.template getDataByPos<0>().push_back(vertWrit);
+                this->cellTypes.template getDataByPos<0>().push_back(cellTypes.at(cell));
             }break;
 
             case writer::type::ElementType::WEDGE :{
@@ -389,6 +395,8 @@ DBGMSG("indexing mesh");
                         break;
                     }
                 }
+                this->cellVert.template getDataByPos<0>().push_back(vertWrit);
+                this->cellTypes.template getDataByPos<0>().push_back(cellTypes.at(cell));
             }break;
 
             case writer::type::ElementType::HEXAHEDRON :{
@@ -432,11 +440,70 @@ DBGMSG("indexing mesh");
                         break;
                     }
                 }
+                this->cellVert.template getDataByPos<0>().push_back(vertWrit);
+                this->cellTypes.template getDataByPos<0>().push_back(cellTypes.at(cell));
             }break;
-            default: throw std::runtime_error("it is not possible yet to write any object into VTK");
+            default: {
+                //throw std::runtime_error("it is not possible yet to write generic object into VTK");
+
+                IndexType tmpFace = cell.getBoundaryElementIndex();
+                IndexType cellCenterIndex = INVALID_INDEX(IndexType);
+                std::string cellCenterKey = std::to_string(cell.getCenter()[0]) +
+                        ";" + std::to_string(cell.getCenter()[1]) +
+                        ";" + std::to_string(cell.getCenter()[2]);
+                auto it = appendedVertPos.find(cellCenterKey);
+                if (it == appendedVertPos.end()) {
+                    appendedVertPos[cellCenterKey] = appendedVertices.size() + mesh.getVertices().size();
+                    cellCenterIndex = appendedVertices.size() + mesh.getVertices().size();
+                    appendedVertices.push_back(cell.getCenter());
+                    DBGVAR(appendedVertices.size());
+                } else {
+                    cellCenterIndex = it->second;
+                }
+
+                do {
+                    auto& face = mesh.getFaces().at(tmpFace);
+
+                    for (auto& sube : face.getSubelements()){
+                        auto& edge = mesh.getEdges().at(sube.index);
+                        vertWrit.clear();
+                        vertWrit.reserve(4);
+                        vertWrit.push_back(edge.getVertexAIndex());
+                        vertWrit.push_back(edge.getVertexBIndex());
+                        std::string faceCenterKey = std::to_string(face.getCenter()[0]) +
+                                ";" + std::to_string(face.getCenter()[1]) +
+                                ";" + std::to_string(face.getCenter()[2]);
+                        IndexType faceCenterIndex = INVALID_INDEX(IndexType);
+                        auto it = appendedVertPos.find(faceCenterKey);
+                        if (it == appendedVertPos.end()) {
+                            faceCenterIndex = appendedVertices.size() + mesh.getVertices().size();
+                            DBGVAR(appendedVertices.size() + mesh.getVertices().size(), faceCenterIndex);
+                            appendedVertPos[faceCenterKey] = faceCenterIndex;
+                            appendedVertices.push_back(face.getCenter());
+                        } else {
+                            faceCenterIndex = it->second;
+                        }
+                        vertWrit.push_back(faceCenterIndex);
+                        vertWrit.push_back(cellCenterIndex);
+                        backwardCellIndexMapping[this->cellVert.template getDataByPos<0>().size()] = cell.getIndex();
+                        this->cellVert.template getDataByPos<0>().push_back(vertWrit);
+                        this->cellTypes.template getDataByPos<0>().push_back(writer::type::ElementType::TETRA);
+                    }
+
+                    tmpFace = face.getNextBElem(cell.getIndex());
+                } while (tmpFace != cell.getBoundaryElementIndex());
+
             }
-            this->cellVert.template getDataByPos<0>().push_back(vertWrit);
+            }
         }
+
+        int cnt = 0;
+        for (auto verts : this->cellVert.template getDataByPos<0>()){
+            cnt += verts.size() + 1;
+        }
+
+        totalNumberOfWrittenElements = cnt;
+
     }
 
 
@@ -444,19 +511,23 @@ DBGMSG("indexing mesh");
     void writeToStream(std::ostream& ost,
                        MeshElements<3, IndexType, Real, Reserve...>& mesh,
                        MeshDataContainer<typename writer::type::ElementType, 3> cellTypes){
+        // create index of mesh
+        indexMesh(mesh, cellTypes);
         // first write verices
-        ost << "POINTS " << mesh.getVertices().size() <<
+        ost << "POINTS " << mesh.getVertices().size() + appendedVertices.size() <<
                " double" << std::endl;
 
         for(auto vert : mesh.getVertices()) {
             ost << vert[0] << ' ' << vert[1] << ' ' << vert[2] <<"\n";
         }
+
+        for(auto vert : appendedVertices) {
+            ost << vert[0] << ' ' << vert[1] << ' ' << vert[2] <<"\n";
+        }
         ost << std::endl;
 
-
         // write cells of the mesh
-        indexMesh(mesh, cellTypes);
-        ost << "CELLS " << mesh.getCells().size() << ' ' << totalNumberOfWrittenElements << std::endl;
+        ost << "CELLS " << cellVert.template getDataByPos<0>().size() << ' ' << totalNumberOfWrittenElements << std::endl;
 
 
         for (const auto& verts : cellVert.template getDataByPos<0>()){
@@ -472,8 +543,8 @@ DBGMSG("indexing mesh");
 
         ost << std::endl;
 
-        ost << "CELL_TYPES " << mesh.getCells().size() << std::endl;
-        for (typename writer::type::ElementType type : cellTypes.template getDataByPos<0>()) {
+        ost << "CELL_TYPES " << this->cellTypes.template getDataByPos<0>().size() << std::endl;
+        for (typename writer::type::ElementType type : this->cellTypes.template getDataByPos<0>()) {
             ost << TypeConversionTable.at(type) << "\n";
         }
         ost << std::endl;
