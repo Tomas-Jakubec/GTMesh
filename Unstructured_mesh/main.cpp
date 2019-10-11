@@ -1,5 +1,6 @@
 #include <iostream>
-#include "../debug/debug.h"
+//#define UNDEBUG
+#include "../debug/Debug.h"
 #include "UnstructuredMesh.h"
 #include "MeshFunctions.h"
 #include "VTKMeshReader.h"
@@ -399,8 +400,8 @@ void testMesh2DLoadAndWrite(){
 
 
     DBGMSG("mesh apply test");
-    temp1::MeshRun<2, 2, 0, 2,false, true>::run(mesh,size_t(4), size_t(4), [](unsigned int S, unsigned int T, size_t ori, size_t i){
-        DBGVAR(S,T,ori,i);
+    MeshRun<2, 2, 0, 2,false, true>::run(mesh,size_t(4), size_t(4), [](size_t ori, size_t i){
+        DBGVAR(ori,i);
     });
 
     mesh.initializeCenters();
@@ -452,7 +453,7 @@ void testMesh3D() {
 
 
     //cont.getDataByDim<3>().resize(20);
-    DBGVAR(cont.getDataByPos<1>().size());
+    DBGVAR(cont.getDataByPos<1>().size(), cont.getDataByPos<1>().getMappedDimension());
 
     DBGVAR(cont.getDataByPos<0>().size());
 
@@ -499,45 +500,73 @@ void testMesh3D() {
     }
 
     DBGMSG("mesh apply test");
-    temp1::MeshApply<3, 2, 3>::apply(mesh3, [](unsigned int S, unsigned int T, size_t ori, size_t i){
-        DBGVAR(S,T,ori,i);
+    MeshApply<3, 2, 3>::apply(mesh3, [](size_t ori, size_t i){
+        DBGVAR(ori,i);
     });
     DBGMSG("mesh apply test");
-    temp1::MeshApply<2, 3, 3>::apply(mesh3,[](unsigned int S, unsigned int T, size_t ori, size_t i){
-        DBGVAR(S,T,ori,i);
+    MeshApply<2, 3, 3>::apply(mesh3,[](size_t ori, size_t i){
+        DBGVAR(ori,i);
     });
+
+    DBGMSG("3D edge orientation");
+    MeshApply<2, 1, 3>::apply(mesh3,[&mesh3](size_t faceIndex, size_t edgeIndex){
+        size_t iA = mesh3.getEdges().at(edgeIndex).getVertexAIndex(), iB =mesh3.getEdges().at(edgeIndex).getVertexBIndex();
+        DBGVAR(faceIndex,
+               edgeIndex,
+               iA, iB,
+               edgeIsLeft(mesh3,faceIndex, edgeIndex));
+    });
+
+
+    auto orientation =  edgesOrientation(mesh3);
+    for(auto & face : mesh3.getFaces()){
+        DBGVAR(face.getIndex(),orientation[face]);
+    }
 
 
     DBGMSG("connection test");
-    auto con = temp1::MeshConnections<3,0>::connections(mesh3);
+    auto con = MeshConnections<3,0>::connections(mesh3);
     for (auto& cell : mesh3.getCells()){
-        DBGVAR(cell.getIndex());
-        for(size_t i : con[cell]){
-            DBGVAR(i);
-        }
+            DBGVAR(cell.getIndex(), con[cell]);
     }
 
 
     DBGMSG("connection test oposite");
-    auto con1 = temp1::MeshConnections<0,3>::connections(mesh3);
+    auto con1 = MeshConnections<0,3>::connections(mesh3);
     for (auto& vert : mesh3.getVertices()){
-        DBGVAR(vert.getIndex());
-        for(size_t i : con1[vert]){
-            DBGVAR(i);
-        }
+        DBGVAR(vert.getIndex(), con1[vert]);
     }
 
     DBGMSG("face to vertex colouring");
-    auto colours = temp1::ColourMesh<2,0>::colour(mesh3);
+    auto colours = ColourMesh<2,0>::colour(mesh3);
     for (auto& face : mesh3.getFaces()){
         DBGVAR(face.getIndex(), colours.at(face));
     }
 
     DBGMSG("vertex to face colouring");
-    auto colours1 = temp1::ColourMesh<0,2>::colour(mesh3);
+    auto colours1 = ColourMesh<0,2>::colour(mesh3);
     for (auto& vert : mesh3.getVertices()){
         DBGVAR(vert.getIndex(), colours1.at(vert));
     }
+
+    MeshDataContainer<MeshNativeType<3>::ElementType,3> types(mesh3, MeshNativeType<3>::ElementType::WEDGE);
+
+    VTKMeshWriter<3, size_t, double, 6> writer;
+    writer.indexMesh(mesh3, types);
+
+    DBGVAR(writer.cellVert.getDataByPos<0>());
+    ofstream out3D("3D_test_mesh_two_prisms.vtk");
+    writer.writeHeader(out3D, "test data");
+    writer.writeToStream(out3D, mesh3, types);
+
+
+    MeshDataContainer<MeshNativeType<3>::ElementType,3> types1(mesh3, MeshNativeType<3>::ElementType::POLYHEDRON);
+
+    VTKMeshWriter<3, size_t, double, 6> writer1;
+    ofstream out3D1("3D_test_mesh_two_prisms_split.vtk");
+    writer1.writeHeader(out3D1, "test data");
+    writer1.writeToStream(out3D1, mesh3, types1);
+    DBGVAR(writer1.backwardCellIndexMapping);
 }
 
 
@@ -573,6 +602,15 @@ void test3DMeshDeformedPrisms() {
     for(double cellM : measures.getDataByDim<3>()) {
         DBGVAR(cellM);
     }
+
+
+    MeshDataContainer<MeshNativeType<3>::ElementType,3> types(mesh3, MeshNativeType<3>::ElementType::WEDGE);
+
+    VTKMeshWriter<3, size_t, double, 6> writer;
+    ofstream out3D("3D_test_mesh_two_deformed_prisms.vtk");
+    writer.writeHeader(out3D, "test data");
+    writer.writeToStream(out3D, mesh3, types);
+
 }
 
 
@@ -618,87 +656,58 @@ void testMeshDataContainer() {
     }
 }
 
-template <unsigned int ... Is>
-class ClassA
- {
-   public:
-      ClassA (std::integer_sequence<unsigned int,Is...>)
-      {DBGVAR(sizeof... (Is), std::get<0>(std::array<size_t, sizeof...(Is)>{Is...})); }
-
-      static void fun (std::index_sequence<Is...>)
-      {DBGVAR(sizeof... (Is), std::get<0>(std::array<size_t, sizeof...(Is)>{Is...})); }
-
- };
-
-
-//template <typename ... t> class ClassB{};
-
-template<typename  Tuple, unsigned int ... Is>
-class ClassB
- {
-   public:
-      ClassB (const std::integer_sequence<unsigned int, Is...>, Tuple t)
-      {std::tuple_element_t<0,Tuple> typ = 0;
-          DBGVAR(sizeof... (Is), std::get<0>(std::array<size_t, sizeof...(Is)>{Is...}), std::get<0>(t), typ); }
-
- };
-
-
-template <typename ... t> class ClassC{};
-
-template<unsigned int ... Is, typename ...Types>
-class ClassC<std::integer_sequence<unsigned int,Is...>, std::tuple<Types...>>
- {
-   public:
-      ClassC (const std::integer_sequence<unsigned int, Is...>, std::tuple<Types...>)
-      {std::tuple_element_t<0,std::tuple<Types...>> typ = 0;
-          DBGVAR(sizeof... (Is), std::get<0>(std::array<size_t, sizeof...(Is)>{Is...}), typ); }
-
-      ClassC () {
-          std::tuple_element_t<0,std::tuple<Types...>> typ = 42.15;
-          std::tuple_element_t<1,std::tuple<Types...>> typ2 = 42.15;
-          DBGVAR(sizeof... (Is), std::get<0>(std::array<size_t, sizeof...(Is)>{Is...}), typ, typ2);
-      }
- };
 
 
 
-void testTemplate() {
-    ClassA n(std::make_integer_sequence<unsigned int, 3>{});
-    UnstructuredMesh<3,size_t, double,6> mesh3;
-    //MeshDataContainer<Vertex<3, double>, 0,1,2> centers2(mesh3,std::make_integer_sequence<unsigned int, 3>{}, Vertex<3, double>{});
-    //ComputeCenters(mesh3);
+void test3DMeshLoad() {
+    UnstructuredMesh<3, size_t, double, 6> mesh;
+    VTKMeshReader<3, size_t, double, 6> reader;
 
-    ClassA p(make_custom_integer_sequence_t<unsigned int, 10, 0, -2>{});
-    std::tuple<double, char> t{};
-    t={1,2};
-    ClassB u(make_custom_integer_sequence_t<unsigned int, 2, 0, -2>{}, t);
+    ifstream file("test_3Dmesh.vtk");
+    reader.loadFromStream(file, mesh);
 
-    ClassC<std::integer_sequence<unsigned int, 2,0>, std::tuple<double, char>> c(make_custom_integer_sequence_t<unsigned int, 2, 0, -2>{}, std::tuple<double, char>{});
-    ClassC<std::integer_sequence<unsigned int, 2,0>, std::tuple<double, char>> cc;
-    ClassC<std::integer_sequence<unsigned int, 2,0>, decltype(std::make_tuple(1.0, 'a'))> ccc;
+DBGVAR(mesh.getVertices().size(),mesh.getEdges().size(), mesh.getFaces().size(), mesh.getCells().size());
+    DBGVAR(mesh.getVertices());
+
+
+    DBGMSG("connection test");
+    auto con2 = MeshConnections<1,0>::connections(mesh);
+    for (auto& edge : mesh.getEdges()){
+            DBGVAR(edge.getIndex(), con2[edge]);
+    }
+
+    for (auto& face : mesh.getFaces()) {
+        DBGVAR(face.getIndex());
+        for (auto& sube : face.getSubelements()){
+            DBGVAR(sube.index);
+        }
+    }
+
+    DBGMSG("connection test");
+    auto con1 = MeshConnections<2,1>::connections(mesh);
+    for (auto& face : mesh.getFaces()){
+            DBGVAR(face.getIndex(), con1[face]);
+    }
+
+    DBGMSG("connection test");
+    auto con = MeshConnections<3,2>::connections(mesh);
+    for (auto& cell : mesh.getCells()){
+            DBGVAR(cell.getIndex(), con[cell]);
+    }
+
+    mesh.initializeCenters();
+    DBGVAR(mesh.computeElementMeasures().getDataByDim<3>(),ComputeCenters(mesh).getDataByDim<2>(),mesh.computeFaceNormals().getDataByPos<0>());
+
+
+
+    VTKMeshWriter<3, size_t, double, 6> writer;
+    ofstream out3D("3D_test_mesh_output.vtk");
+    writer.writeHeader(out3D, "test data");
+    writer.writeToStream(out3D, mesh, reader.getCellTypes());
 }
 
 
-void testDebug() {
-    double r = 42.15;
-    int i = 15;
-    char c = 42;
-    bool b = false;
-    std::list<int> list = {1,2,3};
-    std::vector<std::list<int>> vec(5, list);
-    std::map<std::string, size_t> m{
-        {"prvni", 1},
-        {"druhy", 2},
-        {"treti", 3}
-    };
-    ConsoleLogger::writeVar(__LINE__, __FILE__, "r", r, "i", i, "c", c, "list", list, "vec", vec, "b", b, "map", m);
-    ConsoleLogger::writeVar(__LINE__, __FILE__,"---", {5,4,3,2});
-    DBGVAR(r, i, c, list, vec, b, m);
 
-    Vertex<7, double> vert;
-    DBGVAR(vert.getCoordinates());
-}
 
 
 
@@ -706,13 +715,13 @@ void testDebug() {
 int main()
 {
     //testMesh2D();
-    //testMesh2DLoadAndWrite();
-    //testMesh3D();
+    testMesh2DLoadAndWrite();
+    testMesh3D();
     //test3DMeshDeformedPrisms();
     //testMeshDataContainer();
-    //testTemplate();
     //UnstructuredMesh<5, size_t, double, 6,5,4> m;
     //m.ComputeElementMeasures();
-    //testDebug();
+    //test3DMeshLoad();
+
 
 }

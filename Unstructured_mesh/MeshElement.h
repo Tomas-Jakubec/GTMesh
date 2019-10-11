@@ -98,11 +98,11 @@ public:
         }
     }
 
-    typename std::array<Subelement<IndexType>, Reserve>::iterator end(){
+    typename std::array<Subelement<IndexType>, Reserve>::iterator end() {
         return this->begin() + getNumberOfSubElements();
     }
 
-    typename std::array<Subelement<IndexType>, Reserve>::const_iterator cend(){
+    typename std::array<Subelement<IndexType>, Reserve>::const_iterator cend() const {
         return this->cbegin() + getNumberOfSubElements();
     }
 };

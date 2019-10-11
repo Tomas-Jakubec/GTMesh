@@ -15,4 +15,12 @@ public:
 
 
 };
+
+template <typename IndexType, typename Real>
+class MeshReader<3, IndexType, Real> {
+public:
+    using type = MeshNativeType<3>;
+
+
+};
 #endif // MESHREADER_H

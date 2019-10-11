@@ -8,6 +8,7 @@
 #include <string>
 #include <unordered_map>
 #include <map>
+#include <algorithm>
 
 template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
 class VTKMeshReader : public MeshReader<MeshDimension, IndexType, Real>{
@@ -92,6 +93,7 @@ public:
                     mesh.getEdges().at(edgeIndex).setIndex(edgeIndex);
 
                     mesh.getEdges().at(edgeIndex).setCellLeftIndex(cellIndex);
+                    edges[edgeKey] = edgeIndex;
                 } else {
                     edgeIndex = edgeIt->second;
                     mesh.getEdges().at(edgeIt->second).setCellRightIndex(cellIndex);
@@ -190,7 +192,68 @@ class VTKMeshReader<3, IndexType, Real, Reserve...> : public MeshReader<3, Index
         {13, reader::type::ElementType::WEDGE},
         {14, reader::type::ElementType::PYRAMID},
     };
-
+    std::map<int, std::pair<std::vector<std::array<int,2>>, std::vector<std::vector<int>>>> TypeEdgesFaces{
+        {4, {// tetrahedron
+                {// edges (first)
+                    {0,1},{1,2},{2,0},{0,3},{1,3},{2,3}
+                },{//faces (second)
+                    {0,1,2}, {0,4,3}, {1,5,4}, {3,5,2}
+                }
+            }
+        },
+        {8, {// hexahedron
+                {// edges (first)
+                    {0,1},{1,2},{2,3},{3,0},{0,4},{1,5},{2,6},{3,7},{4,5},{5,6},{6,7},{7,4}
+                },{//faces (second)
+                    {0,1,2,3},
+                    {4,0,5,8},
+                    {5,1,6,9},
+                    {6,2,7,10},
+                    {7,3,5,11},
+                    {8,9,10,11}
+                }
+            }
+        },
+        {6, {// wedge
+                {// edges (first)
+                    {0,1},
+                    {1,2},
+                    {2,0},
+                    {0,3},
+                    {1,4},
+                    {2,5},
+                    {3,5},
+                    {5,4},
+                    {4,3}
+                },{//faces (second)
+                    {0,2,1},
+                    {0,4,8,3},
+                    {1,4,7,5},
+                    {3,5,6,2},
+                    {6,7,8}
+                }
+            }
+        },
+        {5, {// pyramid
+                {// edges (first)
+                    {0,1},//0
+                    {1,2},//1
+                    {2,3},//2
+                    {3,0},//3
+                    {0,4},//4
+                    {1,4},//5
+                    {2,4},//6
+                    {3,4} //7
+                },{//faces (second)
+                    {0,1,2,3},
+                    {0,5,4},
+                    {1,6,5},
+                    {2,7,6},
+                    {3,4,7}
+                }
+            }
+        },
+    };
     std::unordered_map<std::string, IndexType> edges;
     std::unordered_map<std::string, IndexType> faces;
 
@@ -211,7 +274,6 @@ public:
     void loadPoints(std::istream& ist, MeshElements<3, IndexType, Real, Reserve...>& mesh){
         IndexType numPoints;
         ist >> numPoints;
-        Real dummy = 0;
         mesh.getVertices().resize(numPoints);
         ist.ignore(20, '\n');
         for (IndexType vertIndex = 0; vertIndex < numPoints; vertIndex++) {
@@ -232,47 +294,81 @@ public:
             mesh.getCells().at(cellIndex).setIndex(cellIndex);
             IndexType numVert;
             ist >> numVert;
-
+            // load vertices of the cell
             std::vector<IndexType> vertices(numVert);
             for(IndexType j = 0; j < numVert; j++){
                 ist >> vertices.at(j);
             }
 
-            IndexType prevEdge = INVALID_INDEX(IndexType);
-            for(IndexType j = 0; j < numVert; j++){
-                IndexType iA = vertices.at(j), iB = vertices.at((j+1)%numVert);
+            // construct an element
+            // obtain constructing order of edges and faces
+            std::vector<std::array<int,2>>& edgeOrder = TypeEdgesFaces.at(numVert).first;
+            std::vector<std::vector<int>>& faceOrder = TypeEdgesFaces.at(numVert).second;
+
+            std::vector<std::pair<IndexType, bool>> edgeIndexes;
+            // construct edges first
+            for (std::array<int, 2>& e : edgeOrder) {
+
+                IndexType iA = vertices.at(e[0]), iB = vertices.at(e[1]);
                 std::string edgeKey = iA < iB ? std::to_string(iA) +";"+ std::to_string(iB) : std::to_string(iB) +";"+ std::to_string(iA);
                 typename std::unordered_map<std::string, IndexType>::iterator edgeIt = edges.find(edgeKey);
 
-                IndexType edgeIndex = IndexType();
-
-                if (edgeIt == edges.end()){
-
+                if (edgeIt == edges.end()) {
+                    IndexType edgeIndex = IndexType();
                     edgeIndex = mesh.getEdges().size();
                     mesh.getEdges().push_back({});
                     mesh.getEdges().at(edgeIndex).setVertexAIndex(iA);
                     mesh.getEdges().at(edgeIndex).setVertexBIndex(iB);
                     mesh.getEdges().at(edgeIndex).setIndex(edgeIndex);
-
-                    mesh.getEdges().at(edgeIndex).setCellLeftIndex(cellIndex);
+                    edgeIndexes.push_back({edgeIndex, true});
+                    edges[edgeKey] = edgeIndex;
                 } else {
-                    edgeIndex = edgeIt->second;
-                    mesh.getEdges().at(edgeIt->second).setCellRightIndex(cellIndex);
+                    edgeIndexes.push_back({edgeIt->second, iA == mesh.getEdges().at(edgeIt->second).getVertexAIndex()});
                 }
-
-                if (prevEdge != INVALID_INDEX(IndexType)){
-                    mesh.getEdges().at(prevEdge).setNextBElem(edgeIndex, cellIndex);
-                }
-
-                if (j == 0){
-                    mesh.getCells().at(cellIndex).setBoundaryElementIndex(edgeIndex);
-                }
-                if (j == numVert - 1) {
-                    mesh.getEdges().at(edgeIndex).setNextBElem(mesh.getCells().at(cellIndex).getBoundaryElementIndex(), cellIndex);
-                }
-                prevEdge = edgeIndex;
             }
 
+            IndexType prevFaceIndex = INVALID_INDEX(IndexType);
+            for (IndexType fi = 0; fi < faceOrder.size(); fi++) {
+                std::vector<int>& f = faceOrder.at(fi);
+                std::vector<IndexType> faceEdges;
+                for (int& index : f) {
+                    faceEdges.push_back(edgeIndexes.at(index).first);
+                }
+                std::sort(faceEdges.begin(), faceEdges.end());
+
+                std::string faceKey = "";
+                for (IndexType& eI : faceEdges) {
+                    faceKey += std::to_string(eI) + ";";
+                }
+
+                typename std::unordered_map<std::string, IndexType>::iterator faceIt = faces.find(faceKey);
+
+                IndexType faceIndex;
+                if (faceIt == faces.end()) {
+                    faceIndex = mesh.getFaces().size();
+                    mesh.getFaces().push_back({});
+                    for (int& index : f) {
+                        mesh.getFaces().at(faceIndex).getSubelements().addSubelement(edgeIndexes.at(index).first,edgeIndexes.at(index).second);
+                    }
+                    mesh.getFaces().at(faceIndex).setCellLeftIndex(cellIndex);
+                    mesh.getFaces().at(faceIndex).setIndex(faceIndex);
+                } else {
+                    faceIndex = faceIt->second;
+                    mesh.getFaces().at(faceIndex).setCellRightIndex(cellIndex);
+                }
+
+                if (prevFaceIndex != INVALID_INDEX(IndexType)) {
+                    mesh.getFaces().at(prevFaceIndex).setNextBElem(faceIndex, cellIndex);
+                }
+                if (fi == 0) {
+                    mesh.getCells().at(cellIndex).setBoundaryElementIndex(faceIndex);
+                }
+                if (fi == faceOrder.size() - 1) {
+                    mesh.getFaces().at(faceIndex).setNextBElem(mesh.getCells().at(cellIndex).getBoundaryElementIndex(), cellIndex);
+                }
+                faces[faceKey] = faceIndex;
+                prevFaceIndex = faceIndex;
+            }
         }
     }
 

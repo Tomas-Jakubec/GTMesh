@@ -8,7 +8,10 @@ SOURCES += \
     ../debug/debug.cpp
 
 HEADERS += \
-    ../debug/consolelogger.h \
+    ../debug/ConsoleLogger.h \
+    ../debug/Debug.h \
+    ../debug/HTMLLogger.h \
+    ../debug/VariableExport.h \
     CellBoundaryConnection.h \
     CellConnection.h \
     ComputationalySignificantElement.h \
@@ -22,8 +25,6 @@ HEADERS += \
     UnstructedMeshDefine.h \
     UnstructuredMesh.h \
     VTKMeshReader.h \
-    ../debug/debug.h \
-    ../debug/htmllogger.h \
     VTKMeshWriter.h \
     Vector.h \
     Vertex.h

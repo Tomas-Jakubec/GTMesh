@@ -1,5 +1,6 @@
 #ifndef HTMLLOGGER_H
 #define HTMLLOGGER_H
+#include "VariableExport.h"
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -91,7 +92,9 @@ public:
         // create file if not logFile is nullptr
         if (!logFile) create(logFileName.c_str());
 
-        (*logFile)  << "[" << groupIndex << ", " << line << ", '" << cppFile << "', '" << name << "', " << value << "],\n";
+        (*logFile)  << "[" << groupIndex << ", " << line << ", '" << cppFile << "', '" << name << "', ";
+        VariableExport::_writeWar(*logFile,value);
+        (*logFile) << "],\n";
         writeVar(line, cppFile, rest...);
     }
 
@@ -102,7 +105,9 @@ public:
         // create file if not logFile is nullptr
         if (!logFile) create(logFileName.c_str());
 
-        (*logFile) << "[" << groupIndex << ", " << line << ", '" << cppFile << "', '" << name << "', " << value << "],\n";
+        (*logFile)  << "[" << groupIndex << ", " << line << ", '" << cppFile << "', '" << name << "', ";
+        VariableExport::_writeWar(*logFile,value);
+        (*logFile) << "],\n";
         groupIndex++;
 
     }
@@ -259,7 +264,7 @@ function showData(){
             odd = true;
         }
 
-        tmp += dataToShow[i][0] + "</td><td>" + dataToShow[i][1] + "</td><td>" + dataToShow[i][2] + "</td><td>" + dataToShow[i][3] + "</td><td>" + dataToShow[i][4] + "</td></tr>";
+        tmp += dataToShow[i][0] + "</td><td>" + dataToShow[i][1] + "</td><td>" + dataToShow[i][2] + "</td><td>" + dataToShow[i][3] + "</td><td>" + JSON.stringify(dataToShow[i][4]) + "</td></tr>";
 
     }
     tmp += "</table>";

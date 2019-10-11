@@ -38,6 +38,10 @@ public:
         return coordinates[pos];
     }
 
+    unsigned int size() const {
+        return Dim;
+    }
+
     Real normEukleid();
 
     inline Real sumOfSquares() {
@@ -191,23 +195,6 @@ bool Vertex<Dim, Real>::operator !=(const Vertex<Dim, Real>& v) const {
     return !(*this == v);
 }
 
-template <unsigned int Dim, typename Real = double>
-std::ostream& operator <<(std::ostream& ost, const Vertex<Dim,Real>& v) {
-    for (unsigned int i = 0; i < Dim; i++) {
-        ost << v[i] << ' ';
-    }
-
-    return ost;
-}
-
-
-template <unsigned int Dim, typename Real = double>
-std::istream& operator >>(std::istream& ist, Vertex<Dim,Real>& v) {
-    for (unsigned int i = 0; i < Dim; i++) {
-        ist >> v[i];
-    }
-    return ist;
-}
 
 
 #endif // VERTEX_H
