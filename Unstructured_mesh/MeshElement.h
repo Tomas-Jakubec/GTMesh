@@ -323,6 +323,32 @@ public:
         return BoundaryCells;
     }
 
+private:
+    template<unsigned int Dim, typename Dummy = void>
+    struct _ClearMesh {
+        static void clear(MeshElements<Dimension, IndexType, Real, Reserve...> &mesh){
+            mesh.template getElements<Dim>().clear();
+            _ClearMesh<Dim - 1>::clear(mesh);
+        }
+    };
+
+
+    template<typename Dummy>
+    struct _ClearMesh<0, Dummy> {
+        static void clear(MeshElements<Dimension, IndexType, Real, Reserve...> &mesh){
+            mesh.template getElements<0>().clear();
+        }
+    };
+
+public:
+    /**
+     * @brief clear<HR>
+     * Sets the size of all vectors in the mesh to 0 by calling clear on them.
+     */
+    void clear() {
+        _ClearMesh<Dimension>::clear(*this);
+    }
+
     void appendBoundaryCell(IndexType cellIndex, IndexType faceIndex){
         Cell c;
         c.setIndex(cellIndex);

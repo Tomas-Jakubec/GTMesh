@@ -588,6 +588,18 @@ struct MeshColouring {
             unsigned int selectedColour = 0;
             while (!possibleColours[selectedColour]) {
                 selectedColour++;
+                if (selectedColour == possibleColours.size()){
+                    reserve *= 2;
+                    DBGVAR(reserve);
+                    for (std::valarray<bool>& attColour : attachedColours.template getDataByPos<0>()){
+                        std::valarray<bool> newAttColour(false, reserve);
+                        for (size_t i = 0; i < attColour.size(); i++){
+                            newAttColour[i] = attColour[i];
+                        }
+                        attColour.swap(newAttColour);
+                    }
+                    break;
+                }
             }
             result.template getDataByPos<0>().at(startElement.getIndex()) = selectedColour;
             MeshRun<FromDim, FromDim, ToDim, MeshDimension, false, true>::

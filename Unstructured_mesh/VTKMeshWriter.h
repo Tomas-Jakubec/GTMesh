@@ -113,6 +113,8 @@ public:
         }
         lastHash = curHash;
 
+        cellVert.template getDataByPos<0>().clear();
+
         std::vector<IndexType> vertIndex;
         for (auto& cell : mesh.getCells()) {
             vertIndex.clear();
@@ -272,6 +274,11 @@ public:
             return;
         }
         lastHash = curHash;
+
+        appendedVertices.clear();
+        cellVert.template getDataByPos<0>().clear();
+        backwardCellIndexMapping.clear();
+        this->cellTypes.template getDataByPos<0>().clear();
 DBGMSG("indexing mesh");
         // write cells of the mesh
         // prepare connections
@@ -291,7 +298,6 @@ DBGMSG("indexing mesh");
             vertWrit.clear();
             vertWrit.reserve(cellVert[cell].size());
 
-            DBGVAR(cell.getIndex());
 
             switch (cellTypes.template getDataByPos<0>().at(cell.getIndex())) {
 
@@ -354,7 +360,6 @@ DBGMSG("indexing mesh");
                         break;
                     }
                 }
-                DBGVAR(face->getIndex());
                 indexFace(mesh, *face, cell, faceEdgeOri, vertWrit);
                 // write vertices of the oposite triangular side
 
@@ -391,7 +396,6 @@ DBGMSG("indexing mesh");
                     }
                     );
                     if (vertWrit.size() == 6) {
-                        DBGVAR(vertWrit);
                         break;
                     }
                 }
@@ -456,7 +460,6 @@ DBGMSG("indexing mesh");
                     appendedVertPos[cellCenterKey] = appendedVertices.size() + mesh.getVertices().size();
                     cellCenterIndex = appendedVertices.size() + mesh.getVertices().size();
                     appendedVertices.push_back(cell.getCenter());
-                    DBGVAR(appendedVertices.size());
                 } else {
                     cellCenterIndex = it->second;
                 }
@@ -477,7 +480,6 @@ DBGMSG("indexing mesh");
                         auto it = appendedVertPos.find(faceCenterKey);
                         if (it == appendedVertPos.end()) {
                             faceCenterIndex = appendedVertices.size() + mesh.getVertices().size();
-                            DBGVAR(appendedVertices.size() + mesh.getVertices().size(), faceCenterIndex);
                             appendedVertPos[faceCenterKey] = faceCenterIndex;
                             appendedVertices.push_back(face.getCenter());
                         } else {

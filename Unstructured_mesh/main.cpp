@@ -560,15 +560,124 @@ void testMesh3D() {
     writer.writeToStream(out3D, mesh3, types);
 
 
-    MeshDataContainer<MeshNativeType<3>::ElementType,3> types1(mesh3, MeshNativeType<3>::ElementType::POLYHEDRON);
+    MeshDataContainer<MeshNativeType<3>::ElementType,3> types1(mesh3);
+
+    types1.getDataByPos<0>().at(0) = MeshNativeType<3>::ElementType::WEDGE;
+
+    types1.getDataByPos<0>().at(1) = MeshNativeType<3>::ElementType::POLYHEDRON;
 
     VTKMeshWriter<3, size_t, double, 6> writer1;
     ofstream out3D1("3D_test_mesh_two_prisms_split.vtk");
     writer1.writeHeader(out3D1, "test data");
     writer1.writeToStream(out3D1, mesh3, types1);
     DBGVAR(writer1.backwardCellIndexMapping);
+
 }
 
+
+void testMeshRefine() {
+    UnstructuredMesh<3, size_t, double, 6> mesh;
+    twoPrisms(mesh);
+    mesh.initializeCenters();
+
+    MeshDataContainer<MeshNativeType<3>::ElementType,3> types(mesh, MeshNativeType<3>::WEDGE);
+    VTKMeshWriter<3, size_t, double, 6> writer;
+    ofstream out3D;
+    out3D.open("mesh_refine_0.vtk");
+    writer.writeHeader(out3D, "test data");
+    writer.writeToStream(out3D, mesh, types);
+
+    auto colours = MeshColouring<3,0>::colour(mesh);
+
+    out3D << "CELL_DATA " << mesh.getCells().size() << endl;
+    out3D << "SCALARS cell_wrt_vertex_colour double 1\nLOOKUP_TABLE default" << endl;
+    for (auto colour : colours.getDataByPos<0>()) {
+        out3D << colour << ' ';
+    }
+    out3D.close();
+
+    MeshDataContainer<MeshNativeType<3>::ElementType,3> types1(mesh, MeshNativeType<3>::POLYHEDRON);
+
+    VTKMeshWriter<3, size_t, double, 6> writer1;
+    out3D.open("mesh_refine_1.vtk");
+    writer1.writeHeader(out3D, "test data");
+    writer1.writeToStream(out3D, mesh, types1);
+    auto colours1 = MeshColouring<3,0>::colour(mesh);
+
+    out3D << "CELL_DATA " << writer1.cellVert.getDataByPos<0>().size() << endl;
+    out3D << "SCALARS cell_wrt_vertex_colour double 1\nLOOKUP_TABLE default" << endl;
+    size_t realIndex = 0;
+    for (size_t i = 0; i < writer1.cellVert.getDataByPos<0>().size(); i++) {
+        auto iterator = writer1.backwardCellIndexMapping.find(i);
+        if (iterator == writer1.backwardCellIndexMapping.end()){
+            out3D << colours1.getDataByPos<0>().at(realIndex) << ' ';
+            realIndex++;
+        } else {
+            out3D << colours1.getDataByPos<0>().at(iterator->second) << ' ';
+            realIndex = iterator->second;
+        }
+    }
+    out3D.close();
+
+
+    ifstream in3D;
+    in3D.open("mesh_refine_1.vtk");
+    VTKMeshReader<3, size_t, double, 6> reader;
+    reader.loadFromStream(in3D, mesh);
+    in3D.close();
+
+    mesh.initializeCenters();
+
+    MeshDataContainer<MeshNativeType<3>::ElementType,3> types2(mesh, MeshNativeType<3>::POLYHEDRON);
+    out3D.open("mesh_refine_2.vtk");
+    writer1.writeHeader(out3D, "test data");
+    writer1.writeToStream(out3D, mesh, types2);
+
+    auto colours2 = MeshColouring<3,0>::colour(mesh);
+
+    out3D << "CELL_DATA " << writer1.cellVert.getDataByPos<0>().size() << endl;
+    out3D << "SCALARS cell_wrt_vertex_colour double 1\nLOOKUP_TABLE default" << endl;
+    realIndex = 0;
+    for (size_t i = 0; i < writer1.cellVert.getDataByPos<0>().size(); i++) {
+        auto iterator = writer1.backwardCellIndexMapping.find(i);
+        if (iterator == writer1.backwardCellIndexMapping.end()){
+            out3D << colours2.getDataByPos<0>().at(realIndex) << ' ';
+            realIndex++;
+        } else {
+            out3D << colours2.getDataByPos<0>().at(iterator->second) << ' ';
+            realIndex = iterator->second;
+        }
+    }
+    out3D.close();
+
+
+    in3D.open("mesh_refine_2.vtk");
+    reader.loadFromStream(in3D, mesh);
+    in3D.close();
+
+    mesh.initializeCenters();
+
+    MeshDataContainer<MeshNativeType<3>::ElementType,3> types3(mesh, MeshNativeType<3>::POLYHEDRON);
+    out3D.open("mesh_refine_3.vtk");
+    writer1.writeHeader(out3D, "test data");
+    writer1.writeToStream(out3D, mesh, types3);
+    auto colours3 = MeshColouring<3,0>::colour(mesh);
+
+    out3D << "CELL_DATA " << writer1.cellVert.getDataByPos<0>().size() << endl;
+    out3D << "SCALARS cell_wrt_vertex_colour double 1\nLOOKUP_TABLE default" << endl;
+    realIndex = 0;
+    for (size_t i = 0; i < writer1.cellVert.getDataByPos<0>().size(); i++) {
+        auto iterator = writer1.backwardCellIndexMapping.find(i);
+        if (iterator == writer1.backwardCellIndexMapping.end()){
+            out3D << colours3.getDataByPos<0>().at(realIndex) << ' ';
+            realIndex++;
+        } else {
+            out3D << colours3.getDataByPos<0>().at(iterator->second) << ' ';
+            realIndex = iterator->second;
+        }
+    }
+    out3D.close();
+}
 
 
 
@@ -612,8 +721,6 @@ void test3DMeshDeformedPrisms() {
     writer.writeToStream(out3D, mesh3, types);
 
 }
-
-
 
 
 
@@ -715,9 +822,10 @@ DBGVAR(mesh.getVertices().size(),mesh.getEdges().size(), mesh.getFaces().size(),
 int main()
 {
     //testMesh2D();
-    testMesh2DLoadAndWrite();
-    testMesh3D();
+    //testMesh2DLoadAndWrite();
+    //testMesh3D();
     //test3DMeshDeformedPrisms();
+    testMeshRefine();
     //testMeshDataContainer();
     //UnstructuredMesh<5, size_t, double, 6,5,4> m;
     //m.ComputeElementMeasures();

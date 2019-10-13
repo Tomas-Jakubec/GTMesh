@@ -30,7 +30,6 @@ class VTKMeshReader<2, IndexType, Real, Reserve...> : public MeshReader<2, Index
         {7, reader::type::ElementType::POLYGON},
     };
 
-    std::unordered_map<std::string, IndexType> edges;
 
     MeshDataContainer<typename reader::type::ElementType, 2> cellTypes;
     // file indexing
@@ -61,6 +60,8 @@ public:
     }
 
     void loadCells(std::istream& ist, MeshElements<2, IndexType, Real, Reserve...>& mesh){
+        std::unordered_map<std::string, IndexType> edges;
+
         IndexType numCells;
         ist >> numCells;
         mesh.getCells().resize(numCells);
@@ -156,6 +157,7 @@ public:
             throw std::runtime_error("only unstructured grid is supported but got " + buf);
         }
 
+        mesh.clear();
 
         ist >> buf;
         if (buf == "POINTS") {
@@ -254,8 +256,6 @@ class VTKMeshReader<3, IndexType, Real, Reserve...> : public MeshReader<3, Index
             }
         },
     };
-    std::unordered_map<std::string, IndexType> edges;
-    std::unordered_map<std::string, IndexType> faces;
 
     MeshDataContainer<typename reader::type::ElementType, 3> cellTypes;
     // file indexing
@@ -285,6 +285,10 @@ public:
     }
 
     void loadCells(std::istream& ist, MeshElements<3, IndexType, Real, Reserve...>& mesh){
+
+        std::unordered_map<std::string, IndexType> edges;
+        std::unordered_map<std::string, IndexType> faces;
+
         IndexType numCells;
         ist >> numCells;
         mesh.getCells().resize(numCells);
@@ -413,20 +417,21 @@ public:
             throw std::runtime_error("only unstructured grid is supported but got " + buf);
         }
 
+        mesh.clear();
 
         ist >> buf;
         if (buf == "POINTS") {
-            loadPoints(ist, mesh);
+            DBGTRY(loadPoints(ist, mesh);)
         }
 
         ist >> buf;
         if (buf == "CELLS") {
-            loadCells(ist, mesh);
+            DBGTRY(loadCells(ist, mesh);)
         }
 
         ist >> buf;
         if (buf == "CELL_TYPES") {
-            loadCellTypes(ist, mesh);
+            DBGTRY(loadCellTypes(ist, mesh);)
         }
 
     }
