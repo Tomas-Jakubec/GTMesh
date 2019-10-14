@@ -4,7 +4,7 @@
 #include "Vertex.h"
 #include "MeshElement.h"
 
-template<unsigned int MeshDimension, typename IndexType, typename Real>
+template<unsigned int MeshDimension>
 class MeshWriter{
 
 
@@ -15,6 +15,7 @@ protected:
      * to recognize changes in the mesh.
      * It uses number of elements and sum of vertices coordinations.
      */
+    template<typename IndexType, typename Real>
     struct MeshHash {
         IndexType numberOfElements = 0;
         Real totalVert = 0;
@@ -32,14 +33,14 @@ protected:
 private:
     template<unsigned int Dim, typename Dummy = void>
     struct sumOfMeshElements{
-        template<unsigned int ...Reserve>
+        template<typename IndexType, typename Real, unsigned int ...Reserve>
         static IndexType sum(MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh){
             return mesh.template getElements<Dim>().size() + sumOfMeshElements<Dim - 1>::sum(mesh);
         }
     };
     template<typename Dummy>
     struct sumOfMeshElements<0, Dummy>{
-        template<unsigned int ...Reserve>
+        template<typename IndexType, typename Real, unsigned int ...Reserve>
         static IndexType sum(MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh){
             return mesh.template getElements<0>().size();
         }
@@ -47,9 +48,9 @@ private:
 public:
     using type = MeshNativeType<MeshDimension>;
 
-    template<unsigned int ...Reserve>
-    static MeshHash computeHash(MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh){
-        MeshHash res;
+    template<typename IndexType, typename Real, unsigned int ...Reserve>
+    static MeshHash<IndexType, Real> computeHash(MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh){
+        MeshHash<IndexType, Real> res;
         // A vector of ones that simplifies the sum of coordinates
         Vertex<MeshDimension, Real> ones;
         for(unsigned int dim = 0; dim < MeshDimension; dim++){

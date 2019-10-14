@@ -7,18 +7,19 @@
 #include "MeshFunctions.h"
 #include <map>
 #include <ostream>
-template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
-class VTKMeshWriter : public MeshWriter<MeshDimension, IndexType, Real>{
+template<unsigned int MeshDimension, typename IndexType = size_t, typename Real = double>
+class VTKMeshWriter : public MeshWriter<MeshDimension>{
 public:
     VTKMeshWriter() = default;
+    template<unsigned int ...Reserve>
     VTKMeshWriter(const MeshElements<MeshDimension, IndexType, Real, Reserve...>&){}
 };
 
 
 
-template<typename IndexType, typename Real, unsigned int... Reserve>
-class VTKMeshWriter<2, IndexType, Real, Reserve...> : public MeshWriter<2, IndexType, Real>{
-    using writer = MeshWriter<2, IndexType, Real>;
+template<typename IndexType, typename Real>
+class VTKMeshWriter<2, IndexType, Real> : public MeshWriter<2>{
+    using writer = MeshWriter<2>;
     std::map<typename writer::type::ElementType, int> TypeConversionTable{
         {writer::type::ElementType::LINE, 3},
         {writer::type::ElementType::TRIANGLE, 5},
@@ -35,7 +36,7 @@ public:
      * @brief lastHash<HR>
      * The hash of the last written mesh.
      */
-    typename writer::MeshHash lastHash;
+    typename writer::MeshHash<IndexType, Real> lastHash;
     /**
      * @brief cellVert<HR>
      * Vertices of all cells in correct order for vtk export.
@@ -59,6 +60,7 @@ public:
      * @param faceEdgeOri the orientation of the edges to the faces
      * @param verticesIndexed output vector of indexed vertices
      */
+    template<unsigned int ...Reserve>
     void indexCell(MeshElements<2, IndexType, Real, Reserve...>& mesh,
                    typename MeshElements<2, IndexType, Real, Reserve...>::Cell& cell,
                    std::vector<IndexType>& verticesIndexed){
@@ -104,8 +106,9 @@ public:
 
     }
 
+    template<unsigned int ...Reserve>
     void indexMesh(MeshElements<2, IndexType, Real, Reserve...>& mesh){
-        typename writer::MeshHash curHash = writer::computeHash(mesh);
+        typename writer::MeshHash<IndexType, Real> curHash = writer::computeHash(mesh);
 
         // if the mesh is the same as it was, return
         if (lastHash == curHash){
@@ -132,6 +135,7 @@ public:
 
     }
 
+    template<unsigned int ...Reserve>
     void writeToStream(std::ostream& ost,
                        MeshElements<2, IndexType, Real, Reserve...>& mesh,
                        MeshDataContainer<typename writer::type::ElementType, 2> cellTypes){
@@ -173,9 +177,9 @@ public:
 
 
 
-template<typename IndexType, typename Real, unsigned int... Reserve>
-class VTKMeshWriter<3, IndexType, Real, Reserve...> : public MeshWriter<3, IndexType, Real>{
-    using writer = MeshWriter<3, IndexType, Real>;
+template<typename IndexType, typename Real>
+class VTKMeshWriter<3, IndexType, Real> : public MeshWriter<3>{
+    using writer = MeshWriter<3>;
     std::map<typename writer::type::ElementType, int> TypeConversionTable{
         {writer::type::ElementType::TETRA, 10},
         {writer::type::ElementType::HEXAHEDRON, 12},
@@ -194,7 +198,7 @@ public:
      * @brief lastHash<HR>
      * The hash of the last written mesh.
      */
-    typename writer::MeshHash lastHash;
+    typename writer::MeshHash<IndexType, Real> lastHash;
     /**
      * @brief cellVert<HR>
      * Vertices of all cells in correct order for vtk export.
@@ -224,6 +228,7 @@ public:
      * @param faceEdgeOri the orientation of the edges to the faces
      * @param verticesIndexed output vector of indexed vertices
      */
+    template<unsigned int ...Reserve>
     void indexFace(MeshElements<3, IndexType, Real, Reserve...>& mesh,
                    typename MeshElements<3, IndexType, Real, Reserve...>::Face& face,
                    typename MeshElements<3, IndexType, Real, Reserve...>::Cell& cell,
@@ -264,10 +269,10 @@ public:
 
     }
 
-
+    template<unsigned int ...Reserve>
     void indexMesh(MeshElements<3, IndexType, Real, Reserve...>& mesh,
                    MeshDataContainer<typename writer::type::ElementType, 3> cellTypes){
-        typename writer::MeshHash curHash = writer::computeHash(mesh);
+        typename writer::MeshHash<IndexType,Real> curHash = writer::computeHash(mesh);
 
         // if the mesh is the same as it was, return
         if (lastHash == curHash){
@@ -509,7 +514,7 @@ DBGMSG("indexing mesh");
     }
 
 
-
+    template<unsigned int ...Reserve>
     void writeToStream(std::ostream& ost,
                        MeshElements<3, IndexType, Real, Reserve...>& mesh,
                        MeshDataContainer<typename writer::type::ElementType, 3> cellTypes){

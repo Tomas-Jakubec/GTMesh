@@ -391,7 +391,7 @@ void testMesh2DLoadAndWrite(){
     using Mesh = UnstructuredMesh<2, size_t, double>;
     Mesh mesh;
     DBGMSG("load from vtk file test");
-    VTKMeshReader<2, size_t, double> reader;
+    VTKMeshReader<2> reader;
     ifstream ifst("Test_obdelnik.vtk");
     DBGVAR(bool(ifst));
     reader.loadFromStream(ifst, mesh);
@@ -551,7 +551,7 @@ void testMesh3D() {
 
     MeshDataContainer<MeshNativeType<3>::ElementType,3> types(mesh3, MeshNativeType<3>::ElementType::WEDGE);
 
-    VTKMeshWriter<3, size_t, double, 6> writer;
+    VTKMeshWriter<3, size_t, double> writer;
     writer.indexMesh(mesh3, types);
 
     DBGVAR(writer.cellVert.getDataByPos<0>());
@@ -566,7 +566,7 @@ void testMesh3D() {
 
     types1.getDataByPos<0>().at(1) = MeshNativeType<3>::ElementType::POLYHEDRON;
 
-    VTKMeshWriter<3, size_t, double, 6> writer1;
+    VTKMeshWriter<3, size_t, double> writer1;
     ofstream out3D1("3D_test_mesh_two_prisms_split.vtk");
     writer1.writeHeader(out3D1, "test data");
     writer1.writeToStream(out3D1, mesh3, types1);
@@ -581,7 +581,7 @@ void testMeshRefine() {
     mesh.initializeCenters();
 
     MeshDataContainer<MeshNativeType<3>::ElementType,3> types(mesh, MeshNativeType<3>::WEDGE);
-    VTKMeshWriter<3, size_t, double, 6> writer;
+    VTKMeshWriter<3, size_t, double> writer;
     ofstream out3D;
     out3D.open("mesh_refine_0.vtk");
     writer.writeHeader(out3D, "test data");
@@ -598,7 +598,7 @@ void testMeshRefine() {
 
     MeshDataContainer<MeshNativeType<3>::ElementType,3> types1(mesh, MeshNativeType<3>::POLYHEDRON);
 
-    VTKMeshWriter<3, size_t, double, 6> writer1;
+    VTKMeshWriter<3, size_t, double> writer1;
     out3D.open("mesh_refine_1.vtk");
     writer1.writeHeader(out3D, "test data");
     writer1.writeToStream(out3D, mesh, types1);
@@ -622,7 +622,7 @@ void testMeshRefine() {
 
     ifstream in3D;
     in3D.open("mesh_refine_1.vtk");
-    VTKMeshReader<3, size_t, double, 6> reader;
+    VTKMeshReader<3> reader;
     reader.loadFromStream(in3D, mesh);
     in3D.close();
 
@@ -715,7 +715,7 @@ void test3DMeshDeformedPrisms() {
 
     MeshDataContainer<MeshNativeType<3>::ElementType,3> types(mesh3, MeshNativeType<3>::ElementType::WEDGE);
 
-    VTKMeshWriter<3, size_t, double, 6> writer;
+    VTKMeshWriter<3, size_t, double> writer;
     ofstream out3D("3D_test_mesh_two_deformed_prisms.vtk");
     writer.writeHeader(out3D, "test data");
     writer.writeToStream(out3D, mesh3, types);
@@ -768,7 +768,7 @@ void testMeshDataContainer() {
 
 void test3DMeshLoad() {
     UnstructuredMesh<3, size_t, double, 6> mesh;
-    VTKMeshReader<3, size_t, double, 6> reader;
+    VTKMeshReader<3> reader;
 
     ifstream file("test_3Dmesh.vtk");
     reader.loadFromStream(file, mesh);
@@ -807,7 +807,7 @@ DBGVAR(mesh.getVertices().size(),mesh.getEdges().size(), mesh.getFaces().size(),
 
 
 
-    VTKMeshWriter<3, size_t, double, 6> writer;
+    VTKMeshWriter<3, size_t, double> writer;
     ofstream out3D("3D_test_mesh_output.vtk");
     writer.writeHeader(out3D, "test data");
     writer.writeToStream(out3D, mesh, reader.getCellTypes());

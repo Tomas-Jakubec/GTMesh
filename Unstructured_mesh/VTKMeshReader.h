@@ -10,18 +10,20 @@
 #include <map>
 #include <algorithm>
 
-template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
-class VTKMeshReader : public MeshReader<MeshDimension, IndexType, Real>{
+template<unsigned int MeshDimension>
+class VTKMeshReader : public MeshReader<MeshDimension>{
 public:
     VTKMeshReader() = default;
+
+    template<typename IndexType, typename Real, unsigned int ...Reserve>
     VTKMeshReader(const MeshElements<MeshDimension, IndexType, Real, Reserve...>&){}
 };
 
 
 
-template<typename IndexType, typename Real, unsigned int... Reserve>
-class VTKMeshReader<2, IndexType, Real, Reserve...> : public MeshReader<2, IndexType, Real>{
-    using reader = MeshReader<2, IndexType, Real>;
+template<>
+class VTKMeshReader<2> : public MeshReader<2>{
+    using reader = MeshReader<2>;
     std::map<int, typename reader::type::ElementType> TypeConversionTable{
         {3, reader::type::ElementType::LINE},
         {5, reader::type::ElementType::TRIANGLE},
@@ -39,12 +41,15 @@ class VTKMeshReader<2, IndexType, Real, Reserve...> : public MeshReader<2, Index
     //MeshDataContainer<IndexType>
 public:
     VTKMeshReader() = default;
+
+    template<typename IndexType, typename Real, unsigned int ...Reserve>
     VTKMeshReader(const MeshElements<2, IndexType, Real, Reserve...>&){}
 
     MeshDataContainer<typename reader::type::ElementType, 2> getCellTypes() {
         return cellTypes;
     }
 
+    template<typename IndexType, typename Real, unsigned int ...Reserve>
     void loadPoints(std::istream& ist, MeshElements<2, IndexType, Real, Reserve...>& mesh){
         IndexType numPoints;
         ist >> numPoints;
@@ -59,6 +64,7 @@ public:
         }
     }
 
+    template<typename IndexType, typename Real, unsigned int ...Reserve>
     void loadCells(std::istream& ist, MeshElements<2, IndexType, Real, Reserve...>& mesh){
         std::unordered_map<std::string, IndexType> edges;
 
@@ -116,7 +122,7 @@ public:
         }
     }
 
-
+    template<typename IndexType, typename Real, unsigned int ...Reserve>
     void loadCellTypes(std::istream& ist, MeshElements<2, IndexType, Real, Reserve...>& mesh){
         IndexType numCells;
         ist >> numCells;
@@ -133,7 +139,7 @@ public:
         }
     }
 
-
+    template<typename IndexType, typename Real, unsigned int ...Reserve>
     void loadFromStream(std::istream& ist,MeshElements<2, IndexType, Real, Reserve...>& mesh){
         ist.seekg(ist.beg);
         // Ignore first row "# vtk DataFile Version 2.0"
@@ -176,6 +182,7 @@ public:
 
     }
 
+    template<typename IndexType, typename Real, unsigned int ...Reserve>
     MeshElements<2, IndexType, Real, Reserve...> loadFromStream(std::istream& ist){
         MeshElements<2, IndexType, Real, Reserve...> resultMesh;
         loadFromStream(ist, resultMesh);
@@ -184,9 +191,9 @@ public:
 };
 
 
-template<typename IndexType, typename Real, unsigned int... Reserve>
-class VTKMeshReader<3, IndexType, Real, Reserve...> : public MeshReader<3, IndexType, Real>{
-    using reader = MeshReader<3, IndexType, Real>;
+template<>
+class VTKMeshReader<3> : public MeshReader<3>{
+    using reader = MeshReader<3>;
     std::map<int, typename reader::type::ElementType> TypeConversionTable{
         {10, reader::type::ElementType::TETRA},
         {11, reader::type::ElementType::HEXAHEDRON},
@@ -265,12 +272,15 @@ class VTKMeshReader<3, IndexType, Real, Reserve...> : public MeshReader<3, Index
     //MeshDataContainer<IndexType>
 public:
     VTKMeshReader() = default;
+
+    template<typename IndexType, typename Real, unsigned int ...Reserve>
     VTKMeshReader(const MeshElements<3, IndexType, Real, Reserve...>&){}
 
     MeshDataContainer<typename reader::type::ElementType, 3> getCellTypes() {
         return cellTypes;
     }
 
+    template<typename IndexType, typename Real, unsigned int ...Reserve>
     void loadPoints(std::istream& ist, MeshElements<3, IndexType, Real, Reserve...>& mesh){
         IndexType numPoints;
         ist >> numPoints;
@@ -284,6 +294,7 @@ public:
         }
     }
 
+    template<typename IndexType, typename Real, unsigned int ...Reserve>
     void loadCells(std::istream& ist, MeshElements<3, IndexType, Real, Reserve...>& mesh){
 
         std::unordered_map<std::string, IndexType> edges;
@@ -376,7 +387,7 @@ public:
         }
     }
 
-
+    template<typename IndexType, typename Real, unsigned int ...Reserve>
     void loadCellTypes(std::istream& ist, MeshElements<3, IndexType, Real, Reserve...>& mesh){
         IndexType numCells;
         ist >> numCells;
@@ -393,7 +404,7 @@ public:
         }
     }
 
-
+    template<typename IndexType, typename Real, unsigned int ...Reserve>
     void loadFromStream(std::istream& ist,MeshElements<3, IndexType, Real, Reserve...>& mesh){
         ist.seekg(ist.beg);
         // Ignore first row "# vtk DataFile Version 2.0"
@@ -436,6 +447,8 @@ public:
 
     }
 
+
+    template<typename IndexType, typename Real, unsigned int ...Reserve>
     MeshElements<3, IndexType, Real, Reserve...> loadFromStream(std::istream& ist){
         MeshElements<3, IndexType, Real, Reserve...> resultMesh;
         loadFromStream(ist, resultMesh);
