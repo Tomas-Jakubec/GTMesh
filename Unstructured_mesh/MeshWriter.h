@@ -9,26 +9,7 @@ class MeshWriter{
 
 
 protected:
-    /**
-     * @brief The MeshHash struct<HR>
-     * A container to store cumulative data about a mesh
-     * to recognize changes in the mesh.
-     * It uses number of elements and sum of vertices coordinations.
-     */
-    template<typename IndexType, typename Real>
-    struct MeshHash {
-        IndexType numberOfElements = 0;
-        Real totalVert = 0;
 
-        bool operator== (const MeshHash& rhs) const {
-            return numberOfElements == rhs.numberOfElements &&
-                    totalVert == rhs.totalVert;
-        }
-
-        bool operator!= (const MeshHash& rhs) const {
-            return !((*this)==rhs);
-        }
-    };
 
 private:
     template<unsigned int Dim, typename Dummy = void>
@@ -48,21 +29,31 @@ private:
 public:
     using type = MeshNativeType<MeshDimension>;
 
+    /**
+     * @brief computeHash<HR>
+     * Method calculating a hash from the mesh information to detect changes in the mesh.
+     * The hash is calculated from number of elements and sum of vertices coordinates.
+     * @param mesh input mesh to be hashed
+     * @return hash code of type size_t
+     */
     template<typename IndexType, typename Real, unsigned int ...Reserve>
-    static MeshHash<IndexType, Real> computeHash(MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh){
-        MeshHash<IndexType, Real> res;
+    static size_t computeHash(MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh){
+
         // A vector of ones that simplifies the sum of coordinates
         Vertex<MeshDimension, Real> ones;
         for(unsigned int dim = 0; dim < MeshDimension; dim++){
             ones[dim] = 1.0;
         }
 
+        Real totalVert = 0.0;
         for(IndexType i = 0; i < mesh.getVertices().size(); i++) {
-            res.totalVert += mesh.getVertices().at(i) * ones;
+            totalVert += mesh.getVertices().at(i) * ones;
         }
 
-        res.numberOfElements = sumOfMeshElements<MeshDimension>::sum(mesh);
-        return res;
+        IndexType numberOfElements = sumOfMeshElements<MeshDimension>::sum(mesh);
+
+        std::hash<std::string> hasher;
+        return hasher(std::to_string(totalVert)+";"+std::to_string(numberOfElements));
     }
 };
 

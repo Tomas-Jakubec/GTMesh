@@ -36,7 +36,7 @@ public:
      * @brief lastHash<HR>
      * The hash of the last written mesh.
      */
-    typename writer::MeshHash<IndexType, Real> lastHash;
+    size_t lastHash;
     /**
      * @brief cellVert<HR>
      * Vertices of all cells in correct order for vtk export.
@@ -108,7 +108,7 @@ public:
 
     template<unsigned int ...Reserve>
     void indexMesh(MeshElements<2, IndexType, Real, Reserve...>& mesh){
-        typename writer::MeshHash<IndexType, Real> curHash = writer::computeHash(mesh);
+        size_t curHash = writer::computeHash(mesh);
 
         // if the mesh is the same as it was, return
         if (lastHash == curHash){
@@ -198,7 +198,7 @@ public:
      * @brief lastHash<HR>
      * The hash of the last written mesh.
      */
-    typename writer::MeshHash<IndexType, Real> lastHash;
+    size_t lastHash;
     /**
      * @brief cellVert<HR>
      * Vertices of all cells in correct order for vtk export.
@@ -272,7 +272,7 @@ public:
     template<unsigned int ...Reserve>
     void indexMesh(MeshElements<3, IndexType, Real, Reserve...>& mesh,
                    MeshDataContainer<typename writer::type::ElementType, 3> cellTypes){
-        typename writer::MeshHash<IndexType,Real> curHash = writer::computeHash(mesh);
+        size_t curHash = writer::computeHash(mesh);
 
         // if the mesh is the same as it was, return
         if (lastHash == curHash){
