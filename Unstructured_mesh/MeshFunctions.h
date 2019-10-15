@@ -284,6 +284,7 @@ struct _ComputeMeasures<1, Dimension>{
 
 
 
+
 template <unsigned int Dimension,typename IndexType, typename Real, unsigned int ...Reserve>
 MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, Dimension>> ComputeMeasures(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
     MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, Dimension>> measures(mesh);
@@ -292,6 +293,7 @@ MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, Di
 
     return measures;
 }
+
 
 
 
@@ -308,6 +310,9 @@ struct _ComputeNormals{
 };
 
 
+
+
+
 template <>
 struct _ComputeNormals<2>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
@@ -322,6 +327,9 @@ struct _ComputeNormals<2>{
         }
     }
 };
+
+
+
 
 
 template <>
@@ -385,6 +393,9 @@ struct _ComputeNormals<3>{
 
 
 
+
+
+
 template <unsigned int Dimension,typename IndexType, typename Real, unsigned int ...Reserve>
 MeshDataContainer<Vector<Dimension, Real>, Dimension-1> ComputeFaceNormals(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
 
@@ -394,6 +405,8 @@ MeshDataContainer<Vector<Dimension, Real>, Dimension-1> ComputeFaceNormals(MeshE
 
     return normals;
 }
+
+
 
 
 
@@ -469,6 +482,10 @@ struct MeshRun {
     }
 };
 
+
+
+
+
 template <unsigned int StartDimension, unsigned int TargetDimension, unsigned int MeshDimension, bool Descend>
 struct MeshRun<MeshDimension, StartDimension, TargetDimension, MeshDimension, false, Descend> {
 
@@ -489,6 +506,9 @@ struct MeshRun<MeshDimension, StartDimension, TargetDimension, MeshDimension, fa
 };
 
 
+
+
+
 template <unsigned int StartDimension, unsigned int TargetDimension, unsigned int MeshDimension, bool Descend>
 struct MeshRun<1, StartDimension, TargetDimension, MeshDimension, false, Descend> {
 
@@ -503,6 +523,8 @@ struct MeshRun<1, StartDimension, TargetDimension, MeshDimension, false, Descend
         MeshRun<0, StartDimension, TargetDimension, MeshDimension, TargetDimension == 0, Descend>::run(mesh, origElementIndex, edge.getVertexBIndex(), fun);
     }
 };
+
+
 
 
 
@@ -544,7 +566,16 @@ struct MeshApply {
 };
 
 
-template<unsigned int StartDim, unsigned int TargetDim>
+
+
+
+
+enum Ordering{
+    ORDER_ASCEND,
+    ORDER_ORIGINAL
+};
+
+template<unsigned int StartDim, unsigned int TargetDim, Ordering order = Ordering::ORDER_ASCEND>
 struct MeshConnections {
     /**
      * @brief connections<HR>
@@ -565,6 +596,11 @@ struct MeshConnections {
 
         return result;
     }
+};
+
+
+template<unsigned int StartDim, unsigned int TargetDim>
+struct MeshConnections<StartDim, TargetDim, Ordering::ORDER_ORIGINAL> {
 
     /**
      * @brief orderedConnections<HR>
@@ -573,7 +609,7 @@ struct MeshConnections {
      * @return
      */
     template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
-    static MeshDataContainer<std::vector<IndexType>, StartDim> orderedConnections(
+    static MeshDataContainer<std::vector<IndexType>, StartDim> connections(
             MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
             ) {
         MeshDataContainer<std::map<IndexType, IndexType>, StartDim> tempMap(mesh);
@@ -598,6 +634,22 @@ struct MeshConnections {
     }
 
 };
+
+
+
+
+
+
+template <unsigned int StartDim, unsigned int ConnectingDim, unsigned int ConnectedDim = StartDim, Ordering order = Ordering::ORDER_ASCEND>
+class MeshNegborhood{
+    template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
+    static MeshDataContainer<std::vector<IndexType>, StartDim> connections();
+
+};
+
+
+
+
 
 template<unsigned int FromDim, unsigned int ToDim, bool Descend = true>
 struct MeshColouring {
