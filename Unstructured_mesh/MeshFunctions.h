@@ -6,6 +6,7 @@
 #include "Vector.h"
 #include <valarray>
 #include <set>
+#include <map>
 
 template <typename Type, Type startIndex, Type EndIndex, int increment = 1, Type... t>
 struct MakeCustomIntegerSequence : public MakeCustomIntegerSequence<Type, startIndex + increment, EndIndex, increment, t..., startIndex> {
@@ -545,6 +546,14 @@ struct MeshApply {
 
 template<unsigned int StartDim, unsigned int TargetDim>
 struct MeshConnections {
+    /**
+     * @brief connections<HR>
+     * Detects connections of mesh elements of StartDim to TargetDim.
+     * Returns a MeshDataContainer of set<IndexType> allocated to StartDim elements.
+     * The indexes are ordered in ascending way.
+     * @param mesh
+     * @return
+     */
     template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
     static MeshDataContainer<std::set<IndexType>, StartDim> connections(
             MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
@@ -556,6 +565,38 @@ struct MeshConnections {
 
         return result;
     }
+
+    /**
+     * @brief orderedConnections<HR>
+     * This function returns connection in original sequence as in the mesh.
+     * @param mesh
+     * @return
+     */
+    template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
+    static MeshDataContainer<std::vector<IndexType>, StartDim> orderedConnections(
+            MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
+            ) {
+        MeshDataContainer<std::map<IndexType, IndexType>, StartDim> tempMap(mesh);
+
+        MeshApply<StartDim, TargetDim, MeshDimension>::apply(mesh, [&tempMap](IndexType ori, IndexType element){
+            IndexType size = tempMap.template getDataByPos<0>().at(ori).size();
+            tempMap.template getDataByPos<0>().at(ori).insert({element, size});
+        });
+
+        MeshDataContainer<std::set<IndexType>, StartDim> result(mesh);
+        for (IndexType i = 0; i < mesh.template getElements<StartDim>().size(); i++){
+            //resize the vector at the position
+            result.template getDataByPos<0>().at(i).resize(
+                tempMap.template getDataByPos<0>().at(i).size()
+            );
+
+            for(std::pair<IndexType, IndexType>& mapElem : tempMap) {
+                result.template getDataByPos<0>().at(i).at(mapElem.second) = mapElem.first;
+            }
+        }
+        return result;
+    }
+
 };
 
 template<unsigned int FromDim, unsigned int ToDim, bool Descend = true>

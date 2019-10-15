@@ -171,6 +171,74 @@ struct is_indexable<
         > : public integral_constant<bool, false>{};
 
 
+template <typename T>
+class OutOfLineSpecialization {
+public:
+    template<typename ... Sequence>
+    static void printSeq(Sequence...);
+
+    template<T... data>
+    static void onlySpec();
+};
+
+template<typename T> template<typename...Sequence>
+void OutOfLineSpecialization<T>::printSeq(Sequence... onlyOne) {
+    DBGMSG("capture");
+    DBGVAR(onlyOne...);
+}
+template<> template<typename...Sequence>
+void OutOfLineSpecialization<int>::printSeq(Sequence... onlyOne) {
+    DBGMSG("int");
+    DBGVAR(onlyOne...);
+}
+
+
+template<> template<int...data>
+void OutOfLineSpecialization<int>::onlySpec() {
+    DBGMSG("int");
+    DBGVAR(data...);
+}
+
+
+
+template <typename T>
+class InLineSpecialization {
+public:
+    template<typename...Sequence>
+    static void printSeq(Sequence... onlyOne) {
+        DBGMSG("capture");
+        DBGVAR(onlyOne...);
+    }
+};
+
+
+template <>
+class InLineSpecialization<int> {
+public:
+    template<typename...Sequence>
+    static void printSeq(Sequence... onlyOne) {
+        DBGMSG("int");
+        DBGVAR(onlyOne...);
+    }
+    template<int...data>
+    static void onlySpec() {
+        DBGMSG("int");
+        DBGVAR(data...);
+    }
+};
+
+
+template<typename T>
+void callSpec() {
+    // supr, tohle nabízí
+    OutOfLineSpecialization<T>::printSeq(1);
+    OutOfLineSpecialization<T>::template onlySpec<2>();
+
+    InLineSpecialization<T>::printSeq(1);
+    InLineSpecialization<T>::template onlySpec<3>();
+}
+
+
 int main()
 {
 
@@ -195,6 +263,12 @@ int main()
     //DBGVAR(is_same<decltype(&vector<double>::operator[]), typename member_const_function_ptr<vector<double>,const double&, size_t>::type>::value);
 
     DBGVAR(is_indexable<const vector<double>>::value);
-    cout << "Hello World!" << endl;
+
+
+    OutOfLineSpecialization<size_t>::printSeq(1);
+    OutOfLineSpecialization<int>::printSeq(1);
+
+    callSpec<int>();
+
     return 0;
 }

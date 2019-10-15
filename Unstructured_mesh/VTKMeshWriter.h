@@ -198,7 +198,7 @@ public:
      * @brief lastHash<HR>
      * The hash of the last written mesh.
      */
-    size_t lastHash;
+    size_t lastHash = 0;
     /**
      * @brief cellVert<HR>
      * Vertices of all cells in correct order for vtk export.
@@ -220,7 +220,8 @@ public:
 
     /**
      * @brief indexFace<HR>
-     * This funcion stores indexes of vertices in correct order
+     * This funcion return indexes of vertices of a face in correct order
+     * with respect to edge orientation
      * in output vector verticesIndexed
      * @param mesh the structure of the mesh
      * @param face the face of the mesh to be indexed
@@ -269,16 +270,23 @@ public:
 
     }
 
+
+
+
+    /**
+     * @brief indexMesh<HR>
+     * This function creates vector of indexes of vertices for each cell in order suitable
+     * for VTK output. Moreover in case of elements type different from
+     * any VTK cell type, the cell is split into tetrahedrons. The tetrahedrons are
+     * made for each edge of every faces. The tetrahedrons is made of both edges vertices
+     * and cell and face center.
+     * @param mesh Mesh to be indexed
+     * @param cellTypes Vector of known cell types. If a cell type is not known then a method
+     * of splitting into tetrahedrons is used.
+     */
     template<unsigned int ...Reserve>
     void indexMesh(MeshElements<3, IndexType, Real, Reserve...>& mesh,
                    MeshDataContainer<typename writer::type::ElementType, 3> cellTypes){
-        size_t curHash = writer::computeHash(mesh);
-
-        // if the mesh is the same as it was, return
-        if (lastHash == curHash){
-            return;
-        }
-        lastHash = curHash;
 
         appendedVertices.clear();
         cellVert.template getDataByPos<0>().clear();
@@ -288,8 +296,7 @@ DBGMSG("indexing mesh");
         // write cells of the mesh
         // prepare connections
         auto cellVert = MeshConnections<3,0>::connections(mesh);
-        auto cellFace = MeshConnections<3,2>::connections(mesh);
-        auto faceVert = MeshConnections<2,0>::connections(mesh);
+
         // prepare orientation for correct export
         // this is very expensive procedure
         auto faceEdgeOri = edgesOrientation(mesh);
@@ -331,8 +338,8 @@ DBGMSG("indexing mesh");
                 // write vertices of one face
                 typename MeshElements<3, IndexType, Real, Reserve...>::Face* face = nullptr;
                 // search for the base face
-                for (IndexType faceIndex : cellFace[cell]){
-                    if (faceVert.template getDataByPos<0>().at(faceIndex).size() > 3){
+                for (IndexType faceIndex : mesh.template getElement<3>(cell.getIndex()).getSubelements()){
+                    if (mesh.template getElements<2>().at(faceIndex).getSubelements().getNumberOfSubElements() > 3){
                         face = &mesh.getFaces().at(faceIndex);
                     }
                 }
@@ -360,11 +367,12 @@ DBGMSG("indexing mesh");
                 // search for the base face
 
                 for (IndexType faceIndex : mesh.template getElement<3>(cell.getIndex()).getSubelements()){
-                    if (faceVert.template getDataByPos<0>().at(faceIndex).size() == 3){
+                    if (mesh.template getElements<2>().at(faceIndex).getSubelements().getNumberOfSubElements() == 3){
                         face = &mesh.getFaces().at(faceIndex);
                         break;
                     }
                 }
+
                 indexFace(mesh, *face, cell, faceEdgeOri, vertWrit);
                 // write vertices of the oposite triangular side
 
@@ -518,8 +526,16 @@ DBGMSG("indexing mesh");
     void writeToStream(std::ostream& ost,
                        MeshElements<3, IndexType, Real, Reserve...>& mesh,
                        MeshDataContainer<typename writer::type::ElementType, 3> cellTypes){
-        // create index of mesh
-        indexMesh(mesh, cellTypes);
+        // create index of mesh if the mesh has changed
+        size_t curHash = writer::computeHash(mesh);
+
+        // if the mesh is not the same as it was,
+        // then update the index
+        if (lastHash != curHash){
+            indexMesh(mesh, cellTypes);
+        }
+        lastHash = curHash;
+
         // first write verices
         ost << "POINTS " << mesh.getVertices().size() + appendedVertices.size() <<
                " double" << std::endl;
