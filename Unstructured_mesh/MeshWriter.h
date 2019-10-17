@@ -26,6 +26,18 @@ private:
             return mesh.template getElements<0>().size();
         }
     };
+
+    template<typename IndexType, typename Real>
+    struct HashData{
+        IndexType nElem;
+        Real totCoord;
+    };
+
+    template<typename IndexType, typename Real>
+    union HashUni {
+        HashData<IndexType, Real> data;
+        char bytes[sizeof (HashData<IndexType, Real>) + 1] = {};
+    };
 public:
     using type = MeshNativeType<MeshDimension>;
 
@@ -52,8 +64,11 @@ public:
 
         IndexType numberOfElements = sumOfMeshElements<MeshDimension>::sum(mesh);
 
+        HashUni<IndexType, Real> uni;
+        uni.data = {numberOfElements, totalVert};
         std::hash<std::string> hasher;
-        return hasher(std::to_string(totalVert)+";"+std::to_string(numberOfElements));
+        return hasher(uni.bytes);
+        //return hasher(std::to_string(totalVert)+";"+std::to_string(numberOfElements));
     }
 };
 

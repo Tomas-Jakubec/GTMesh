@@ -272,6 +272,110 @@ public:
 
 
 
+private:
+    /**
+     * @brief indexPyramid<HR>
+     * Stores indexes of vertices in output container vertWrit
+     * @param mesh
+     * @param cell the current proceeded cell
+     * @param face the base face of the pyramid
+     * @param faceEdgeOri orientation of edges to faces
+     * @param vertWrit [out]
+     */
+    template<unsigned int ... Reserve>
+    void indexPyramid(
+            MeshElements<3, IndexType, Real, Reserve...>& mesh,
+            typename MeshElements<3, IndexType, Real, Reserve...>::Cell& cell,
+            typename MeshElements<3, IndexType, Real, Reserve...>::Face& face,
+            MeshDataContainer<std::vector<bool>,2>& faceEdgeOri,
+            std::vector<IndexType>& vertWrit
+            ){
+        indexFace(mesh,face, cell, faceEdgeOri, vertWrit);
+
+        for (IndexType index : cellVert[cell]) {
+            bool vertOK = true;
+            for (IndexType i : vertWrit){
+               if (i == index){
+                   vertOK = false;
+               }
+            }
+            if (vertOK){
+                vertWrit.push_back(index);
+            }
+        }
+    }
+
+
+
+
+    /**
+     * @brief indexLinearObject<HR>
+     * This function stores indexes of vertices of cells which are made by cartesian product of
+     * a line and the base face in output container vertWrit.
+     * @param mesh
+     * @param cell the current proceeded cell
+     * @param face the base face of the pyramid
+     * @param faceEdgeOri orientation of edges to faces
+     * @param vertWrit [out]
+     */
+    template<unsigned int ... Reserve>
+    void indexLinearObject(
+            MeshElements<3, IndexType, Real, Reserve...>& mesh,
+            typename MeshElements<3, IndexType, Real, Reserve...>::Cell& cell,
+            typename MeshElements<3, IndexType, Real, Reserve...>::Face& face,
+            MeshDataContainer<std::vector<bool>,2>& faceEdgeOri,
+            std::vector<IndexType>& vertWrit
+            ){
+        indexFace(mesh, face, cell, faceEdgeOri, vertWrit);
+        // write vertices of the oposite triangular side
+
+        IndexType numVertBaseFace = vertWrit.size();
+
+        IndexType index = 0;
+
+        auto lambdaProc = [&mesh,&index,&vertWrit](IndexType, IndexType edgeIndex){
+            auto& edge = mesh.getEdges().at(edgeIndex);
+
+            if (edge.getVertexAIndex() == index){
+                bool edgeOK = true;
+                for (IndexType i : vertWrit){
+                   if (edge.getVertexBIndex() == i){
+                       edgeOK = false;
+                   }
+                }
+                if(edgeOK){
+                    vertWrit.push_back(edge.getVertexBIndex());
+                }
+            }
+
+            if (edge.getVertexBIndex() == index){
+                bool edgeOK = true;
+                for (IndexType i : vertWrit){
+                   if (edge.getVertexAIndex() == i){
+                       edgeOK = false;
+                   }
+                }
+                if(edgeOK){
+                    vertWrit.push_back(edge.getVertexAIndex());
+                }
+            }
+        };
+
+        for (IndexType i = 0; i < numVertBaseFace; i++) {
+            index = vertWrit[i];
+
+            MeshRun<3,3,1,3,false, true>::run(
+                mesh,
+                cell.getIndex(),
+                cell.getIndex(),
+                lambdaProc
+            );
+        }
+    }
+
+
+
+public:
 
     /**
      * @brief indexMesh<HR>
@@ -311,56 +415,42 @@ DBGMSG("indexing mesh");
             vertWrit.reserve(cellVert[cell].size());
 
 
+            // switch the writing procedure according to cell type
             switch (cellTypes.template getDataByPos<0>().at(cell.getIndex())) {
 
+
+            // Cell type TETRA
             case writer::type::ElementType::TETRA :{
-                // write vertices of one face
+                // every face is base face for TETRAHEDRON
                 auto& face = mesh.getFaces().at(cell.getBoundaryElementIndex());
 
-                indexFace(mesh,face, cell, faceEdgeOri, vertWrit);
-
-                for (IndexType index : cellVert[cell]) {
-                    bool vertOK = true;
-                    for (IndexType i : vertWrit){
-                       if (i == index){
-                           vertOK = false;
-                       }
-                    }
-                    if (vertOK){
-                        vertWrit.push_back(index);
-                    }
-                }
+                indexPyramid(mesh, cell, face, faceEdgeOri, vertWrit);
                 this->cellVert.template getDataByPos<0>().push_back(vertWrit);
                 this->cellTypes.template getDataByPos<0>().push_back(cellTypes.at(cell));
             }break;
 
+
+
+            // Cell type PYRAMID
             case writer::type::ElementType::PYRAMID :{
-                // write vertices of one face
-                typename MeshElements<3, IndexType, Real, Reserve...>::Face* face = nullptr;
+
                 // search for the base face
+                typename MeshElements<3, IndexType, Real, Reserve...>::Face* face = nullptr;
                 for (IndexType faceIndex : mesh.template getElement<3>(cell.getIndex()).getSubelements()){
                     if (mesh.template getElements<2>().at(faceIndex).getSubelements().getNumberOfSubElements() > 3){
                         face = &mesh.getFaces().at(faceIndex);
                     }
                 }
+                // index the pyramid object
+                indexPyramid(mesh, cell, *face, faceEdgeOri, vertWrit);
 
-                indexFace(mesh, *face, cell, faceEdgeOri, vertWrit);
-                // write the last vertex
-                for (IndexType index : cellVert.at(cell)) {
-                    bool vertOK = true;
-                    for (IndexType i : vertWrit){
-                       if (i == index){
-                           vertOK = false;
-                       }
-                    }
-                    if (vertOK){
-                        vertWrit.push_back(index);
-                    }
-                }
                 this->cellVert.template getDataByPos<0>().push_back(vertWrit);
                 this->cellTypes.template getDataByPos<0>().push_back(cellTypes.at(cell));
             }break;
 
+
+
+            // Cell type WEDGE
             case writer::type::ElementType::WEDGE :{
                 // write vertices of one face
                 typename MeshElements<3, IndexType, Real, Reserve...>::Face* face = nullptr;
@@ -373,93 +463,25 @@ DBGMSG("indexing mesh");
                     }
                 }
 
-                indexFace(mesh, *face, cell, faceEdgeOri, vertWrit);
-                // write vertices of the oposite triangular side
-
-                for (IndexType i = 0; i < vertWrit.size(); i++) {
-                    IndexType index = vertWrit[i];
-
-                    MeshRun<3,3,1,3,false, true>::run(mesh, cell.getIndex(),cell.getIndex(),
-                        [&mesh,&index,&vertWrit](IndexType, IndexType edgeIndex){
-                        auto& edge = mesh.getEdges().at(edgeIndex);
-
-                        if (edge.getVertexAIndex() == index){
-                            bool edgeOK = true;
-                            for (IndexType i : vertWrit){
-                               if (edge.getVertexBIndex() == i){
-                                   edgeOK = false;
-                               }
-                            }
-                            if(edgeOK){
-                                vertWrit.push_back(edge.getVertexBIndex());
-                            }
-                        }
-
-                        if (edge.getVertexBIndex() == index){
-                            bool edgeOK = true;
-                            for (IndexType i : vertWrit){
-                               if (edge.getVertexAIndex() == i){
-                                   edgeOK = false;
-                               }
-                            }
-                            if(edgeOK){
-                                vertWrit.push_back(edge.getVertexAIndex());
-                            }
-                        }
-                    }
-                    );
-                    if (vertWrit.size() == 6) {
-                        break;
-                    }
-                }
+                indexLinearObject(mesh, cell, *face, faceEdgeOri, vertWrit);
                 this->cellVert.template getDataByPos<0>().push_back(vertWrit);
                 this->cellTypes.template getDataByPos<0>().push_back(cellTypes.at(cell));
             }break;
 
+
+
+            // Cell type HEXAHEDRON
             case writer::type::ElementType::HEXAHEDRON :{
                 // write vertices of one face
                 auto& face = mesh.getFaces().at(cell.getBoundaryElementIndex());
 
-                indexFace(mesh, face, cell, faceEdgeOri, vertWrit);
-                // write vertices of the oposite triangular side
-                for (IndexType i = 0; i < vertWrit.size(); i++) {
-                    IndexType index = vertWrit[i];
-                    MeshRun<3,3,1,3,false, true>::run(mesh, cell.getIndex(),cell.getIndex(),
-                        [&mesh,&index,&vertWrit](IndexType, IndexType edgeIndex){
-                        auto& edge = mesh.getEdges().at(edgeIndex);
-
-                        if (edge.getVertexAIndex() == index){
-                            bool edgeOK = true;
-                            for (IndexType i : vertWrit){
-                               if (edge.getVertexBIndex() == i){
-                                   edgeOK = false;
-                               }
-                            }
-                            if(edgeOK){
-                                vertWrit.push_back(edge.getVertexBIndex());
-                            }
-                        }
-
-                        if (edge.getVertexBIndex() == index){
-                            bool edgeOK = true;
-                            for (IndexType i : vertWrit){
-                               if (edge.getVertexAIndex() == i){
-                                   edgeOK = false;
-                               }
-                            }
-                            if(edgeOK){
-                                vertWrit.push_back(edge.getVertexAIndex());
-                            }
-                        }
-                    }
-                    );
-                    if (vertWrit.size() == 8) {
-                        break;
-                    }
-                }
+                indexLinearObject(mesh, cell, face, faceEdgeOri, vertWrit);
                 this->cellVert.template getDataByPos<0>().push_back(vertWrit);
                 this->cellTypes.template getDataByPos<0>().push_back(cellTypes.at(cell));
             }break;
+
+
+            // Defalt splitting of the volume
             default: {
                 //throw std::runtime_error("it is not possible yet to write generic object into VTK");
 
@@ -522,6 +544,15 @@ DBGMSG("indexing mesh");
     }
 
 
+    /**
+     * @brief writeToStream
+     * Exports the mesh to the output stream in VTK format.
+     * If the mesh is written for the first time, it is indexed.
+     * @see indexMesh
+     * @param ost
+     * @param mesh
+     * @param cellTypes the types of cells in NativeType format
+     */
     template<unsigned int ...Reserve>
     void writeToStream(std::ostream& ost,
                        MeshElements<3, IndexType, Real, Reserve...>& mesh,
