@@ -1,10 +1,10 @@
 #include <iostream>
 //#define UNDEBUG
 #include "../debug/Debug.h"
-#include "UnstructuredMesh.h"
-#include "MeshFunctions.h"
-#include "VTKMeshReader.h"
-#include "VTKMeshWriter.h"
+#include "UnstructuredMesh/UnstructuredMesh.h"
+#include "UnstructuredMesh/MeshFunctions/MeshFunctions.h"
+#include "UnstructuredMesh/MeshIO/MeshReader/VTKMeshReader.h"
+#include "UnstructuredMesh/MeshIO/MeshWriter/VTKMeshWriter.h"
 #include <fstream>
 #include <list>
 using namespace std;

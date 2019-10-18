@@ -12,19 +12,19 @@ HEADERS += \
     ../debug/Debug.h \
     ../debug/HTMLLogger.h \
     ../debug/VariableExport.h \
-    CellBoundaryConnection.h \
-    CellConnection.h \
-    ComputationalySignificantElement.h \
     InlineArrayOperations.h \
-    MeshDataContainer.h \
-    MeshElement.h \
-    MeshFunctions.h \
-    MeshNativeType.h \
-    MeshReader.h \
-    MeshWriter.h \
-    UnstructedMeshDefine.h \
-    UnstructuredMesh.h \
-    VTKMeshReader.h \
-    VTKMeshWriter.h \
+    UnstructuredMesh/MeshDataContainer/MeshDataContainer.h \
+    UnstructuredMesh/MeshElements/CellBoundaryConnection.h \
+    UnstructuredMesh/MeshElements/CellConnection.h \
+    UnstructuredMesh/MeshElements/ComputationalySignificantElement.h \
+    UnstructuredMesh/MeshElements/MeshElement.h \
+    UnstructuredMesh/MeshFunctions/MeshFunctions.h \
+    UnstructuredMesh/MeshIO/MeshNativeType.h \
+    UnstructuredMesh/MeshIO/MeshReader/MeshReader.h \
+    UnstructuredMesh/MeshIO/MeshReader/VTKMeshReader.h \
+    UnstructuredMesh/MeshIO/MeshWriter/MeshWriter.h \
+    UnstructuredMesh/MeshIO/MeshWriter/VTKMeshWriter.h \
+    UnstructuredMesh/UnstructedMeshDefine.h \
+    UnstructuredMesh/UnstructuredMesh.h \
     Vector.h \
     Vertex.h

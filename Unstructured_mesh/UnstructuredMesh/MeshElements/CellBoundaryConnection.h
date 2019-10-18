@@ -1,6 +1,6 @@
 #ifndef CELLBOUNDARYCONNECTION_H
 #define CELLBOUNDARYCONNECTION_H
-#include "UnstructedMeshDefine.h"
+#include "../UnstructedMeshDefine.h"
 #include "CellConnection.h"
 
 template<typename indexType>

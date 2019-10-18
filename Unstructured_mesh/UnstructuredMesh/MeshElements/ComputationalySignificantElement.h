@@ -1,6 +1,6 @@
 #ifndef COMPUTATIONALY_SIGNIFICANT_ELEMENT_H
 #define COMPUTATIONALY_SIGNIFICANT_ELEMENT_H
-#include "Vertex.h"
+#include "../../Vertex.h"
 
 template <unsigned int MeshDim, typename Real>
 class ComputationallySignificantElement

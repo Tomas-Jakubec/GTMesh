@@ -1,6 +1,6 @@
 #ifndef MESHREADER_H
 #define MESHREADER_H
-#include "MeshNativeType.h"
+#include "../MeshNativeType.h"
 
 template<unsigned int MeshDimension>
 class MeshReader{

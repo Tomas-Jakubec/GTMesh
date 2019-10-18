@@ -1,8 +1,8 @@
 #ifndef MESHWRITER_H
 #define MESHWRITER_H
-#include "MeshNativeType.h"
+#include "../MeshNativeType.h"
 #include "Vertex.h"
-#include "MeshElement.h"
+#include "../../MeshElements/MeshElement.h"
 
 template<unsigned int MeshDimension>
 class MeshWriter{

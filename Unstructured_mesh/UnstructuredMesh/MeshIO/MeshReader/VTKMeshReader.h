@@ -2,8 +2,8 @@
 #define VTKMESHREADER_H
 
 #include "MeshReader.h"
-#include "MeshDataContainer.h"
-#include "MeshElement.h"
+#include "../../MeshDataContainer/MeshDataContainer.h"
+#include "../../MeshElements/MeshElement.h"
 #include <istream>
 #include <string>
 #include <unordered_map>

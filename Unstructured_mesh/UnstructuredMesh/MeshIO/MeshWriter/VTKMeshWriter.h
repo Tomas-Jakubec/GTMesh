@@ -2,9 +2,9 @@
 #define VTKMESHWRITER_H
 
 #include "MeshWriter.h"
-#include "MeshElement.h"
-#include "MeshDataContainer.h"
-#include "MeshFunctions.h"
+#include "../../MeshElements/MeshElement.h"
+#include "../../MeshDataContainer/MeshDataContainer.h"
+#include "../../MeshFunctions/MeshFunctions.h"
 #include <map>
 #include <ostream>
 template<unsigned int MeshDimension, typename IndexType = size_t, typename Real = double>
