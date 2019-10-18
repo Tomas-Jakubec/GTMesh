@@ -619,14 +619,14 @@ struct MeshConnections<StartDim, TargetDim, Order::ORDER_ORIGINAL> {
             tempMap.template getDataByPos<0>().at(ori).insert({element, size});
         });
 
-        MeshDataContainer<std::set<IndexType>, StartDim> result(mesh);
+        MeshDataContainer<std::vector<IndexType>, StartDim> result(mesh);
         for (IndexType i = 0; i < mesh.template getElements<StartDim>().size(); i++){
             //resize the vector at the position
             result.template getDataByPos<0>().at(i).resize(
                 tempMap.template getDataByPos<0>().at(i).size()
             );
 
-            for(std::pair<IndexType, IndexType>& mapElem : tempMap) {
+            for(std::pair<const IndexType, IndexType>& mapElem : tempMap.template getDataByPos<0>().at(i)) {
                 result.template getDataByPos<0>().at(i).at(mapElem.second) = mapElem.first;
             }
         }

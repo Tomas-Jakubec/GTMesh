@@ -530,6 +530,11 @@ void testMesh3D() {
             DBGVAR(cell.getIndex(), con[cell]);
     }
 
+    DBGMSG("connections original order");
+    auto conOrig = MeshConnections<3,0,Order::ORDER_ORIGINAL>::connections(mesh3);
+    for (auto& cell : mesh3.getCells()){
+            DBGVAR(cell.getIndex(), conOrig[cell]);
+    }
 
     DBGMSG("connection test oposite");
     auto con1 = MeshConnections<0,3>::connections(mesh3);
@@ -823,9 +828,9 @@ int main()
 {
     //testMesh2D();
     //testMesh2DLoadAndWrite();
-    //testMesh3D();
+    testMesh3D();
     //test3DMeshDeformedPrisms();
-    testMeshRefine();
+    //testMeshRefine();
     //testMeshDataContainer();
     //UnstructuredMesh<5, size_t, double, 6,5,4> m;
     //m.ComputeElementMeasures();
