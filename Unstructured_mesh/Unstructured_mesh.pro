@@ -13,6 +13,7 @@ HEADERS += \
     ../debug/HTMLLogger.h \
     ../debug/VariableExport.h \
     InlineArrayOperations.h \
+    UnstructuredMesh/MeshDataContainer/MemberApproach.h \
     UnstructuredMesh/MeshDataContainer/MeshDataContainer.h \
     UnstructuredMesh/MeshElements/CellBoundaryConnection.h \
     UnstructuredMesh/MeshElements/CellConnection.h \

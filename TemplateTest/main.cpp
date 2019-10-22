@@ -1,5 +1,7 @@
 #include "../debug/Debug.h"
-#include "../Unstructured_mesh/UnstructuredMesh.h"
+#include "../Unstructured_mesh/UnstructuredMesh/UnstructuredMesh.h"
+#include "../Unstructured_mesh/UnstructuredMesh/MeshDataContainer/MemberApproach.h"
+#include <type_traits>
 #include <iostream>
 #include <list>
 #include <map>
@@ -239,9 +241,50 @@ void callSpec() {
 }
 
 
-int main()
-{
+struct tempData {
+    double density;
 
+    Vector<3,double> velocity;
+
+    double& getData(){
+        return density;
+    }
+
+    Vector<3,double> getMomentum(){
+        return velocity*density;
+    }
+
+    void setMomentum(const Vector<3,double>& val){
+        velocity = val / density;
+    }
+
+};
+
+
+void testMemberRef(){
+
+    MemberApproach<tempData, double>* app;
+
+    //MemberReference<tempData, double, bool> invalid;
+
+    MemberReference<tempData, double>::SuperRef<double tempData::*> ref(&tempData::density);
+    MemberReference<tempData, double>::SuperRef<double& (tempData::*)()> ref1(&tempData::getData);
+
+    MemberReference<tempData, Vector<3,double>>::SuperRef ref2(std::make_pair(&tempData::getMomentum, &tempData::setMomentum));
+
+    app = &ref;
+    app = &ref1;
+    tempData d;
+    app->setValue(&d, 42.15);
+    DBGVAR(app->getValue(&d));
+
+    MemberApproach<tempData, Vector<3,double>>* app2 = &ref2;
+    app2->setValue(&d, {42.15,84.30,42.15});
+    DBGVAR(app2->getValue(&d), d.velocity);
+
+}
+
+void testOrig() {
     Vertex<5, double> vert;
     vector<double> vec;
     DBGVAR(has_public_member<double>::value);
@@ -254,11 +297,11 @@ int main()
     member_ptr<Temp, double>::type pom = &Temp::data;
     DBGVAR(((&t)->*pom1)(0.0),pom);
     //auto op = &vector<double>::operator[];
-    member_const_function_ptr<vector<double>,const double&, size_t>::type c_at = &vector<double>::at;
+    //member_const_function_ptr<vector<double>,const double&, size_t>::type c_at = &vector<double>::at;
 
-    member_function_ptr<vector<double>,double&, size_t>::type at = &vector<double>::at;
+    //member_function_ptr<vector<double>,double&, size_t>::type at = &vector<double>::at;
 
-    member_const_function_ptr<vector<double>,const double&, size_t>::type op = &vector<double>::operator[];
+    //member_const_function_ptr<vector<double>,const double&, size_t>::type op = &vector<double>::operator[];
 
     //DBGVAR(is_same<decltype(&vector<double>::operator[]), typename member_const_function_ptr<vector<double>,const double&, size_t>::type>::value);
 
@@ -269,6 +312,52 @@ int main()
     OutOfLineSpecialization<int>::printSeq(1);
 
     callSpec<int>();
+
+}
+
+
+template <typename T>
+class Base{
+public:
+    T data;
+    Base(T dat){
+        data = dat;
+    }
+};
+
+template <>
+class Base<double>{
+public:
+    double data;
+    Base(double dat){
+        DBGMSG("double");
+        data = dat;
+    }
+};
+
+
+
+template <typename T1, typename T2>
+class Base<std::pair<T1,T2>>{
+public:
+    T1 first;
+    T2 second;
+    Base(std::pair<T1,T2> pair){
+        first = pair.first;
+        second = pair.second;
+    }
+};
+
+
+int main()
+{
+
+    Base b1(0.0);
+
+    Base b2(std::pair<char,int>{'1',3});
+
+    DBGVAR(b2.first,b2.second);
+    testMemberRef();
 
     return 0;
 }

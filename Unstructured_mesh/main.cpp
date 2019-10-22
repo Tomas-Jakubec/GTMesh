@@ -5,6 +5,7 @@
 #include "UnstructuredMesh/MeshFunctions/MeshFunctions.h"
 #include "UnstructuredMesh/MeshIO/MeshReader/VTKMeshReader.h"
 #include "UnstructuredMesh/MeshIO/MeshWriter/VTKMeshWriter.h"
+#include "UnstructuredMesh/MeshDataContainer/MemberApproach.h"
 #include <fstream>
 #include <list>
 using namespace std;
@@ -823,18 +824,16 @@ DBGVAR(mesh.getVertices().size(),mesh.getEdges().size(), mesh.getFaces().size(),
 
 
 
-
 int main()
 {
     //testMesh2D();
     //testMesh2DLoadAndWrite();
-    testMesh3D();
+    //testMesh3D();
     //test3DMeshDeformedPrisms();
     //testMeshRefine();
     //testMeshDataContainer();
     //UnstructuredMesh<5, size_t, double, 6,5,4> m;
     //m.ComputeElementMeasures();
     //test3DMeshLoad();
-
 
 }
