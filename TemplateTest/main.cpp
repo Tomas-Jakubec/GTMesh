@@ -1,6 +1,7 @@
 #include "../debug/Debug.h"
 #include "../Unstructured_mesh/UnstructuredMesh/UnstructuredMesh.h"
 #include "../Unstructured_mesh/UnstructuredMesh/MeshDataContainer/MemberApproach.h"
+#include <functional>
 #include <type_traits>
 #include <iostream>
 #include <list>
@@ -358,6 +359,10 @@ int main()
 
     DBGVAR(b2.first,b2.second);
     testMemberRef();
+
+    std::function<int(int)> fce = [&b1](int i){return b1.data + 42 + i;};
+
+    std::cout << fce(2);
 
     return 0;
 }

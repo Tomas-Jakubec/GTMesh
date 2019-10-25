@@ -3,6 +3,20 @@
 #include <type_traits>
 #include <utility>
 
+template<typename Class, typename MA>
+class MemberApproachBase{
+
+    auto getValue(Class* c){
+        return static_cast<MA*>(this)->getValue(c);
+    }
+
+    template<typename ValueType>
+    void setValue(Class* c, const ValueType& val) {
+        static_cast<MA*>(this)->setValue(c, val);
+    }
+};
+
+
 template <typename Class, typename ValueType>
 class MemberApproach{
 public:
