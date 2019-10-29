@@ -344,7 +344,9 @@ public:
 
             IndexType prevFaceIndex = INVALID_INDEX(IndexType);
             for (IndexType fi = 0; fi < faceOrder.size(); fi++) {
+
                 std::vector<int>& f = faceOrder.at(fi);
+
                 std::vector<IndexType> faceEdges;
                 for (int& index : f) {
                     faceEdges.push_back(edgeIndexes.at(index).first);

@@ -21,8 +21,10 @@ HEADERS += \
     UnstructuredMesh/MeshElements/MeshElement.h \
     UnstructuredMesh/MeshFunctions/MeshFunctions.h \
     UnstructuredMesh/MeshIO/MeshNativeType.h \
+    UnstructuredMesh/MeshIO/MeshReader/FPMAMeshReader.h \
     UnstructuredMesh/MeshIO/MeshReader/MeshReader.h \
     UnstructuredMesh/MeshIO/MeshReader/VTKMeshReader.h \
+    UnstructuredMesh/MeshIO/MeshWriter/FPMAMeshWriter.h \
     UnstructuredMesh/MeshIO/MeshWriter/MeshWriter.h \
     UnstructuredMesh/MeshIO/MeshWriter/VTKMeshWriter.h \
     UnstructuredMesh/UnstructedMeshDefine.h \
