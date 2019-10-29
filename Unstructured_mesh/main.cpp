@@ -5,6 +5,10 @@
 #include "UnstructuredMesh/MeshFunctions/MeshFunctions.h"
 #include "UnstructuredMesh/MeshIO/MeshReader/VTKMeshReader.h"
 #include "UnstructuredMesh/MeshIO/MeshWriter/VTKMeshWriter.h"
+
+#include "UnstructuredMesh/MeshIO/MeshReader/FPMAMeshReader.h"
+#include "UnstructuredMesh/MeshIO/MeshWriter/FPMAMeshWriter.h"
+
 #include "UnstructuredMesh/MeshDataContainer/MemberApproach.h"
 #include <fstream>
 #include <list>
@@ -817,11 +821,80 @@ DBGVAR(mesh.getVertices().size(),mesh.getEdges().size(), mesh.getFaces().size(),
     ofstream out3D("3D_test_mesh_output.vtk");
     writer.writeHeader(out3D, "test data");
     writer.writeToStream(out3D, mesh, reader.getCellTypes());
+
 }
 
 
+void testFPMARW(){
+    UnstructuredMesh<3, size_t, double, 8> mesh;
+    FPMAMeshReader<3> reader;
+    ifstream file("Poly_simple.fpma");
+    reader.loadFromStream(file, mesh);
+
+    DBGVAR(mesh.getCells().size(), mesh.getVertices().size());
+
+    auto faceVert = MeshConnections<2,0,ORDER_ORIGINAL>::connections(mesh);
+    DBGVAR(faceVert.getDataByPos<0>());
+
+    mesh.initializeCenters();
+    VTKMeshWriter<3, size_t, double> writer;
+    ofstream ofile("Poly_simple.vtk");
+    writer.writeHeader(ofile, "fpma_output_test");
+    writer.writeToStream(ofile, mesh, MeshDataContainer<MeshNativeType<3>::ElementType, 3>(mesh, MeshNativeType<3>::POLYHEDRON));
+
+    ofile << "CELL_DATA " << writer.cellVert.getDataByPos<0>().size() << endl;
+    ofile << "SCALARS cell_wrt_vertex_colour double 1\nLOOKUP_TABLE default" << endl;
+    size_t realIndex = 0;
+    for (size_t i = 0; i < writer.cellVert.getDataByPos<0>().size(); i++) {
+        auto iterator = writer.backwardCellIndexMapping.find(i);
+        if (iterator == writer.backwardCellIndexMapping.end()){
+            ofile << realIndex << ' ';
+            realIndex++;
+        } else {
+            ofile << iterator->second << ' ';
+            realIndex = iterator->second;
+        }
+    }
+    ofile.close();
+
+    FPMAMeshWriter<3,size_t, double> writerFPMA;
+    ofstream ofile1("Poly_simple_test.fpma");
+    writerFPMA.writeToStream(ofile1, mesh);
 
 
+}
+
+
+void testFPMA_poly(){
+    UnstructuredMesh<3, size_t, double, 12> mesh;
+    FPMAMeshReader<3> reader;
+    ifstream file("Spark_mesh.fpma");
+    reader.loadFromStream(file, mesh);
+
+    DBGVAR(mesh.getCells().size(), mesh.getVertices().size());
+
+    mesh.initializeCenters();
+    VTKMeshWriter<3, size_t, double> writer;
+    ofstream ofile("Spark_mesh.vtk");
+    writer.writeHeader(ofile, "fpma_output_test");
+    writer.writeToStream(ofile, mesh, MeshDataContainer<MeshNativeType<3>::ElementType, 3>(mesh, MeshNativeType<3>::POLYHEDRON));
+
+    ofile << "CELL_DATA " << writer.cellVert.getDataByPos<0>().size() << endl;
+    ofile << "SCALARS cell_wrt_vertex_colour double 1\nLOOKUP_TABLE default" << endl;
+    size_t realIndex = 0;
+    for (size_t i = 0; i < writer.cellVert.getDataByPos<0>().size(); i++) {
+        auto iterator = writer.backwardCellIndexMapping.find(i);
+        if (iterator == writer.backwardCellIndexMapping.end()){
+            ofile << realIndex << ' ';
+            realIndex++;
+        } else {
+            ofile << iterator->second << ' ';
+            realIndex = iterator->second;
+        }
+    }
+    ofile.close();
+
+}
 
 
 int main()
@@ -836,4 +909,5 @@ int main()
     //m.ComputeElementMeasures();
     //test3DMeshLoad();
 
+    testFPMA_poly();
 }
