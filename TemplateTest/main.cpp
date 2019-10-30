@@ -262,7 +262,6 @@ struct tempData {
 
 };
 
-Traits<tempData, double>::makeReferences("density"s, &tempData::density);
 
 void testMemberRef(){
 
@@ -285,6 +284,10 @@ void testMemberRef(){
     app2->setValue(&d, {42.15,84.30,42.15});
     DBGVAR(app2->getValue(&d), d.velocity);
 
+    Traits<tempData, double, Vector<3,double>> r;
+    Traits<tempData, double, Vector<3,double>>::getReference<0>() = &ref; //new MemberReference<tempData, double>::SuperRef<double tempData::*>(&tempData::density);
+    Traits<tempData, double, Vector<3,double>>::getReference<1>() = new MemberReference<tempData, Vector<3, double>>::SuperRef(std::make_pair(&tempData::getMomentum, &tempData::setMomentum));
+    DBGVAR(r.refs.MemRefs<0>::ref->getValue(&d), (Traits<tempData, double, Vector<3,double>>::getReference<1>()->getValue(&d)));
 }
 
 void testOrig() {

@@ -16,25 +16,30 @@ class Traits {
     using type = std::tuple_element_t<Index,std::tuple<Types...>>;
 
     template<unsigned int Index = sizeof...(Types) - 1, typename Dummy = void>
-    class MemRefs{
-        MemberApproach<Class, type<Index>>* ref;
+    struct MemRefs: public MemRefs<Index - 1>{
+        MemberApproach<Class, type<Index>>* ref = nullptr;
         std::string name;
     };
 
     template<typename Dummy>
-    class MemRefs<0, Dummy>{
-        MemberApproach<Class, type<0>>* ref;
+    struct MemRefs<0, Dummy>{
+        MemberApproach<Class, type<0>>* ref = nullptr;
         std::string name;
     };
 
 public:
-    static MemRefs<sizeof... (Types) - 1> refs;
+    static MemRefs<sizeof... (Types) - 1, void> refs;
+
+    template<unsigned int Index>
+    static MemberApproach<Class, type<Index>>*& getReference(){
+        return refs.MemRefs<Index, void>::ref;
+    }
+
 
     template<typename...Refs>
     static void makeReferences(Refs... refsAndNames) {
         _makeReferences<0>(refsAndNames...);
     }
-
 
     template<unsigned int Pos = 0, typename ref, typename...Refs>
     static void _makeReferences(std::string name, ref member,Refs... refsAndNames) {
@@ -52,5 +57,8 @@ public:
 
 
 };
+
+template<typename Class, typename... Types>
+typename Traits<Class, Types...>::template MemRefs<sizeof... (Types) - 1> Traits<Class,Types...>::refs;
 
 #endif // TRAITS_H
