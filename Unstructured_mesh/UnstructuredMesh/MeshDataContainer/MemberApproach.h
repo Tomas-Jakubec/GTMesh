@@ -26,8 +26,6 @@ public:
 
 
 
-
-
 template<typename Class, typename ValueType>
 class MemberReference{
 

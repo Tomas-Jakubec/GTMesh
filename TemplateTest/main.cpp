@@ -1,6 +1,7 @@
 #include "../debug/Debug.h"
 #include "../Unstructured_mesh/UnstructuredMesh/UnstructuredMesh.h"
 #include "../Unstructured_mesh/UnstructuredMesh/MeshDataContainer/MemberApproach.h"
+#include "../Unstructured_mesh/UnstructuredMesh/MeshDataContainer/Traits.h"
 #include <functional>
 #include <type_traits>
 #include <iostream>
@@ -261,6 +262,7 @@ struct tempData {
 
 };
 
+Traits<tempData, double>::makeReferences("density"s, &tempData::density);
 
 void testMemberRef(){
 
