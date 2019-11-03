@@ -8,6 +8,7 @@ SOURCES += \
     ../debug/debug.cpp
 
 HEADERS += \
+    ../Macros/MacroForEach.h \
     ../debug/ConsoleLogger.h \
     ../debug/Debug.h \
     ../debug/HTMLLogger.h \

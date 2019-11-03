@@ -782,10 +782,12 @@ struct MeshColouring <FromDim, ToDim, false> {
     static MeshDataContainer<unsigned int, FromDim> colour(
             MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
             ) {
+        // resulting container of colours
         MeshDataContainer<unsigned int, FromDim> result(mesh);
 
         DBGMSG("starting the coloring procedure");
         unsigned int reserve = 16;
+        // allocates memory to the given dimension
         MeshDataContainer<std::valarray<bool>, ToDim> attachedColours(mesh, std::valarray<bool>(false, reserve));
 
         auto connections = MeshConnections<FromDim, ToDim>::connections(mesh);
@@ -798,9 +800,24 @@ struct MeshColouring <FromDim, ToDim, false> {
 
             }
 
+            // Select the first possible colour
             unsigned int selectedColour = 0;
             while (!possibleColours[selectedColour]) {
                 selectedColour++;
+                if (selectedColour == possibleColours.size()){
+                    reserve *= 2;
+
+                    // If the number of colours exceeds the number of
+                    // allocated bits, then allocate twice as much memory
+                    for (std::valarray<bool>& attColour : attachedColours.template getDataByPos<0>()){
+                        std::valarray<bool> newAttColour(false, reserve);
+                        for (size_t i = 0; i < attColour.size(); i++){
+                            newAttColour[i] = attColour[i];
+                        }
+                        attColour.swap(newAttColour);
+                    }
+                    break;
+                }
             }
 
             result.template getDataByPos<0>().at(startElement.getIndex()) = selectedColour;

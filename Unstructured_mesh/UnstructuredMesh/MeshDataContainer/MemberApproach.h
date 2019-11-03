@@ -62,7 +62,6 @@ public:
 
        Reference(Ref referenceToMember){
            ref = referenceToMember;
-           DBGVAR((std::is_same<Ref, ValueType Class::*>::value));
        }
 
        virtual ValueType getValue(Class* c) override {

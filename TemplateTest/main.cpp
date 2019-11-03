@@ -47,7 +47,7 @@ struct member_ptr {
 
 struct Temp {
     double data;
-    double fun(double d){return data;}
+    double fun(double d [[maybe_unused]]){return data;}
 };
 
 void testDebug() {
@@ -261,34 +261,57 @@ struct tempData {
     }
 
 };
+MAKE_ATRIBUTE_TRAITS(tempData,"density"s, &tempData::density, "momentum"s, std::make_pair(&tempData::getMomentum, &tempData::setMomentum));
+/*
+template<>
+class Traits<tempData>{
+public:
+    static Traits<tempData, double, Vector<3,double>> tr;
+};
+
+Traits<tempData, double, Vector<3,double>> Traits<tempData>::tr("density"s, &tempData::density, "momentum"s, std::make_pair(&tempData::getMomentum, &tempData::setMomentum));
+*/
+
+using tempDataTraits = Traits<tempData, double, Vector<3,double>>;
 
 
 void testMemberRef(){
 
-    MemberApproach<tempData, double>* app;
+     auto temp = MemberReferenceType<decltype (&tempData::getData)>::type(42.15);
+     auto temp2 = MemberReferenceType<std::pair<decltype (&tempData::getMomentum), decltype (&tempData::setMomentum)>>::type();
 
-    //MemberReference<tempData, double, bool> invalid;
 
-    MemberReference<tempData, double>::SuperRef<double tempData::*> ref(&tempData::density);
-    MemberReference<tempData, double>::SuperRef<double& (tempData::*)()> ref1(&tempData::getData);
+     DBGVAR(temp,temp2);
 
-    MemberReference<tempData, Vector<3,double>>::SuperRef ref2(std::make_pair(&tempData::getMomentum, &tempData::setMomentum));
-
-    app = &ref;
-    app = &ref1;
+    static tempDataTraits tr("density"s, &tempData::density, "momentum"s, std::make_pair(&tempData::getMomentum, &tempData::setMomentum));
     tempData d;
-    app->setValue(&d, 42.15);
-    DBGVAR(app->getValue(&d));
 
-    MemberApproach<tempData, Vector<3,double>>* app2 = &ref2;
-    app2->setValue(&d, {42.15,84.30,42.15});
-    DBGVAR(app2->getValue(&d), d.velocity);
-
-    Traits<tempData, double, Vector<3,double>> r;
-    Traits<tempData, double, Vector<3,double>>::getReference<0>() = &ref; //new MemberReference<tempData, double>::SuperRef<double tempData::*>(&tempData::density);
+    /*Traits<tempData, double, Vector<3,double>>::getReference<0>() = &ref; //new MemberReference<tempData, double>::SuperRef<double tempData::*>(&tempData::density);
     Traits<tempData, double, Vector<3,double>>::getReference<1>() = new MemberReference<tempData, Vector<3, double>>::SuperRef(std::make_pair(&tempData::getMomentum, &tempData::setMomentum));
-    DBGVAR(r.refs.MemRefs<0>::ref->getValue(&d), (Traits<tempData, double, Vector<3,double>>::getReference<1>()->getValue(&d)));
+    */
+    tr.getReference<0>()->setValue(&d, 0.0);
+    DBGVAR(Traits<tempData>::tr.getReference<0>()->getValue(&d));
+    tempDataTraits::getReference<0>()->setValue(&d, 42.15);
+    tempDataTraits::getReference<1>()->setValue(&d, {42.15,84.30,42.15});
+
+    DBGVAR((tempDataTraits::getReference<0>()->getValue(&d)), (Traits<tempData, double, Vector<3,double>>::getReference<1>()->getValue(&d)), d.velocity);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void testOrig() {
     Vertex<5, double> vert;
