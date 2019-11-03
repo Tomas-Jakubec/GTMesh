@@ -66,7 +66,7 @@ DBG("something went wrong in try block: " << e.what());   \
 abort();}
 
 // Macros using html debug output
-#define HTMLDBGVAR(...) HDBGLog.writeVar(__LINE__, __FILE__ FOR_EACH(STRVAR, __VA_ARGS__))
+#define HTMLDBGVAR(...) HDBGLog.writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
 #define HTMLDBGCOND(condition, ...) if(condition) HTMLDBGVAR(__VA_ARGS__)
 
 #define DBGCHECK DBG("check")

@@ -261,40 +261,40 @@ struct tempData {
     }
 
 };
-MAKE_ATRIBUTE_TRAITS(tempData,"density"s, &tempData::density, "momentum"s, std::make_pair(&tempData::getMomentum, &tempData::setMomentum));
+
+
+//MAKE_NAMED_ATRIBUTE_TRAIT(tempData, "density", density, "velocity", velocity);
+//MAKE_ATRIBUTE_TRAIT(tempData, density, velocity);
+
+MAKE_CUSTOM_ATTRIBUTE_TRAIT(tempData, "density", &tempData::density, "momentum", std::make_pair(&tempData::getMomentum, &tempData::setMomentum))
 /*
 template<>
 class Traits<tempData>{
 public:
-    static Traits<tempData, double, Vector<3,double>> tr;
+    using ttype = Traits<tempData, double, Vector<3,double>>;
+    const static ttype tr;
 };
 
-Traits<tempData, double, Vector<3,double>> Traits<tempData>::tr("density"s, &tempData::density, "momentum"s, std::make_pair(&tempData::getMomentum, &tempData::setMomentum));
+const Traits<tempData>::ttype Traits<tempData>::tr("density", &tempData::density, "momentum"s, std::make_pair(&tempData::getMomentum, &tempData::setMomentum));
 */
 
-using tempDataTraits = Traits<tempData, double, Vector<3,double>>;
-
-
+#define STR(x) #x
+#define CATTR(Class, attr) STR(typename MemberReferenceType<decltype(&Class::attr)>::type)
+#define TEST_M(Class, name, attr) name, CATTR(Class, attr)
 void testMemberRef(){
 
-     auto temp = MemberReferenceType<decltype (&tempData::getData)>::type(42.15);
-     auto temp2 = MemberReferenceType<std::pair<decltype (&tempData::getMomentum), decltype (&tempData::setMomentum)>>::type();
 
-
-     DBGVAR(temp,temp2);
-
-    static tempDataTraits tr("density"s, &tempData::density, "momentum"s, std::make_pair(&tempData::getMomentum, &tempData::setMomentum));
     tempData d;
 
-    /*Traits<tempData, double, Vector<3,double>>::getReference<0>() = &ref; //new MemberReference<tempData, double>::SuperRef<double tempData::*>(&tempData::density);
-    Traits<tempData, double, Vector<3,double>>::getReference<1>() = new MemberReference<tempData, Vector<3, double>>::SuperRef(std::make_pair(&tempData::getMomentum, &tempData::setMomentum));
-    */
-    tr.getReference<0>()->setValue(&d, 0.0);
-    DBGVAR(Traits<tempData>::tr.getReference<0>()->getValue(&d));
-    tempDataTraits::getReference<0>()->setValue(&d, 42.15);
-    tempDataTraits::getReference<1>()->setValue(&d, {42.15,84.30,42.15});
+    //DBGVAR(Traits<tempData>::ttype::getName<0>());
 
-    DBGVAR((tempDataTraits::getReference<0>()->getValue(&d)), (Traits<tempData, double, Vector<3,double>>::getReference<1>()->getValue(&d)), d.velocity);
+    Traits<tempData>::tr.getReference<0>()->setValue(&d, 0.0);
+    DBGVAR(Traits<tempData>::tr.getReference<0>()->getValue(&d));
+    Traits<tempData>::ttype::getReference<0>()->setValue(&d, 42.15);
+    Traits<tempData>::ttype::getReference<1>()->setValue(&d, {42.15,84.30,42.15});
+
+    DBGVAR(Traits<tempData>::ttype::getName<0>(),(Traits<tempData>::ttype::getReference<0>()->getValue(&d)), Traits<tempData>::ttype::getName<1>(),(Traits<tempData, double, Vector<3,double>>::getReference<1>()->getValue(&d)), d.velocity);
+
 }
 
 
@@ -302,15 +302,101 @@ void testMemberRef(){
 
 
 
+#include "../Unstructured_mesh/UnstructuredMesh/MeshDataContainer/Singleton.h"
+/*
+Test of order of constructors
+*/
+
+struct mem{
+    std::string s;
+    mem(){DBGVAR(s);}
+};
+
+template<typename statMem>
+class C1 {
+    template<unsigned int Index>
+    struct mem{
+        std::string s;
+        mem(){DBGVAR(s);}
+    };
+
+public:
+    C1(){
+        Singleton<mem<1>>::getInstance().s = "ahoj";
+        DBGVAR("C1", Singleton<mem<1>>::getInstance().s);
+
+    }
+    static std::string& getS() {return Singleton<mem<1>>::getInstance().s;}
+
+};
+
+
+template <typename dummy>
+class C2 {
+public:
+    static C1<mem> c;
+    C2() {DBGVAR(c.getS());}
+};
+template <typename dummy> C1<mem> C2<dummy>::c;
+
+
+template<typename statMem>
+class C1_wrong {
+
+public:
+
+    static statMem s;
+
+    C1_wrong(){
+        s.s = "ahoj";
+        DBGVAR("C1_wrong", s.s);
+
+    }
+    static std::string& getS() {return s.s;}
+
+};
+template <typename statMem> statMem C1_wrong<statMem>::s;
 
 
 
+template <typename dummy>
+class C2_wrong {
+public:
+    static C1_wrong<mem> c;
+    C2_wrong() {DBGVAR(c.getS());}
+};
+template <typename dummy> C1_wrong<mem> C2_wrong<dummy>::c;
 
 
 
+class C1_ {
+public:
+    static mem s1;
+    C1_(){
+        s1.s = "ahoj";
+        DBGVAR("C1_", s1.s);
+
+    }
+
+};
+
+mem C1_::s1;
+
+class C2_ {
+public:
+    static C1_ c;
+    C2_(){DBGVAR(c.s1.s);}
+};
+C1_ C2_::c;
 
 
+using C = C1<mem>;
 
+void testConstrucorOrder() {
+    C2_ c;
+    C2<void> c1;
+    DBGVAR(C2_::c.s1.s, C2<void>::c.getS(), C::getS(), C2_wrong<void>::c.getS());
+}
 
 
 void testOrig() {
@@ -381,16 +467,18 @@ public:
 int main()
 {
 
-    Base b1(0.0);
+    /*Base b1(0.0);
 
     Base b2(std::pair<char,int>{'1',3});
 
     DBGVAR(b2.first,b2.second);
+    */
     testMemberRef();
-
+    testConstrucorOrder();
+/*
     std::function<int(int)> fce = [&b1](int i){return b1.data + 42 + i;};
 
     std::cout << fce(2);
-
+*/
     return 0;
 }

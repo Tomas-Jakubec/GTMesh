@@ -1,6 +1,14 @@
 #ifndef MACROFOREACH_H
 #define MACROFOREACH_H
 
+/*
+ * Macros FOR_EACH are supposed to repeat
+ * any other mocro for each argument passed as
+ * variadic parameters.
+*/
+
+
+
 #define FOR_EACH_NARG(...) FOR_EACH_NARG_(__VA_ARGS__, FOR_EACH_RSEQ_N())
 #define FOR_EACH_NARG_(...) FOR_EACH_ARG_N(__VA_ARGS__)
 #define FOR_EACH_ARG_N(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, N, ...) N
@@ -83,10 +91,65 @@
 
 #define FOR_EACH_EVEN_(N, what, ...) CONCATENATE(FOR_EACH_EVEN_, N)(what, __VA_ARGS__)
 #define FOR_EACH_EVEN(what, ...) FOR_EACH_EVEN_(FOR_EACH_NARG(__VA_ARGS__), what, __VA_ARGS__)
-/*
+
 #define DUMMY
-#define FOR_EACH_ODD_(N, what, ...) CONCATENATE(FOR_EACH_EVEN_, N)(what, __VA_ARGS__)
 #define FOR_EACH_ODD(what, ...) FOR_EACH_EVEN_(FOR_EACH_NARG( , __VA_ARGS__), what, , __VA_ARGS__)
-*/
+
+
+#define FOR_EACH_2ARGS_00(what, ...)
+#define FOR_EACH_2ARGS_02(what, x1, x2, ...)   what(x1, x2)
+#define FOR_EACH_2ARGS_04(what, x1, x2, ...)   what(x1, x2), FOR_EACH_2ARGS_02(what, __VA_ARGS__)
+#define FOR_EACH_2ARGS_06(what, x1, x2, ...)   what(x1, x2), FOR_EACH_2ARGS_04(what, __VA_ARGS__)
+#define FOR_EACH_2ARGS_08(what, x1, x2, ...)   what(x1, x2), FOR_EACH_2ARGS_06(what, __VA_ARGS__)
+#define FOR_EACH_2ARGS_10(what, x1, x2, ...)   what(x1, x2), FOR_EACH_2ARGS_08(what, __VA_ARGS__)
+#define FOR_EACH_2ARGS_12(what, x1, x2, ...)   what(x1, x2), FOR_EACH_2ARGS_10(what, __VA_ARGS__)
+#define FOR_EACH_2ARGS_14(what, x1, x2, ...)   what(x1, x2), FOR_EACH_2ARGS_12(what, __VA_ARGS__)
+#define FOR_EACH_2ARGS_16(what, x1, x2, ...)   what(x1, x2), FOR_EACH_2ARGS_14(what, __VA_ARGS__)
+#define FOR_EACH_2ARGS_18(what, x1, x2, ...)   what(x1, x2), FOR_EACH_2ARGS_16(what, __VA_ARGS__)
+#define FOR_EACH_2ARGS_20(what, x1, x2, ...)   what(x1, x2), FOR_EACH_2ARGS_18(what, __VA_ARGS__)
+#define FOR_EACH_2ARGS_22(what, x1, x2, ...)   what(x1, x2), FOR_EACH_2ARGS_20(what, __VA_ARGS__)
+#define FOR_EACH_2ARGS_24(what, x1, x2, ...)   what(x1, x2), FOR_EACH_2ARGS_22(what, __VA_ARGS__)
+#define FOR_EACH_2ARGS_26(what, x1, x2, ...)   what(x1, x2), FOR_EACH_2ARGS_24(what, __VA_ARGS__)
+#define FOR_EACH_2ARGS_28(what, x1, x2, ...)   what(x1, x2), FOR_EACH_2ARGS_26(what, __VA_ARGS__)
+#define FOR_EACH_2ARGS_30(what, x1, x2, ...)   what(x1, x2), FOR_EACH_2ARGS_28(what, __VA_ARGS__)
+#define FOR_EACH_2ARGS_32(what, x1, x2, ...)   what(x1, x2), FOR_EACH_2ARGS_30(what, __VA_ARGS__)
+#define FOR_EACH_2ARGS_34(what, x1, x2, ...)   what(x1, x2), FOR_EACH_2ARGS_32(what, __VA_ARGS__)
+#define FOR_EACH_2ARGS_36(what, x1, x2, ...)   what(x1, x2), FOR_EACH_2ARGS_34(what, __VA_ARGS__)
+#define FOR_EACH_2ARGS_38(what, x1, x2, ...)   what(x1, x2), FOR_EACH_2ARGS_36(what, __VA_ARGS__)
+#define FOR_EACH_2ARGS_40(what, x1, x2, ...)   what(x1, x2), FOR_EACH_2ARGS_38(what, __VA_ARGS__)
+
+
+#define FOR_EACH_2ARGS_(N, what, ...) CONCATENATE(FOR_EACH_2ARGS_, N)(what, __VA_ARGS__)
+#define FOR_EACH_2ARGS(what, ...) FOR_EACH_2ARGS_(FOR_EACH_NARG(__VA_ARGS__), what, __VA_ARGS__)
+
+
+#define FOR_EACH_3ARGS_1STAT_00(what, ...)
+#define FOR_EACH_3ARGS_1STAT_02(what,x_stat, x1, x2, ...)   what(x_stat, x1, x2)
+#define FOR_EACH_3ARGS_1STAT_04(what,x_stat, x1, x2, ...)   what(x_stat, x1, x2), FOR_EACH_3ARGS_1STAT_02(what, x_stat, __VA_ARGS__)
+#define FOR_EACH_3ARGS_1STAT_06(what,x_stat, x1, x2, ...)   what(x_stat, x1, x2), FOR_EACH_3ARGS_1STAT_04(what, x_stat, __VA_ARGS__)
+#define FOR_EACH_3ARGS_1STAT_08(what,x_stat, x1, x2, ...)   what(x_stat, x1, x2), FOR_EACH_3ARGS_1STAT_06(what, x_stat, __VA_ARGS__)
+#define FOR_EACH_3ARGS_1STAT_10(what,x_stat, x1, x2, ...)   what(x_stat, x1, x2), FOR_EACH_3ARGS_1STAT_08(what, x_stat, __VA_ARGS__)
+#define FOR_EACH_3ARGS_1STAT_12(what,x_stat, x1, x2, ...)   what(x_stat, x1, x2), FOR_EACH_3ARGS_1STAT_10(what, x_stat, __VA_ARGS__)
+#define FOR_EACH_3ARGS_1STAT_14(what,x_stat, x1, x2, ...)   what(x_stat, x1, x2), FOR_EACH_3ARGS_1STAT_12(what, x_stat, __VA_ARGS__)
+#define FOR_EACH_3ARGS_1STAT_16(what,x_stat, x1, x2, ...)   what(x_stat, x1, x2), FOR_EACH_3ARGS_1STAT_14(what, x_stat, __VA_ARGS__)
+#define FOR_EACH_3ARGS_1STAT_18(what,x_stat, x1, x2, ...)   what(x_stat, x1, x2), FOR_EACH_3ARGS_1STAT_16(what, x_stat, __VA_ARGS__)
+#define FOR_EACH_3ARGS_1STAT_20(what,x_stat, x1, x2, ...)   what(x_stat, x1, x2), FOR_EACH_3ARGS_1STAT_18(what, x_stat, __VA_ARGS__)
+#define FOR_EACH_3ARGS_1STAT_22(what,x_stat, x1, x2, ...)   what(x_stat, x1, x2), FOR_EACH_3ARGS_1STAT_20(what, x_stat, __VA_ARGS__)
+#define FOR_EACH_3ARGS_1STAT_24(what,x_stat, x1, x2, ...)   what(x_stat, x1, x2), FOR_EACH_3ARGS_1STAT_22(what, x_stat, __VA_ARGS__)
+#define FOR_EACH_3ARGS_1STAT_26(what,x_stat, x1, x2, ...)   what(x_stat, x1, x2), FOR_EACH_3ARGS_1STAT_24(what, x_stat, __VA_ARGS__)
+#define FOR_EACH_3ARGS_1STAT_28(what,x_stat, x1, x2, ...)   what(x_stat, x1, x2), FOR_EACH_3ARGS_1STAT_26(what, x_stat, __VA_ARGS__)
+#define FOR_EACH_3ARGS_1STAT_30(what,x_stat, x1, x2, ...)   what(x_stat, x1, x2), FOR_EACH_3ARGS_1STAT_28(what, x_stat, __VA_ARGS__)
+#define FOR_EACH_3ARGS_1STAT_32(what,x_stat, x1, x2, ...)   what(x_stat, x1, x2), FOR_EACH_3ARGS_1STAT_30(what, x_stat, __VA_ARGS__)
+#define FOR_EACH_3ARGS_1STAT_34(what,x_stat, x1, x2, ...)   what(x_stat, x1, x2), FOR_EACH_3ARGS_1STAT_32(what, x_stat, __VA_ARGS__)
+#define FOR_EACH_3ARGS_1STAT_36(what,x_stat, x1, x2, ...)   what(x_stat, x1, x2), FOR_EACH_3ARGS_1STAT_34(what, x_stat, __VA_ARGS__)
+#define FOR_EACH_3ARGS_1STAT_38(what,x_stat, x1, x2, ...)   what(x_stat, x1, x2), FOR_EACH_3ARGS_1STAT_36(what, x_stat, __VA_ARGS__)
+#define FOR_EACH_3ARGS_1STAT_40(what,x_stat, x1, x2, ...)   what(x_stat, x1, x2), FOR_EACH_3ARGS_1STAT_38(what, x_stat, __VA_ARGS__)
+
+
+#define FOR_EACH_3ARGS_1STAT_(N, what, x_stat, ...) CONCATENATE(FOR_EACH_3ARGS_1STAT_, N)(what, x_stat, __VA_ARGS__)
+#define FOR_EACH_3ARGS_1STAT(what, x_stat, ...) FOR_EACH_3ARGS_1STAT_(FOR_EACH_NARG(__VA_ARGS__), what, x_stat, __VA_ARGS__)
+
+
+
 
 #endif // MACROFOREACH_H
