@@ -1,24 +1,24 @@
 #ifndef SINGLETON_H
 #define SINGLETON_H
 #include <type_traits>
+#include <memory>
 
 
-
-template<class Class>
 /**
  * @brief The Singleton class
  */
+template<class Class>
 class Singleton {
     //static_assert (std::is_trivially_constructible<Class>::value, "The class in singleton must be trivially constructible.");
 public:
     static Class& getInstance(){
         if (p == nullptr) {
-            p = new Class; // the class must be trivially constructible
+            p = std::unique_ptr<Class>(new Class); // the class must be trivially constructible
         }
         return *p;
     }
 protected:
-    static Class* p;
+    static std::unique_ptr<Class> p;
     Singleton() {}
 private:
     // disable move and copy options
@@ -28,7 +28,7 @@ private:
     Singleton& operator=(Singleton const&&) = delete;
 
 };
-template <class Class> Class* Singleton<Class>::p = nullptr;
+template <class Class> std::unique_ptr<Class> Singleton<Class>::p = nullptr;
 
 
 

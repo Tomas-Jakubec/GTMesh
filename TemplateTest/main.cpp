@@ -252,7 +252,7 @@ struct tempData {
         return density;
     }
 
-    Vector<3,double> getMomentum(){
+    Vector<3,double> getMomentum()const{
         return velocity*density;
     }
 
@@ -262,11 +262,6 @@ struct tempData {
 
 };
 
-
-//MAKE_NAMED_ATRIBUTE_TRAIT(tempData, "density", density, "velocity", velocity);
-//MAKE_ATRIBUTE_TRAIT(tempData, density, velocity);
-
-MAKE_CUSTOM_ATTRIBUTE_TRAIT(tempData, "density", &tempData::density, "momentum", std::make_pair(&tempData::getMomentum, &tempData::setMomentum))
 /*
 template<>
 class Traits<tempData>{
@@ -278,9 +273,21 @@ public:
 const Traits<tempData>::ttype Traits<tempData>::tr("density", &tempData::density, "momentum"s, std::make_pair(&tempData::getMomentum, &tempData::setMomentum));
 */
 
-#define STR(x) #x
-#define CATTR(Class, attr) STR(typename MemberReferenceType<decltype(&Class::attr)>::type)
-#define TEST_M(Class, name, attr) name, CATTR(Class, attr)
+//MAKE_NAMED_ATRIBUTE_TRAIT(tempData, "density", density, "velocity", velocity);
+//MAKE_ATRIBUTE_TRAIT(tempData, density, velocity);
+
+MAKE_CUSTOM_ATTRIBUTE_TRAIT(tempData, "density", &tempData::density, "momentum", std::make_pair(&tempData::getMomentum, &tempData::setMomentum))
+
+struct ExportTest {
+    int attrInt = 1;
+    double attrDouble = 42.15;
+    char attrChar = 42;
+    std::string attrStr = "Ahojky";
+    std::vector<std::string> attrVec = {"tohle", "je", "nejlepsi", "debugovaci", "system"};
+    tempData attrTempData{42.15, {1,2,1}};
+};
+MAKE_ATRIBUTE_TRAIT(ExportTest, attrInt, attrDouble, attrChar, attrStr, attrVec, attrTempData);
+
 void testMemberRef(){
 
 
@@ -288,13 +295,16 @@ void testMemberRef(){
 
     //DBGVAR(Traits<tempData>::ttype::getName<0>());
 
-    Traits<tempData>::tr.getReference<0>()->setValue(&d, 0.0);
-    DBGVAR(Traits<tempData>::tr.getReference<0>()->getValue(&d));
-    Traits<tempData>::ttype::getReference<0>()->setValue(&d, 42.15);
+    Traits<tempData>::ttype::getReference<0>()->setValue(&d, 0.0);
+    DBGVAR(Traits<tempData>::ttype::getReference<0>()->getValue(&d));
+    Traits<tempData>::ttype::getReference<0>()->setValue(d, 42.15);
     Traits<tempData>::ttype::getReference<1>()->setValue(&d, {42.15,84.30,42.15});
 
     DBGVAR(Traits<tempData>::ttype::getName<0>(),(Traits<tempData>::ttype::getReference<0>()->getValue(&d)), Traits<tempData>::ttype::getName<1>(),(Traits<tempData, double, Vector<3,double>>::getReference<1>()->getValue(&d)), d.velocity);
+    DBGVAR(Traits<tempData>::is_specialized,Detail::has_default_traits<tempData>::value, d);
 
+    ExportTest e;
+    DBGVAR(e);
 }
 
 
@@ -306,7 +316,7 @@ void testMemberRef(){
 /*
 Test of order of constructors
 */
-
+/*
 struct mem{
     std::string s;
     mem(){DBGVAR(s);}
@@ -397,7 +407,7 @@ void testConstrucorOrder() {
     C2<void> c1;
     DBGVAR(C2_::c.s1.s, C2<void>::c.getS(), C::getS(), C2_wrong<void>::c.getS());
 }
-
+*/
 
 void testOrig() {
     Vertex<5, double> vert;
@@ -474,7 +484,7 @@ int main()
     DBGVAR(b2.first,b2.second);
     */
     testMemberRef();
-    testConstrucorOrder();
+    //testConstrucorOrder();
 /*
     std::function<int(int)> fce = [&b1](int i){return b1.data + 42 + i;};
 
