@@ -16,7 +16,7 @@ class Traits {
         friend class Singleton<MemRefs<1, void>>;
         std::unique_ptr<MemberApproach<Class, type<Index>>> ref = nullptr;
         std::string name;
-//    private:
+
         MemRefs(){}
     };
 
@@ -25,7 +25,7 @@ class Traits {
         friend class Singleton<MemRefs<0, void>>;
         std::unique_ptr<MemberApproach<Class, type<0>>> ref = nullptr;
         std::string name;
-    //private:
+
         MemRefs(){}
     };
 
@@ -40,14 +40,14 @@ class Traits {
     template<unsigned int Pos, typename ref>
     static void _makeReferences(const std::string& name, ref member) {
         refs::getInstance().MemRefs<Pos, void>::name = name;
-        getReference<Pos>() = std::unique_ptr<MemberApproach<Class, type<Pos>>>(new MemberReference<Class, type<Pos>, decltype(member)>(member));
+        refs::getInstance().MemRefs<Pos, void>::ref = std::unique_ptr<MemberApproach<Class, type<Pos>>>(new MemberReference<Class, type<Pos>, decltype(member)>(member));
     }
 
 
     template<unsigned int Pos, typename ref>
     static void _makeReferences(const char* name, ref member) {
         refs::getInstance().MemRefs<Pos, void>::name = name;
-        getReference<Pos>() = std::unique_ptr<MemberApproach<Class, type<Pos>>>(new MemberReference<Class, type<Pos>, decltype(member)>(member));
+        refs::getInstance().MemRefs<Pos, void>::ref = std::unique_ptr<MemberApproach<Class, type<Pos>>>(new MemberReference<Class, type<Pos>, decltype(member)>(member));
     }
 
 
@@ -61,12 +61,12 @@ public:
 
 
     template<unsigned int Index>
-    static std::unique_ptr<MemberApproach<Class, type<Index>>>& getReference(){
+    static const std::unique_ptr<MemberApproach<Class, type<Index>>>& getReference(){
         return refs::getInstance().MemRefs<Index, void>::ref;
     }
 
     template<unsigned int Index>
-    static std::string& getName(){
+    static const std::string& getName(){
         return refs::getInstance().MemRefs<Index, void>::name;
     }
 
@@ -113,10 +113,10 @@ const Traits<Class>::ttype Traits<Class>::tr(__VA_ARGS__); \
 
 #define NAME_AND_REF(Class, name, member) name, &Class::member
 
-#define MAKE_NAMED_ATRIBUTE_TRAIT(Class, ...) MAKE_CUSTOM_ATTRIBUTE_TRAIT(Class, FOR_EACH_3ARGS_1STAT(NAME_AND_REF, Class, __VA_ARGS__))
+#define MAKE_NAMED_ATTRIBUTE_TRAIT(Class, ...) MAKE_CUSTOM_ATTRIBUTE_TRAIT(Class, FOR_EACH_3ARGS_1STAT(NAME_AND_REF, Class, __VA_ARGS__))
 
 #define NAME_ATT(attribute) #attribute, attribute
-#define MAKE_ATRIBUTE_TRAIT(Class, ...) MAKE_NAMED_ATRIBUTE_TRAIT(Class, FOR_EACH(NAME_ATT, __VA_ARGS__))
+#define MAKE_ATTRIBUTE_TRAIT(Class, ...) MAKE_NAMED_ATTRIBUTE_TRAIT(Class, FOR_EACH(NAME_ATT, __VA_ARGS__))
 
 
 

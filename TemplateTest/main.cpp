@@ -273,8 +273,8 @@ public:
 const Traits<tempData>::ttype Traits<tempData>::tr("density", &tempData::density, "momentum"s, std::make_pair(&tempData::getMomentum, &tempData::setMomentum));
 */
 
-//MAKE_NAMED_ATRIBUTE_TRAIT(tempData, "density", density, "velocity", velocity);
-//MAKE_ATRIBUTE_TRAIT(tempData, density, velocity);
+//MAKE_NAMED_ATTRIBUTE_TRAIT(tempData, "density", density, "velocity", velocity);
+//MAKE_ATTRIBUTE_TRAIT(tempData, density, velocity);
 
 MAKE_CUSTOM_ATTRIBUTE_TRAIT(tempData, "density", &tempData::density, "momentum", std::make_pair(&tempData::getMomentum, &tempData::setMomentum))
 
@@ -286,7 +286,7 @@ struct ExportTest {
     std::vector<std::string> attrVec = {"tohle", "je", "nejlepsi", "debugovaci", "system"};
     tempData attrTempData{42.15, {1,2,1}};
 };
-MAKE_ATRIBUTE_TRAIT(ExportTest, attrInt, attrDouble, attrChar, attrStr, attrVec, attrTempData);
+MAKE_ATTRIBUTE_TRAIT(ExportTest, attrInt, attrDouble, attrChar, attrStr, attrVec, attrTempData);
 
 void testMemberRef(){
 
