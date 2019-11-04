@@ -67,7 +67,7 @@ struct is_indexable : public __is_indexable<T1>
 
 
 template <typename T1, typename VOID = void>
-struct __has_default_traits : public std::false_type {
+struct __has_default_traits : public std::integral_constant<bool, false> {
 };
 
 
@@ -77,7 +77,7 @@ struct __has_default_traits<
         typename std::enable_if<
             Traits<T1>::is_specialized
         >::type
-        > : public std::true_type {
+        > : public std::integral_constant<bool, true> {
 };
 
 template<typename T>
@@ -148,7 +148,8 @@ struct VariableExport {
     static auto _writeWar(std::ostream& ost, const T &list)
       -> typename std::enable_if<
               Detail::is_iterable<T>::value &&
-             !Detail::is_exportable<T>::value
+             !Detail::is_exportable<T>::value &&
+             !Detail::has_default_traits<T>::value
          >::type
     {
         auto it = list.begin();
@@ -170,7 +171,8 @@ struct VariableExport {
       -> typename std::enable_if<
               Detail::is_indexable<T>::value &&
              !Detail::is_iterable<T>::value &&
-             !Detail::is_exportable<T>::value
+             !Detail::is_exportable<T>::value &&
+             !Detail::has_default_traits<T>::value
          >::type
     {
         ost << "[ ";
