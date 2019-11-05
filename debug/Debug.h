@@ -2,12 +2,11 @@
 #define DEBUG_H
 
 
-#include "../Macros/MacroForEach.h"
 
-#define STRVAR(var) #var, var
 
 
 #ifndef UNDEBUG
+#include "../Macros/MacroForEach.h"
 #include <iostream>
 #include "HTMLLogger.h"
 #include "ConsoleLogger.h"
@@ -19,6 +18,7 @@
 
 extern HtmlLogger HDBGLog;
 
+#define STRVAR(var) #var, var
 
 #define DBG(comment)            \
 std::cerr << "DBG in file "     \

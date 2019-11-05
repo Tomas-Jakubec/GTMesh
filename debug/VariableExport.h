@@ -207,7 +207,7 @@ struct VariableExport {
     }
 
 
-    template<typename T,unsigned int Index = 0>
+    template<typename T,unsigned int Index = 0, typename VOID = void>
     struct PrintClass{
         static void print(std::ostream& ost, const T &traitedClass){
             ost << '"' << Traits<T>::ttype::template getName<Index>() << "\" : ";
@@ -218,13 +218,33 @@ struct VariableExport {
         }
     };
 
-    template<typename T>
-    struct PrintClass<T, Traits<T>::ttype::size() - 1>{
+    template<typename T,unsigned int Index, typename... Types>
+    struct PrintClass <Traits<T, Types...>, Index, std::enable_if_t<Index < Traits<T, Types...>::size() - 1>>{
+        static void print(std::ostream& ost, const T &traitedClass){
+            ost << '"' << Traits<T, Types...>::template getName<Index>() << "\" : ";
+            VariableExport::_writeWar(ost, Traits<T, Types...>::template getReference<Index>()->getValue(traitedClass));
+            ost << ", ";
+            PrintClass<Traits<T, Types...>, Index + 1>::print(ost, traitedClass);
+
+        }
+    };
+
+    template<typename T,unsigned int Index, typename ... Types>
+    struct PrintClass <Traits<T, Types...>, Index, std::enable_if_t<Index == Traits<T, Types...>::size() - 1>>{
+        static void print(std::ostream& ost, const T &traitedClass){
+            ost << '"' << Traits<T, Types...>::template getName<Traits<T, Types...>::size() - 1>() << "\" : ";
+            VariableExport::_writeWar(ost, Traits<T, Types...>::template getReference<Traits<T, Types...>::size() - 1>()->getValue(traitedClass));
+        }
+    };
+
+    template<typename T, unsigned int Index>
+    struct PrintClass<T, Index, std::enable_if_t<Index == Traits<T>::ttype::size() - 1>>{
         static void print(std::ostream& ost, const T &traitedClass){
             ost << '"' << Traits<T>::ttype::template getName<Traits<T>::ttype::size() - 1>() << "\" : ";
             VariableExport::_writeWar(ost, Traits<T>::ttype::template getReference<Traits<T>::ttype::size() - 1>()->getValue(traitedClass));
         }
     };
+
 
     template<typename T>
     static auto _writeWar(std::ostream& ost, const T &traitedClass)
@@ -233,7 +253,7 @@ struct VariableExport {
          >::type
     {
         ost << "{ ";
-        PrintClass<T>::print(ost, traitedClass);
+        PrintClass<typename Traits<T>::ttype>::print(ost, traitedClass);
         ost << " }";
     }
 

@@ -16,6 +16,7 @@ HEADERS += \
     InlineArrayOperations.h \
     UnstructuredMesh/MeshDataContainer/MemberApproach.h \
     UnstructuredMesh/MeshDataContainer/MeshDataContainer.h \
+    UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataWriter.h \
     UnstructuredMesh/MeshDataContainer/Singleton.h \
     UnstructuredMesh/MeshDataContainer/Traits.h \
     UnstructuredMesh/MeshElements/CellBoundaryConnection.h \

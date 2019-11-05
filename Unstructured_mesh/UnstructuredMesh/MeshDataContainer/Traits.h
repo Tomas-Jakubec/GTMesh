@@ -7,10 +7,10 @@
 
 template<typename Class, typename...Types>
 class Traits {
-
+public:
     template <unsigned int Index>
     using type = std::tuple_element_t<Index,std::tuple<Types...>>;
-
+private:
     template<unsigned int Index = sizeof...(Types) - 1, typename Dummy = void>
     struct MemRefs: public MemRefs<Index - 1>{
         friend class Singleton<MemRefs<1, void>>;
