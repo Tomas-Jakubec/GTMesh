@@ -5,7 +5,7 @@
 #include "UnstructuredMesh/MeshFunctions/MeshFunctions.h"
 #include "UnstructuredMesh/MeshIO/MeshReader/VTKMeshReader.h"
 #include "UnstructuredMesh/MeshIO/MeshWriter/VTKMeshWriter.h"
-
+#include "UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataWriter.h"
 #include "UnstructuredMesh/MeshIO/MeshReader/FPMAMeshReader.h"
 #include "UnstructuredMesh/MeshIO/MeshWriter/FPMAMeshWriter.h"
 
@@ -585,6 +585,13 @@ void testMesh3D() {
 }
 
 
+struct colourData {
+    unsigned int colour;
+    Vector<3, double> firstEdgeNormal;
+};
+
+MAKE_ATTRIBUTE_TRAIT(colourData, colour, firstEdgeNormal);
+
 void testMeshRefine() {
     UnstructuredMesh<3, size_t, double, 6> mesh;
     twoPrisms(mesh);
@@ -614,7 +621,20 @@ void testMeshRefine() {
     writer1.writeToStream(out3D, mesh, types1);
     auto colours1 = MeshColouring<3,0>::colour(mesh);
 
-    out3D << "CELL_DATA " << writer1.cellVert.getDataByPos<0>().size() << endl;
+    MeshDataContainer<colourData, 3> cd(mesh);
+    auto normals = mesh.computeFaceNormals();
+
+    for(auto& cell : mesh.getCells()){
+        cd.at(cell).colour = colours1.at(cell);
+        cd.at(cell).firstEdgeNormal = normals.getDataByDim<2>().at(mesh.getFaces().at(cell.getBoundaryElementIndex()).getNextBElem(cell.getIndex()));
+    }
+    DBGVAR(cd.getDataByDim<3>());
+
+    VTKMeshDataWriter<3> dataWriter;
+
+    dataWriter.writeToStream(out3D, cd, writer1);
+
+    //out3D << "CELL_DATA " << writer1.cellVert.getDataByPos<0>().size() << endl;
     out3D << "SCALARS cell_wrt_vertex_colour double 1\nLOOKUP_TABLE default" << endl;
     size_t realIndex = 0;
     for (size_t i = 0; i < writer1.cellVert.getDataByPos<0>().size(); i++) {
@@ -688,6 +708,8 @@ void testMeshRefine() {
     }
     out3D.close();
 }
+
+
 
 
 
@@ -903,7 +925,7 @@ int main()
     //testMesh2DLoadAndWrite();
     //testMesh3D();
     //test3DMeshDeformedPrisms();
-    //testMeshRefine();
+    testMeshRefine();
     //testMeshDataContainer();
     //UnstructuredMesh<5, size_t, double, 6,5,4> m;
     //m.ComputeElementMeasures();

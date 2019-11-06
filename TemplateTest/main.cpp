@@ -269,9 +269,9 @@ public:
     using ttype = Traits<tempData, double, Vector<3,double>>;
     const static ttype tr;
 };
-
 const Traits<tempData>::ttype Traits<tempData>::tr("density", &tempData::density, "momentum"s, std::make_pair(&tempData::getMomentum, &tempData::setMomentum));
 */
+
 
 //MAKE_NAMED_ATTRIBUTE_TRAIT(tempData, "density", density, "velocity", velocity);
 //MAKE_ATTRIBUTE_TRAIT(tempData, density, velocity);
@@ -304,7 +304,7 @@ void testMemberRef(){
     DBGVAR(Traits<tempData>::is_specialized,Detail::has_default_traits<tempData>::value, d);
 
     ExportTest e;
-    DBGVAR(e);
+    DBGVAR(e, ClassC<>());
 }
 
 

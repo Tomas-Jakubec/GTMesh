@@ -9,34 +9,77 @@
 template <unsigned int MeshDimension>
 class VTKMeshDataWriter {
 
+
     /**
      * @brief writeColumn
      * writes a single column of traited data
      */
-    static void writeColumn(...){}
+    static void writeColumn(std::ostream& ost [[maybe_unused]],...){
+        DBGMSG("capture");
+        throw std::runtime_error("capture of write column must not be called.");
+    }
 
     template<typename T, unsigned int Index, unsigned int Position, typename IndexType, typename Real>
     static auto writeColumn(std::ostream& ost, const DataContainer<T, Position, MeshDimension> &data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer)
     -> typename std::enable_if<
         Detail::is_indexable<typename Traits<T>::ttype::template type<Index>>::value
-    >::type
+       >::type
     {
-        if (data.at(0).size() == MeshDimension)
+
+        if (Traits<T>::ttype::template getReference<Index>()->getValue(data.at(0)).size() == MeshDimension)
         ost << "VECTORS ";
-        else if (data.at(0).size() == MeshDimension * MeshDimension)
+        else if (Traits<T>::ttype::template getReference<Index>()->getValue(data.at(0)).size() == MeshDimension * MeshDimension)
         ost << "TENZORS ";
 
-        ost << Traits<T>::ttype::template getName<Index>() << "double";
+        ost << Traits<T>::ttype::template getName<Index>() << " double\n";
 
-        IndexType i = 0;
-        for (; i < data.size(); i++) {
-            for (unsigned int j = 0; j < data.at(i).size(); j++) {
-                ost << data.at(i)[j];
+
+        IndexType realIndex = 0;
+        for (IndexType i = 0; i < writer.cellVert.template getDataByPos<0>().size(); i++) {
+
+            auto iterator = writer.backwardCellIndexMapping.find(i);
+            if (iterator == writer.backwardCellIndexMapping.end()){
+                for (unsigned int j = 0; j < Traits<T>::ttype::template getReference<Index>()->getValue(data.at(0)).size(); j++) {
+                    ost << Traits<T>::ttype::template getValue<Index>(data.at(realIndex))[j] << ' ';
+                }
+                realIndex++;
+            } else {
+                realIndex = iterator->second;
+                for (unsigned int j = 0; j < Traits<T>::ttype::template getReference<Index>()->getValue(data.at(0)).size(); j++) {
+                    ost << Traits<T>::ttype::template getValue<Index>(data.at(realIndex))[j] << ' ';
+                }
             }
-
         }
     }
 
+
+    template<typename T, unsigned int Index, unsigned int Position, typename IndexType, typename Real>
+    static auto writeColumn(std::ostream& ost, const DataContainer<T, Position, MeshDimension> &data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer)
+    -> typename std::enable_if<
+        !Detail::is_indexable<typename Traits<T>::ttype::template type<Index>>::value
+    >::type
+    {
+
+
+        ost << "SCALARS " << Traits<T>::ttype::template getName<Index>() << " double 1\nLOOKUP_TABLE default\n";
+
+        IndexType realIndex = 0;
+        for (IndexType i = 0; i < writer.cellVert.template getDataByPos<0>().size(); i++) {
+
+            auto iterator = writer.backwardCellIndexMapping.find(i);
+            if (iterator == writer.backwardCellIndexMapping.end()){
+
+                ost << Traits<T>::ttype::template getValue<Index>(data.at(realIndex)) << ' ';
+
+                realIndex++;
+            } else {
+
+                realIndex = iterator->second;
+                ost << Traits<T>::ttype::template getValue<Index>(data.at(realIndex)) << ' ';
+
+            }
+        }
+    }
 
 
     template<typename T,unsigned int Index = 0, typename VOID = void>
@@ -44,24 +87,25 @@ class VTKMeshDataWriter {
 
     template<typename T,unsigned int Index, typename... Types>
     struct writeCellData <Traits<T, Types...>, Index, std::enable_if_t<Index < Traits<T, Types...>::size() - 1>>{
+
         template<unsigned int Position, typename IndexType, typename Real>
+
         static void write(std::ostream& ost, const DataContainer<T, Position, MeshDimension> &data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer){
-
-            ost << "CELL_DATA " << writer.cellVert.template getDataByPos<0>().size() << std::endl;
-
-            ost << '"' << Traits<T, Types...>::template getName<Index>() << "\" : ";
-            VariableExport::_writeWar(ost, Traits<T, Types...>::template getReference<Index>()->getValue(data));
-            ost << ", ";
-            writeCellData<Traits<T, Types...>, Index + 1>::print(ost, data);
+            DBGVAR(Detail::is_indexable<typename Traits<T>::ttype::template type<Index>>::value);
+            writeColumn<T, Index, Position, IndexType, Real>(ost, data, writer);
+            ost << std::endl;
+            writeCellData<Traits<T, Types...>, Index + 1>::write(ost, data, writer);
 
         }
     };
 
     template<typename T,unsigned int Index, typename ... Types>
     struct writeCellData <Traits<T, Types...>, Index, std::enable_if_t<Index == Traits<T, Types...>::size() - 1>>{
-        static void write(std::ostream& ost, const T &traitedClass){
-            ost << '"' << Traits<T, Types...>::template getName<Traits<T, Types...>::size() - 1>() << "\" : ";
-            VariableExport::_writeWar(ost, Traits<T, Types...>::template getReference<Traits<T, Types...>::size() - 1>()->getValue(traitedClass));
+        template<unsigned int Position, typename IndexType, typename Real>
+        static void write(std::ostream& ost, const DataContainer<T, Position, MeshDimension> &data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer){
+
+            writeColumn<T, Index, Position, IndexType, Real>(ost, data, writer);
+            ost << std::endl;
         }
     };
 
@@ -71,9 +115,10 @@ class VTKMeshDataWriter {
 public:
     template<typename T,typename IndexType, typename Real, unsigned int ...Dimensions>
     static void writeToStream(std::ostream& ost, MeshDataContainer<T, Dimensions...>& data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer) {
-        using type = typename decltype(data.template getDataByDim<MeshDimension>())::DataType;
+        using type = T;//typename std::remove_reference<decltype(data.template getDataByDim<MeshDimension>())>::type::DataType;
         static_assert (Detail::has_default_traits<type>::value, "The class T must have defined traits for example using macro MAKE_ATTRIBUTE_TRAIT in header Traits.h");
-
+        ost << "CELL_DATA " << writer.cellVert.template getDataByPos<0>().size() << std::endl;
+        writeCellData<typename Traits<type>::ttype>::write(ost, data.template getDataByDim<MeshDimension>(), writer);
     }
 
 };

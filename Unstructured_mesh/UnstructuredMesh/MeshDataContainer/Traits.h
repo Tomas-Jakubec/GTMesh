@@ -12,7 +12,7 @@ public:
     using type = std::tuple_element_t<Index,std::tuple<Types...>>;
 private:
     template<unsigned int Index = sizeof...(Types) - 1, typename Dummy = void>
-    struct MemRefs: public MemRefs<Index - 1>{
+    struct MemRefs: public MemRefs<Index - 1> {
         friend class Singleton<MemRefs<1, void>>;
         std::unique_ptr<MemberApproach<Class, type<Index>>> ref = nullptr;
         std::string name;
@@ -64,6 +64,27 @@ public:
     static const std::unique_ptr<MemberApproach<Class, type<Index>>>& getReference(){
         return refs::getInstance().MemRefs<Index, void>::ref;
     }
+
+    template<unsigned int Index>
+    static type<Index> getValue(const Class* c){
+        return getReference<Index>()->getValue(c);
+    }
+
+    template<unsigned int Index>
+    static type<Index> getValue(const Class& c){
+        return getReference<Index>()->getValue(c);
+    }
+
+    template<unsigned int Index>
+    static void setValue(const Class* c, const type<Index>& val){
+        getReference<Index>()->setValue(c, val);
+    }
+
+    template<unsigned int Index>
+    static void setValue(const Class& c, const type<Index>& val){
+        getReference<Index>()->setValue(c, val);
+    }
+
 
     template<unsigned int Index>
     static const std::string& getName(){
