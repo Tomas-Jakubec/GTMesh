@@ -57,24 +57,29 @@ public:
 template <typename IndexType>
 struct Subelement{
     IndexType index = INVALID_INDEX(IndexType);
-    bool isLeft = false;
 };
 
 
 template <typename IndexType, unsigned int Reserve>
 class SubelementContainer : public std::array<Subelement<IndexType>, Reserve>{
-    unsigned char numberOfElements = 0;
+    unsigned int numberOfElements = 0;
 
 public:
-    unsigned char getNumberOfSubElements(){
+    unsigned int getNumberOfSubElements(){
         return numberOfElements;
     }
 
+    unsigned int size() {
+        return numberOfElements;
+    }
 
-    void addSubelement(IndexType index, bool isLeft) {
+    unsigned int reserve() {
+        return Reserve;
+    }
+
+    void addSubelement(IndexType index) {
         if (numberOfElements < Reserve){
             this->at(numberOfElements).index = index;
-            this->at(numberOfElements).isLeft = isLeft;
             numberOfElements++;
         } else {
             throw(std::runtime_error(//"In face element (" + std::to_string(MeshElementBase<IndexType>::GetIndex()) +
@@ -82,6 +87,10 @@ public:
                                      +")."));
         }
 
+    }
+
+    void push_back(IndexType index) {
+        addSubelement(index);
     }
 
     void removeSubelement(unsigned char atIndex){
@@ -104,6 +113,18 @@ public:
 
     typename std::array<Subelement<IndexType>, Reserve>::const_iterator cend() const {
         return this->cbegin() + getNumberOfSubElements();
+    }
+};
+
+
+template<typename IndexType>
+class SubelementContainer<IndexType, 0> : public std::vector<IndexType> {
+    void addSubelement(IndexType index) {
+        this->push_back(index);
+    }
+
+    void removeSubelement(unsigned char atIndex){
+        this->erase(atIndex);
     }
 };
 
@@ -132,9 +153,7 @@ public:
     }
 
     MeshElement(IndexType index = INVALID_INDEX(IndexType))
-        :MeshElementBase<IndexType>(index), CellBoundaryConnection<IndexType> () {
-        subelements.fill({INVALID_INDEX(IndexType), false});
-    }
+        :MeshElementBase<IndexType>(index), CellBoundaryConnection<IndexType> () {}
 
 };
 

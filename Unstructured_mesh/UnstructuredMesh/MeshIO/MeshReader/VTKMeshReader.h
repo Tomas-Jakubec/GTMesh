@@ -320,7 +320,7 @@ public:
             std::vector<std::array<int,2>>& edgeOrder = TypeEdgesFaces.at(numVert).first;
             std::vector<std::vector<int>>& faceOrder = TypeEdgesFaces.at(numVert).second;
 
-            std::vector<std::pair<IndexType, bool>> edgeIndexes;
+            std::vector<IndexType> edgeIndexes;
             // construct edges first
             for (std::array<int, 2>& e : edgeOrder) {
 
@@ -335,10 +335,10 @@ public:
                     mesh.getEdges().at(edgeIndex).setVertexAIndex(iA);
                     mesh.getEdges().at(edgeIndex).setVertexBIndex(iB);
                     mesh.getEdges().at(edgeIndex).setIndex(edgeIndex);
-                    edgeIndexes.push_back({edgeIndex, true});
+                    edgeIndexes.push_back(edgeIndex);
                     edges[edgeKey] = edgeIndex;
                 } else {
-                    edgeIndexes.push_back({edgeIt->second, iA == mesh.getEdges().at(edgeIt->second).getVertexAIndex()});
+                    edgeIndexes.push_back(edgeIt->second);
                 }
             }
 
@@ -349,7 +349,7 @@ public:
 
                 std::vector<IndexType> faceEdges;
                 for (int& index : f) {
-                    faceEdges.push_back(edgeIndexes.at(index).first);
+                    faceEdges.push_back(edgeIndexes.at(index));
                 }
                 std::sort(faceEdges.begin(), faceEdges.end());
 
@@ -365,7 +365,7 @@ public:
                     faceIndex = mesh.getFaces().size();
                     mesh.getFaces().push_back({});
                     for (int& index : f) {
-                        mesh.getFaces().at(faceIndex).getSubelements().addSubelement(edgeIndexes.at(index).first,edgeIndexes.at(index).second);
+                        mesh.getFaces().at(faceIndex).getSubelements().addSubelement(edgeIndexes.at(index));
                     }
                     mesh.getFaces().at(faceIndex).setCellLeftIndex(cellIndex);
                     mesh.getFaces().at(faceIndex).setIndex(faceIndex);

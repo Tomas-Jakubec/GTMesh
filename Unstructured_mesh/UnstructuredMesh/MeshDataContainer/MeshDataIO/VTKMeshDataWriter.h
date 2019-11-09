@@ -35,7 +35,7 @@ class VTKMeshDataWriter {
 
 
         IndexType realIndex = 0;
-        for (IndexType i = 0; i < writer.cellVert.template getDataByPos<0>().size(); i++) {
+        for (IndexType i = 0; i < writer.getNumberOfCells(); i++) {
 
             auto iterator = writer.backwardCellIndexMapping.find(i);
             if (iterator == writer.backwardCellIndexMapping.end()){
@@ -64,7 +64,7 @@ class VTKMeshDataWriter {
         ost << "SCALARS " << Traits<T>::ttype::template getName<Index>() << " double 1\nLOOKUP_TABLE default\n";
 
         IndexType realIndex = 0;
-        for (IndexType i = 0; i < writer.cellVert.template getDataByPos<0>().size(); i++) {
+        for (IndexType i = 0; i < writer.getNumberOfCells(); i++) {
 
             auto iterator = writer.backwardCellIndexMapping.find(i);
             if (iterator == writer.backwardCellIndexMapping.end()){
@@ -115,7 +115,7 @@ public:
     static void writeToStream(std::ostream& ost, DataContainer<T, Position, MeshDimension>& data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer) {
         using type = T;//typename std::remove_reference<decltype(data.template getDataByDim<MeshDimension>())>::type::DataType;
         static_assert (Detail::has_default_traits<type>::value, "The class T must have defined traits for example using macro MAKE_ATTRIBUTE_TRAIT in header Traits.h");
-        ost << "CELL_DATA " << writer.cellVert.template getDataByPos<0>().size() << std::endl;
+        ost << "CELL_DATA " << writer.getNumberOfCells() << std::endl;
         writeCellData<typename Traits<type>::ttype>::write(ost, data, writer);
     }
 
@@ -150,7 +150,7 @@ public:
     static void writeToStream(std::ostream& ost, MeshDataContainer<T, Dimensions...>& data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer) {
         using type = T;//typename std::remove_reference<decltype(data.template getDataByDim<MeshDimension>())>::type::DataType;
         static_assert (Detail::has_default_traits<type>::value, "The class T must have defined traits for example using macro MAKE_ATTRIBUTE_TRAIT in header Traits.h");
-        ost << "CELL_DATA " << writer.cellVert.template getDataByPos<0>().size() << std::endl;
+        ost << "CELL_DATA " << writer.getNumberOfCells() << std::endl;
         MeshDataIterator<MeshDataContainer<T, Dimensions...>::size() - 1>::writeToStream(ost, data, writer);
     }
 };
