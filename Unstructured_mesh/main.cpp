@@ -6,6 +6,7 @@
 #include "UnstructuredMesh/MeshIO/MeshReader/VTKMeshReader.h"
 #include "UnstructuredMesh/MeshIO/MeshWriter/VTKMeshWriter.h"
 #include "UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataWriter.h"
+#include "UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataReader.h"
 #include "UnstructuredMesh/MeshIO/MeshReader/FPMAMeshReader.h"
 #include "UnstructuredMesh/MeshIO/MeshWriter/FPMAMeshWriter.h"
 
@@ -654,6 +655,11 @@ void testMeshRefine() {
     in3D.open("mesh_refine_1.vtk");
     VTKMeshReader<3> reader;
     reader.loadFromStream(in3D, mesh);
+
+    MeshDataContainer<colourData, 3> cd1(mesh);
+    VTKMeshDataReader<3, size_t>::readData(in3D, cd1.getDataByPos<0>());
+
+    DBGVAR(cd1.getDataByDim<3>());
     in3D.close();
 
     mesh.initializeCenters();

@@ -76,12 +76,12 @@ public:
     }
 
     template<unsigned int Index>
-    static void setValue(const Class* c, const type<Index>& val){
+    static void setValue(Class* c, const type<Index>& val){
         getReference<Index>()->setValue(c, val);
     }
 
     template<unsigned int Index>
-    static void setValue(const Class& c, const type<Index>& val){
+    static void setValue(Class& c, const type<Index>& val){
         getReference<Index>()->setValue(c, val);
     }
 
