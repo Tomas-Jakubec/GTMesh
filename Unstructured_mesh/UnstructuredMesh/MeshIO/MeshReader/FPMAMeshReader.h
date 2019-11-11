@@ -77,7 +77,7 @@ public:
                     edgeIndex = edgeIt->second;
                 }
                 try {
-                    mesh.getFaces().at(faceIndex).getSubelements().addSubelement(edgeIndex, true);
+                    mesh.getFaces().at(faceIndex).getSubelements().addSubelement(edgeIndex);
                 } catch (std::runtime_error& err) {
                     throw std::runtime_error(std::string("The number of edges has overflew the prealocated memory ") +
                                              std::to_string(mesh.getFaces().at(faceIndex).getSubelements().size()) +

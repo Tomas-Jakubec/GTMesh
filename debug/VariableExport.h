@@ -3,7 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-
+#include "../Unstructured_mesh/UnstructuredMesh/MeshDataContainer/Traits.h"
 
 namespace Detail {
 
@@ -64,7 +64,28 @@ template <typename T1>
 struct is_indexable : public __is_indexable<T1>
 {};
 
+
+
+template <typename T1, typename VOID = void>
+struct __has_default_traits : public std::integral_constant<bool, false> {
+};
+
+
+template <typename T1>
+struct __has_default_traits<
+        T1,
+        typename std::enable_if<
+            Traits<T1>::is_specialized
+        >::type
+        > : public std::integral_constant<bool, true> {
+};
+
+template<typename T>
+struct has_default_traits : __has_default_traits<T> {
+
+};
 }
+
 
 struct VariableExport {
 
@@ -127,7 +148,8 @@ struct VariableExport {
     static auto _writeWar(std::ostream& ost, const T &list)
       -> typename std::enable_if<
               Detail::is_iterable<T>::value &&
-             !Detail::is_exportable<T>::value
+             !Detail::is_exportable<T>::value &&
+             !Detail::has_default_traits<T>::value
          >::type
     {
         auto it = list.begin();
@@ -149,7 +171,8 @@ struct VariableExport {
       -> typename std::enable_if<
               Detail::is_indexable<T>::value &&
              !Detail::is_iterable<T>::value &&
-             !Detail::is_exportable<T>::value
+             !Detail::is_exportable<T>::value &&
+             !Detail::has_default_traits<T>::value
          >::type
     {
         ost << "[ ";
@@ -162,6 +185,11 @@ struct VariableExport {
             }
         }
     }
+
+
+
+
+
 
     template<typename T>
     static void _writeWar(std::ostream& ost, const std::initializer_list<T> &list)
@@ -178,7 +206,58 @@ struct VariableExport {
         }
     }
 
-};
 
+    template<typename T,unsigned int Index = 0, typename VOID = void>
+    struct PrintClass{
+        static void print(std::ostream& ost, const T &traitedClass){
+            ost << '"' << Traits<T>::ttype::template getName<Index>() << "\" : ";
+            VariableExport::_writeWar(ost, Traits<T>::ttype::template getReference<Index>()->getValue(traitedClass));
+            ost << ", ";
+            PrintClass<T, Index + 1>::print(ost, traitedClass);
+
+        }
+    };
+
+    template<typename T,unsigned int Index, typename... Types>
+    struct PrintClass <Traits<T, Types...>, Index, std::enable_if_t<Index < Traits<T, Types...>::size() - 1>>{
+        static void print(std::ostream& ost, const T &traitedClass){
+            ost << '"' << Traits<T, Types...>::template getName<Index>() << "\" : ";
+            VariableExport::_writeWar(ost, Traits<T, Types...>::template getReference<Index>()->getValue(traitedClass));
+            ost << ", ";
+            PrintClass<Traits<T, Types...>, Index + 1>::print(ost, traitedClass);
+
+        }
+    };
+
+    template<typename T,unsigned int Index, typename ... Types>
+    struct PrintClass <Traits<T, Types...>, Index, std::enable_if_t<Index == Traits<T, Types...>::size() - 1>>{
+        static void print(std::ostream& ost, const T &traitedClass){
+            ost << '"' << Traits<T, Types...>::template getName<Traits<T, Types...>::size() - 1>() << "\" : ";
+            VariableExport::_writeWar(ost, Traits<T, Types...>::template getReference<Traits<T, Types...>::size() - 1>()->getValue(traitedClass));
+        }
+    };
+
+    template<typename T, unsigned int Index>
+    struct PrintClass<T, Index, std::enable_if_t<Index == Traits<T>::ttype::size() - 1>>{
+        static void print(std::ostream& ost, const T &traitedClass){
+            ost << '"' << Traits<T>::ttype::template getName<Traits<T>::ttype::size() - 1>() << "\" : ";
+            VariableExport::_writeWar(ost, Traits<T>::ttype::template getReference<Traits<T>::ttype::size() - 1>()->getValue(traitedClass));
+        }
+    };
+
+
+    template<typename T>
+    static auto _writeWar(std::ostream& ost, const T &traitedClass)
+      -> typename std::enable_if<
+             Detail::has_default_traits<T>::value
+         >::type
+    {
+        ost << "{ ";
+        PrintClass<typename Traits<T>::ttype>::print(ost, traitedClass);
+        ost << " }";
+    }
+
+
+};
 
 #endif // VARIABLEEXPORT_H

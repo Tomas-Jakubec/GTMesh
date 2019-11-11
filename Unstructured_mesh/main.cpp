@@ -5,7 +5,8 @@
 #include "UnstructuredMesh/MeshFunctions/MeshFunctions.h"
 #include "UnstructuredMesh/MeshIO/MeshReader/VTKMeshReader.h"
 #include "UnstructuredMesh/MeshIO/MeshWriter/VTKMeshWriter.h"
-
+#include "UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataWriter.h"
+#include "UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataReader.h"
 #include "UnstructuredMesh/MeshIO/MeshReader/FPMAMeshReader.h"
 #include "UnstructuredMesh/MeshIO/MeshWriter/FPMAMeshWriter.h"
 
@@ -81,34 +82,6 @@ void explicitUpdate(UnstructuredMesh<3,size_t, double, 12> mesh,
 
 
 
-void exportData(std::string filename,
-                VTKMeshWriter<3, size_t, double>& writer,
-                double time,
-                UnstructuredMesh<3, size_t, double, 12>& mesh,
-                MeshDataContainer<std::tuple<CellData, FaceData>, 3,2>& compData) {
-
-    ofstream ofile(filename + "_" + to_string(time) + ".vtk");
-    writer.writeHeader(ofile, "HC_test"s + to_string(time));
-    writer.writeToStream(ofile, mesh, MeshDataContainer<MeshNativeType<3>::ElementType, 3>(mesh, MeshNativeType<3>::POLYHEDRON));
-
-    ofile << "CELL_DATA " << writer.cellVert.getDataByPos<0>().size() << endl;
-    ofile << "SCALARS Temperature double 1\nLOOKUP_TABLE default" << endl;
-    size_t realIndex = 0;
-    for (size_t i = 0; i < writer.cellVert.getDataByPos<0>().size(); i++) {
-        auto iterator = writer.backwardCellIndexMapping.find(i);
-        if (iterator == writer.backwardCellIndexMapping.end()){
-            ofile << compData.getDataByDim<3>().at(realIndex).T << ' ';
-            realIndex++;
-        } else {
-            ofile << compData.getDataByDim<3>().at(iterator->second).T << ' ';
-            realIndex = iterator->second;
-        }
-    }
-    ofile.close();
-    DBGMSG("Data eported");
-}
-
-
 void testHeatConduction() {
     UnstructuredMesh<3, size_t, double, 12> mesh;
     FPMAMeshReader<3> reader;
@@ -118,6 +91,8 @@ void testHeatConduction() {
     mesh.initializeCenters();
 
     mesh.setupBoundaryCells();
+
+
 
     mesh.setupBoundaryCellsCenters();
 

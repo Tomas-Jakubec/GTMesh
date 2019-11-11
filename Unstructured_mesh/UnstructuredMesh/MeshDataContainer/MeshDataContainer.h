@@ -10,11 +10,11 @@ template<typename DataType, unsigned int Position, unsigned int MappedDimenion>
 struct DataContainer : public std::vector<DataType> {
     using type = DataType;
 
-    constexpr unsigned int getPosition() {
+    static constexpr unsigned int getPosition() {
         return Position;
     }
 
-    constexpr unsigned int getMappedDimension() {
+    static constexpr unsigned int getMappedDimension() {
         return MappedDimenion;
     }
 };
@@ -56,9 +56,25 @@ public:
     };
 
     template<typename _DataType>
-    struct _DataContainer<_DataType, 0> : public std::vector<_DataType>{
+    struct _DataContainer<_DataType, 0>{
         DataContainer<_DataType, 0, dimensionAt<0U>()> _data;
     };
+
+    /**
+     * Data container type according to pos
+     */
+    template <unsigned int Pos>
+    using DataContainerType = DataContainer<DataType, 0, dimensionAt<Pos>()>;
+
+    /**
+     * @brief size<HR>
+     * Returns the number of vectors contained in the MeshDataContainer.
+    * @return
+    */
+   static constexpr unsigned int size() {
+       return sizeof... (Dimensions);
+   }
+
 private:
     template<unsigned int pos, typename dummy = void>
     struct Alocator{
@@ -226,6 +242,21 @@ public:
         DataContainer<DataType<0>, 0, dimensionAt<0>()> _data;
         //std::vector<DataType<0>> _data;
     };
+
+    /**
+     * Data container type according to pos
+     */
+    template <unsigned int Pos>
+    using DataContainerType = DataContainer<DataType<Pos>, 0, dimensionAt<Pos>()>;
+
+    /**
+     * @brief size<HR>
+     * Returns the number of vectors contained in the MeshDataContainer.
+    * @return
+    */
+   static constexpr unsigned int size() {
+       return sizeof... (Dimensions);
+   }
 
     template<unsigned int pos, typename _DataType, typename... _DataTypes>
     struct Alocator{

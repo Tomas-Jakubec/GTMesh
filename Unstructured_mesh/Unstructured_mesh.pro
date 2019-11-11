@@ -8,6 +8,7 @@ SOURCES += \
     ../debug/debug.cpp
 
 HEADERS += \
+    ../Macros/MacroForEach.h \
     ../debug/ConsoleLogger.h \
     ../debug/Debug.h \
     ../debug/HTMLLogger.h \
@@ -15,6 +16,10 @@ HEADERS += \
     InlineArrayOperations.h \
     UnstructuredMesh/MeshDataContainer/MemberApproach.h \
     UnstructuredMesh/MeshDataContainer/MeshDataContainer.h \
+    UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataReader.h \
+    UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataWriter.h \
+    UnstructuredMesh/MeshDataContainer/Singleton.h \
+    UnstructuredMesh/MeshDataContainer/Traits.h \
     UnstructuredMesh/MeshElements/CellBoundaryConnection.h \
     UnstructuredMesh/MeshElements/CellConnection.h \
     UnstructuredMesh/MeshElements/ComputationalySignificantElement.h \

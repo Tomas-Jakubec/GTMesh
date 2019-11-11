@@ -378,6 +378,15 @@ private:
 public:
 
     /**
+     * @brief getNumberOfCells
+     * returns the number of exported cells
+     * @return
+     */
+    size_t getNumberOfCells() {
+        return cellVert.template getDataByPos<0>().size();
+    }
+
+    /**
      * @brief indexMesh<HR>
      * This function creates vector of indexes of vertices for each cell in order suitable
      * for VTK output. Moreover in case of elements type different from
