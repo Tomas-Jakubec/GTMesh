@@ -79,7 +79,7 @@ void testDebug() {
 
     DBGVAR(Detail::is_indexable<decltype(vert)>::value);
 
-    Subelement<size_t> s({1,true});
+    Subelement<size_t> s({1});
     DBGVAR(s);
 
     HTMLDBGVAR(r, i, c, list, vec, b, m);
@@ -492,3 +492,52 @@ int main()
 */
     return 0;
 }
+
+
+/** GCC error
+#include <iostream>
+#include <string>
+
+struct mem{
+    std::string s;
+    mem(){std::cout <<"mem constructor: " << s << std::endl;}
+};
+
+template<typename statMem>
+class C1_wrong {
+
+public:
+
+    static statMem s;
+
+    C1_wrong(){
+        s.s = "hello";
+        std::cout << "C1_wrong s.s: " << s.s << std::endl;
+
+    }
+    static std::string& getS() {return s.s;}
+
+};
+template <typename statMem> statMem C1_wrong<statMem>::s;
+
+
+
+template <typename dummy>
+class C2_wrong {
+public:
+    static C1_wrong<mem> c;
+    C2_wrong() {std::cout << "C2_wrong constructor c.getS(): " << c.getS() << std::endl;}
+};
+template <typename dummy> C1_wrong<mem> C2_wrong<dummy>::c;
+
+
+void testConstrucorOrder() {
+
+    std::cout << "global value of C2: " << C2_wrong<void>::c.getS() << std::endl;
+}
+
+int main()
+{
+    testConstrucorOrder();
+}
+  */
