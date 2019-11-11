@@ -18,16 +18,23 @@ using namespace std;
 
 
 struct CellData {
-    double T = 300;
     double invVol;
 
 };
+
+
+struct CompData {
+    double T = 300;
+};
+MAKE_NAMED_ATTRIBUTE_TRAIT(CompData, "Temperature", T);
+
 struct FaceData {
     double volOverDist;
 };
 
 void heatFlow(UnstructuredMesh<3,size_t, double, 12> mesh,
         MeshDataContainer<std::tuple<CellData, FaceData>, 3,2>& data,
+        MeshDataContainer<CompData, 3>& compData,
         MeshDataContainer<double, 3>& outDeltas) {
 
     for (double& dT : outDeltas.getDataByPos<0>()){
@@ -38,14 +45,14 @@ void heatFlow(UnstructuredMesh<3,size_t, double, 12> mesh,
         double lT = 1000;
         bool lIn = false;
         if(!((face.getCellLeftIndex() & BOUNDARY_INDEX(size_t)) == BOUNDARY_INDEX(size_t))){
-            lT = data.getDataByDim<3>().at(face.getCellLeftIndex()).T;
+            lT = compData.getDataByDim<3>().at(face.getCellLeftIndex()).T;
             lIn = true;
         }
 
         double rT = 1000;
         bool rIn = false;
         if(!((face.getCellRightIndex() & BOUNDARY_INDEX(size_t)) == BOUNDARY_INDEX(size_t))){
-            rT = data.getDataByDim<3>().at(face.getCellRightIndex()).T;
+            rT = compData.getDataByDim<3>().at(face.getCellRightIndex()).T;
             rIn = true;
         }
 
@@ -61,6 +68,7 @@ void heatFlow(UnstructuredMesh<3,size_t, double, 12> mesh,
 
 void explicitUpdate(UnstructuredMesh<3,size_t, double, 12> mesh,
                     MeshDataContainer<std::tuple<CellData, FaceData>, 3,2>& data,
+                    MeshDataContainer<CompData, 3>& compData,
                     double tau,
                     double startTime,
                     double finalT){
@@ -68,11 +76,12 @@ void explicitUpdate(UnstructuredMesh<3,size_t, double, 12> mesh,
     double time = startTime;
     while (time < finalT) {
 
-        heatFlow(mesh, data, K1);
+        heatFlow(mesh, data, compData, K1);
 
         for (size_t i = 0; i < mesh.getCells().size(); i++){
             auto& cellData = data.getDataByDim<3>().at(i);
-            cellData.T += cellData.invVol * tau * K1.getDataByDim<3>().at(i);
+            auto& _compData = compData.getDataByPos<0>().at(i);
+            _compData.T += cellData.invVol * tau * K1.getDataByDim<3>().at(i);
         }
         cout << "time: " << time << "\r";
         time += tau;
@@ -80,6 +89,25 @@ void explicitUpdate(UnstructuredMesh<3,size_t, double, 12> mesh,
     DBGMSG("computation done");
 }
 
+
+
+void exportData(std::string filename,
+                VTKMeshWriter<3, size_t, double>& writer,
+                double time,
+                UnstructuredMesh<3, size_t, double, 12>& mesh,
+                MeshDataContainer<CompData, 3>& compData) {
+
+    ofstream ofile(filename + "_" + to_string(time) + ".vtk");
+    writer.writeHeader(ofile, "HC_test"s + to_string(time));
+    writer.writeToStream(ofile, mesh, MeshDataContainer<MeshNativeType<3>::ElementType, 3>(mesh, MeshNativeType<3>::POLYHEDRON));
+
+    VTKMeshDataWriter<3> dataWriter;
+    dataWriter.writeToStream(ofile, compData, writer);
+
+    ofile.close();
+    DBGMSG("Data eported");
+
+}
 
 
 void testHeatConduction() {
@@ -100,14 +128,16 @@ void testHeatConduction() {
 
     auto dists = ComputeCellsDistance(mesh);
 
-    MeshDataContainer<std::tuple<CellData, FaceData>, 3,2> compData(mesh);
+    MeshDataContainer<std::tuple<CellData, FaceData>, 3,2> meshData(mesh);
+
+    MeshDataContainer<CompData, 3> compData(mesh);
 
     for (auto& face : mesh.getFaces()) {
-        compData.at(face).volOverDist = measures.at(face) / dists.at(face);
+        meshData.at(face).volOverDist = measures.at(face) / dists.at(face);
     }
 
     for (auto& cell : mesh.getCells()) {
-        compData.at(cell).invVol = 1.0 / measures.at(cell);
+        meshData.at(cell).invVol = 1.0 / measures.at(cell);
     }
 
     double startTime = 0.0, finalTime = 1e-2, tau = 1e-5;
@@ -122,21 +152,23 @@ void testHeatConduction() {
 
 
     explicitUpdate(mesh,
+                   meshData,
                    compData,
                    tau,
                    startTime,
                    finalTime);
 
-
     exportData("Heatcond_test",
                writer,
-               finalTime,
+               startTime,
                mesh,
                compData);
+
 
     startTime = finalTime;
     finalTime *= 2;
     explicitUpdate(mesh,
+                   meshData,
                    compData,
                    tau,
                    startTime,
@@ -144,9 +176,11 @@ void testHeatConduction() {
 
     exportData("Heatcond_test",
                writer,
-               finalTime,
+               startTime,
                mesh,
                compData);
+
+
 
 }
 
