@@ -473,6 +473,48 @@ public:
     }
 };
 
+class Number {
+public:
+    double num = 0;
+    Number(double num) {
+        this->num = num;
+        DBGMSG("constructing number");
+    }
+
+    Number operator+(const Number& rhs){
+        DBGMSG("operator+ const&");
+        return Number(this->num + rhs.num);
+    }
+
+
+    Number operator+(Number&& rhs){
+        DBGMSG("operator+ &&");
+        rhs.num += this->num;
+        return rhs;
+    }
+
+    Number operator*(const Number& rhs){
+        return Number(this->num * rhs.num);
+    }
+
+
+    Number operator*(Number&& rhs){
+        rhs.num *= this->num;
+        return rhs;
+    }
+
+
+};
+
+MAKE_ATTRIBUTE_TRAIT(Number,num);
+
+void testOperator() {
+    Number n(42.15), m(42);
+    DBGMSG("start sum");
+    Number nn = n + (n *(m + (m + n)));
+    DBGVAR(nn);
+}
+
 
 int main()
 {
@@ -483,7 +525,8 @@ int main()
 
     DBGVAR(b2.first,b2.second);
     */
-    testMemberRef();
+    testOperator();
+    //testMemberRef();
     //testConstrucorOrder();
 /*
     std::function<int(int)> fce = [&b1](int i){return b1.data + 42 + i;};
