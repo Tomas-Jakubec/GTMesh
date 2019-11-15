@@ -9,6 +9,7 @@
 template <unsigned int MeshDimension, typename IndexType>
 class VTKMeshDataReader {
 
+    static_assert (MeshDimension == 2 || MeshDimension == 3, "The VTK file format can represent data only in 2D or 3D");
     /**
      * @brief readColumn
      * reads a single column of traited data
@@ -21,7 +22,8 @@ class VTKMeshDataReader {
     template<typename T, unsigned int Index, unsigned int Position>
     static auto readColumn(std::istream& ist, DataContainer<T, Position, MeshDimension> &data,std::map<std::string, std::istream::pos_type>& dataPositions)
     -> typename std::enable_if<
-        Detail::is_indexable<typename Traits<T>::ttype::template type<Index>>::value
+        Detail::is_indexable<typename Traits<T>::ttype::template type<Index>>::value &&
+        MeshDimension == 3
        >::type
     {
 
@@ -33,7 +35,32 @@ class VTKMeshDataReader {
             for (unsigned int j = 0; j < Traits<T>::ttype::template getValue<Index>(data.at(i)).size(); j++){
                 ist >> value[j];
             }
-            DBGVAR(value);
+            Traits<T>::ttype::template setValue<Index>(data.at(i), value);
+        }
+
+    }
+
+
+    template<typename T, unsigned int Index, unsigned int Position>
+    static auto readColumn(std::istream& ist, DataContainer<T, Position, MeshDimension> &data,std::map<std::string, std::istream::pos_type>& dataPositions)
+    -> typename std::enable_if<
+        Detail::is_indexable<typename Traits<T>::ttype::template type<Index>>::value &&
+        MeshDimension == 2
+       >::type
+    {
+
+        ist.seekg(dataPositions[Traits<T>::ttype::template getName<Index>()]);
+
+        typename Traits<T>::ttype::template type<Index> value;
+        typename Traits<T>::ttype::template type<Index> dummy;
+
+        for (IndexType i = 0; i < data.size(); i++) {
+            for (unsigned int j = 0; j < Traits<T>::ttype::template getValue<Index>(data.at(i)).size(); j++){
+                ist >> value[j];
+            }
+
+            ist >> dummy[0];
+
             Traits<T>::ttype::template setValue<Index>(data.at(i), value);
         }
 

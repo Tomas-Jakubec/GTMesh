@@ -9,6 +9,7 @@
 template <unsigned int MeshDimension>
 class VTKMeshDataWriter {
 
+    static_assert (MeshDimension == 2 || MeshDimension ==3, "The VTK format can hold only 2D or 3D data");
 
     /**
      * @brief writeColumn
@@ -22,7 +23,8 @@ class VTKMeshDataWriter {
     template<typename T, unsigned int Index, unsigned int Position, typename IndexType, typename Real>
     static auto writeColumn(std::ostream& ost, const DataContainer<T, Position, MeshDimension> &data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer)
     -> typename std::enable_if<
-        Detail::is_indexable<typename Traits<T>::ttype::template type<Index>>::value
+        Detail::is_indexable<typename Traits<T>::ttype::template type<Index>>::value &&
+        MeshDimension == 3
        >::type
     {
 
@@ -58,6 +60,48 @@ class VTKMeshDataWriter {
         }
     }
 
+
+
+
+    template<typename T, unsigned int Index, unsigned int Position, typename IndexType, typename Real>
+    static auto writeColumn(std::ostream& ost, const DataContainer<T, Position, MeshDimension> &data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer)
+    -> typename std::enable_if<
+        Detail::is_indexable<typename Traits<T>::ttype::template type<Index>>::value &&
+        MeshDimension == 2
+       >::type
+    {
+
+        if (Traits<T>::ttype::template getReference<Index>()->getValue(data.at(0)).size() == MeshDimension)
+            ost << "VECTORS ";
+        else if (Traits<T>::ttype::template getReference<Index>()->getValue(data.at(0)).size() == MeshDimension * MeshDimension)
+            ost << "TENZORS ";
+
+        ost << Traits<T>::ttype::template getName<Index>() << " double\n";
+
+
+        IndexType realIndex = 0;
+        IndexType localIndex = 0;
+        for(const std::pair<IndexType, IndexType>& key : writer.backwardCellIndexMapping) {
+            while (localIndex < key.first) {
+                    for (unsigned int j = 0; j < Traits<T>::ttype::template getReference<Index>()->getValue(data.at(0)).size(); j++) {
+                    ost << Traits<T>::ttype::template getValue<Index>(data.at(realIndex))[j] << " 0.0 ";
+                }
+                realIndex++;
+                localIndex++;
+            }
+            realIndex = key.second;
+            localIndex++;
+            for (unsigned int j = 0; j < Traits<T>::ttype::template getReference<Index>()->getValue(data.at(0)).size(); j++) {
+                ost << Traits<T>::ttype::template getValue<Index>(data.at(realIndex))[j] << " 0.0 ";
+            }
+        }
+        while (realIndex < data.size() - 1) {
+            for (unsigned int j = 0; j < Traits<T>::ttype::template getReference<Index>()->getValue(data.at(0)).size(); j++) {
+                ost << Traits<T>::ttype::template getValue<Index>(data.at(realIndex))[j] << " 0.0 ";
+            }
+            realIndex++;
+        }
+    }
 
     template<typename T, unsigned int Index, unsigned int Position, typename IndexType, typename Real>
     static auto writeColumn(std::ostream& ost, const DataContainer<T, Position, MeshDimension> &data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer)
@@ -160,6 +204,5 @@ public:
         MeshDataIterator<MeshDataContainer<T, Dimensions...>::size() - 1>::writeToStream(ost, data, writer);
     }
 };
-
 
 #endif // VTKMESHDATAWRITER_H
