@@ -33,6 +33,7 @@ class VTKMeshDataReader {
             for (unsigned int j = 0; j < Traits<T>::ttype::template getValue<Index>(data.at(i)).size(); j++){
                 ist >> value[j];
             }
+            DBGVAR(value);
             Traits<T>::ttype::template setValue<Index>(data.at(i), value);
         }
 
