@@ -118,9 +118,14 @@ public:
 
 
 template<typename IndexType>
-class SubelementContainer<IndexType, 0> : public std::vector<IndexType> {
+class SubelementContainer<IndexType, 0> : public std::vector<Subelement<IndexType>> {
+public:
+    IndexType getNumberOfSubelements() {
+        return this->size();
+    }
+
     void addSubelement(IndexType index) {
-        this->push_back(index);
+        this->push_back(Subelement<IndexType>{index});
     }
 
     void removeSubelement(unsigned char atIndex){
