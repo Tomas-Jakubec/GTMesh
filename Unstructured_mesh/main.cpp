@@ -894,12 +894,12 @@ void testFPMARW(){
 
 
 void testFPMA_poly(){
-    UnstructuredMesh<3, size_t, double, 12> mesh;
+    UnstructuredMesh<3, size_t, double, 0> mesh;
     FPMAMeshReader<3> reader;
     ifstream file("Spark_mesh.fpma");
     reader.loadFromStream(file, mesh);
 
-    DBGVAR(mesh.getCells().size(), mesh.getVertices().size());
+    CSVDBGVAR(mesh.getCells().size(), mesh.getVertices().size());
 
     mesh.initializeCenters();
     VTKMeshWriter<3, size_t, double> writer;
@@ -931,7 +931,7 @@ int main()
     //testMesh2DLoadAndWrite();
     //testMesh3D();
     //test3DMeshDeformedPrisms();
-    testMeshRefine();
+    //testMeshRefine();
     //testMeshDataContainer();
     //UnstructuredMesh<5, size_t, double, 6,5,4> m;
     //m.ComputeElementMeasures();

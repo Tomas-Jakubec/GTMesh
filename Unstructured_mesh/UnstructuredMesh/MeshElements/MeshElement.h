@@ -120,7 +120,7 @@ public:
 template<typename IndexType>
 class SubelementContainer<IndexType, 0> : public std::vector<Subelement<IndexType>> {
 public:
-    IndexType getNumberOfSubelements() {
+    IndexType getNumberOfSubElements() {
         return this->size();
     }
 

@@ -9,6 +9,7 @@ SOURCES += \
 
 HEADERS += \
     ../Macros/MacroForEach.h \
+    ../debug/CSVLogger.h \
     ../debug/ConsoleLogger.h \
     ../debug/Debug.h \
     ../debug/HTMLLogger.h \

@@ -9,14 +9,22 @@
 #include "../Macros/MacroForEach.h"
 #include <iostream>
 #include "HTMLLogger.h"
+#include "CSVLogger.h"
 #include "ConsoleLogger.h"
 #include <stdexcept>
 /*
 ** Macros intended for sending
 ** messages during program run
 */
+namespace dbg {
+    struct DBGStatics {
+        static HtmlLogger HDBGLog;
+        static CSVLogger CSVDBGLog;
+    };
 
-extern HtmlLogger HDBGLog;
+    HtmlLogger DBGStatics::HDBGLog("DBG.html");
+    CSVLogger DBGStatics::CSVDBGLog("DBG.csv");
+}
 
 #define STRVAR(var) #var, var
 
@@ -66,8 +74,13 @@ DBG("something went wrong in try block: " << e.what());   \
 abort();}
 
 // Macros using html debug output
-#define HTMLDBGVAR(...) HDBGLog.writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
+#define HTMLDBGVAR(...) dbg::DBGStatics::HDBGLog.writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
 #define HTMLDBGCOND(condition, ...) if(condition) HTMLDBGVAR(__VA_ARGS__)
+
+// Macros using csv debug output
+#define CSVDBGVAR(...) dbg::DBGStatics::CSVDBGLog.writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
+#define CSVDBGCOND(condition, ...) if(condition) HTMLDBGVAR(__VA_ARGS__)
+
 
 #define DBGCHECK DBG("check")
 
