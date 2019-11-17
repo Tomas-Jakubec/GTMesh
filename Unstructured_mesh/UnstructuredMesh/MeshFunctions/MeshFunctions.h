@@ -5,6 +5,7 @@
 #include "../MeshDataContainer/MeshDataContainer.h"
 #include "../../Vector.h"
 #include <valarray>
+#include <functional>
 #include <set>
 #include <map>
 
@@ -531,11 +532,13 @@ struct MeshRun<1, StartDimension, TargetDimension, MeshDimension, false, Descend
 template <unsigned int CurrentDimension,unsigned int StartDimension, unsigned int TargetDimension, unsigned int MeshDimension, bool Descend>
 struct MeshRun<CurrentDimension, StartDimension, TargetDimension, MeshDimension, true, Descend> {
 
-    template<typename Func, typename IndexType, typename Real, unsigned int ...Reserve>
+    template<typename Functor, typename IndexType, typename Real, unsigned int ...Reserve>
     static void run(MeshElements<MeshDimension, IndexType, Real, Reserve...>& ,
                     IndexType origElementIndex,
                     IndexType index,
-                    Func fun){
+                    Functor fun){
+        static_assert (std::is_assignable<std::function<void(IndexType, IndexType)>,Functor>::value,
+                       "The Functor fun must be a function with void return type and two arguments of IndexType, the first is index of StartDimension element and the second is the index of the TargetDimension element");
         if(Descend){
             fun(origElementIndex, index);
         }else{
@@ -559,7 +562,7 @@ struct MeshApply {
                     (StartDimension > TargetDimension) ? StartDimension : TargetDimension,
                     (StartDimension > TargetDimension) ? TargetDimension : StartDimension,
                     MeshDimension,
-                    false,
+                    StartDimension == TargetDimension,
                     (StartDimension > TargetDimension)>::run(mesh, startElement.getIndex(), startElement.getIndex(), f);
         }
     }

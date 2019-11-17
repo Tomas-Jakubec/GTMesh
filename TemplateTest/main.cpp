@@ -516,23 +516,43 @@ void testOperator() {
 }
 
 
-int main()
-{
 
-    /*Base b1(0.0);
+
+void applyFunc(function_ptr<int, int>::type f, int arg) {
+    DBGVAR(f(arg));
+}
+void applyFunc(std::function<int(int)>&f, int arg) {
+    DBGVAR(f(arg));
+}
+
+template <typename Functor>
+void applyFunc1(const Functor&f, int arg) {
+    static_assert (std::is_assignable<std::function<void(int)>,Functor>::value,
+                   "The Functor must be a function with one argument int and return type int");
+    DBGVAR(f(arg));
+}
+
+void testFunction() {
+    Base b1(0.0);
 
     Base b2(std::pair<char,int>{'1',3});
 
     DBGVAR(b2.first,b2.second);
-    */
-    testOperator();
+
+    std::function<int(int)> fce ( [&b1](int i)->int{return b1.data + 42 + i;});
+
+    applyFunc(fce, 2);
+    applyFunc([](int i){return 42 + i;},2);
+    applyFunc1([&b1](int i)->double{return b1.data + 42.15 + i;}, 2);
+}
+
+int main()
+{
+
+    //testOperator();
     //testMemberRef();
     //testConstrucorOrder();
-/*
-    std::function<int(int)> fce = [&b1](int i){return b1.data + 42 + i;};
-
-    std::cout << fce(2);
-*/
+    testFunction();
     return 0;
 }
 
