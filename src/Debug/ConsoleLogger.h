@@ -44,7 +44,7 @@ public:
         std::cerr << "\033[0m\n";
 #else
         std::cerr << "In file " << cppFile << " at line " << line << " variable " << name << " has value of ";
-        VariableExport::_writeWar(std::cerr, value);
+        VariableExport::exportVariable(std::cerr, value);
         std::cerr << "\n";
 #endif
     }
@@ -58,7 +58,7 @@ public:
         std::cerr << "\033[0m\n";
 #else
         std::cerr << "In file " << cppFile << " at line " << line << " variable " << name << " has value of ";
-        VariableExport::_writeWar(std::cerr, value);
+        VariableExport::exportVariable(std::cerr, value);
         std::cerr << "\n";
 #endif
     }

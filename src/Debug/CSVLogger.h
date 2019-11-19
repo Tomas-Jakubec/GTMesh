@@ -91,7 +91,7 @@ public:
         if (!logFile) create(logFileName.c_str());
 
         (*logFile)  <<  groupIndex << ';' << line << ";\"" << cppFile << "\";\"" << name << "\";";
-        VariableExport::_writeWar(*logFile,value);
+        VariableExport::exportVariable(*logFile,value);
         (*logFile) << "\n";
         writeVar(line, cppFile, rest...);
     }
@@ -104,7 +104,7 @@ public:
         if (!logFile) create(logFileName.c_str());
 
         (*logFile)  <<  groupIndex << ';' << line << ";\"" << cppFile << "\";\"" << name << "\";";
-        VariableExport::_writeWar(*logFile,value);
+        VariableExport::exportVariable(*logFile,value);
         (*logFile) << "\n";
 
         groupIndex++;
