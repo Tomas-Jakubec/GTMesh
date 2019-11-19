@@ -13,7 +13,7 @@ HEADERS += \
     ../src/Debug/Debug.h \
     ../src/Debug/HTMLLogger.h \
     ../src/Debug/VariableExport.h \
-    ../src/InlineArrayOperations.h \
+    ../src/NumericStaticArray/InlineArrayOperations.h \
     ../src/Traits/MemberApproach/MemberApproach.h \
     ../src/UnstructuredMesh/MeshDataContainer/MeshDataContainer.h \
     ../src/UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataReader.h \
