@@ -17,8 +17,8 @@ namespace VariableExport {
 
     template<typename T>
     auto exportVariable(std::ostream& ost, const T& b)
-      -> typename std::enable_if<std::is_class<
-            typename std::remove_reference<decltype(ost << b)>::type>::value &&
+      -> typename std::enable_if<
+             IsExportable<T>::value &&
             !std::is_same<T, bool>::value &&
             !std::is_same<T, std::string>::value &&
             !std::is_same<T, const char*>::value &&
@@ -66,9 +66,9 @@ namespace VariableExport {
     template<typename T>
     auto exportVariable(std::ostream& ost, const T &list)
       -> typename std::enable_if<
-              is_iterable<T>::value &&
-             !is_exportable<T>::value &&
-             !has_default_traits<T>::value
+              IsIterable<T>::value &&
+             !IsExportable<T>::value &&
+             !HasDefaultTraits<T>::value
          >::type
     {
         auto it = list.begin();
@@ -88,10 +88,10 @@ namespace VariableExport {
     template<typename T>
     auto exportVariable(std::ostream& ost, const T &list)
       -> typename std::enable_if<
-              is_indexable<T>::value &&
-             !is_iterable<T>::value &&
-             !is_exportable<T>::value &&
-             !has_default_traits<T>::value
+              IsIndexable<T>::value &&
+             !IsIterable<T>::value &&
+             !IsExportable<T>::value &&
+             !HasDefaultTraits<T>::value
          >::type
     {
         ost << "[ ";
@@ -106,7 +106,26 @@ namespace VariableExport {
     }
 
 
-
+    template<typename T>
+    auto exportVariable(std::ostream& ost, const T &list)
+      -> typename std::enable_if<
+              IsTNLIndexable<T>::value &&
+             !IsIndexable<T>::value &&
+             !IsIterable<T>::value &&
+             !IsExportable<T>::value &&
+             !HasDefaultTraits<T>::value
+         >::type
+    {
+        ost << "[ ";
+        for (decltype (list.size())i = 0; i < list.size(); i++){
+            exportVariable(ost, list[i]);
+            if (i == list.getSize() - 1){
+                ost << " ]";
+            } else {
+                ost << ", ";
+            }
+        }
+    }
 
 
 
@@ -168,7 +187,7 @@ namespace VariableExport {
     template<typename T>
     auto exportVariable(std::ostream& ost, const T &traitedClass)
       -> typename std::enable_if<
-             has_default_traits<T>::value
+             HasDefaultTraits<T>::value
          >::type
     {
         ost << "{ ";

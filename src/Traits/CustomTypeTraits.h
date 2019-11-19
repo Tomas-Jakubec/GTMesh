@@ -89,23 +89,23 @@ struct __has_default_traits<
 
 
 template <typename T1>
-struct is_exportable : public Detail::__is_exportable<T1>
+struct IsExportable : public Detail::__is_exportable<T1>
 {};
 
 
 template <typename T1>
-struct is_iterable : public Detail::__is_iterable<T1>
+struct IsIterable : public Detail::__is_iterable<T1>
 {};
 
 template <typename T1>
-struct is_indexable : public Detail::__is_indexable<T1>
+struct IsIndexable : public Detail::__is_indexable<T1>
 {};
 
 template <typename T1>
-struct is_tnl_indexable : public Detail::__is_tnl_indexable<T1>
+struct IsTNLIndexable : public Detail::__is_tnl_indexable<T1>
 {};
 
 template<typename T>
-struct has_default_traits : Detail::__has_default_traits<T> {};
+struct HasDefaultTraits : Detail::__has_default_traits<T> {};
 
 #endif // CUSTOMTRAITS_H

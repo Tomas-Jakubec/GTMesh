@@ -24,7 +24,7 @@ class VTKMeshDataReader {
     template<typename T, unsigned int Index, unsigned int Position>
     static auto readColumn(std::istream& ist, DataContainer<T, Position, MeshDimension> &data,std::map<std::string, std::istream::pos_type>& dataPositions)
     -> typename std::enable_if<
-        is_indexable<typename Traits<T>::ttype::template type<Index>>::value &&
+        IsIndexable<typename Traits<T>::ttype::template type<Index>>::value &&
         MeshDimension == 3
        >::type
     {
@@ -46,7 +46,7 @@ class VTKMeshDataReader {
     template<typename T, unsigned int Index, unsigned int Position>
     static auto readColumn(std::istream& ist, DataContainer<T, Position, MeshDimension> &data,std::map<std::string, std::istream::pos_type>& dataPositions)
     -> typename std::enable_if<
-        is_indexable<typename Traits<T>::ttype::template type<Index>>::value &&
+        IsIndexable<typename Traits<T>::ttype::template type<Index>>::value &&
         MeshDimension == 2
        >::type
     {
@@ -72,7 +72,7 @@ class VTKMeshDataReader {
     template<typename T, unsigned int Index, unsigned int Position>
     static auto readColumn(std::istream& ist, DataContainer<T, Position, MeshDimension> &data,std::map<std::string, std::istream::pos_type>& dataPositions)
     -> typename std::enable_if<
-        !is_indexable<typename Traits<T>::ttype::template type<Index>>::value
+        !IsIndexable<typename Traits<T>::ttype::template type<Index>>::value
     >::type
     {
 
@@ -98,7 +98,7 @@ private:
         template<unsigned int Position>
 
         static void read(std::istream& ist, DataContainer<T, Position, MeshDimension> &data, std::map<std::string, std::istream::pos_type>& dataPositions){
-            DBGVAR(is_indexable<typename Traits<T>::ttype::template type<Index>>::value);
+            DBGVAR(IsIndexable<typename Traits<T>::ttype::template type<Index>>::value);
             readColumn<T, Index, Position>(ist, data, dataPositions);
             readCellData<Traits<T, Types...>, Index + 1>::read(ist, data, dataPositions);
 
