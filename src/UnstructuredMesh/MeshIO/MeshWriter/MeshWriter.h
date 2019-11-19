@@ -1,7 +1,7 @@
 #ifndef MESHWRITER_H
 #define MESHWRITER_H
 #include "../MeshNativeType.h"
-#include "../../../Vertex.h"
+#include "../../../NumericStaticArray/Vertex.h"
 #include "../../MeshElements/MeshElement.h"
 
 template<unsigned int MeshDimension>

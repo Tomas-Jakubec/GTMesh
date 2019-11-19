@@ -10,7 +10,7 @@
 #include "../src/UnstructuredMesh/MeshIO/MeshReader/FPMAMeshReader.h"
 #include "../src/UnstructuredMesh/MeshIO/MeshWriter/FPMAMeshWriter.h"
 
-#include "../src/UnstructuredMesh/MeshDataContainer/MemberApproach.h"
+#include "../src/Traits/MemberApproach/MemberApproach.h"
 #include <fstream>
 #include <list>
 using namespace std;

@@ -1,7 +1,8 @@
 #ifndef VTKMESHDATAREADER_H
 #define VTKMESHDATAREADER_H
-#include "../Traits.h"
+#include "../../../Traits/Traits.h"
 #include "../MeshDataContainer.h"
+#include "../../../Debug/Debug.h"
 #include <istream>
 #include <map>
 #include <sstream>

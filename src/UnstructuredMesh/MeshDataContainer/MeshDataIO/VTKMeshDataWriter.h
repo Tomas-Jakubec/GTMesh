@@ -1,7 +1,8 @@
 #ifndef VTKMESHDATAWRITER_H
 #define VTKMESHDATAWRITER_H
-#include "../Traits.h"
+#include "../../../Traits/Traits.h"
 #include "../MeshDataContainer.h"
+#include "../../../Debug/Debug.h"
 #include "../../MeshIO/MeshWriter/VTKMeshWriter.h"
 
 #include <ostream>

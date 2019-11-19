@@ -3,7 +3,7 @@
 #define MESH_FUNCTIONS_H
 #include "../MeshElements/MeshElement.h"
 #include "../MeshDataContainer/MeshDataContainer.h"
-#include "../../Vector.h"
+#include "../../NumericStaticArray/Vector.h"
 #include <valarray>
 #include <functional>
 #include <set>

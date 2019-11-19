@@ -1,9 +1,9 @@
 #ifndef TRAITS_H
 #define TRAITS_H
-#include "MemberApproach.h"
+#include "MemberApproach/MemberApproach.h"
 #include <string>
 #include <memory>
-#include "Singleton.h"
+#include "../Singleton/Singleton.h"
 
 template<typename Class, typename...Types>
 class Traits {
@@ -117,7 +117,7 @@ public:
     static constexpr std::false_type is_specialized{};
 };
 
-#include "../../Macros/MacroForEach.h"
+#include "../Macros/MacroForEach.h"
 
 
 #define MEMREF_TYPE_CUSTOM(name, memberRef) typename MemberReferenceType<decltype(memberRef)>::type

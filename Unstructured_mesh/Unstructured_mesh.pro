@@ -14,12 +14,12 @@ HEADERS += \
     ../src/Debug/HTMLLogger.h \
     ../src/Debug/VariableExport.h \
     ../src/InlineArrayOperations.h \
-    ../src/UnstructuredMesh/MeshDataContainer/MemberApproach.h \
+    ../src/Traits/MemberApproach/MemberApproach.h \
     ../src/UnstructuredMesh/MeshDataContainer/MeshDataContainer.h \
     ../src/UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataReader.h \
     ../src/UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataWriter.h \
-    ../src/UnstructuredMesh/MeshDataContainer/Singleton.h \
-    ../src/UnstructuredMesh/MeshDataContainer/Traits.h \
+    ../src/Singleton/Singleton.h \
+    ../src/Traits/Traits.h \
     ../src/UnstructuredMesh/MeshElements/CellBoundaryConnection.h \
     ../src/UnstructuredMesh/MeshElements/CellConnection.h \
     ../src/UnstructuredMesh/MeshElements/ComputationalySignificantElement.h \
@@ -34,5 +34,5 @@ HEADERS += \
     ../src/UnstructuredMesh/MeshIO/MeshWriter/VTKMeshWriter.h \
     ../src/UnstructuredMesh/UnstructedMeshDefine.h \
     ../src/UnstructuredMesh/UnstructuredMesh.h \
-    ../src/Vector.h \
-    ../src/Vertex.h
+    ../src/NumericStaticArray/Vector.h \
+    ../src/NumericStaticArray/Vertex.h

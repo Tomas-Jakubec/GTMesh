@@ -3,7 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include "../UnstructuredMesh/MeshDataContainer/Traits.h"
+#include "../Traits/Traits.h"
 
 namespace Detail {
 
