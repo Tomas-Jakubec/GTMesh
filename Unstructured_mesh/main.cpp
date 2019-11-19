@@ -1,16 +1,16 @@
 #include <iostream>
 //#define UNDEBUG
-#include "../debug/Debug.h"
-#include "UnstructuredMesh/UnstructuredMesh.h"
-#include "UnstructuredMesh/MeshFunctions/MeshFunctions.h"
-#include "UnstructuredMesh/MeshIO/MeshReader/VTKMeshReader.h"
-#include "UnstructuredMesh/MeshIO/MeshWriter/VTKMeshWriter.h"
-#include "UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataWriter.h"
-#include "UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataReader.h"
-#include "UnstructuredMesh/MeshIO/MeshReader/FPMAMeshReader.h"
-#include "UnstructuredMesh/MeshIO/MeshWriter/FPMAMeshWriter.h"
+#include "../src/Debug/Debug.h"
+#include "../src/UnstructuredMesh/UnstructuredMesh.h"
+#include "../src/UnstructuredMesh/MeshFunctions/MeshFunctions.h"
+#include "../src/UnstructuredMesh/MeshIO/MeshReader/VTKMeshReader.h"
+#include "../src/UnstructuredMesh/MeshIO/MeshWriter/VTKMeshWriter.h"
+#include "../src/UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataWriter.h"
+#include "../src/UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataReader.h"
+#include "../src/UnstructuredMesh/MeshIO/MeshReader/FPMAMeshReader.h"
+#include "../src/UnstructuredMesh/MeshIO/MeshWriter/FPMAMeshWriter.h"
 
-#include "UnstructuredMesh/MeshDataContainer/MemberApproach.h"
+#include "../src/UnstructuredMesh/MeshDataContainer/MemberApproach.h"
 #include <fstream>
 #include <list>
 using namespace std;

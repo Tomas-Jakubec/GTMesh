@@ -5,35 +5,34 @@ CONFIG -= qt
 
 SOURCES += \
         main.cpp \
-    ../debug/debug.cpp
 
 HEADERS += \
-    ../Macros/MacroForEach.h \
-    ../debug/CSVLogger.h \
-    ../debug/ConsoleLogger.h \
-    ../debug/Debug.h \
-    ../debug/HTMLLogger.h \
-    ../debug/VariableExport.h \
-    InlineArrayOperations.h \
-    UnstructuredMesh/MeshDataContainer/MemberApproach.h \
-    UnstructuredMesh/MeshDataContainer/MeshDataContainer.h \
-    UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataReader.h \
-    UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataWriter.h \
-    UnstructuredMesh/MeshDataContainer/Singleton.h \
-    UnstructuredMesh/MeshDataContainer/Traits.h \
-    UnstructuredMesh/MeshElements/CellBoundaryConnection.h \
-    UnstructuredMesh/MeshElements/CellConnection.h \
-    UnstructuredMesh/MeshElements/ComputationalySignificantElement.h \
-    UnstructuredMesh/MeshElements/MeshElement.h \
-    UnstructuredMesh/MeshFunctions/MeshFunctions.h \
-    UnstructuredMesh/MeshIO/MeshNativeType.h \
-    UnstructuredMesh/MeshIO/MeshReader/FPMAMeshReader.h \
-    UnstructuredMesh/MeshIO/MeshReader/MeshReader.h \
-    UnstructuredMesh/MeshIO/MeshReader/VTKMeshReader.h \
-    UnstructuredMesh/MeshIO/MeshWriter/FPMAMeshWriter.h \
-    UnstructuredMesh/MeshIO/MeshWriter/MeshWriter.h \
-    UnstructuredMesh/MeshIO/MeshWriter/VTKMeshWriter.h \
-    UnstructuredMesh/UnstructedMeshDefine.h \
-    UnstructuredMesh/UnstructuredMesh.h \
-    Vector.h \
-    Vertex.h
+    ../src/Macros/MacroForEach.h \
+    ../src/Debug/CSVLogger.h \
+    ../src/Debug/ConsoleLogger.h \
+    ../src/Debug/Debug.h \
+    ../src/Debug/HTMLLogger.h \
+    ../src/Debug/VariableExport.h \
+    ../src/InlineArrayOperations.h \
+    ../src/UnstructuredMesh/MeshDataContainer/MemberApproach.h \
+    ../src/UnstructuredMesh/MeshDataContainer/MeshDataContainer.h \
+    ../src/UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataReader.h \
+    ../src/UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataWriter.h \
+    ../src/UnstructuredMesh/MeshDataContainer/Singleton.h \
+    ../src/UnstructuredMesh/MeshDataContainer/Traits.h \
+    ../src/UnstructuredMesh/MeshElements/CellBoundaryConnection.h \
+    ../src/UnstructuredMesh/MeshElements/CellConnection.h \
+    ../src/UnstructuredMesh/MeshElements/ComputationalySignificantElement.h \
+    ../src/UnstructuredMesh/MeshElements/MeshElement.h \
+    ../src/UnstructuredMesh/MeshFunctions/MeshFunctions.h \
+    ../src/UnstructuredMesh/MeshIO/MeshNativeType.h \
+    ../src/UnstructuredMesh/MeshIO/MeshReader/FPMAMeshReader.h \
+    ../src/UnstructuredMesh/MeshIO/MeshReader/MeshReader.h \
+    ../src/UnstructuredMesh/MeshIO/MeshReader/VTKMeshReader.h \
+    ../src/UnstructuredMesh/MeshIO/MeshWriter/FPMAMeshWriter.h \
+    ../src/UnstructuredMesh/MeshIO/MeshWriter/MeshWriter.h \
+    ../src/UnstructuredMesh/MeshIO/MeshWriter/VTKMeshWriter.h \
+    ../src/UnstructuredMesh/UnstructedMeshDefine.h \
+    ../src/UnstructuredMesh/UnstructuredMesh.h \
+    ../src/Vector.h \
+    ../src/Vertex.h
