@@ -134,7 +134,7 @@ class VTKMeshDataWriter {
     }
 
 
-    template<typename T,unsigned int Index = 0, typename VOID = void>
+    template<typename T,unsigned int Index = 0, typename Void = void>
     struct writeCellData{};
 
     template<typename T,unsigned int Index, typename... Types>

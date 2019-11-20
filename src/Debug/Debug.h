@@ -105,6 +105,10 @@ abort();}
 #define HTMLDBGVAR(...)
 
 #define HTMLDBGCOND(condition, ...)
+
+#define CSVDBGVAR(...)
+
+#define CSVDBGCOND(condition, ...)
 #endif //UNDEBUG
 
 #endif // DEBUG_H

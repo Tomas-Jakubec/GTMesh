@@ -1,5 +1,6 @@
 #include <iostream>
 //#define UNDEBUG
+//#define CONSOLE_COLOURED_OUTPUT
 #include "../src/Debug/Debug.h"
 #include "../src/UnstructuredMesh/UnstructuredMesh.h"
 #include "../src/UnstructuredMesh/MeshFunctions/MeshFunctions.h"
@@ -13,6 +14,7 @@
 #include "../src/Traits/MemberApproach/MemberApproach.h"
 #include <fstream>
 #include <list>
+#include <windows.h>
 using namespace std;
 
 
@@ -930,12 +932,13 @@ int main()
     //testMesh2D();
     //testMesh2DLoadAndWrite();
     //testMesh3D();
-    //test3DMeshDeformedPrisms();
+    test3DMeshDeformedPrisms();
     //testMeshRefine();
     //testMeshDataContainer();
     //UnstructuredMesh<5, size_t, double, 6,5,4> m;
     //m.ComputeElementMeasures();
     //test3DMeshLoad();
 
-    testFPMA_poly();
+    //testFPMA_poly();
+
 }

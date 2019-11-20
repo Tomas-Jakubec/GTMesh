@@ -89,7 +89,7 @@ class VTKMeshDataReader {
     }
 private:
 
-    template<typename T,unsigned int Index = 0, typename VOID = void>
+    template<typename T,unsigned int Index = 0, typename Void = void>
     struct readCellData{};
 
     template<typename T,unsigned int Index, typename... Types>
