@@ -49,7 +49,7 @@ struct Temp {
     double data;
     double fun(double d [[maybe_unused]]){return data;}
 };
-
+#define STR(var) #var
 void testDebug() {
     double r = 42.15;
     int i = 15;
@@ -80,9 +80,8 @@ void testDebug() {
     DBGVAR(IsIndexable<decltype(vert)>::value);
 
     Subelement<size_t> s({1});
-    DBGVAR(s);
-    //auto v = {1,2,3};
-    //DBGVAR(v);
+    auto v = {1,2,3};
+    DBGVAR(s, v);
 
     HTMLDBGVAR(r, i, c, list, vec, b, m);
 
