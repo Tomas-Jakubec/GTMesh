@@ -6,17 +6,17 @@
 #include "../Traits/Traits.h"
 #include "../Traits/CustomTypeTraits.h"
 
-namespace VariableExport {
+struct VariableExport {
 
 
-    void exportVariable(std::ostream& ost, ...)
+    static void exportVariable(std::ostream& ost, ...)
     {
         ost << "\"variable is not exportable\"" << std::endl;
     }
 
 
     template<typename T>
-    auto exportVariable(std::ostream& ost, const T& b)
+    static auto exportVariable(std::ostream& ost, const T& b)
       -> typename std::enable_if<
              IsExportable<T>::value &&
             !std::is_same<T, bool>::value &&
@@ -30,31 +30,31 @@ namespace VariableExport {
 
 
 
-    void exportVariable(std::ostream& ost, const bool& b)
+    static void exportVariable(std::ostream& ost, const bool& b)
     {
         ost << (b == true ? "true" : "false");
     }
 
-    void exportVariable(std::ostream& ost, const std::string& str)
+    static void exportVariable(std::ostream& ost, const std::string& str)
     {
         ost << '"' << str << '"';
     }
 
 
-    void exportVariable(std::ostream& ost, const char* str)
+    static void exportVariable(std::ostream& ost, const char* str)
     {
         ost << '"' << str << '"';
     }
 
 
-    void exportVariable(std::ostream& ost, const char str)
+    static void exportVariable(std::ostream& ost, const char str)
     {
         ost << '"' << str << '"';
     }
 
 
     template<typename T1, typename T2>
-    auto exportVariable(std::ostream& ost, const std::pair<T1,T2>& b) -> void
+    static auto exportVariable(std::ostream& ost, const std::pair<T1,T2>& b) -> void
     {
         ost << "{ ";
         exportVariable(ost, b.first);
@@ -64,7 +64,7 @@ namespace VariableExport {
     }
 
     template<typename T>
-    auto exportVariable(std::ostream& ost, const T &list)
+    static auto exportVariable(std::ostream& ost, const T &list)
       -> typename std::enable_if<
               IsIterable<T>::value &&
              !IsExportable<T>::value &&
@@ -86,7 +86,7 @@ namespace VariableExport {
 
 
     template<typename T>
-    auto exportVariable(std::ostream& ost, const T &list)
+    static auto exportVariable(std::ostream& ost, const T &list)
       -> typename std::enable_if<
               IsIndexable<T>::value &&
              !IsIterable<T>::value &&
@@ -107,7 +107,7 @@ namespace VariableExport {
 
 
     template<typename T>
-    auto exportVariable(std::ostream& ost, const T &list)
+    static auto exportVariable(std::ostream& ost, const T &list)
       -> typename std::enable_if<
               IsTNLIndexable<T>::value &&
              !IsIndexable<T>::value &&
@@ -130,9 +130,9 @@ namespace VariableExport {
 
 
     template<typename T>
-    void exportVariable(std::ostream& ost, const std::initializer_list<T> &list)
+    static void exportVariable(std::ostream& ost, const std::initializer_list<T> &list)
     {
-        auto it = list.begin();
+        static auto it = list.begin();
         ost << "[ ";
         while (it != list.end()){
             exportVariable(ost, *it);
@@ -145,7 +145,7 @@ namespace VariableExport {
     }
 
 
-    template<typename T,unsigned int Index = 0, typename VOID = void>
+    template<typename T,unsigned int Index = 0, typename Void = void>
     struct PrintClass{
         static void print(std::ostream& ost, const T &traitedClass){
             ost << '"' << Traits<T>::ttype::template getName<Index>() << "\" : ";
@@ -185,7 +185,7 @@ namespace VariableExport {
 
 
     template<typename T>
-    auto exportVariable(std::ostream& ost, const T &traitedClass)
+    static auto exportVariable(std::ostream& ost, const T &traitedClass)
       -> typename std::enable_if<
              HasDefaultTraits<T>::value
          >::type
@@ -196,6 +196,6 @@ namespace VariableExport {
     }
 
 
-}
+};
 
 #endif // VARIABLEEXPORT_H

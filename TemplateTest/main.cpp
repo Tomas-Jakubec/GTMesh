@@ -1,7 +1,7 @@
-#include "../debug/Debug.h"
-#include "../Unstructured_mesh/UnstructuredMesh/UnstructuredMesh.h"
-#include "../Unstructured_mesh/UnstructuredMesh/MeshDataContainer/MemberApproach.h"
-#include "../Unstructured_mesh/UnstructuredMesh/MeshDataContainer/Traits.h"
+#include "../src/Debug/Debug.h"
+#include "../src/UnstructuredMesh/UnstructuredMesh.h"
+#include "../src/Traits/MemberApproach/MemberApproach.h"
+#include "../src/Traits/Traits.h"
 #include <functional>
 #include <type_traits>
 #include <iostream>
@@ -69,18 +69,20 @@ void testDebug() {
     Vertex<7, double> vert;
     DBGVAR(vert, vert.getCoordinates());
 
-    DBGVAR((Detail::is_exportable<decltype(vec)>::value));
+    DBGVAR((IsExportable<decltype(vec)>::value));
 
-    DBGVAR((Detail::is_exportable<double>::value));
+    DBGVAR((IsExportable<double>::value));
 
-    DBGVAR(Detail::is_indexable<double>::value);
+    DBGVAR(IsIndexable<double>::value);
 
-    DBGVAR(Detail::is_indexable<decltype(vec)>::value);
+    DBGVAR(IsIndexable<decltype(vec)>::value);
 
-    DBGVAR(Detail::is_indexable<decltype(vert)>::value);
+    DBGVAR(IsIndexable<decltype(vert)>::value);
 
     Subelement<size_t> s({1});
     DBGVAR(s);
+    //auto v = {1,2,3};
+    //DBGVAR(v);
 
     HTMLDBGVAR(r, i, c, list, vec, b, m);
 
@@ -92,7 +94,7 @@ void testDebug() {
 //The concept implementation
 template<typename T>
 class NeedIterator{
-    static_assert (Detail::is_iterable<T>::value, "The type must be iterable");
+    static_assert (IsIterable<T>::value, "The type must be iterable");
 public:
     NeedIterator(const T&){}
 };
@@ -301,7 +303,7 @@ void testMemberRef(){
     Traits<tempData>::ttype::getReference<1>()->setValue(&d, {42.15,84.30,42.15});
 
     DBGVAR(Traits<tempData>::ttype::getName<0>(),(Traits<tempData>::ttype::getReference<0>()->getValue(&d)), Traits<tempData>::ttype::getName<1>(),(Traits<tempData, double, Vector<3,double>>::getReference<1>()->getValue(&d)), d.velocity);
-    DBGVAR(Traits<tempData>::is_specialized,Detail::has_default_traits<tempData>::value, d);
+    DBGVAR(Traits<tempData>::is_specialized,HasDefaultTraits<tempData>::value, d);
 
     ExportTest e;
     DBGVAR(e, ClassC<>());
@@ -312,7 +314,7 @@ void testMemberRef(){
 
 
 
-#include "../Unstructured_mesh/UnstructuredMesh/MeshDataContainer/Singleton.h"
+#include "../src/Singleton/Singleton.h"
 /*
 Test of order of constructors
 */
@@ -548,11 +550,11 @@ void testFunction() {
 
 int main()
 {
-
+    testDebug();
     //testOperator();
-    //testMemberRef();
+    testMemberRef();
     //testConstrucorOrder();
-    testFunction();
+    //testFunction();
     return 0;
 }
 

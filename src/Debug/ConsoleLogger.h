@@ -47,7 +47,7 @@ public:
 #ifdef CONSOLE_COLOURED_OUTPUT
 #ifdef _WIN32
         HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-        std::cerr << "In file " << cppFile << " at line " << line << " variable " << name << " has value of ";
+        std::cerr << "In file " << cppFile << " at line " << line << " variable ";
         SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
         std::cerr << name;
         SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
@@ -75,7 +75,7 @@ public:
 #ifdef CONSOLE_COLOURED_OUTPUT
 #ifdef _WIN32
         HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-        std::cerr << "In file " << cppFile << " at line " << line << " variable " << name << " has value of ";
+        std::cerr << "In file " << cppFile << " at line " << line << " variable ";
         SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
         std::cerr << name;
         SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
