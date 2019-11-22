@@ -172,15 +172,36 @@ public:
     }
 
 private:
+
+
     template <unsigned int Index, bool OK = false>
     struct MeshDataIterator{
+
         template<typename T,typename IndexType, typename Real, unsigned int ...Dimensions>
-        static void writeToStream(std::ostream& ost, MeshDataContainer<T, Dimensions...>& data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer) {
+        static auto writeToStream(std::ostream& ost,
+                                  MeshDataContainer<T, Dimensions...>& data,
+                                  VTKMeshWriter<MeshDimension,IndexType, Real>& writer) -> typename
+        std::enable_if<
+            (!HasDefaultTraits<typename MeshDataContainer<T, Dimensions...>::template DataContainerType<Index>::type>::value) ||
+            (!(MeshDataContainer<T, Dimensions...>::template DataContainerType<Index>::getMappedDimension() == MeshDimension))
+        >::type
+        {
             using type = typename MeshDataContainer<T, Dimensions...>::template DataContainerType<Index>::type;
 
-            if constexpr (HasDefaultTraits<type>::value && MeshDataContainer<T, Dimensions...>::template DataContainerType<Index>::getMappedDimension() == MeshDimension){
-                VTKMeshDataWriter<MeshDimension>::writeCellData<typename Traits<type>::ttype>::write(ost, data.template getDataByPos<Index>(), writer);
-            }
+
+            MeshDataIterator<Index - 1, OK | HasDefaultTraits<type>::value>:: writeToStream(ost, data, writer);
+        }
+
+        template<typename T,typename IndexType, typename Real, unsigned int ...Dimensions>
+        static auto writeToStream(std::ostream& ost, MeshDataContainer<T, Dimensions...>& data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer)
+            ->typename std::enable_if<HasDefaultTraits<typename MeshDataContainer<T, Dimensions...>::template DataContainerType<Index>::type>::value &&
+                              MeshDataContainer<T, Dimensions...>::template DataContainerType<Index>::getMappedDimension() == MeshDimension
+                             >::type
+        {
+            using type = typename MeshDataContainer<T, Dimensions...>::template DataContainerType<Index>::type;
+
+            VTKMeshDataWriter<MeshDimension>::writeCellData<typename Traits<type>::ttype>::write(ost, data.template getDataByPos<Index>(), writer);
+
             MeshDataIterator<Index - 1, OK | HasDefaultTraits<type>::value>:: writeToStream(ost, data, writer);
         }
     };
@@ -188,12 +209,31 @@ private:
     template <bool OK>
     struct MeshDataIterator <0, OK> {
         template<typename T,typename IndexType, typename Real, unsigned int ...Dimensions>
-        static void writeToStream(std::ostream& ost, MeshDataContainer<T, Dimensions...>& data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer) {
+        static auto writeToStream(std::ostream& ost [[maybe_unused]],
+                                  MeshDataContainer<T, Dimensions...>& data [[maybe_unused]],
+                                  VTKMeshWriter<MeshDimension,IndexType, Real>& writer [[maybe_unused]]) -> typename
+            std::enable_if<
+                (!HasDefaultTraits<typename MeshDataContainer<T, Dimensions...>::template DataContainerType<0>::type>::value) ||
+                (!(MeshDataContainer<T, Dimensions...>::template DataContainerType<0>::getMappedDimension() == MeshDimension))
+            >::type
+        {
+            static_assert (OK , "The mesh data container must have at least one DataContainer mapped to cells with traits for example using macro MAKE_ATTRIBUTE_TRAIT see header Traits.h");
+
+        }
+
+        template<typename T,typename IndexType, typename Real, unsigned int ...Dimensions>
+        static auto writeToStream(std::ostream& ost,
+                                  MeshDataContainer<T, Dimensions...>& data,
+                                  VTKMeshWriter<MeshDimension,IndexType, Real>& writer) -> typename
+            std::enable_if<
+                HasDefaultTraits<typename MeshDataContainer<T, Dimensions...>::template DataContainerType<0>::type>::value &&
+                MeshDataContainer<T, Dimensions...>::template DataContainerType<0>::getMappedDimension() == MeshDimension
+            >::type
+        {
             using type = typename MeshDataContainer<T, Dimensions...>::template DataContainerType<0>::type;
-            static_assert (OK | HasDefaultTraits<type>::value, "The mesh data container must have at least one DataContainer mapped to cells with traits for example using macro MAKE_ATTRIBUTE_TRAIT see header Traits.h");
-            if constexpr (HasDefaultTraits<type>::value && MeshDataContainer<T, Dimensions...>::template DataContainerType<0>::getMappedDimension() == MeshDimension){
-                VTKMeshDataWriter<MeshDimension>::writeCellData<typename Traits<type>::ttype>::write(ost, data.template getDataByPos<0>(), writer);
-            }
+
+            VTKMeshDataWriter<MeshDimension>::writeCellData<typename Traits<type>::ttype>::write(ost, data.template getDataByPos<0>(), writer);
+
         }
     };
 
