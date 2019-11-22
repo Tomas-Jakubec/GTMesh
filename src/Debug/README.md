@@ -4,7 +4,7 @@ simplifies the output from the program.
 The macros can export almost any variable type.
 
 Example:
-```
+```c++
 #include "[[path]]/src/Debug/Debug.h"
 #include <vector>
 #include <map>
