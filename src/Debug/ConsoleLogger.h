@@ -63,7 +63,7 @@ public:
 
 #endif
 #else
-        std::cerr << "In file " << cppFile << " at line " << line << " variable " << name << " has value of ";
+        std::cerr << "== " << cppFile << " [[ " << line << " ]] <<< " << name << " >>> ";
         VariableExport::exportVariable(std::cerr, value);
         std::cerr << "\n";
 #endif

@@ -22,6 +22,7 @@ struct VariableExport {
             !std::is_same<T, bool>::value &&
             !std::is_same<T, std::string>::value &&
             !std::is_same<T, const char*>::value &&
+            !std::is_same<T, char*>::value &&
             !std::is_same<T, const char>::value
          >::type
     {
@@ -157,7 +158,7 @@ struct VariableExport {
     };
 
     template<typename T,unsigned int Index, typename... Types>
-    struct PrintClass <Traits<T, Types...>, Index, std::enable_if_t<Index < Traits<T, Types...>::size() - 1>>{
+    struct PrintClass <Traits<T, Types...>, Index, typename std::enable_if<Index < Traits<T, Types...>::size() - 1>::type>{
         static void print(std::ostream& ost, const T &traitedClass){
             ost << '"' << Traits<T, Types...>::template getName<Index>() << "\" : ";
             VariableExport::exportVariable(ost, Traits<T, Types...>::template getReference<Index>()->getValue(traitedClass));
@@ -168,7 +169,7 @@ struct VariableExport {
     };
 
     template<typename T,unsigned int Index, typename ... Types>
-    struct PrintClass <Traits<T, Types...>, Index, std::enable_if_t<Index == Traits<T, Types...>::size() - 1>>{
+    struct PrintClass <Traits<T, Types...>, Index, typename std::enable_if<Index == Traits<T, Types...>::size() - 1>::type>{
         static void print(std::ostream& ost, const T &traitedClass){
             ost << '"' << Traits<T, Types...>::template getName<Traits<T, Types...>::size() - 1>() << "\" : ";
             VariableExport::exportVariable(ost, Traits<T, Types...>::template getReference<Traits<T, Types...>::size() - 1>()->getValue(traitedClass));
@@ -176,7 +177,7 @@ struct VariableExport {
     };
 
     template<typename T, unsigned int Index>
-    struct PrintClass<T, Index, std::enable_if_t<Index == Traits<T>::ttype::size() - 1>>{
+    struct PrintClass<T, Index, typename std::enable_if<Index == Traits<T>::ttype::size() - 1>::type>{
         static void print(std::ostream& ost, const T &traitedClass){
             ost << '"' << Traits<T>::ttype::template getName<Traits<T>::ttype::size() - 1>() << "\" : ";
             VariableExport::exportVariable(ost, Traits<T>::ttype::template getReference<Traits<T>::ttype::size() - 1>()->getValue(traitedClass));

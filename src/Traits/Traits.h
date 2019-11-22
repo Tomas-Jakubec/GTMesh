@@ -9,7 +9,7 @@ template<typename Class, typename...Types>
 class Traits {
 public:
     template <unsigned int Index>
-    using type = std::tuple_element_t<Index,std::tuple<Types...>>;
+    using type = typename std::tuple_element<Index,std::tuple<Types...>>::type;
 private:
     template<unsigned int Index = sizeof...(Types) - 1, typename Dummy = void>
     struct MemRefs: public MemRefs<Index - 1> {
