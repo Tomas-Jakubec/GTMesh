@@ -4,6 +4,7 @@
 #include "../MeshElements/MeshElement.h"
 #include "../MeshDataContainer/MeshDataContainer.h"
 #include "../../NumericStaticArray/Vector.h"
+#include "../../Debug/Debug.h"
 #include <valarray>
 #include <functional>
 #include <set>
@@ -52,7 +53,6 @@ struct _ComputeCenters{
             elemCenters.at(i) /= subElemCnt;
         }
 
-        DBGMSG(dim);
         _ComputeCenters<dim + 1, Dimension>::compute(centers, mesh);
     }
 };
@@ -79,7 +79,6 @@ struct _ComputeCenters<Dimension, Dimension>{
 
             elemCenters.at(i) /= subElemCnt;
         }
-        DBGMSG(Dimension);
     }
 
 };
@@ -99,7 +98,6 @@ struct _ComputeCenters<1, Dimension>{
                                 mesh.template getElements<0>().at(edge.getVertexBIndex())) * 0.5;
         }
 
-        DBGMSG("1");
         _ComputeCenters<2, Dimension>::compute(centers, mesh);
     }
 };

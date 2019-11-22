@@ -1,6 +1,6 @@
 #include <iostream>
 //#define UNDEBUG
-#define CONSOLE_COLOURED_OUTPUT
+//#define CONSOLE_COLOURED_OUTPUT
 #include "../src/Debug/Debug.h"
 #include "../src/UnstructuredMesh/UnstructuredMesh.h"
 #include "../src/UnstructuredMesh/MeshFunctions/MeshFunctions.h"
@@ -14,7 +14,6 @@
 #include "../src/Traits/MemberApproach/MemberApproach.h"
 #include <fstream>
 #include <list>
-#include <windows.h>
 using namespace std;
 
 
@@ -931,7 +930,7 @@ int main()
 {
     //testMesh2D();
     //testMesh2DLoadAndWrite();
-    //testMesh3D();
+    testMesh3D();
     test3DMeshDeformedPrisms();
     //testMeshRefine();
     //testMeshDataContainer();

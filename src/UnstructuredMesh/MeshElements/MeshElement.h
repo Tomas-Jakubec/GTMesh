@@ -267,63 +267,60 @@ public:
 template <unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
 struct MeshElements{
 private:
-    template <unsigned int _Dimension,unsigned int ElemDim, typename _IndexType, typename _Real, unsigned int ..._Reserve>
-    struct _MeshElements : public _MeshElements<_Dimension, ElemDim - 1, _IndexType, _Real, _Reserve...>{
-        std::vector<MeshElement<_Dimension, ElemDim, _IndexType, _Real, std::get<_Dimension - ElemDim - 1>(std::array<unsigned int, sizeof... (Reserve)>{Reserve...})>> elements;
-    };
 
-    template <unsigned int _Dimension, typename _IndexType, typename _Real, unsigned int ..._Reserve>
-    struct _MeshElements<_Dimension, 0, _IndexType, _Real, _Reserve...>{
-        std::vector<MeshElement<Dimension, 0, IndexType, Real, 0>> elements;
-    };
+    template<unsigned int dim, typename Void = void>
+    struct _Reserve{
 
-    template <unsigned int _Dimension, typename _IndexType, typename _Real, unsigned int ..._Reserve>
-    struct _MeshElements<_Dimension, 1, _IndexType, _Real, _Reserve...> : public _MeshElements<_Dimension, 0, _IndexType, _Real, _Reserve...>{
-        std::vector<MeshElement<Dimension, 1, IndexType, Real, 0>> elements;
-    };
+        static unsigned int constexpr value = std::get<Dimension - dim - 1>(std::array<unsigned int, sizeof... (Reserve)>{Reserve...});
 
-
-    template <unsigned int _Dimension,typename _IndexType, typename _Real, unsigned int ..._Reserve>
-    struct _MeshElements<_Dimension, _Dimension, _IndexType, _Real, _Reserve...> : public _MeshElements<_Dimension, _Dimension - 1, _IndexType, _Real, _Reserve...>{
-        std::vector<MeshElement<_Dimension, _Dimension, _IndexType, _Real, 0>> elements;
     };
 
     template<unsigned int dim>
-    static unsigned int constexpr reserve(){
-        if constexpr (dim == Dimension || dim == 1 || dim == 0){
-            return 0;
-        } else {
-            return std::get<(dim == Dimension || dim == 1 || dim == 0) ? 0 : Dimension - dim - 1>(std::array<unsigned int, sizeof... (Reserve)>{Reserve...});
-        }
-    }
+    struct _Reserve<dim, typename std::enable_if<dim == Dimension || dim == 1 || dim == 0 || (Dimension - dim - 1 > sizeof...(Reserve))>::type>{
 
+        static unsigned int constexpr value = 0;
+    };
 
-
-
-    _MeshElements<Dimension, Dimension, IndexType, Real, Reserve...> Refs;
-    std::vector<MeshElement<Dimension, Dimension, IndexType, Real, 0>> BoundaryCells;
 public:
 
     using Vertex = MeshElement<Dimension, 0, IndexType, Real, 0>;
     using Edge = MeshElement<Dimension, 1, IndexType, Real, 0>;
-    using Face = MeshElement<Dimension, Dimension - 1, IndexType, Real, reserve<Dimension - 1>()>;
+    using Face = MeshElement<Dimension, Dimension - 1, IndexType, Real, _Reserve<Dimension - 1>::value>;
     using Cell = MeshElement<Dimension, Dimension, IndexType, Real, 0>;
 
     template<unsigned int ElementDimension>
-    using ElementType = MeshElement<Dimension, ElementDimension, IndexType, Real, reserve<ElementDimension>()>;
+    using ElementType = MeshElement<Dimension, ElementDimension, IndexType, Real, _Reserve<ElementDimension>::value>;
+
+private:
+    template <unsigned int ElemDim = Dimension, typename Dummy = void>
+    struct _MeshElements : public _MeshElements<ElemDim - 1, Dummy>{
+        std::vector<typename MeshElements<Dimension, IndexType, Real, Reserve...>:: template ElementType<ElemDim>> elements;
+    };
+
+    template <typename Dummy>
+    struct _MeshElements<0, Dummy>{
+        std::vector<typename MeshElements<Dimension, IndexType, Real, Reserve...>:: template ElementType<0>> elements;
+    };
 
 
+
+
+private:
+    _MeshElements<Dimension> Refs;
+    std::vector<Cell> BoundaryCells;
+
+public:
     template<unsigned int dim>
     std::vector<ElementType<dim>>& getElements(){
         static_assert (Dimension >= dim, "In GetElements template parameter dim must be less or equal to Dimension.");
-        return Refs._MeshElements<Dimension, dim, IndexType, Real, Reserve...>::elements;
+        return Refs._MeshElements<dim>::elements;
     }
 
 
     template<unsigned int dim>
     const std::vector<ElementType<dim>>&  getElements() const {
         static_assert (Dimension >= dim, "In GetElements template parameter dim must be less or equal to Dimension.");
-        return Refs._MeshElements<Dimension, dim, IndexType, Real, Reserve...>::elements;
+        return Refs._MeshElements<dim>::elements;
     }
 
     std::vector<Vertex>& getVertices(){
@@ -447,7 +444,7 @@ public:
         IndexType elementIndex;
         MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh;
     public:
-        MeshElementWrap(MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh, MeshElement<Dimension, ElementDim, IndexType, Real, reserve<ElementDim>()>& meshElement){
+        MeshElementWrap(MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh, MeshElement<Dimension, ElementDim, IndexType, Real, _Reserve<Dimension - 1>::value>& meshElement){
             elementIndex = meshElement.getIndex();
             this->parentMesh = parentMesh;
         }
@@ -461,7 +458,7 @@ public:
             return elementIndex;
         }
 
-        SubelementContainer<IndexType, reserve<ElementDim>()>& getSubelements(){
+        SubelementContainer<IndexType, _Reserve<Dimension - 1>::value>& getSubelements(){
             return parentMesh->template getElements<ElementDim>()[elementIndex].getSubelements();
         }
     };
