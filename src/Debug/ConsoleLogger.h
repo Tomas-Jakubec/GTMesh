@@ -14,7 +14,20 @@ class ConsoleLogger {
 
 public:
 
+    template<typename MSGTYPE, typename... MSGTYPES>
+    static void writeMessage(const char* prefix, int line, const char* sourceFile, const MSGTYPE& message, const MSGTYPES&... rest) {
+        writeMessage(prefix, line, sourceFile, message);
+        writeMessage(prefix, line, sourceFile, rest...);
+    }
 
+
+    template<typename MSGTYPE>
+    static void writeMessage(const char* prefix, int line, const char* sourceFile, const MSGTYPE& message) {
+
+        std::cerr << prefix << " " << sourceFile << " << " << line << " >> ==> ";
+        VariableExport::exportVariable(std::cerr, message);
+        std::cerr << " <==\n";
+    }
 
     template<typename VAR_NAME, typename VAR, typename ... REST>
     static void writeVar(VAR_NAME name, VAR value, REST ... rest){
@@ -39,59 +52,59 @@ public:
         writeVar(line, cppFile,  rest...);
     }
 
-    template<typename VAR_NAME, typename VAR>
-    static void writeVar(int line, const char* cppFile, VAR_NAME name,const VAR& value){
+    template<typename VAR>
+    static void writeVar(int line, const char* cppFile, const char* name,const VAR& value){
 
 
 
 #ifdef CONSOLE_COLOURED_OUTPUT
 #ifdef _WIN32
         HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-        std::cerr << "In file " << cppFile << " at line " << line << " variable ";
+        std::cerr << "== " << cppFile << " << " << line << " >> [[ ";
         SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
         std::cerr << name;
         SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
-        std::cerr << " has value of ";
+        std::cerr << " ]] ==> ";
         SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN);
         VariableExport::exportVariable(std::cerr, value);
         SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
         std::cerr << "\n";
 #else
-        std::cerr << "In file " << cppFile << " at line " << line << " variable \033[0;33m" << name << "\033[0m has value of \033[0;32m";
+        std::cerr << "== " << cppFile << " << " << line << " >> [[ \033[0;33m" << name << "\033[0m ]] ==> \033[0;32m";
         VariableExport::exportVariable(std::cerr, value);
         std::cerr << "\033[0m\n";
 
 #endif
 #else
-        std::cerr << "== " << cppFile << " [[ " << line << " ]] <<< " << name << " >>> ";
+        std::cerr << "== " << cppFile << " << " << line << " >> [[ " << name << " ]] ==> ";
         VariableExport::exportVariable(std::cerr, value);
         std::cerr << "\n";
 #endif
     }
 
-    template<typename VAR_NAME, typename VAR>
-    static void writeVar(int line, const char* cppFile, VAR_NAME name,const std::initializer_list<VAR>& value){
+    template<typename VAR>
+    static void writeVar(int line, const char* cppFile, const char* name,const std::initializer_list<VAR>& value){
 
 #ifdef CONSOLE_COLOURED_OUTPUT
 #ifdef _WIN32
         HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-        std::cerr << "In file " << cppFile << " at line " << line << " variable ";
+        std::cerr << "== " << cppFile << " << " << line << " >> [[ ";
         SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
         std::cerr << name;
         SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
-        std::cerr << " has value of ";
+        std::cerr << " ]] ==> ";
         SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN);
         VariableExport::exportVariable(std::cerr, value);
         SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
         std::cerr << "\n";
 #else
-        std::cerr << "In file " << cppFile << " at line " << line << " variable \033[0;33m" << name << "\033[0m has value of \033[0;32m";
+        std::cerr << "== " << cppFile << " << " << line << " >> [[ \033[0;33m" << name << "\033[0m ]] ==> \033[0;32m";
         VariableExport::exportVariable(std::cerr, value);
         std::cerr << "\033[0m\n";
 
 #endif
 #else
-        std::cerr << "In file " << cppFile << " at line " << line << " variable " << name << " has value of ";
+        std::cerr << "== " << cppFile << " << " << line << " >> [[ " << name << " ]] ==> ";
         VariableExport::exportVariable(std::cerr, value);
         std::cerr << "\n";
 #endif

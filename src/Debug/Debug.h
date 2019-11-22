@@ -28,67 +28,31 @@ namespace dbg {
 
 #define STRVAR(var) #var, var
 
-#define DBG(comment)            \
-std::cerr << "DBG in file "     \
-<< __FILE__ << " at line " <<   \
-__LINE__ << " says " << comment \
-<< std::endl
-
-#ifdef __linux__
-#define SINGLE_DBGVAR(var)       \
-std::cerr << "DBGVAR in file "   \
-<< __FILE__ << " at line " <<    \
-__LINE__ << " variable \033[0;33m" << #var \
-<< "\033[0m has value of \033[0;31m" << var <<    \
-"\033[0m" << std::endl
-#elif _WIN32
-#define SINGLE_DBGVAR(var)       \
-std::cerr << "DBGVAR in file "   \
-<< __FILE__ << " at line " <<    \
-__LINE__ << " variable " << #var \
-<< " has value of " << var << std::endl
-#endif
-
-
-#define SINGLE_DBGVAR_SC(var) SINGLE_DBGVAR(var);
 
 #define DBGVAR(...) ConsoleLogger::writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
 #define DBGVARCOND(condition, ...) if(condition) DBGVAR(__VA_ARGS__)
 
-#ifdef __linux__
-#define DBGMSG(message)       \
-std::cerr << "DBGMSG contains \
-message [[\033[0;32m" << message << "\033[0m]]"\
-<< std::endl
-#elif _WIN32
-#define DBGMSG(message)       \
-std::cerr << "DBGMSG contains \
-message [[" << message << "]]"\
-<< std::endl
-#endif
+#define DBGMSG(...) ConsoleLogger::writeMessage("++", __LINE__, __FILE__, __VA_ARGS__)
 
 #define DBGTRY(code)                        \
 try{code;}                                   \
 catch(const std::exception& e){              \
-DBG("something went wrong in try block: " << e.what());   \
+ConsoleLogger::writeMessage("!!", __LINE__, __FILE__, std::string("something went wrong in try block: ") + e.what());   \
 abort();}
 
 // Macros using html debug output
-#define HTMLDBGVAR(...) dbg::DBGStatics::HDBGLog.writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
-#define HTMLDBGCOND(condition, ...) if(condition) HTMLDBGVAR(__VA_ARGS__)
+#define DBGVAR_HTML(...) dbg::DBGStatics::HDBGLog.writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
+#define DBGVARCOND_HTML(condition, ...) if(condition) DBGVAR_HTML(__VA_ARGS__)
 
 // Macros using csv debug output
-#define CSVDBGVAR(...) dbg::DBGStatics::CSVDBGLog.writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
-#define CSVDBGCOND(condition, ...) if(condition) HTMLDBGVAR(__VA_ARGS__)
+#define DBGVAR_CSV(...) dbg::DBGStatics::CSVDBGLog.writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
+#define DBGVARCOND_CSV(condition, ...) if(condition) DBGVAR_HTML(__VA_ARGS__)
 
 
-#define DBGCHECK DBG("check")
+#define DBGCHECK ConsoleLogger::writeMessage("--", __LINE__, __FILE__, "check line")
+
 
 #else
-
-#define SINGLE_DBGVAR_SC(var)
-
-#define SINGLE_DBGVAR(var)
 
 #define DBG(comment)
 
@@ -96,7 +60,7 @@ abort();}
 
 #define DBGVAR(...)
 
-#define DBGMSG(msg)
+#define DBGMSG(...)
 
 #define DBGCHECK
 

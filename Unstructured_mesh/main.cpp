@@ -1,6 +1,6 @@
 #include <iostream>
 //#define UNDEBUG
-//#define CONSOLE_COLOURED_OUTPUT
+#define CONSOLE_COLOURED_OUTPUT
 #include "../src/Debug/Debug.h"
 #include "../src/UnstructuredMesh/UnstructuredMesh.h"
 #include "../src/UnstructuredMesh/MeshFunctions/MeshFunctions.h"
@@ -900,7 +900,7 @@ void testFPMA_poly(){
     ifstream file("Spark_mesh.fpma");
     reader.loadFromStream(file, mesh);
 
-    CSVDBGVAR(mesh.getCells().size(), mesh.getVertices().size());
+    DBGVAR_CSV(mesh.getCells().size(), mesh.getVertices().size());
 
     mesh.initializeCenters();
     VTKMeshWriter<3, size_t, double> writer;
