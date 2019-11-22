@@ -37,3 +37,6 @@ HEADERS += \
     ../src/UnstructuredMesh/UnstructuredMesh.h \
     ../src/NumericStaticArray/Vector.h \
     ../src/NumericStaticArray/Vertex.h
+
+DISTFILES += \
+    ../src/Debug/README.md
