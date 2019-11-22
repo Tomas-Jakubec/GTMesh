@@ -6,7 +6,8 @@
 
 /**
  * @brief The MemberApproach class
- * Generic abstract class providing the
+ * Generic abstract class providing the approach to
+ * any attribute of a class using getValue and setValue
  */
 template <typename Class, typename ValueType>
 class MemberApproach{
@@ -245,7 +246,7 @@ public:
 
 template <typename Ref>
 struct MemberReferenceType {
-    static_assert (std::is_trivial_v<Ref>, "The Ref must be a type of member reference (MemberType Class::*) or reference getter (MemberType& (Class::*)()) into class \
+    static_assert (std::is_trivial<Ref>::value, "The Ref must be a type of member reference (MemberType Class::*) or reference getter (MemberType& (Class::*)()) into class \
 or a pair of getter and setter (std::pair<MemberType (Class::*)(), void (Class::*)(const MemberType&))");
 };
 

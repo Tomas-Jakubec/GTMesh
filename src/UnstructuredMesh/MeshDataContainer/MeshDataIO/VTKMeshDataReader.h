@@ -139,7 +139,7 @@ public:
                     ist.ignore(500, '\n');
                 }
 
-                dataPositions.insert(std::pair(dataName, ist.tellg()));
+                dataPositions.insert(std::make_pair(dataName, ist.tellg()));
             }
         }
         ist.clear();
