@@ -3,7 +3,7 @@
 
 
 #include "../../NumericStaticArray/Vertex.h"
-#include <vector>
+#include <array>
 
 /**
  * @brief GrammSchmidt
@@ -12,20 +12,20 @@
  * @param vectors [in / out] vector containing the vectors and
  * after the process the vectors are changed.
  */
-template <unsigned int Dimension,typename IndexType, typename Real>
-void GrammSchmidt(std::vector<Vertex<Dimension, Real>>& vectors){
+template <unsigned int NumVec, unsigned int Dimension,typename IndexType, typename Real>
+void GrammSchmidt(std::array<Vertex<Dimension, Real>, NumVec>& vectors){
     /*
      * Vector of inverse suquare of norm
      */
-    std::vector<Real> invSumOfSquares(vectors.size());
+    std::array<Real, NumVec> invSumOfSquares;
     invSumOfSquares.at(0) = 1.0 / vectors.at(0).sumOfSquares();
+    std::array<Real, NumVec> coef;
 
     for (IndexType i = 1; i < vectors.size(); i++) {
         /*
          * Coefitiens of scalar products.
          * The coefitients are computed in advance for better stability
          */
-        std::vector<Real> coef(i);
         for (IndexType j = 0; j < i; j++) {
 
             coef.at(j) = (vectors.at(i)*(vectors.at(j))) * invSumOfSquares.at(j);

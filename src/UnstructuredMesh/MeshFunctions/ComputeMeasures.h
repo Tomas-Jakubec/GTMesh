@@ -4,7 +4,8 @@
 #include "MeshFunctionsDefine.h"
 #include "MeshApply.h"
 #include "../MeshDataContainer/MeshDataContainer.h"
-
+#include "GrammSchmidt.h"
+#include <array>
 
 template <unsigned int dim, unsigned int Dimension, ComputationMethod Method = DEFAULT>
 struct _ComputeMeasures{
@@ -172,8 +173,8 @@ struct _ComputeMeasures<3, 3, TESSELLATED>{
                     Vertex<3,Real>& vertA = mesh.getVertices().at(mesh.getEdges().at(edgeIndex).getVertexAIndex());
                     Vertex<3,Real>& vertB = mesh.getVertices().at(mesh.getEdges().at(edgeIndex).getVertexBIndex());
 
-                    std::vector<Vertex<3,Real>> pyramidVec = {vertA - faceCenter, vertB - faceCenter, cellCenter - faceCenter};
-                    GrammSchmidt<3, IndexType, Real>(pyramidVec);
+                    std::array<Vertex<3,Real>, 3> pyramidVec = {vertA - faceCenter, vertB - faceCenter, cellCenter - faceCenter};
+                    GrammSchmidt<3, 3, IndexType, Real>(pyramidVec);
 
                     measure += pyramidVec.at(0).normEukleid() * pyramidVec.at(1).normEukleid() * pyramidVec.at(2).normEukleid() * (1.0/6.0);
 

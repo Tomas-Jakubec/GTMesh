@@ -5,7 +5,7 @@
 #include "MeshApply.h"
 #include "../MeshDataContainer/MeshDataContainer.h"
 #include "GrammSchmidt.h"
-
+#include <array>
 
 
 
@@ -124,9 +124,9 @@ struct _ComputeCenters<2, 3, ComputationMethod::TESSELLATED> {
             for(auto& sub : element.getSubelements()){
                 IndexType AI = mesh.getEdges().at(sub.index).getVertexAIndex();
                 IndexType BI = mesh.getEdges().at(sub.index).getVertexBIndex();
-                std::vector<Vertex<3, Real>> v = {elemCenters.at(i) - mesh.getVertices().at(AI), elemCenters.at(i) - mesh.getVertices().at(BI)};
+                std::array<Vertex<3, Real>, 2> v = {elemCenters.at(i) - mesh.getVertices().at(AI), elemCenters.at(i) - mesh.getVertices().at(BI)};
 
-                GrammSchmidt<3, IndexType, Real>(v);
+                GrammSchmidt<2, 3, IndexType, Real>(v);
                 Real surf = v.at(0).normEukleid() * 0.5 * v.at(1).normEukleid();
 
                 tempVert += subElemCenters.at(sub.index) * (surf * (2.0 / 3.0));
