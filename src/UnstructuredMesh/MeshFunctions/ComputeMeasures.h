@@ -7,6 +7,11 @@
 #include "GrammSchmidt.h"
 #include <array>
 
+
+
+namespace Detail {
+
+
 template <unsigned int dim, unsigned int Dimension, ComputationMethod Method = DEFAULT>
 struct _ComputeMeasures{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
@@ -188,7 +193,7 @@ struct _ComputeMeasures<3, 3, TESSELLATED>{
     }
 };
 
-
+}
 
 
 
@@ -198,7 +203,7 @@ template <ComputationMethod Method, unsigned int Dimension,typename IndexType, t
 MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, Dimension>> ComputeMeasures(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
     MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, Dimension>> measures(mesh);
 
-    _ComputeMeasures<1, Dimension, Method>::compute(measures, mesh);
+    Detail::_ComputeMeasures<1, Dimension, Method>::compute(measures, mesh);
 
     return measures;
 }

@@ -50,4 +50,5 @@ HEADERS += \
     ../src/NumericStaticArray/Vertex.h
 
 DISTFILES += \
-    ../src/Debug/README.md
+    ../src/Debug/README.md \
+    ../src/UnstructuredMesh/MeshFunctions/README.md
