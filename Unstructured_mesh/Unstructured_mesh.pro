@@ -25,7 +25,18 @@ HEADERS += \
     ../src/UnstructuredMesh/MeshElements/CellConnection.h \
     ../src/UnstructuredMesh/MeshElements/ComputationalySignificantElement.h \
     ../src/UnstructuredMesh/MeshElements/MeshElement.h \
+    ../src/UnstructuredMesh/MeshFunctions/ComputeCenter.h \
+    ../src/UnstructuredMesh/MeshFunctions/ComputeMeasures.h \
+    ../src/UnstructuredMesh/MeshFunctions/ComputeNormals.h \
+    ../src/UnstructuredMesh/MeshFunctions/EdgeOrientation.h \
+    ../src/UnstructuredMesh/MeshFunctions/GrammSchmidt.h \
+    ../src/UnstructuredMesh/MeshFunctions/MeshApply.h \
+    ../src/UnstructuredMesh/MeshFunctions/MeshColouring.h \
+    ../src/UnstructuredMesh/MeshFunctions/MeshConnections.h \
     ../src/UnstructuredMesh/MeshFunctions/MeshFunctions.h \
+    ../src/UnstructuredMesh/MeshFunctions/MeshFunctionsDefine.h \
+    ../src/UnstructuredMesh/MeshFunctions/CellsDistance.h \
+    ../src/UnstructuredMesh/MeshFunctions/MeshNeighborhood.h \
     ../src/UnstructuredMesh/MeshIO/MeshNativeType.h \
     ../src/UnstructuredMesh/MeshIO/MeshReader/FPMAMeshReader.h \
     ../src/UnstructuredMesh/MeshIO/MeshReader/MeshReader.h \

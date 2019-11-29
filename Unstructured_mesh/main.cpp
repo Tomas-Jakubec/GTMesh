@@ -349,7 +349,7 @@ void testMesh2D() {
 
 
 
-    auto centers = ComputeCenters(mesh);
+    auto centers = ComputeCenters<DEFAULT>(mesh);
 
     auto& faceCent = centers.getDataByDim<1>();
     for(auto& center : faceCent) {
@@ -359,7 +359,6 @@ void testMesh2D() {
     for(sit::Cell& cell : mesh.getCells()){
         DBGVAR(centers.getDataByDim<2>().at(cell.getIndex()));
     }
-
 
     DBGMSG("computing measures");
 
@@ -472,21 +471,40 @@ void testMesh3D() {
 
 
     //_ComputeCenters<1,3, 3,2,1>::compute<size_t, double, 6>(centers, mesh3);
-    auto centers = ComputeCenters(mesh3);
+    auto centers = ComputeCenters<DEFAULT>(mesh3);
 
     for(auto& face : mesh3.getFaces()) {
         face.setCenter(centers.template getDataByDim<2>().at(face.getIndex()));
         DBGVAR(face.getCenter());
     }
-    DBGMSG("cellCenter");
+    DBGMSG("cellCenter - default method");
     for(auto& cell : mesh3.getCells()) {
         cell.setCenter(centers.template getDataByDim<3>().at(cell.getIndex()));
         DBGVAR(cell.getCenter());
     }
 
+    DBGMSG("centers - tessellated faces");
+    auto centers1 = ComputeCenters<TESSELLATED>(mesh3);
+
+    for(auto& face : mesh3.getFaces()) {
+        face.setCenter(centers1.template getDataByDim<2>().at(face.getIndex()));
+        DBGVAR(face.getCenter());
+    }
+    DBGMSG("cellCenter");
+    for(auto& cell : mesh3.getCells()) {
+        cell.setCenter(centers1.template getDataByDim<3>().at(cell.getIndex()));
+        DBGVAR(cell.getCenter());
+    }
+
     DBGMSG("measure computation");
 
-    auto measures = ComputeMeasures(mesh3);
+DBGMSG("tessellated cell volume");
+    auto measures1 = ComputeMeasures<TESSELLATED>(mesh3);
+
+    DBGVAR(measures1.getDataByDim<3>());
+
+
+    auto measures = ComputeMeasures<DEFAULT>(mesh3);
     for(double edgeM : measures.getDataByDim<1>()) {
         DBGVAR(edgeM);
     }
@@ -725,7 +743,7 @@ void test3DMeshDeformedPrisms() {
     twoDeformedPrisms(mesh3);
 
     //_ComputeCenters<1,3, 3,2,1>::compute<size_t, double, 6>(centers, mesh3);
-    auto centers = ComputeCenters(mesh3);
+    auto centers = ComputeCenters<DEFAULT>(mesh3);
 
     for(auto& face : mesh3.getFaces()) {
         face.setCenter(centers[face]);
@@ -739,7 +757,7 @@ void test3DMeshDeformedPrisms() {
 
     DBGMSG("measure computation");
 
-    auto measures = ComputeMeasures(mesh3);
+    auto measures = ComputeMeasures<DEFAULT>(mesh3);
     for(double edgeM : measures.getDataByDim<1>()) {
         DBGVAR(edgeM);
     }
@@ -842,7 +860,7 @@ DBGVAR(mesh.getVertices().size(),mesh.getEdges().size(), mesh.getFaces().size(),
     }
 
     mesh.initializeCenters();
-    DBGVAR(mesh.computeElementMeasures().getDataByDim<3>(),ComputeCenters(mesh).getDataByDim<2>(),mesh.computeFaceNormals().getDataByPos<0>());
+    DBGVAR(mesh.computeElementMeasures().getDataByDim<3>(),ComputeCenters<DEFAULT>(mesh).getDataByDim<2>(),mesh.computeFaceNormals().getDataByPos<0>());
 
 
 

@@ -4,14 +4,17 @@
 #include "vector"
 #include <type_traits>
 #include "MeshFunctions/MeshFunctions.h"
+#include "MeshFunctions/ComputeCenter.h"
+#include "MeshFunctions/ComputeMeasures.h"
 
 
 template <unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
 class UnstructuredMesh : public MeshElements<Dimension, IndexType, Real, Reserve...>{
 
 public:
+    template<ComputationMethod Method = ComputationMethod::DEFAULT>
     void initializeCenters(){
-        auto centers = ComputeCenters(*this);
+        auto centers = ComputeCenters<Method>(*this);
 
         for (auto& face : this->getFaces()){
             face.setCenter(centers[face]);
@@ -21,8 +24,9 @@ public:
         }
     }
 
+    template<ComputationMethod Method = ComputationMethod::DEFAULT>
     MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, Dimension>> computeElementMeasures() {
-        return ComputeMeasures(*this);
+        return ComputeMeasures<Method>(*this);
     }
 
     MeshDataContainer<Vector<Dimension, Real>, Dimension-1> computeFaceNormals() {

@@ -276,12 +276,17 @@ private:
     };
 
     template<unsigned int dim>
-    struct _Reserve<dim, typename std::enable_if<dim == Dimension || dim == 1 || dim == 0 || (Dimension - dim - 1 > sizeof...(Reserve))>::type>{
+    struct _Reserve<dim, typename std::enable_if<dim == Dimension || dim == 1 || dim == 0 || (Dimension - dim > sizeof...(Reserve))>::type>{
 
         static unsigned int constexpr value = 0;
     };
 
 public:
+
+    template<unsigned int dim>
+    static unsigned int constexpr reserve() {
+        return _Reserve<dim>::value;
+    }
 
     using Vertex = MeshElement<Dimension, 0, IndexType, Real, 0>;
     using Edge = MeshElement<Dimension, 1, IndexType, Real, 0>;

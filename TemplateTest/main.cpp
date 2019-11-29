@@ -83,9 +83,9 @@ void testDebug() {
     auto v = {1,2,3};
     DBGVAR(s, v);
 
-    HTMLDBGVAR(r, i, c, list, vec, b, m);
+    DBGVAR_HTML(r, i, c, list, vec, b, m);
 
-    HTMLDBGVAR(r+1, i+1, char(c+1), list, vec[0], b, m["prvni"]);
+    DBGVAR_HTML(r+1, i+1, char(c+1), list, vec[0], b, m["prvni"]);
 }
 
 
@@ -547,13 +547,47 @@ void testFunction() {
     applyFunc1([&b1](int i)->double{return b1.data + 42.15 + i;}, 2);
 }
 
+
+
+template <unsigned int dim, unsigned int Dim, CalculationMethod Method = DEFAULT>
+struct calcCent{
+    static void run() {DBGMSG("running default", dim);calcCent<dim + 1, Dim, Method>::run();}
+};
+
+template <unsigned int Dim, CalculationMethod Method>
+struct calcCent<Dim, Dim, Method>{
+    static void run() {DBGMSG("running default", Dim);}
+};
+
+template <unsigned int Dim, CalculationMethod Method>
+struct calcCent<0, Dim, Method>{
+    static void run() {DBGMSG("running default", 0);calcCent<1, Dim, Method>::run();}
+};
+
+template <unsigned int Dim, CalculationMethod Method>
+struct calcCent<1, Dim, Method>{
+    static void run() {DBGMSG("running default", 1);calcCent<2, Dim, Method>::run();}
+};
+
+template <>
+struct calcCent<2, 3, MESH_TESSELLATED>{
+    static void run() {DBGMSG("running MESH_TESSELLATED");calcCent<3, 3, MESH_TESSELLATED>::run();}
+};
+
+
+void testCalcCent() {
+    calcCent<0,3>::run();
+    calcCent<0,3, MESH_TESSELLATED>::run();
+}
+
 int main()
 {
-    testDebug();
+    //testDebug();
     //testOperator();
-    testMemberRef();
+    //testMemberRef();
     //testConstrucorOrder();
     //testFunction();
+    testCalcCent();
     return 0;
 }
 
