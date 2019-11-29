@@ -2,7 +2,7 @@
 #define GRAMMSCHMIDT_H
 
 
-#include "../../NumericStaticArray/Vertex.h"
+#include "Vector.h"
 #include <array>
 
 /**

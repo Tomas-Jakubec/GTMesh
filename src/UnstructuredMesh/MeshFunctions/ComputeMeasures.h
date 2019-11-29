@@ -4,7 +4,7 @@
 #include "MeshFunctionsDefine.h"
 #include "MeshApply.h"
 #include "../MeshDataContainer/MeshDataContainer.h"
-#include "GrammSchmidt.h"
+#include "../../NumericStaticArray/GrammSchmidt.h"
 #include <array>
 
 

@@ -13,6 +13,7 @@ HEADERS += \
     ../src/Debug/Debug.h \
     ../src/Debug/HTMLLogger.h \
     ../src/Debug/VariableExport.h \
+    ../src/NumericStaticArray/GrammSchmidt.h \
     ../src/NumericStaticArray/InlineArrayOperations.h \
     ../src/Traits/CustomTypeTraits.h \
     ../src/Traits/MemberApproach/MemberApproach.h \
@@ -29,7 +30,6 @@ HEADERS += \
     ../src/UnstructuredMesh/MeshFunctions/ComputeMeasures.h \
     ../src/UnstructuredMesh/MeshFunctions/ComputeNormals.h \
     ../src/UnstructuredMesh/MeshFunctions/EdgesOrientation.h \
-    ../src/UnstructuredMesh/MeshFunctions/GrammSchmidt.h \
     ../src/UnstructuredMesh/MeshFunctions/MeshApply.h \
     ../src/UnstructuredMesh/MeshFunctions/MeshColouring.h \
     ../src/UnstructuredMesh/MeshFunctions/MeshConnections.h \
