@@ -179,7 +179,7 @@ struct _ComputeMeasures<3, 3, TESSELLATED>{
                     Vertex<3,Real>& vertB = mesh.getVertices().at(mesh.getEdges().at(edgeIndex).getVertexBIndex());
 
                     std::array<Vertex<3,Real>, 3> pyramidVec = {vertA - faceCenter, vertB - faceCenter, cellCenter - faceCenter};
-                    GrammSchmidt<3, 3, IndexType, Real>(pyramidVec);
+                    grammSchmidt<3, 3, IndexType, Real>(pyramidVec);
 
                     measure += pyramidVec.at(0).normEukleid() * pyramidVec.at(1).normEukleid() * pyramidVec.at(2).normEukleid() * (1.0/6.0);
 

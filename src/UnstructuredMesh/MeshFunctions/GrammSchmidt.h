@@ -13,7 +13,7 @@
  * after the process the vectors are changed.
  */
 template <unsigned int NumVec, unsigned int Dimension,typename IndexType, typename Real>
-void GrammSchmidt(std::array<Vertex<Dimension, Real>, NumVec>& vectors){
+void grammSchmidt(std::array<Vector<Dimension, Real>, NumVec>& vectors){
     /*
      * Vector of inverse suquare of norm
      */

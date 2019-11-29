@@ -16,8 +16,8 @@ struct MeshRun {
                     Func fun){
 
 
-        auto i = mesh.template getElements<CurrentDimension>().at(index);
-        for (auto sube : mesh.template getElement<CurrentDimension>(i.getIndex()).getSubelements())
+        auto currentElement = mesh.template getElements<CurrentDimension>().at(index);
+        for (auto& sube : currentElement.getSubelements())
         MeshRun< CurrentDimension - 1, StartDimension, TargetDimension, MeshDimension, TargetDimension == CurrentDimension - 1, Descend>::run(mesh, origElementIndex, sube.index, fun);
 
 

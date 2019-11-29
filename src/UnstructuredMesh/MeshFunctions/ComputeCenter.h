@@ -126,7 +126,7 @@ struct _ComputeCenters<2, 3, ComputationMethod::TESSELLATED> {
                 IndexType BI = mesh.getEdges().at(sub.index).getVertexBIndex();
                 std::array<Vertex<3, Real>, 2> v = {elemCenters.at(i) - mesh.getVertices().at(AI), elemCenters.at(i) - mesh.getVertices().at(BI)};
 
-                GrammSchmidt<2, 3, IndexType, Real>(v);
+                grammSchmidt<2, 3, IndexType, Real>(v);
                 Real surf = v.at(0).normEukleid() * 0.5 * v.at(1).normEukleid();
 
                 tempVert += subElemCenters.at(sub.index) * (surf * (2.0 / 3.0));

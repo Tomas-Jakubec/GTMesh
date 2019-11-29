@@ -1,5 +1,5 @@
-#ifndef EDGEORIENTATION_H
-#define EDGEORIENTATION_H
+#ifndef EDGESORIENTATION_H
+#define EDGESORIENTATION_H
 #include "../MeshElements/MeshElement.h"
 #include "../MeshDataContainer/MeshDataContainer.h"
 #include "../../NumericStaticArray/Vector.h"
@@ -87,4 +87,4 @@ MeshDataContainer<std::vector<bool>, 2> edgesOrientation(MeshElements<3, IndexTy
 }
 
 
-#endif // EDGEORIENTATION_H
+#endif // EDGESORIENTATION_H

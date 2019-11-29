@@ -28,7 +28,7 @@ HEADERS += \
     ../src/UnstructuredMesh/MeshFunctions/ComputeCenter.h \
     ../src/UnstructuredMesh/MeshFunctions/ComputeMeasures.h \
     ../src/UnstructuredMesh/MeshFunctions/ComputeNormals.h \
-    ../src/UnstructuredMesh/MeshFunctions/EdgeOrientation.h \
+    ../src/UnstructuredMesh/MeshFunctions/EdgesOrientation.h \
     ../src/UnstructuredMesh/MeshFunctions/GrammSchmidt.h \
     ../src/UnstructuredMesh/MeshFunctions/MeshApply.h \
     ../src/UnstructuredMesh/MeshFunctions/MeshColouring.h \
