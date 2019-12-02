@@ -16,7 +16,7 @@ template <unsigned int dim, unsigned int Dimension, ComputationMethod Method = D
 struct _ComputeMeasures{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
     static void compute(MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, Dimension>>&,MeshElements<Dimension, IndexType, Real, Reserve...>&){
-        static_assert (Dimension > 3,"The measure computation of mesh of dimension higher than 3 is not implemented yet.");
+        static_assert (Dimension <= 3,"The measure computation of mesh of dimension higher than 3 is not implemented yet.");
         throw std::runtime_error("The measure computation of mesh of dimension higher than 3 is not implemented yet.");
     }
 };
@@ -179,9 +179,10 @@ struct _ComputeMeasures<3, 3, TESSELLATED>{
                     Vertex<3,Real>& vertB = mesh.getVertices().at(mesh.getEdges().at(edgeIndex).getVertexBIndex());
 
                     std::array<Vertex<3,Real>, 3> pyramidVec = {vertA - faceCenter, vertB - faceCenter, cellCenter - faceCenter};
-                    grammSchmidt<3, 3, IndexType, Real>(pyramidVec);
+                    std::array<Real, 3> norms;
+                    grammSchmidt<3, 3, IndexType, Real>(pyramidVec, norms);
 
-                    measure += pyramidVec.at(0).normEukleid() * pyramidVec.at(1).normEukleid() * pyramidVec.at(2).normEukleid() * (1.0/6.0);
+                    measure += norms.at(0) * norms.at(1) * norms.at(2) * (1.0/6.0);
 
                 });
                 }
@@ -193,7 +194,7 @@ struct _ComputeMeasures<3, 3, TESSELLATED>{
     }
 };
 
-}
+} // namespace Detail
 
 
 

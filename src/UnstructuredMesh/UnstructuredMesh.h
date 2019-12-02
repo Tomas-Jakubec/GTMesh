@@ -29,8 +29,9 @@ public:
         return ComputeMeasures<Method>(*this);
     }
 
+    template<ComputationMethod Method = ComputationMethod::DEFAULT>
     MeshDataContainer<Vector<Dimension, Real>, Dimension-1> computeFaceNormals() {
-        return ::ComputeFaceNormals(*this);
+        return ::ComputeFaceNormals<Method>(*this);
     }
 
 /*

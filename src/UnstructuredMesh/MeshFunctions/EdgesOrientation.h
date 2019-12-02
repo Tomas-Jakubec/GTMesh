@@ -5,6 +5,7 @@
 #include "../../NumericStaticArray/Vector.h"
 #include "../../Debug/Debug.h"
 #include "MeshApply.h"
+#include "ComputeNormals.h"
 #include <valarray>
 #include <set>
 #include <map>
@@ -63,7 +64,7 @@ bool edgeIsLeft(MeshElements<3, IndexType, Real, Reserve...>& mesh, IndexType fa
     typename MeshElements<3, IndexType, Real, Reserve...>::Edge& edge = mesh.getEdges().at(edgeIndex);
     typename MeshElements<3, IndexType, Real, Reserve...>::template ElementType<2>& face = mesh.template getElements<2>().at(faceIndex);
 
-    auto normals = ComputeFaceNormals(mesh);
+    auto normals = ComputeFaceNormals<ComputationMethod::DEFAULT>(mesh);
 
     return edgeIsLeft(mesh, face, edge, normals[face]);
 
@@ -73,7 +74,7 @@ template<typename IndexType, typename Real, unsigned int ...Reserve>
 MeshDataContainer<std::vector<bool>, 2> edgesOrientation(MeshElements<3, IndexType, Real, Reserve...>& mesh) {
 
     MeshDataContainer<std::vector<bool>, 2> orientations(mesh);
-    auto normals = ComputeFaceNormals(mesh);
+    auto normals = ComputeFaceNormals<ComputationMethod::DEFAULT>(mesh);
 
     for (auto& face : mesh.getFaces()) {
         orientations[face].resize(face.getSubelements().getNumberOfSubElements());

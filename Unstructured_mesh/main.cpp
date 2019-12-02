@@ -377,7 +377,7 @@ void testMesh2D() {
 
     DBGMSG("2D normals test");
 
-    auto normals = ComputeFaceNormals(mesh);
+    auto normals = ComputeFaceNormals<DEFAULT>(mesh);
     for(auto& edge : mesh.getEdges()){
         DBGVAR(edge.getIndex(),normals.at(edge));
     }
@@ -522,6 +522,13 @@ DBGMSG("tessellated cell volume");
     auto normals = mesh3.computeFaceNormals();
     for(auto& face : mesh3.getFaces()){
         DBGVAR(face.getIndex(),normals.at(face));
+    }
+
+    DBGMSG("3D normals test");
+
+    auto normalsTess = mesh3.computeFaceNormals<TESSELLATED>();
+    for(auto& face : mesh3.getFaces()){
+        DBGVAR(face.getIndex(),normalsTess.at(face));
     }
 
     DBGMSG("mesh apply test");
