@@ -95,7 +95,7 @@ class FPMAMeshWriter<3, IndexType, Real> : public MeshWriter<3>{
 
 
         faceVert.template getDataByPos<0>().clear();
-        faceVert.alocateData(mesh);
+        faceVert.allocateData(mesh);
 DBGMSG("indexing mesh");
         // write cells of the mesh
         // prepare connections
