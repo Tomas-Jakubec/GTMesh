@@ -35,7 +35,7 @@ public:
         elementIndex = index;
     }
 
-    IndexType getIndex(){
+    IndexType getIndex() const {
         return elementIndex;
     }
 
@@ -65,15 +65,15 @@ class SubelementContainer : public std::array<Subelement<IndexType>, Reserve>{
     unsigned int numberOfElements = 0;
 
 public:
-    unsigned int getNumberOfSubElements(){
+    unsigned int getNumberOfSubElements() const {
         return numberOfElements;
     }
 
-    unsigned int size() {
+    unsigned int size() const {
         return numberOfElements;
     }
 
-    unsigned int reserve() {
+    unsigned int reserve() const {
         return Reserve;
     }
 
@@ -206,11 +206,11 @@ public:
 
 
 
-    IndexType getVertexAIndex(){
+    IndexType getVertexAIndex() const {
         return vertexAIndex;
     }
 
-    IndexType getVertexBIndex(){
+    IndexType getVertexBIndex() const {
         return vertexBIndex;
     }
 
@@ -250,7 +250,7 @@ public:
 
     }
 
-    IndexType getBoundaryElementIndex(){
+    IndexType getBoundaryElementIndex() const {
         return boundaryElementIndex;
     }
 
@@ -348,6 +348,29 @@ public:
     std::vector<Cell>& getBoundaryCells() {
         return BoundaryCells;
     }
+/*
+ * Constant version of getters
+ * */
+    const std::vector<Vertex>& getVertices() const {
+        return getElements<0>();
+    }
+
+
+    const std::vector<Edge>& getEdges() const {
+        return getElements<1>();
+    }
+
+    const std::vector<Face>& getFaces() const {
+        return getElements<Dimension - 1>();
+    }
+
+    const std::vector<Cell>& getCells() const {
+        return getElements<Dimension>();
+    }
+
+    const std::vector<Cell>& getBoundaryCells() const {
+        return BoundaryCells;
+    }
 
 private:
     template<unsigned int Dim, typename Dummy = void>
@@ -384,12 +407,12 @@ public:
 
     void setupBoundaryCells(){
         for (Face& face : getFaces()){
-            if (face.getCellLeftIndex() == INVALID_INDEX(IndexType)){
+            if (face.getCellLeftIndex == INVALID_INDEX(IndexType)){
                 IndexType cellIndex = BoundaryCells.size() | BOUNDARY_INDEX(IndexType);
                 face.setCellLeftIndex(cellIndex);
                 appendBoundaryCell(cellIndex, face.getIndex());
             }
-            if (face.getCellRightIndex() == INVALID_INDEX(IndexType)){
+            if (face.getCellRightIndex == INVALID_INDEX(IndexType)){
                 IndexType cellIndex = BoundaryCells.size() | BOUNDARY_INDEX(IndexType);
                 face.setCellRightIndex(cellIndex);
                 appendBoundaryCell(cellIndex, face.getIndex());
@@ -401,7 +424,7 @@ public:
 
     void setupBoundaryCellsCenters() {
         for(Cell& cell : BoundaryCells){
-            cell.setCenter(getFaces().at(cell.getBoundaryElementIndex()).getCenter());
+            cell.SetCenter(getFaces().at(cell.getBoundaryElementIndex()).GetCenter());
         }
     }
 
