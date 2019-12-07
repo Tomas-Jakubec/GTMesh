@@ -2,7 +2,6 @@
 #define MESHDATACONTAINER_H
 
 #include "../MeshElements/MeshElement.h"
-#include "../debug/Debug.h"
 
 
 
@@ -80,7 +79,8 @@ private:
     struct Alocator{
         MeshDataContainer<DataType, Dimensions...>& parent;
         template<unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
-        static void alocateMemory(MeshDataContainer<DataType, Dimensions...>& parent ,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh) {
+        static void alocateMemory(MeshDataContainer<DataType, Dimensions...>& parent ,
+                                  const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh) {
             parent.template getDataByPos<pos>().resize(
                         mesh.template getElements<std::get<pos>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...})>().size());
             Alocator<pos - 1>::alocateMemory(parent, mesh);
@@ -88,7 +88,7 @@ private:
 
         template<unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
         static void alocateMemory(MeshDataContainer<DataType, Dimensions...>& parent ,
-                                  MeshElements<Dimension, IndexType, Real, Reserve...>& mesh,
+                                  const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh,
                                   const DataType& initialValue) {
             parent.template getDataByPos<pos>().resize(
                         mesh.template getElements<std::get<pos>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...})>().size(),
@@ -100,7 +100,8 @@ private:
     template<typename dummy>
     struct Alocator<0, dummy>{
         template<unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
-        static void alocateMemory(MeshDataContainer<DataType, Dimensions...>& parent ,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh) {
+        static void alocateMemory(MeshDataContainer<DataType, Dimensions...>& parent ,
+                                  const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh) {
 
             parent.template getDataByPos<0>().resize(
                         mesh.template getElements<std::get<0>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...})>().size());
@@ -108,7 +109,7 @@ private:
         }
         template<unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
         static void alocateMemory(MeshDataContainer<DataType, Dimensions...>& parent ,
-                                  MeshElements<Dimension, IndexType, Real, Reserve...>& mesh,
+                                  const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh,
                                   const DataType& initialValue) {
 
             parent.template getDataByPos<0>().resize(
@@ -143,36 +144,37 @@ public:
     }
 
     template <unsigned int ElementDim, unsigned int Dimension, typename IndexType, typename Real, unsigned int Reserve>
-    DataType& at(MeshElement<Dimension, ElementDim, IndexType, Real, Reserve>& element) {
+    DataType& at(const MeshElement<Dimension, ElementDim, IndexType, Real, Reserve>& element) {
         return getDataByDim<ElementDim>().at(element.getIndex());
     }
 
     template <unsigned int ElementDim, unsigned int Dimension, typename IndexType, typename Real, unsigned int Reserve>
-    DataType& operator[](MeshElement<Dimension, ElementDim, IndexType, Real, Reserve>& element) {
+    DataType& operator[](const MeshElement<Dimension, ElementDim, IndexType, Real, Reserve>& element) {
         return getDataByDim<ElementDim>()[element.getIndex()];
     }
 
     MeshDataContainer(){}
 
     template <unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
-    MeshDataContainer(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+    MeshDataContainer(const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
         alocateData(mesh);
     }
 
     template <unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
-    MeshDataContainer(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh, std::integer_sequence<unsigned int,Dimensions...>, DataType){
+    MeshDataContainer(const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh,
+                      std::integer_sequence<unsigned int,Dimensions...>, DataType){
         alocateData(mesh);
     }
 
 
     template <unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
-    MeshDataContainer(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh,
+    MeshDataContainer(const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh,
                       const DataType& initialValue){
         alocateData(mesh, initialValue);
     }
 
     template <unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
-    MeshDataContainer(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh,
+    MeshDataContainer(const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh,
                       const DataType& initialValue,
                       std::integer_sequence<unsigned int,Dimensions...>,
                       DataType){
@@ -182,12 +184,12 @@ public:
 
 
     template <unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
-    void alocateData(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+    void alocateData(const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
         Alocator<sizeof... (Dimensions) - 1>::alocateMemory(*this, mesh);
     }
 
     template <unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
-    void alocateData(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh, const DataType& initialValue){
+    void alocateData(const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh, const DataType& initialValue){
         Alocator<sizeof... (Dimensions) - 1>::alocateMemory(*this, mesh,initialValue);
     }
 
@@ -261,7 +263,8 @@ public:
     template<unsigned int pos, typename _DataType, typename... _DataTypes>
     struct Alocator{
         template<unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
-        static void alocateMemory(MeshDataContainer<std::tuple<DataTypes...>, Dimensions...>& parent ,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh) {
+        static void alocateMemory(MeshDataContainer<std::tuple<DataTypes...>, Dimensions...>& parent ,
+                                  const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh) {
             parent.template getDataByPos<pos>().resize(
                         mesh.template getElements<std::get<pos>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...})>().size());
             Alocator<pos + 1, _DataTypes...>::alocateMemory(parent, mesh);
@@ -269,7 +272,7 @@ public:
 
         template<unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
         static void alocateMemory(MeshDataContainer<std::tuple<DataTypes...>, Dimensions...>& parent,
-                                  MeshElements<Dimension, IndexType, Real, Reserve...>& mesh,
+                                  const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh,
                                   const _DataType& initialValue,
                                   const _DataTypes&... values) {
             parent.template getDataByPos<pos>().resize(
@@ -282,7 +285,8 @@ public:
     template<typename _DataType, typename... _DataTypes>
     struct Alocator<sizeof... (Dimensions) - 1, _DataType, _DataTypes...>{
         template<unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
-        static void alocateMemory(MeshDataContainer<std::tuple<DataTypes...>, Dimensions...>& parent ,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh) {
+        static void alocateMemory(MeshDataContainer<std::tuple<DataTypes...>, Dimensions...>& parent ,
+                                  const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh) {
 
             parent.template getDataByPos<sizeof... (Dimensions) - 1>().resize(
                         mesh.template getElements<std::get<sizeof... (Dimensions) - 1>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...})>().size());
@@ -290,7 +294,7 @@ public:
         }
         template<unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
         static void alocateMemory(MeshDataContainer<std::tuple<DataTypes...>, Dimensions...>& parent,
-                                  MeshElements<Dimension, IndexType, Real, Reserve...>& mesh,
+                                  const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh,
                                   const _DataType& initialValue,
                                   const _DataTypes&...) {
 
@@ -335,12 +339,12 @@ public:
     }
 
     template <unsigned int ElementDim, unsigned int Dimension, typename IndexType, typename Real, unsigned int Reserve>
-    std::tuple_element_t<dimensionIndex<ElementDim>(), std::tuple<DataTypes...>>& at(MeshElement<Dimension, ElementDim, IndexType, Real, Reserve>& element) {
+    std::tuple_element_t<dimensionIndex<ElementDim>(), std::tuple<DataTypes...>>& at(const MeshElement<Dimension, ElementDim, IndexType, Real, Reserve>& element) {
         return getDataByDim<ElementDim>().at(element.getIndex());
     }
 
     template <unsigned int ElementDim, unsigned int Dimension, typename IndexType, typename Real, unsigned int Reserve>
-    std::tuple_element_t<dimensionIndex<ElementDim>(), std::tuple<DataTypes...>>& operator[](MeshElement<Dimension, ElementDim, IndexType, Real, Reserve>& element) {
+    std::tuple_element_t<dimensionIndex<ElementDim>(), std::tuple<DataTypes...>>& operator[](const MeshElement<Dimension, ElementDim, IndexType, Real, Reserve>& element) {
         return getDataByDim<ElementDim>()[element.getIndex()];
     }
 
@@ -349,25 +353,25 @@ public:
     MeshDataContainer(){}
 
     template <unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
-    MeshDataContainer(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+    MeshDataContainer(const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
         alocateData(mesh);
     }
 
     template <unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
-    MeshDataContainer(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh,
+    MeshDataContainer(const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh,
                       const DataTypes&... initialValues){
         alocateData(mesh, initialValues...);
     }
 
     template <unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
-    void alocateData(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+    void alocateData(const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
         Alocator<0, DataTypes...>::alocateMemory(*this, mesh);
     }
 
 
 
     template <unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
-    void alocateData(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh,
+    void alocateData(const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh,
                      const DataTypes&... initialValues){
         Alocator<0, DataTypes...>::alocateMemory(*this, mesh, initialValues...);
     }

@@ -10,7 +10,7 @@ template <unsigned int CurrentDimension, unsigned int StartDimension, unsigned i
 struct MeshRun {
 
     template<typename Func, typename IndexType, typename Real, unsigned int ...Reserve>
-    static void run(MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh,
+    static void run(const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh,
                     IndexType origElementIndex,
                     IndexType index,
                     Func fun){
@@ -32,7 +32,7 @@ template <unsigned int StartDimension, unsigned int TargetDimension, unsigned in
 struct MeshRun<MeshDimension, StartDimension, TargetDimension, MeshDimension, false, Descend> {
 
     template<typename Func, typename IndexType, typename Real, unsigned int ...Reserve>
-    static void run(MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh,
+    static void run(const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh,
                     IndexType origElementIndex,
                     IndexType index,
                     Func fun){
@@ -55,7 +55,7 @@ template <unsigned int StartDimension, unsigned int TargetDimension, unsigned in
 struct MeshRun<1, StartDimension, TargetDimension, MeshDimension, false, Descend> {
 
     template<typename Func, typename IndexType, typename Real, unsigned int ...Reserve>
-    static void run(MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh,
+    static void run(const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh,
                     IndexType origElementIndex,
                     IndexType index,
                     Func fun){
@@ -70,33 +70,46 @@ struct MeshRun<1, StartDimension, TargetDimension, MeshDimension, false, Descend
 
 
 
-template <unsigned int CurrentDimension,unsigned int StartDimension, unsigned int TargetDimension, unsigned int MeshDimension, bool Descend>
-struct MeshRun<CurrentDimension, StartDimension, TargetDimension, MeshDimension, true, Descend> {
+template <unsigned int CurrentDimension,unsigned int StartDimension, unsigned int TargetDimension, unsigned int MeshDimension>
+struct MeshRun<CurrentDimension, StartDimension, TargetDimension, MeshDimension, true, true> {
 
     template<typename Functor, typename IndexType, typename Real, unsigned int ...Reserve>
-    static void run(MeshElements<MeshDimension, IndexType, Real, Reserve...>& ,
+    static void run(const MeshElements<MeshDimension, IndexType, Real, Reserve...>& ,
                     IndexType origElementIndex,
                     IndexType index,
                     Functor fun){
         static_assert (std::is_assignable<std::function<void(IndexType, IndexType)>,Functor>::value,
                        "The Functor fun must be a function with void return type and two arguments of IndexType,\
  the first is index of StartDimension element and the second is the index of the TargetDimension element");
-        if(Descend){
+
             fun(origElementIndex, index);
-        }else{
-            fun(index, origElementIndex);
-        }
+
     }
 };
 
+template <unsigned int CurrentDimension,unsigned int StartDimension, unsigned int TargetDimension, unsigned int MeshDimension>
+struct MeshRun<CurrentDimension, StartDimension, TargetDimension, MeshDimension, true, false> {
 
+    template<typename Functor, typename IndexType, typename Real, unsigned int ...Reserve>
+    static void run(const MeshElements<MeshDimension, IndexType, Real, Reserve...>& ,
+                    IndexType origElementIndex,
+                    IndexType index,
+                    Functor fun){
+        static_assert (std::is_assignable<std::function<void(IndexType, IndexType)>,Functor>::value,
+                       "The Functor fun must be a function with void return type and two arguments of IndexType,\
+ the first is index of StartDimension element and the second is the index of the TargetDimension element");
+
+            fun(index, origElementIndex);
+
+    }
+};
 
 
 
 template <unsigned int StartDimension, unsigned int TargetDimension, unsigned int MeshDimension>
 struct MeshApply {
     template<typename Functor, typename IndexType, typename Real, unsigned int ...Reserve>
-    static void apply(MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh,
+    static void apply(const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh,
                       Functor f) {
         for (auto& startElement : mesh.template getElements<(StartDimension > TargetDimension) ? StartDimension : TargetDimension>()){
             MeshRun<
@@ -111,7 +124,7 @@ struct MeshApply {
 
     template<typename Functor, typename IndexType, typename Real, unsigned int ...Reserve>
     static void apply(IndexType elementIndex,
-                      MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh,
+                      const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh,
                       Functor f) {
             MeshRun<
                     (StartDimension > TargetDimension) ? StartDimension : TargetDimension,

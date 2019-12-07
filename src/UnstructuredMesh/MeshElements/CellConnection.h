@@ -6,11 +6,11 @@
 /**
  * @brief The CellConnection class
 */
-    template<typename indexType>
-    class CellConnection {
-        // Indexes to two cells which neighbours
-        // with this edge
-        indexType cellRightIndex, cellLeftIndex;
+template<typename indexType>
+class CellConnection {
+    // Indexes to two cells which neighbours
+    // with this edge
+    indexType cellRightIndex, cellLeftIndex;
     public:
     /**
      * @brief CellConnection
