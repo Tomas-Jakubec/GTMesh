@@ -407,12 +407,12 @@ public:
 
     void setupBoundaryCells(){
         for (Face& face : getFaces()){
-            if (face.getCellLeftIndex == INVALID_INDEX(IndexType)){
+            if (face.getCellLeftIndex() == INVALID_INDEX(IndexType)){
                 IndexType cellIndex = BoundaryCells.size() | BOUNDARY_INDEX(IndexType);
                 face.setCellLeftIndex(cellIndex);
                 appendBoundaryCell(cellIndex, face.getIndex());
             }
-            if (face.getCellRightIndex == INVALID_INDEX(IndexType)){
+            if (face.getCellRightIndex() == INVALID_INDEX(IndexType)){
                 IndexType cellIndex = BoundaryCells.size() | BOUNDARY_INDEX(IndexType);
                 face.setCellRightIndex(cellIndex);
                 appendBoundaryCell(cellIndex, face.getIndex());
@@ -424,7 +424,7 @@ public:
 
     void setupBoundaryCellsCenters() {
         for(Cell& cell : BoundaryCells){
-            cell.SetCenter(getFaces().at(cell.getBoundaryElementIndex()).GetCenter());
+            cell.setCenter(getFaces().at(cell.getBoundaryElementIndex()).getCenter());
         }
     }
 

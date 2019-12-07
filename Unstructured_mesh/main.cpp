@@ -427,6 +427,7 @@ void testMesh3D() {
     using sit3 = UnstructuredMesh<3, size_t, double, 6>;
     UnstructuredMesh<3, size_t, double, 6> mesh3;
     twoPrisms(mesh3);
+    mesh3.setupBoundaryCells();
     size_t tmp_face = mesh3.getCells().at(0).getBoundaryElementIndex();
 
     do {

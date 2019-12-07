@@ -41,7 +41,7 @@ struct MeshRun<MeshDimension, StartDimension, TargetDimension, MeshDimension, fa
         IndexType tmpFace = cell.getBoundaryElementIndex();
         do {
             MeshRun<MeshDimension - 1, StartDimension, TargetDimension, MeshDimension, TargetDimension == MeshDimension - 1, Descend>::run(mesh, origElementIndex, tmpFace, fun);
-            tmpFace = mesh.getFaces().at(tmpFace).getNextBElem(cell.getIndex());
+            tmpFace = mesh.getFaces().at(tmpFace).getNextBElem(index);
         } while (tmpFace != cell.getBoundaryElementIndex());
 
     }
@@ -111,14 +111,14 @@ struct MeshApply {
     template<typename Functor, typename IndexType, typename Real, unsigned int ...Reserve>
     static void apply(const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh,
                       Functor f) {
-        for (auto& startElement : mesh.template getElements<(StartDimension > TargetDimension) ? StartDimension : TargetDimension>()){
+        for (IndexType currElement = 0; currElement < mesh.template getElements<(StartDimension > TargetDimension) ? StartDimension : TargetDimension>().size(); currElement++){
             MeshRun<
                     (StartDimension > TargetDimension) ? StartDimension : TargetDimension,
                     (StartDimension > TargetDimension) ? StartDimension : TargetDimension,
                     (StartDimension > TargetDimension) ? TargetDimension : StartDimension,
                     MeshDimension,
                     StartDimension == TargetDimension,
-                    (StartDimension > TargetDimension)>::run(mesh, startElement.getIndex(), startElement.getIndex(), f);
+                    (StartDimension > TargetDimension)>::run(mesh, currElement, currElement, f);
         }
     }
 
