@@ -126,7 +126,7 @@ public:
     void loadCellTypes(std::istream& ist, MeshElements<2, IndexType, Real, Reserve...>& mesh){
         IndexType numCells;
         ist >> numCells;
-        cellTypes.alocateData(mesh);
+        cellTypes.allocateData(mesh);
         for (IndexType i = 0; i < numCells; i++) {
             int vtkType = 0;
             ist >> vtkType;
@@ -393,7 +393,7 @@ public:
     void loadCellTypes(std::istream& ist, MeshElements<3, IndexType, Real, Reserve...>& mesh){
         IndexType numCells;
         ist >> numCells;
-        cellTypes.alocateData(mesh);
+        cellTypes.allocateData(mesh);
         for (IndexType i = 0; i < numCells; i++) {
             int vtkType = 0;
             ist >> vtkType;

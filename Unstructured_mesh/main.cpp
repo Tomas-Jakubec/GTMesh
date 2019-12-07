@@ -456,8 +456,9 @@ void testMesh3D() {
     DBGMSG("mesh conatiner test");
     MeshDataContainer<double, 3,2,1,0> cont(mesh3);
 
-    MakeMeshDataContainer_t<double, make_custom_integer_sequence_t<unsigned int, 0,3>> cont1(mesh3);
+    MakeMeshDataContainer_t<double, make_custom_integer_sequence_t<unsigned int, 3,0,-1>> cont1(mesh3);
 
+    cont = cont1;
 
     //cont.getDataByDim<3>().resize(20);
     DBGVAR(cont.getDataByPos<1>().size(), cont.getDataByPos<1>().getMappedDimension());
@@ -473,6 +474,8 @@ void testMesh3D() {
 
     //_ComputeCenters<1,3, 3,2,1>::compute<size_t, double, 6>(centers, mesh3);
     auto centers = ComputeCenters<DEFAULT>(mesh3);
+
+
 
     for(auto& face : mesh3.getFaces()) {
         face.setCenter(centers.template getDataByDim<2>().at(face.getIndex()));
@@ -811,6 +814,7 @@ void testMeshDataContainer() {
 
     MeshDataContainer<std::tuple<int, double, char, int>, 3, 2, 0, 2> containerIni(mesh3,3, 42.15, 'a', 15);
 
+
     for (auto& val : containerIni.getDataByPos<0>()){
         DBGVAR(val);
     }
@@ -824,6 +828,15 @@ void testMeshDataContainer() {
     }
 
     for (auto& val : containerIni.getDataByPos<3>()){
+        DBGVAR(val);
+    }
+
+    DBGMSG("assign test");
+    MeshDataContainer<std::tuple<int, double, char, int>, 3, 2, 0, 2> containerAssign;
+
+    containerAssign = containerIni;
+
+    for (auto& val : containerAssign.getDataByPos<0>()){
         DBGVAR(val);
     }
 }
@@ -956,10 +969,10 @@ int main()
 {
     //testMesh2D();
     //testMesh2DLoadAndWrite();
-    testMesh3D();
-    test3DMeshDeformedPrisms();
+    //testMesh3D();
+    //test3DMeshDeformedPrisms();
     //testMeshRefine();
-    //testMeshDataContainer();
+    testMeshDataContainer();
     //UnstructuredMesh<5, size_t, double, 6,5,4> m;
     //m.ComputeElementMeasures();
     //test3DMeshLoad();
