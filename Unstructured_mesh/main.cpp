@@ -62,7 +62,7 @@ public:
         auto dists = ComputeCellsDistance(mesh);
 
 
-        meshData.alocateData(mesh);
+        meshData.allocateData(mesh);
 
         MeshDataContainer<CompData, 3> compData(mesh);
 
@@ -140,7 +140,8 @@ void RKMSolver(HeatCunduction<3,double>& problem,
 
     double tau = tau_ini;
 
-    MeshDataContainer<CompData, 3> Ktemp(problem.mesh);
+    MeshDataContainer<CompData, 3> Ktemp;
+    Ktemp.allocateData(compData);
 
     MeshDataContainer<double, 3> K1(problem.mesh);
     MeshDataContainer<double, 3> K2(problem.mesh);
