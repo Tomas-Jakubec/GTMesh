@@ -33,61 +33,120 @@ struct FaceData {
     double volOverDist;
 };
 
-void heatFlux(UnstructuredMesh<3,size_t, double, 12> mesh,
-        MeshDataContainer<std::tuple<CellData, FaceData>, 3,2>& data,
-        MeshDataContainer<CompData, 3>& compData,
-        MeshDataContainer<double, 3>& outDeltas) {
+template <unsigned int ProblemDimension, typename Real>
+class HeatCunduction {
+public:
+    UnstructuredMesh<ProblemDimension,size_t, double, 12> mesh;
+    MeshDataContainer<std::tuple<CellData, FaceData>, 3,2> meshData;
+    VTKMeshWriter<ProblemDimension, size_t, Real> writer;
 
-    for (double& dT : outDeltas.getDataByPos<0>()){
-        dT = 0;
+    HeatCunduction(){
     }
 
-    for (auto& face : mesh.getFaces()) {
-        double lT = 1000;
-        bool lIn = false;
-        if(!((face.getCellLeftIndex() & BOUNDARY_INDEX(size_t)) == BOUNDARY_INDEX(size_t))){
-            lT = compData.getDataByDim<3>().at(face.getCellLeftIndex()).T;
-            lIn = true;
+    void loadMesh(const std::string& fileName) {
+        FPMAMeshReader<3> reader;
+        ifstream file(fileName);
+        reader.loadFromStream(file, mesh);
+
+        mesh.template initializeCenters<TESSELLATED>();
+
+        mesh.setupBoundaryCells();
+
+
+
+        mesh.setupBoundaryCellsCenters();
+
+
+        auto measures = mesh.template computeElementMeasures<TESSELLATED>();
+
+        auto dists = ComputeCellsDistance(mesh);
+
+
+        meshData.alocateData(mesh);
+
+        MeshDataContainer<CompData, 3> compData(mesh);
+
+        for (auto& face : mesh.getFaces()) {
+            meshData.at(face).volOverDist = measures.at(face) / dists.at(face);
         }
 
-        double rT = 1000;
-        bool rIn = false;
-        if(!((face.getCellRightIndex() & BOUNDARY_INDEX(size_t)) == BOUNDARY_INDEX(size_t))){
-            rT = compData.getDataByDim<3>().at(face.getCellRightIndex()).T;
-            rIn = true;
+        for (auto& cell : mesh.getCells()) {
+            meshData.at(cell).invVol = 1.0 / measures.at(cell);
+        }
+    }
+
+    void calculateRHS(
+            Real,//time is unused in this problem
+            MeshDataContainer<CompData, 3>& compData,
+            MeshDataContainer<double, 3>& outDeltas) {
+
+        for (double& dT : outDeltas.getDataByPos<0>()){
+            dT = 0;
         }
 
+        for (auto& face : mesh.getFaces()) {
+            double lT = 1000;
+            bool lIn = false;
+            if(!((face.getCellLeftIndex() & BOUNDARY_INDEX(size_t)) == BOUNDARY_INDEX(size_t))){
+                lT = compData.getDataByDim<3>().at(face.getCellLeftIndex()).T;
+                lIn = true;
+            }
 
-        double dT = data.at(face).volOverDist * (lT - rT);
-        if (rIn)
-            outDeltas.getDataByDim<3>().at(face.getCellRightIndex()) += dT;
-        if (lIn)
-            outDeltas.getDataByDim<3>().at(face.getCellLeftIndex()) -= dT;
+            double rT = 1000;
+            bool rIn = false;
+            if(!((face.getCellRightIndex() & BOUNDARY_INDEX(size_t)) == BOUNDARY_INDEX(size_t))){
+                rT = compData.getDataByDim<3>().at(face.getCellRightIndex()).T;
+                rIn = true;
+            }
 
+
+            double dT = meshData.at(face).volOverDist * (lT - rT);
+            if (rIn)
+                outDeltas.getDataByDim<3>().at(face.getCellRightIndex()) += dT;
+            if (lIn)
+                outDeltas.getDataByDim<3>().at(face.getCellLeftIndex()) -= dT;
+
+        }
+
+        for (auto& cell : mesh.getCells()) {
+            outDeltas.at(cell) *= meshData.at(cell).invVol;
+        }
     }
 
-    for (auto& cell : mesh.getCells()) {
-        outDeltas.at(cell) *= data.at(cell).invVol;
-    }
-}
+    template<typename dataType>
+    void exportData(double time,
+                    MeshDataContainer<dataType, 3>& compData) {
 
-void explicitUpdate(UnstructuredMesh<3,size_t, double, 12> mesh,
-                    MeshDataContainer<std::tuple<CellData, FaceData>, 3,2>& data,
-                    MeshDataContainer<CompData, 3>& compData,//x_ini
-                    double tau_ini,//tau_ini
-                    double startTime,
-                    double finalT,
-                    double delta){
+        ofstream ofile("HeatCond"s + "_" + to_string(time) + ".vtk");
+        writer.writeHeader(ofile, "HC_test"s + to_string(time));
+        writer.writeToStream(ofile, mesh, MeshDataContainer<MeshNativeType<3>::ElementType, 3>(mesh, MeshNativeType<3>::POLYHEDRON));
+
+        VTKMeshDataWriter<3> dataWriter;
+        dataWriter.writeToStream(ofile, compData, writer);
+
+        ofile.close();
+        DBGMSG("Data eported");
+
+    }
+};
+
+
+void RKMSolver(HeatCunduction<3,double>& problem,
+                MeshDataContainer<CompData, 3>& compData,//x_ini
+                double tau_ini,//tau_ini
+                double startTime,
+                double finalT,
+                double delta){
 
     double tau = tau_ini;
 
-    MeshDataContainer<CompData, 3> Ktemp(mesh);
+    MeshDataContainer<CompData, 3> Ktemp(problem.mesh);
 
-    MeshDataContainer<double, 3> K1(mesh);
-    MeshDataContainer<double, 3> K2(mesh);
-    MeshDataContainer<double, 3> K3(mesh);
-    MeshDataContainer<double, 3> K4(mesh);
-    MeshDataContainer<double, 3> K5(mesh);
+    MeshDataContainer<double, 3> K1(problem.mesh);
+    MeshDataContainer<double, 3> K2(problem.mesh);
+    MeshDataContainer<double, 3> K3(problem.mesh);
+    MeshDataContainer<double, 3> K4(problem.mesh);
+    MeshDataContainer<double, 3> K5(problem.mesh);
     double time = startTime;
     bool run = true;
     while (run) {
@@ -96,45 +155,36 @@ void explicitUpdate(UnstructuredMesh<3,size_t, double, 12> mesh,
             run = false;
         }
 
-        heatFlux(mesh, data, compData, K1);
-/*
-        for (size_t i = 0; i < mesh.getCells().size(); i++){
-            auto& _compData = compData.getDataByPos<0>().at(i);
-            _compData.T += (tau) * K1.getDataByDim<3>().at(i);
-        }
-        time += tau;
-        cout << "time: " << time << "\r";
-*/
-        for (size_t i = 0; i < mesh.getCells().size(); i++){
+        problem.calculateRHS(time, compData, K1);
+
+        for (size_t i = 0; i < Ktemp.getDataByPos<0>().size(); i++){
             Ktemp.getDataByPos<0>().at(i).T = compData.getDataByDim<3>().at(i).T + (tau * (1.0 / 3.0) * K1.getDataByDim<3>().at(i));
         }
 
-        heatFlux(mesh, data, Ktemp, K2);
+        problem.calculateRHS(time, Ktemp, K2);
 
-        for (size_t i = 0; i < mesh.getCells().size(); i++){
+        for (size_t i = 0; i < Ktemp.getDataByPos<0>().size(); i++){
             Ktemp.getDataByPos<0>().at(i).T = compData.getDataByDim<3>().at(i).T + (tau * (1.0 / 6.0) * (K1.getDataByDim<3>().at(i) + K2.getDataByDim<3>().at(i)));
         }
 
 
-        heatFlux(mesh, data, Ktemp, K3);
+        problem.calculateRHS(time, Ktemp, K3);
 
-        for (size_t i = 0; i < mesh.getCells().size(); i++){
+        for (size_t i = 0; i < Ktemp.getDataByPos<0>().size(); i++){
             Ktemp.getDataByPos<0>().at(i).T = compData.getDataByDim<3>().at(i).T + (tau * (0.125 * K1.getDataByDim<3>().at(i) + 0.375 * K3.getDataByDim<3>().at(i)));
         }
 
+        problem.calculateRHS(time, Ktemp, K4);
 
-        heatFlux(mesh, data, Ktemp, K4);
-
-        for (size_t i = 0; i < mesh.getCells().size(); i++){
+        for (size_t i = 0; i < Ktemp.getDataByPos<0>().size(); i++){
             Ktemp.getDataByPos<0>().at(i).T = compData.getDataByDim<3>().at(i).T + (tau * ((0.5 * K1.getDataByDim<3>().at(i)) - (1.5 * K3.getDataByDim<3>().at(i)) + (2.0 * K4.getDataByPos<0>().at(i))));
         }
 
-
-        heatFlux(mesh, data, Ktemp, K5);
+        problem.calculateRHS(time, Ktemp, K5);
 
         double error = 0.0;
 
-        for (size_t i = 0; i < mesh.getCells().size(); i++){
+        for (size_t i = 0; i < K4.getDataByPos<0>().size(); i++){
             double tmpE = abs(0.2 * K1.getDataByPos<0>().at(i) - 0.9 * K3.getDataByPos<0>().at(i) +
                     0.8 * K4.getDataByPos<0>().at(i) - 0.1 * K5.getDataByPos<0>().at(i));
             if (tmpE > error) {
@@ -144,7 +194,7 @@ void explicitUpdate(UnstructuredMesh<3,size_t, double, 12> mesh,
 
         error *= tau * (1.0 / 3.0);
         if (error < delta) {
-            for (size_t i = 0; i < mesh.getCells().size(); i++){
+            for (size_t i = 0; i < K4.getDataByPos<0>().size(); i++){
                 auto& _compData = compData.getDataByPos<0>().at(i);
                 _compData.T += tau * (1.0 / 6.0) * (((K1.getDataByDim<3>().at(i) + K5.getDataByDim<3>().at(i))) + (4.0 * K4.getDataByPos<0>().at(i)));
             }
@@ -161,24 +211,7 @@ void explicitUpdate(UnstructuredMesh<3,size_t, double, 12> mesh,
 }
 
 
-template<typename dataType>
-void exportData(std::string filename,
-                VTKMeshWriter<3, size_t, double>& writer,
-                double time,
-                UnstructuredMesh<3, size_t, double, 12>& mesh,
-                MeshDataContainer<dataType, 3>& compData) {
 
-    ofstream ofile(filename + "_" + to_string(time) + ".vtk");
-    writer.writeHeader(ofile, "HC_test"s + to_string(time));
-    writer.writeToStream(ofile, mesh, MeshDataContainer<MeshNativeType<3>::ElementType, 3>(mesh, MeshNativeType<3>::POLYHEDRON));
-
-    VTKMeshDataWriter<3> dataWriter;
-    dataWriter.writeToStream(ofile, compData, writer);
-
-    ofile.close();
-    DBGMSG("Data eported");
-
-}
 struct Index {
     size_t index;
 };
@@ -262,88 +295,53 @@ void meshAdmisibility(const std::string& meshFileName) {
 
 
 
-void testHeatConduction() {
-    UnstructuredMesh<3, size_t, double, 12> mesh;
-    FPMAMeshReader<3> reader;
-    ifstream file("Poly_box.fpma");
-    reader.loadFromStream(file, mesh);
-
-    mesh.initializeCenters<TESSELLATED>();
-
-    mesh.setupBoundaryCells();
 
 
 
-    mesh.setupBoundaryCellsCenters();
+void testHeatConduction1() {
 
+    HeatCunduction<3,double> hcProblem;
 
-    auto measures = mesh.computeElementMeasures<TESSELLATED>();
-
-    auto dists = ComputeCellsDistance(mesh);
-
-    MeshDataContainer<std::tuple<CellData, FaceData>, 3,2> meshData(mesh);
-
-    MeshDataContainer<CompData, 3> compData(mesh);
-
-    for (auto& face : mesh.getFaces()) {
-        meshData.at(face).volOverDist = measures.at(face) / dists.at(face);
-    }
-
-    for (auto& cell : mesh.getCells()) {
-        meshData.at(cell).invVol = 1.0 / measures.at(cell);
-    }
+    hcProblem.loadMesh("Poly_2_5_level2.fpma");
 
     double startTime = 0.0, finalTime = 0.5 , tau = 1e-4;
 
     VTKMeshWriter<3, size_t, double> writer;
 
-    exportData("Heatcond_test_RKM",
-               writer,
-               startTime,
-               mesh,
-               compData);
+    MeshDataContainer<CompData, 3> compData(hcProblem.mesh);
 
+    hcProblem.exportData(startTime, compData);
 
-    explicitUpdate(mesh,
-                   meshData,
-                   compData,
+    RKMSolver(hcProblem, compData,
                    tau,
                    startTime,
                    finalTime,
                    1e-2);
 
-    exportData("Heatcond_test_RKM",
-               writer,
-               finalTime,
-               mesh,
-               compData);
+    hcProblem.exportData(finalTime, compData);
+
 
 
     startTime = finalTime;
     finalTime *= 2;
-    explicitUpdate(mesh,
-                   meshData,
-                   compData,
+    RKMSolver(hcProblem, compData,
                    tau,
                    startTime,
                    finalTime,
                    1e-2);
 
-    exportData("Heatcond_test_RKM",
-               writer,
-               finalTime,
-               mesh,
-               compData);
+
+    hcProblem.exportData(finalTime, compData);
+
 
 
 
 }
 
-
-
 int main()
 {
+    testHeatConduction1();
     //testHeatConduction();
-    meshAdmisibility("Poly_2_5_level2.fpma");
+    //meshAdmisibility("Poly_2_5_level1.fpma");
 
 }
