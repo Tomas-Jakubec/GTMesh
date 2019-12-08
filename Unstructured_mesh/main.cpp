@@ -803,6 +803,12 @@ void testMeshDataContainer() {
     MeshDataContainer<std::tuple<int, double, char, double>, 3,2,0> container(mesh3);
 
 
+    MeshDataContainer<double, 3,3,1> cont(mesh3, 52.2);
+    MeshDataContainer<double, 1,1> contAlloc;
+    contAlloc.allocateData(cont, 42.2);
+
+    DBGVAR(cont.getDataByDim<1>(), contAlloc.getDataByDim<1>());
+
 
     for(auto& c : container.getDataByDim<0>()) {
         c=42;
@@ -812,7 +818,7 @@ void testMeshDataContainer() {
         DBGVAR(container.at(v));
     }
 
-    MeshDataContainer<std::tuple<int, double, char, int>, 3, 2, 0, 2> containerIni(mesh3,3, 42.15, 'a', 15);
+    MeshDataContainer<std::tuple<int, double, char, int>, 3, 2, 0, 1> containerIni(mesh3,3, 42.15, 'a', 15);
 
 
     for (auto& val : containerIni.getDataByPos<0>()){
@@ -832,13 +838,15 @@ void testMeshDataContainer() {
     }
 
     DBGMSG("assign test");
-    MeshDataContainer<std::tuple<int, double, char, int>, 3, 2, 0, 2> containerAssign;
+    MeshDataContainer<std::tuple<int, double, char, int>, 3, 2, 0, 1> containerAssign;
 
     containerAssign = containerIni;
 
-    for (auto& val : containerAssign.getDataByPos<0>()){
-        DBGVAR(val);
-    }
+    contAlloc.getDataByDim<1>().clear();
+    contAlloc.allocateData(containerAssign, 87);
+
+
+    DBGVAR(contAlloc.getDataByDim<1>(), contAlloc.getDataByPos<1>(),containerAssign.getDataByPos<0>());
 }
 
 
@@ -969,9 +977,9 @@ int main()
 {
     //testMesh2D();
     //testMesh2DLoadAndWrite();
-    //testMesh3D();
-    //test3DMeshDeformedPrisms();
-    //testMeshRefine();
+    testMesh3D();
+    test3DMeshDeformedPrisms();
+    testMeshRefine();
     testMeshDataContainer();
     //UnstructuredMesh<5, size_t, double, 6,5,4> m;
     //m.ComputeElementMeasures();

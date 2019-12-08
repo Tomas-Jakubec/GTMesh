@@ -16,13 +16,13 @@ class VTKMeshDataReader {
      * @brief readColumn
      * reads a single column of traited data
      */
-    static void readColumn(std::istream& ist [[maybe_unused]],...){
+    static void readColumn(std::istream& ,...){
         DBGMSG("capture");
         throw std::runtime_error("capture of read column must not be called.");
     }
 
-    template<typename T, unsigned int Index, unsigned int Position>
-    static auto readColumn(std::istream& ist, DataContainer<T, Position, MeshDimension> &data,std::map<std::string, std::istream::pos_type>& dataPositions)
+    template<typename T, unsigned int Index>
+    static auto readColumn(std::istream& ist, DataContainer<T, MeshDimension> &data,std::map<std::string, std::istream::pos_type>& dataPositions)
     -> typename std::enable_if<
         IsIndexable<typename Traits<T>::ttype::template type<Index>>::value &&
         MeshDimension == 3
@@ -43,8 +43,8 @@ class VTKMeshDataReader {
     }
 
 
-    template<typename T, unsigned int Index, unsigned int Position>
-    static auto readColumn(std::istream& ist, DataContainer<T, Position, MeshDimension> &data,std::map<std::string, std::istream::pos_type>& dataPositions)
+    template<typename T, unsigned int Index>
+    static auto readColumn(std::istream& ist, DataContainer<T, MeshDimension> &data,std::map<std::string, std::istream::pos_type>& dataPositions)
     -> typename std::enable_if<
         IsIndexable<typename Traits<T>::ttype::template type<Index>>::value &&
         MeshDimension == 2
@@ -69,8 +69,8 @@ class VTKMeshDataReader {
     }
 
 
-    template<typename T, unsigned int Index, unsigned int Position>
-    static auto readColumn(std::istream& ist, DataContainer<T, Position, MeshDimension> &data,std::map<std::string, std::istream::pos_type>& dataPositions)
+    template<typename T, unsigned int Index>
+    static auto readColumn(std::istream& ist, DataContainer<T, MeshDimension> &data,std::map<std::string, std::istream::pos_type>& dataPositions)
     -> typename std::enable_if<
         !IsIndexable<typename Traits<T>::ttype::template type<Index>>::value
     >::type
@@ -95,11 +95,11 @@ private:
     template<typename T,unsigned int Index, typename... Types>
     struct readCellData <Traits<T, Types...>, Index, std::enable_if_t<Index < Traits<T, Types...>::size() - 1>>{
 
-        template<unsigned int Position>
 
-        static void read(std::istream& ist, DataContainer<T, Position, MeshDimension> &data, std::map<std::string, std::istream::pos_type>& dataPositions){
+
+        static void read(std::istream& ist, DataContainer<T, MeshDimension> &data, std::map<std::string, std::istream::pos_type>& dataPositions){
             DBGVAR(IsIndexable<typename Traits<T>::ttype::template type<Index>>::value);
-            readColumn<T, Index, Position>(ist, data, dataPositions);
+            readColumn<T, Index>(ist, data, dataPositions);
             readCellData<Traits<T, Types...>, Index + 1>::read(ist, data, dataPositions);
 
         }
@@ -107,10 +107,10 @@ private:
 
     template<typename T,unsigned int Index, typename ... Types>
     struct readCellData <Traits<T, Types...>, Index, std::enable_if_t<Index == Traits<T, Types...>::size() - 1>>{
-        template<unsigned int Position>
-        static void read(std::istream& ist, DataContainer<T, Position, MeshDimension> &data, std::map<std::string, std::istream::pos_type>& dataPositions){
 
-            readColumn<T, Index, Position>(ist, data, dataPositions);
+        static void read(std::istream& ist, DataContainer<T, MeshDimension> &data, std::map<std::string, std::istream::pos_type>& dataPositions){
+
+            readColumn<T, Index>(ist, data, dataPositions);
 
         }
     };
@@ -146,8 +146,8 @@ public:
         return dataPositions;
     }
 
-    template<typename T, unsigned int Position>
-    static void readData(std::istream& ist, DataContainer<T, Position, MeshDimension>& data) {
+    template<typename T>
+    static void readData(std::istream& ist, DataContainer<T, MeshDimension>& data) {
 
         std::map<std::string, std::istream::pos_type> dataPositions = indexData(ist);
 

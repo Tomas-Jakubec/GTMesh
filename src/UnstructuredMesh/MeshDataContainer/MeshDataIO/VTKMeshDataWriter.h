@@ -17,13 +17,13 @@ class VTKMeshDataWriter {
      * @brief writeColumn
      * writes a single column of traited data
      */
-    static void writeColumn(std::ostream& ost [[maybe_unused]],...){
+    static void writeColumn(std::ostream&,...){
         DBGMSG("capture");
         throw std::runtime_error("capture of write column must not be called.");
     }
 
-    template<typename T, unsigned int Index, unsigned int Position, typename IndexType, typename Real>
-    static auto writeColumn(std::ostream& ost, const DataContainer<T, Position, MeshDimension> &data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer)
+    template<typename T, unsigned int Index, typename IndexType, typename Real>
+    static auto writeColumn(std::ostream& ost, const DataContainer<T, MeshDimension> &data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer)
     -> typename std::enable_if<
         IsIndexable<typename Traits<T>::ttype::template type<Index>>::value &&
         MeshDimension == 3
@@ -65,8 +65,8 @@ class VTKMeshDataWriter {
 
 
 
-    template<typename T, unsigned int Index, unsigned int Position, typename IndexType, typename Real>
-    static auto writeColumn(std::ostream& ost, const DataContainer<T, Position, MeshDimension> &data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer)
+    template<typename T, unsigned int Index, typename IndexType, typename Real>
+    static auto writeColumn(std::ostream& ost, const DataContainer<T, MeshDimension> &data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer)
     -> typename std::enable_if<
         IsIndexable<typename Traits<T>::ttype::template type<Index>>::value &&
         MeshDimension == 2
@@ -105,8 +105,8 @@ class VTKMeshDataWriter {
         }
     }
 
-    template<typename T, unsigned int Index, unsigned int Position, typename IndexType, typename Real>
-    static auto writeColumn(std::ostream& ost, const DataContainer<T, Position, MeshDimension> &data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer)
+    template<typename T, unsigned int Index, typename IndexType, typename Real>
+    static auto writeColumn(std::ostream& ost, const DataContainer<T, MeshDimension> &data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer)
     -> typename std::enable_if<
         !IsIndexable<typename Traits<T>::ttype::template type<Index>>::value
     >::type
@@ -140,11 +140,11 @@ class VTKMeshDataWriter {
     template<typename T,unsigned int Index, typename... Types>
     struct writeCellData <Traits<T, Types...>, Index, std::enable_if_t<Index < Traits<T, Types...>::size() - 1>>{
 
-        template<unsigned int Position, typename IndexType, typename Real>
+        template<typename IndexType, typename Real>
 
-        static void write(std::ostream& ost, const DataContainer<T, Position, MeshDimension> &data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer){
+        static void write(std::ostream& ost, const DataContainer<T, MeshDimension> &data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer){
             DBGVAR(IsIndexable<typename Traits<T>::ttype::template type<Index>>::value);
-            writeColumn<T, Index, Position, IndexType, Real>(ost, data, writer);
+            writeColumn<T, Index, IndexType, Real>(ost, data, writer);
             ost << std::endl;
             writeCellData<Traits<T, Types...>, Index + 1>::write(ost, data, writer);
 
@@ -153,18 +153,18 @@ class VTKMeshDataWriter {
 
     template<typename T,unsigned int Index, typename ... Types>
     struct writeCellData <Traits<T, Types...>, Index, std::enable_if_t<Index == Traits<T, Types...>::size() - 1>>{
-        template<unsigned int Position, typename IndexType, typename Real>
-        static void write(std::ostream& ost, const DataContainer<T, Position, MeshDimension> &data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer){
+        template< typename IndexType, typename Real>
+        static void write(std::ostream& ost, const DataContainer<T, MeshDimension> &data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer){
 
-            writeColumn<T, Index, Position, IndexType, Real>(ost, data, writer);
+            writeColumn<T, Index, IndexType, Real>(ost, data, writer);
             ost << std::endl;
         }
     };
 
 
 public:
-    template<typename T,typename IndexType, typename Real, unsigned int Position>
-    static void writeToStream(std::ostream& ost, DataContainer<T, Position, MeshDimension>& data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer) {
+    template<typename T,typename IndexType, typename Real>
+    static void writeToStream(std::ostream& ost, DataContainer<T, MeshDimension>& data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer) {
         using type = T;//typename std::remove_reference<decltype(data.template getDataByDim<MeshDimension>())>::type::DataType;
         static_assert (HasDefaultTraits<type>::value, "The class T must have defined traits for example using macro MAKE_ATTRIBUTE_TRAIT in header Traits.h");
         ost << "CELL_DATA " << writer.getNumberOfCells() << std::endl;
@@ -209,9 +209,9 @@ private:
     template <bool OK>
     struct MeshDataIterator <0, OK> {
         template<typename T,typename IndexType, typename Real, unsigned int ...Dimensions>
-        static auto writeToStream(std::ostream& ost [[maybe_unused]],
-                                  MeshDataContainer<T, Dimensions...>& data [[maybe_unused]],
-                                  VTKMeshWriter<MeshDimension,IndexType, Real>& writer [[maybe_unused]]) -> typename
+        static auto writeToStream(std::ostream&,
+                                  MeshDataContainer<T, Dimensions...>&,
+                                  VTKMeshWriter<MeshDimension,IndexType, Real>&) -> typename
             std::enable_if<
                 (!HasDefaultTraits<typename MeshDataContainer<T, Dimensions...>::template DataContainerType<0>::type>::value) ||
                 (!(MeshDataContainer<T, Dimensions...>::template DataContainerType<0>::getMappedDimension() == MeshDimension))
