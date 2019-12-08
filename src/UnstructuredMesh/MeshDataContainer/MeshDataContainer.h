@@ -18,13 +18,18 @@ struct DataContainer : public std::vector<DataType> {
 
 /**
  * @brief The MeshDataContainer struct<HR>
- * A struct designed to manage data boud to mesh.
+ * A struct designed to manage data bound to a mesh.
  * Creates a serie of vectors sized acording to dimension.
  */
 template <typename DataType, unsigned int ...Dimensions>
 struct MeshDataContainer{
 private:
 
+    /**
+     * @brief The DimensionPos struct
+     * realizes the method indexof in the parameter pack @a Dimensions.
+     * If the searched value is nor present, the index @a pos ran out of bounds.
+     */
     template<unsigned int dim, unsigned int pos, unsigned int _dim>
     struct DimensionPos : DimensionPos<dim, pos + 1,std::get<pos + 1>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...})>{};
 
@@ -506,11 +511,14 @@ public:
 
 
 
+
 /**
- * @brief The MeshDataContainer struct
+ * @brief The MeshDataContainer<std::tuple<DataTypes>, Dimensions> struct<HR>
+ * This specialization of MeshDataContainer allows to declare
+ * a data type for each dimension separately. The data types are
+ * given by a tuple.
  *
- * A struct designed to manage data boud to mesh.
- * Creates a serie of vectors sized acording to dimension.
+ * @example MeshDataContainer<std::tuple<int, double>, 3,2> data;
  */
 template <typename ...DataTypes, unsigned int ...Dimensions>
 struct MeshDataContainer<std::tuple<DataTypes...>, Dimensions...>{

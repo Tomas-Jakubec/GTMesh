@@ -4,10 +4,10 @@
 #include "MeshConnections.h"
 
 template<unsigned int FromDim, unsigned int ToDim, bool Descend = true>
-struct MeshColouring {
+struct MeshColoring {
 
     template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
-    static MeshDataContainer<unsigned int, FromDim> colour(
+    static MeshDataContainer<unsigned int, FromDim> color(
             MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
             ) {
         MeshDataContainer<unsigned int, FromDim> result(mesh);
@@ -62,9 +62,9 @@ struct MeshColouring {
 
 
 template<unsigned int FromDim, unsigned int ToDim>
-struct MeshColouring <FromDim, ToDim, false> {
+struct MeshColoring <FromDim, ToDim, false> {
     template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
-    static MeshDataContainer<unsigned int, FromDim> colour(
+    static MeshDataContainer<unsigned int, FromDim> color(
             MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
             ) {
         // resulting container of colours
@@ -117,13 +117,13 @@ struct MeshColouring <FromDim, ToDim, false> {
 
 
 template <unsigned int FromDim, unsigned int ToDim>
-struct ColourMesh{
+struct ColorMesh{
 
 template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
-static MeshDataContainer<unsigned int, FromDim> colour(
+static MeshDataContainer<unsigned int, FromDim> color(
             MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
         ){
-    return MeshColouring<FromDim, ToDim, (FromDim > ToDim)>::colour(mesh);
+    return MeshColoring<FromDim, ToDim, (FromDim > ToDim)>::color(mesh);
 }
 };
 

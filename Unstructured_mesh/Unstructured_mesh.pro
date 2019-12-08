@@ -31,7 +31,7 @@ HEADERS += \
     ../src/UnstructuredMesh/MeshFunctions/ComputeNormals.h \
     ../src/UnstructuredMesh/MeshFunctions/EdgesOrientation.h \
     ../src/UnstructuredMesh/MeshFunctions/MeshApply.h \
-    ../src/UnstructuredMesh/MeshFunctions/MeshColouring.h \
+    ../src/UnstructuredMesh/MeshFunctions/MeshColoring.h \
     ../src/UnstructuredMesh/MeshFunctions/MeshConnections.h \
     ../src/UnstructuredMesh/MeshFunctions/MeshFunctions.h \
     ../src/UnstructuredMesh/MeshFunctions/MeshFunctionsDefine.h \

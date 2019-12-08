@@ -579,13 +579,13 @@ DBGMSG("tessellated cell volume");
     }
 
     DBGMSG("face to vertex colouring");
-    auto colours = ColourMesh<2,0>::colour(mesh3);
+    auto colours = ColorMesh<2,0>::color(mesh3);
     for (auto& face : mesh3.getFaces()){
         DBGVAR(face.getIndex(), colours.at(face));
     }
 
     DBGMSG("vertex to face colouring");
-    auto colours1 = ColourMesh<0,2>::colour(mesh3);
+    auto colours1 = ColorMesh<0,2>::color(mesh3);
     for (auto& vert : mesh3.getVertices()){
         DBGVAR(vert.getIndex(), colours1.at(vert));
     }
@@ -635,7 +635,7 @@ void testMeshRefine() {
     writer.writeHeader(out3D, "test data");
     writer.writeToStream(out3D, mesh, types);
 
-    auto colours = MeshColouring<3,0>::colour(mesh);
+    auto colours = MeshColoring<3,0>::color(mesh);
 
     out3D << "CELL_DATA " << mesh.getCells().size() << endl;
     out3D << "SCALARS cell_wrt_vertex_colour double 1\nLOOKUP_TABLE default" << endl;
@@ -650,7 +650,7 @@ void testMeshRefine() {
     out3D.open("mesh_refine_1.vtk");
     writer1.writeHeader(out3D, "test data");
     writer1.writeToStream(out3D, mesh, types1);
-    auto colours1 = MeshColouring<3,0>::colour(mesh);
+    auto colours1 = MeshColoring<3,0>::color(mesh);
 
     MeshDataContainer<colourData, 3> cd(mesh);
     auto normals = mesh.computeFaceNormals();
@@ -699,7 +699,7 @@ void testMeshRefine() {
     writer1.writeHeader(out3D, "test data");
     writer1.writeToStream(out3D, mesh, types2);
 
-    auto colours2 = MeshColouring<3,0>::colour(mesh);
+    auto colours2 = MeshColoring<3,0>::color(mesh);
 
     out3D << "CELL_DATA " << writer1.cellVert.getDataByPos<0>().size() << endl;
     out3D << "SCALARS cell_wrt_vertex_colour double 1\nLOOKUP_TABLE default" << endl;
@@ -727,7 +727,7 @@ void testMeshRefine() {
     out3D.open("mesh_refine_3.vtk");
     writer1.writeHeader(out3D, "test data");
     writer1.writeToStream(out3D, mesh, types3);
-    auto colours3 = MeshColouring<3,0>::colour(mesh);
+    auto colours3 = MeshColoring<3,0>::color(mesh);
 
     out3D << "CELL_DATA " << writer1.cellVert.getDataByPos<0>().size() << endl;
     out3D << "SCALARS cell_wrt_vertex_colour double 1\nLOOKUP_TABLE default" << endl;
