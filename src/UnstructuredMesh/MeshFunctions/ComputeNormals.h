@@ -1,7 +1,7 @@
 #ifndef COMPUTENORMALS_H
 #define COMPUTENORMALS_H
 
-#include "../MeshElements/MeshElement.h"
+#include "../MeshElements/MeshElements.h"
 #include "../MeshDataContainer/MeshDataContainer.h"
 #include "../../NumericStaticArray/Vector.h"
 #include "../../NumericStaticArray/GrammSchmidt.h"
@@ -105,8 +105,9 @@ template <>
 struct _ComputeNormals<3, TESSELLATED>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
     static void compute(MeshDataContainer<Vector<3, Real>, 2>& normals,MeshElements<3, IndexType, Real, Reserve...>& mesh){
-        for (auto& face : mesh.getFaces()) {
+        for (IndexType faceIndex = 0; faceIndex < mesh.getFaces().size(); faceIndex++) {
 
+            auto& face = mesh.getFaces()[faceIndex];
             bool vectorSign = true;
             IndexType cellIndex = face.getCellLeftIndex();
             if (
@@ -124,7 +125,7 @@ struct _ComputeNormals<3, TESSELLATED>{
 
             Real surfTotal = Real();
 
-            MeshApply<2,1,3>::apply(face.getIndex(), mesh, [&](IndexType , IndexType edgeIndex){
+            MeshApply<2,1>::apply(face.getIndex(), mesh, [&](IndexType , IndexType edgeIndex){
                 Vertex<3,Real>& vertA = mesh.getVertices().at(mesh.getEdges().at(edgeIndex).getVertexAIndex());
                 Vertex<3,Real>& vertB = mesh.getVertices().at(mesh.getEdges().at(edgeIndex).getVertexBIndex());
 

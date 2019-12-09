@@ -536,16 +536,16 @@ DBGMSG("tessellated cell volume");
     }
 
     DBGMSG("mesh apply test");
-    MeshApply<3, 2, 3>::apply(mesh3, [](size_t ori, size_t i){
+    MeshApply<3, 2>::apply(mesh3, [](size_t ori, size_t i){
         DBGVAR(ori,i);
     });
     DBGMSG("mesh apply test");
-    MeshApply<2, 3, 3>::apply(mesh3,[](size_t ori, size_t i){
+    MeshApply<2, 3>::apply(mesh3,[](size_t ori, size_t i){
         DBGVAR(ori,i);
     });
 
     DBGMSG("3D edge orientation");
-    MeshApply<2, 1, 3>::apply(mesh3,[&mesh3](size_t faceIndex, size_t edgeIndex){
+    MeshApply<2, 1>::apply(mesh3,[&mesh3](size_t faceIndex, size_t edgeIndex){
         size_t iA = mesh3.getEdges().at(edgeIndex).getVertexAIndex(), iB =mesh3.getEdges().at(edgeIndex).getVertexBIndex();
         DBGVAR(faceIndex,
                edgeIndex,

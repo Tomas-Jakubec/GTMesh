@@ -1,6 +1,6 @@
 #ifndef EDGESORIENTATION_H
 #define EDGESORIENTATION_H
-#include "../MeshElements/MeshElement.h"
+#include "../MeshElements/MeshElements.h"
 #include "../MeshDataContainer/MeshDataContainer.h"
 #include "../../NumericStaticArray/Vector.h"
 #include "../../Debug/Debug.h"
@@ -23,8 +23,8 @@ bool edgeIsLeft(MeshElements<2, IndexType, Real, Reserve...>& mesh,
 
     Real res = AminC[0]*BminC[1]-BminC[0]*AminC[1];
     return res > 0;
-    throw std::runtime_error("can not determine orientation of edge " +
-                             std::to_string(edge.getIndex()) + " wrt face: " + std::to_string(face.getIndex()));
+    /*throw std::runtime_error("can not determine orientation of edge " +
+                             std::to_string(edge.getIndex()) + " wrt face: " + std::to_string(face.getIndex()));*/
 }
 
 template<typename IndexType, typename Real, unsigned int ...Reserve>

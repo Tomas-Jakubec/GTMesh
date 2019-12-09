@@ -18,16 +18,12 @@ struct MeshColoring {
 
 
 
-        for (auto& startElement : mesh.template getElements<FromDim>()){
+        for (IndexType elementIndex = 0; elementIndex < mesh.template getElements<FromDim>().size(); elementIndex++){
             std::valarray<bool> possibleColours(true,reserve);
-            MeshRun<FromDim, FromDim, ToDim, MeshDimension, false, true>::
-                run(mesh,
-                    startElement.getIndex(),
-                    startElement.getIndex(),
-                    [&possibleColours, &attachedColours](IndexType, IndexType element){
-                        DBGTRY(possibleColours &= !attachedColours.template getDataByPos<0>().at(element);)
-                    }
-                );
+            MeshApply<FromDim, ToDim>::apply(elementIndex, mesh,
+                 [&possibleColours, &attachedColours](IndexType, IndexType element){
+                     DBGTRY(possibleColours &= !attachedColours.template getDataByPos<0>().at(element);)
+            });
 
             // Select the first possible colour
             unsigned int selectedColour = 0;
@@ -46,15 +42,12 @@ struct MeshColoring {
                     break;
                 }
             }
-            result.template getDataByPos<0>().at(startElement.getIndex()) = selectedColour;
-            MeshRun<FromDim, FromDim, ToDim, MeshDimension, false, true>::
-                run(mesh,
-                    startElement.getIndex(),
-                    startElement.getIndex(),
-                    [selectedColour, &attachedColours](IndexType, IndexType element){
-                        DBGTRY(attachedColours.template getDataByPos<0>().at(element)[selectedColour] = true;)
-                    }
-                );
+            result.template getDataByPos<0>().at(elementIndex) = selectedColour;
+            MeshApply<FromDim, ToDim>::apply(elementIndex, mesh,
+                 [selectedColour, &attachedColours](IndexType, IndexType element){
+                     DBGTRY(attachedColours.template getDataByPos<0>().at(element)[selectedColour] = true;)
+            });
+
         }
         return result;
     }
@@ -77,9 +70,9 @@ struct MeshColoring <FromDim, ToDim, false> {
 
         auto connections = MeshConnections<FromDim, ToDim>::connections(mesh);
 
-        for (auto& startElement : mesh.template getElements<FromDim>()){
+        for (IndexType elementIndex = 0; elementIndex < mesh.template getElements<FromDim>().size(); elementIndex++){
             std::valarray<bool> possibleColours(true,reserve);
-            for (IndexType element : connections.at(startElement)){
+            for (IndexType element : connections.template getDataByPos<0>().at(elementIndex)){
 
                 DBGTRY(possibleColours &= !attachedColours.template getDataByPos<0>().at(element);)
 
@@ -105,9 +98,9 @@ struct MeshColoring <FromDim, ToDim, false> {
                 }
             }
 
-            result.template getDataByPos<0>().at(startElement.getIndex()) = selectedColour;
+            result.template getDataByPos<0>().at(elementIndex) = selectedColour;
 
-            for (IndexType element : connections.at(startElement)){
+            for (IndexType element : connections.template getDataByPos<0>().at(elementIndex)){
                 DBGTRY(attachedColours.template getDataByPos<0>().at(element)[selectedColour] = true;)
             }
         }

@@ -26,6 +26,7 @@ HEADERS += \
     ../src/UnstructuredMesh/MeshElements/CellConnection.h \
     ../src/UnstructuredMesh/MeshElements/ComputationalySignificantElement.h \
     ../src/UnstructuredMesh/MeshElements/MeshElement.h \
+    ../src/UnstructuredMesh/MeshElements/MeshElements.h \
     ../src/UnstructuredMesh/MeshFunctions/ComputeCenter.h \
     ../src/UnstructuredMesh/MeshFunctions/ComputeMeasures.h \
     ../src/UnstructuredMesh/MeshFunctions/ComputeNormals.h \

@@ -1,7 +1,7 @@
 #ifndef MESHCONNECTIONS_H
 #define MESHCONNECTIONS_H
 
-#include "../MeshElements/MeshElement.h"
+#include "../MeshElements/MeshElements.h"
 #include "../MeshDataContainer/MeshDataContainer.h"
 #include "../../NumericStaticArray/Vector.h"
 #include "../../Debug/Debug.h"
@@ -31,7 +31,7 @@ struct MeshConnections {
             MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
             ) {
         MeshDataContainer<std::set<IndexType>, StartDim> result(mesh);
-        MeshApply<StartDim, TargetDim, MeshDimension>::apply(mesh, [&result](IndexType ori, IndexType element){
+        MeshApply<StartDim, TargetDim>::apply(mesh, [&result](IndexType ori, IndexType element){
             result.template getDataByPos<0>().at(ori).insert(element);
         });
 
@@ -55,7 +55,7 @@ struct MeshConnections<StartDim, TargetDim, Order::ORDER_ORIGINAL> {
             ) {
         MeshDataContainer<std::map<IndexType, IndexType>, StartDim> tempMap(mesh);
 
-        MeshApply<StartDim, TargetDim, MeshDimension>::apply(mesh, [&tempMap](IndexType ori, IndexType element){
+        MeshApply<StartDim, TargetDim>::apply(mesh, [&tempMap](IndexType ori, IndexType element){
             IndexType size = tempMap.template getDataByPos<0>().at(ori).size();
             tempMap.template getDataByPos<0>().at(ori).insert({element, size});
         });

@@ -2,7 +2,7 @@
 #define VTKMESHWRITER_H
 
 #include "MeshWriter.h"
-#include "../../MeshElements/MeshElement.h"
+#include "../../MeshElements/MeshElements.h"
 #include "../../MeshDataContainer/MeshDataContainer.h"
 #include "../../MeshFunctions/MeshFunctions.h"
 #include <map>
@@ -445,11 +445,17 @@ DBGMSG("indexing mesh");
 
                 // search for the base face
                 typename MeshElements<3, IndexType, Real, Reserve...>::Face* face = nullptr;
-                for (IndexType faceIndex : mesh.template getElement<3>(cell.getIndex()).getSubelements()){
-                    if (mesh.template getElements<2>().at(faceIndex).getSubelements().getNumberOfSubElements() > 3){
-                        face = &mesh.getFaces().at(faceIndex);
+
+                MeshApply<3, 2>::apply(
+                            cell.getIndex(),
+                            mesh,
+                            [&mesh, &face](IndexType , IndexType faceIndex){
+                        if (mesh.template getElements<2>().at(faceIndex).getSubelements().getNumberOfSubElements() > 3){
+                            face = &mesh.getFaces().at(faceIndex);
                     }
-                }
+                });
+
+
                 // index the pyramid object
                 indexPyramid(mesh, cell, *face, faceEdgeOri, vertWrit);
 
@@ -465,12 +471,15 @@ DBGMSG("indexing mesh");
                 typename MeshElements<3, IndexType, Real, Reserve...>::Face* face = nullptr;
                 // search for the base face
 
-                for (IndexType faceIndex : mesh.template getElement<3>(cell.getIndex()).getSubelements()){
-                    if (mesh.template getElements<2>().at(faceIndex).getSubelements().getNumberOfSubElements() == 3){
-                        face = &mesh.getFaces().at(faceIndex);
-                        break;
+                MeshApply<3, 2>::apply(
+                            cell.getIndex(),
+                            mesh,
+                            [&mesh, &face](IndexType , IndexType faceIndex){
+                        if (mesh.template getElements<2>().at(faceIndex).getSubelements().getNumberOfSubElements() == 3 && face == nullptr){
+                            face = &mesh.getFaces().at(faceIndex);
                     }
-                }
+                });
+
 
                 indexLinearObject(mesh, cell, *face, faceEdgeOri, vertWrit);
                 this->cellVert.template getDataByPos<0>().push_back(vertWrit);

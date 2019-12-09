@@ -1,7 +1,7 @@
 #ifndef MESHAPPLY_H
 #define MESHAPPLY_H
 
-#include "../MeshElements/MeshElement.h"
+#include "../MeshElements/MeshElements.h"
 #include <functional>
 
 
@@ -18,7 +18,8 @@ struct MeshRun {
 
         auto currentElement = mesh.template getElements<CurrentDimension>().at(index);
         for (auto& sube : currentElement.getSubelements())
-        MeshRun< CurrentDimension - 1, StartDimension, TargetDimension, MeshDimension, TargetDimension == CurrentDimension - 1, Descend>::run(mesh, origElementIndex, sube.index, fun);
+        MeshRun< CurrentDimension - 1, StartDimension, TargetDimension, MeshDimension, TargetDimension == CurrentDimension - 1, Descend>
+                ::run(mesh, origElementIndex, sube.index, fun);
 
 
     }
@@ -40,7 +41,8 @@ struct MeshRun<MeshDimension, StartDimension, TargetDimension, MeshDimension, fa
         auto& cell = mesh.getCells().at(index);
         IndexType tmpFace = cell.getBoundaryElementIndex();
         do {
-            MeshRun<MeshDimension - 1, StartDimension, TargetDimension, MeshDimension, TargetDimension == MeshDimension - 1, Descend>::run(mesh, origElementIndex, tmpFace, fun);
+            MeshRun<MeshDimension - 1, StartDimension, TargetDimension, MeshDimension, TargetDimension == MeshDimension - 1, Descend>
+                    ::run(mesh, origElementIndex, tmpFace, fun);
             tmpFace = mesh.getFaces().at(tmpFace).getNextBElem(index);
         } while (tmpFace != cell.getBoundaryElementIndex());
 
@@ -61,8 +63,10 @@ struct MeshRun<1, StartDimension, TargetDimension, MeshDimension, false, Descend
                     Func fun){
 
         auto& edge = mesh.getEdges().at(index);
-        MeshRun<0, StartDimension, TargetDimension, MeshDimension, TargetDimension == 0, Descend>::run(mesh, origElementIndex, edge.getVertexAIndex(), fun);
-        MeshRun<0, StartDimension, TargetDimension, MeshDimension, TargetDimension == 0, Descend>::run(mesh, origElementIndex, edge.getVertexBIndex(), fun);
+        MeshRun<0, StartDimension, TargetDimension, MeshDimension, TargetDimension == 0, Descend>
+                ::run(mesh, origElementIndex, edge.getVertexAIndex(), fun);
+        MeshRun<0, StartDimension, TargetDimension, MeshDimension, TargetDimension == 0, Descend>
+                ::run(mesh, origElementIndex, edge.getVertexBIndex(), fun);
     }
 };
 
@@ -106,9 +110,9 @@ struct MeshRun<CurrentDimension, StartDimension, TargetDimension, MeshDimension,
 
 
 
-template <unsigned int StartDimension, unsigned int TargetDimension, unsigned int MeshDimension>
+template <unsigned int StartDimension, unsigned int TargetDimension>
 struct MeshApply {
-    template<typename Functor, typename IndexType, typename Real, unsigned int ...Reserve>
+    template<unsigned int MeshDimension, typename Functor, typename IndexType, typename Real, unsigned int ...Reserve>
     static void apply(const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh,
                       Functor f) {
         for (IndexType currElement = 0; currElement < mesh.template getElements<(StartDimension > TargetDimension) ? StartDimension : TargetDimension>().size(); currElement++){
@@ -122,7 +126,7 @@ struct MeshApply {
         }
     }
 
-    template<typename Functor, typename IndexType, typename Real, unsigned int ...Reserve>
+    template<unsigned int MeshDimension, typename Functor, typename IndexType, typename Real, unsigned int ...Reserve>
     static void apply(IndexType elementIndex,
                       const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh,
                       Functor f) {
