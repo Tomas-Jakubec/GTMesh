@@ -975,6 +975,7 @@ void testFPMA_poly(){
 
 int main()
 {
+
     //testMesh2D();
     //testMesh2DLoadAndWrite();
     testMesh3D();
@@ -986,5 +987,6 @@ int main()
     //test3DMeshLoad();
 
     //testFPMA_poly();
+    DBGVAR(vector<double>());
 
 }

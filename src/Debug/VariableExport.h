@@ -76,12 +76,11 @@ struct VariableExport {
         ost << "[ ";
         while (it != list.end()){
             exportVariable(ost, *it);
-            if (++it == list.end()){
-                ost << " ]";
-            } else {
+            if (++it != list.end()){
                 ost << ", ";
             }
         }
+        ost << " ]";
     }
 
 
@@ -98,12 +97,11 @@ struct VariableExport {
         ost << "[ ";
         for (decltype (list.size())i = 0; i < list.size(); i++){
             exportVariable(ost, list[i]);
-            if (i == list.size() - 1){
-                ost << " ]";
-            } else {
+            if (i < list.size() - 1){
                 ost << ", ";
             }
         }
+        ost << " ]";
     }
 
 
@@ -120,12 +118,11 @@ struct VariableExport {
         ost << "[ ";
         for (decltype (list.size())i = 0; i < list.size(); i++){
             exportVariable(ost, list[i]);
-            if (i == list.getSize() - 1){
-                ost << " ]";
-            } else {
+            if (i <  list.getSize() - 1){
                 ost << ", ";
             }
         }
+        ost << " ]";
     }
 
 
@@ -137,12 +134,11 @@ struct VariableExport {
         ost << "[ ";
         while (it != list.end()){
             exportVariable(ost, *it);
-            if (++it == list.end()){
-                ost << " ]";
-            } else {
+            if (++it != list.end()){
                 ost << ", ";
             }
         }
+        ost << " ]";
     }
 
 
