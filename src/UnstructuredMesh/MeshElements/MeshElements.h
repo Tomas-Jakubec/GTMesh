@@ -219,7 +219,7 @@ public:
 private:
 
     template<unsigned int Dim = Dimension, typename Dummy = void>
-    struct hashOfMeshElements{
+    struct HashOfMeshElements{
         static size_t hash(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
             std::hash<IndexType> indexHasher;
 
@@ -230,7 +230,7 @@ private:
                     elemHash ^= indexHasher(subElement.index);
                 }
             }
-            return elemHash ^ hashOfMeshElements<Dim - 1>::hash(mesh);
+            return elemHash ^ HashOfMeshElements<Dim - 1>::hash(mesh);
         }
     };
 
@@ -239,49 +239,35 @@ private:
      * @brief The hashOfMeshElements<Dimension, Dummy> struct hashes the cell information.
      */
     template<typename Dummy>
-    struct hashOfMeshElements<Dimension, Dummy>{
+    struct HashOfMeshElements<Dimension, Dummy>{
         static size_t hash(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
-            std::hash<IndexType> indexHasher;
 
             // Hash of cells
-            size_t cHash = indexHasher(mesh.getCells().size());
-            for(auto& cell : mesh.getCells()) {
-                cHash ^= indexHasher(cell.getBoundaryElementIndex());
-            }
-            return cHash ^ hashOfMeshElements<Dimension -1>::hash(mesh);
+            size_t cHash = std::_Hash_impl::hash(mesh.getCells().data(), mesh.getCells().size() * sizeof (MeshElements<Dimension, IndexType, Real, Reserve...>::Cell));
+
+            return cHash ^ HashOfMeshElements<Dimension -1>::hash(mesh);
         }
     };
 
     template<typename Dummy>
-    struct hashOfMeshElements<1, Dummy>{
+    struct HashOfMeshElements<1, Dummy>{
         static size_t hash(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
-            std::hash<IndexType> indexHasher;
 
             // Hash of cells
-            size_t eHash = indexHasher(mesh.getEdges().size());
-            for(auto& edge : mesh.getEdges()) {
-                eHash ^= edge.getVertexAIndex();
-                eHash ^= edge.getVertexBIndex();
-            }
-            return eHash ^ hashOfMeshElements<0>::hash(mesh);
+            size_t eHash = std::_Hash_impl::hash(mesh.getEdges().data(), mesh.getEdges().size() * sizeof (MeshElements<Dimension, IndexType, Real, Reserve...>::Edge));
+
+            return eHash ^ HashOfMeshElements<0>::hash(mesh);
         }
     };
 
 
     template<typename Dummy>
-    struct hashOfMeshElements<0, Dummy>{
+    struct HashOfMeshElements<0, Dummy>{
         static size_t hash(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
-            std::hash<Real> vertexHasher;
-            std::hash<IndexType> indexHasher;
 
             // Hash of vertices
-            size_t vHash = indexHasher(mesh.getVertices().size());
-            for(auto& vertex : mesh.getVertices()) {
-                for(unsigned int i = 0; i < vertex.size(); i++) {
-                    vHash ^= vertexHasher(vertex[i]);
-                    //vHash >>= 2;
-                }
-            }
+            size_t vHash = std::_Hash_impl::hash(&mesh.getVertices()[0], mesh.getVertices().size() * sizeof (MeshElements<Dimension, IndexType, Real, Reserve...>::Vertex));
+
             return vHash;
         }
     };
@@ -290,7 +276,7 @@ public:
 
     size_t updateSignature() {
 
-        meshSignature = hashOfMeshElements<Dimension>::hash(*this);
+        meshSignature = HashOfMeshElements<Dimension>::hash(*this);
 
         return meshSignature;
 

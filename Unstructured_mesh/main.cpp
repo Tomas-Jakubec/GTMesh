@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 //#define UNDEBUG
 #define CONSOLE_COLOURED_OUTPUT
 #include "../src/Debug/Debug.h"
@@ -271,7 +272,6 @@ void twoDeformedPrisms(UnstructuredMesh<3, size_t, double, 6>& mesh3){
 void testMesh2D() {
     using sit = UnstructuredMesh<2, size_t, double>;
     sit mesh;
-
 
     mesh.getVertices().resize(4);
 
@@ -982,6 +982,10 @@ void testFPMA_poly(){
 
 int main()
 {
+    vector<size_t> v(10,1);
+    DBGVAR(v.data(), ((char *)&*(v.end())) - ((char*)&*(v.begin())));
+
+    void* p = 0;
 
     testMesh2D();
     //testMesh2DLoadAndWrite();
