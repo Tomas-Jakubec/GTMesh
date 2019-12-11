@@ -47,12 +47,16 @@ private:
     };
 
 
-
-
 private:
     _MeshElements<Dimension> innerElements;
     std::vector<Cell> BoundaryCells;
     //_MeshElements<Dimension> boundaryElements;
+
+    /**
+     * @brief Hash signature of the mash elements.
+     * Use to detect changes in mesh.
+     */
+    size_t meshSignature;
 
 
 public:
@@ -206,6 +210,95 @@ public:
             return CellSubelementIterator(cellIndex, INVALID_INDEX(IndexType), parentMesh);
         }
     };
+
+
+
+    /*
+     * Signature computation
+     */
+private:
+
+    template<unsigned int Dim = Dimension, typename Dummy = void>
+    struct hashOfMeshElements{
+        static size_t hash(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+            std::hash<IndexType> indexHasher;
+
+            // Hash of generic element eg. face
+            size_t elemHash = mesh.getElements<Dim>().size();
+            for(auto& element : mesh.getElements<Dim>()) {
+                for (auto& subElement : element.getSubelements()) {
+                    elemHash ^= indexHasher(subElement.index);
+                }
+            }
+            return elemHash ^ hashOfMeshElements<Dim - 1>::hash(mesh);
+        }
+    };
+
+
+    /**
+     * @brief The hashOfMeshElements<Dimension, Dummy> struct hashes the cell information.
+     */
+    template<typename Dummy>
+    struct hashOfMeshElements<Dimension, Dummy>{
+        static size_t hash(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+            std::hash<IndexType> indexHasher;
+
+            // Hash of cells
+            size_t cHash = indexHasher(mesh.getCells().size());
+            for(auto& cell : mesh.getCells()) {
+                cHash ^= indexHasher(cell.getBoundaryElementIndex());
+            }
+            return cHash ^ hashOfMeshElements<Dimension -1>::hash(mesh);
+        }
+    };
+
+    template<typename Dummy>
+    struct hashOfMeshElements<1, Dummy>{
+        static size_t hash(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+            std::hash<IndexType> indexHasher;
+
+            // Hash of cells
+            size_t eHash = indexHasher(mesh.getEdges().size());
+            for(auto& edge : mesh.getEdges()) {
+                eHash ^= edge.getVertexAIndex();
+                eHash ^= edge.getVertexBIndex();
+            }
+            return eHash ^ hashOfMeshElements<0>::hash(mesh);
+        }
+    };
+
+
+    template<typename Dummy>
+    struct hashOfMeshElements<0, Dummy>{
+        static size_t hash(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+            std::hash<Real> vertexHasher;
+            std::hash<IndexType> indexHasher;
+
+            // Hash of vertices
+            size_t vHash = indexHasher(mesh.getVertices().size());
+            for(auto& vertex : mesh.getVertices()) {
+                for(unsigned int i = 0; i < vertex.size(); i++) {
+                    vHash ^= vertexHasher(vertex[i]);
+                    //vHash >>= 2;
+                }
+            }
+            return vHash;
+        }
+    };
+
+public:
+
+    size_t updateSignature() {
+
+        meshSignature = hashOfMeshElements<Dimension>::hash(*this);
+
+        return meshSignature;
+
+    }
+
+    size_t getSignature() const {
+        return meshSignature;
+    }
 
 public:
     template<unsigned int ElementDim, typename Dummy = void>

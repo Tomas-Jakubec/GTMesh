@@ -84,6 +84,7 @@ void cube(UnstructuredMesh<3, size_t, double, 6>& mesh3){
 
         mesh3.getCells().push_back(0);
         mesh3.getCells().at(0).setBoundaryElementIndex(3);
+        mesh3.updateSignature();
     DBGCHECK;
 }
 
@@ -173,6 +174,7 @@ void twoPrisms(UnstructuredMesh<3, size_t, double, 6>& mesh3){
         mesh3.getCells().push_back(1);
         mesh3.getCells().at(1).setBoundaryElementIndex(1);
 
+        mesh3.updateSignature();
     DBGCHECK;
 }
 
@@ -262,6 +264,7 @@ void twoDeformedPrisms(UnstructuredMesh<3, size_t, double, 6>& mesh3){
         mesh3.getCells().push_back(1);
         mesh3.getCells().at(1).setBoundaryElementIndex(1);
 
+        mesh3.updateSignature();
     DBGCHECK;
 }
 
@@ -310,6 +313,9 @@ void testMesh2D() {
     mesh.getCells().at(1).setBoundaryElementIndex(2);
     mesh.getCells().at(1).setIndex(1);
 
+    mesh.updateSignature();
+
+    DBGVAR(mesh.getSignature());
     mesh.initializeCenters();
 
 
@@ -451,7 +457,7 @@ void testMesh3D() {
     }
 
 
-
+    DBGVAR(mesh3.getSignature());
 
     DBGMSG("mesh conatiner test");
     MeshDataContainer<double, 3,2,1,0> cont(mesh3);
@@ -753,6 +759,7 @@ void test3DMeshDeformedPrisms() {
     UnstructuredMesh<3, size_t, double, 6> mesh3;
     twoDeformedPrisms(mesh3);
 
+    DBGVAR(mesh3.getSignature());
     //_ComputeCenters<1,3, 3,2,1>::compute<size_t, double, 6>(centers, mesh3);
     auto centers = ComputeCenters<DEFAULT>(mesh3);
 
@@ -976,7 +983,7 @@ void testFPMA_poly(){
 int main()
 {
 
-    //testMesh2D();
+    testMesh2D();
     //testMesh2DLoadAndWrite();
     testMesh3D();
     test3DMeshDeformedPrisms();

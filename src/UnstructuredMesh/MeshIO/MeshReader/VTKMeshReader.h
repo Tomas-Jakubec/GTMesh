@@ -447,6 +447,7 @@ public:
             DBGTRY(loadCellTypes(ist, mesh);)
         }
 
+        mesh.updateSignature();
     }
 
 

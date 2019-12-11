@@ -144,6 +144,8 @@ public:
 
         loadCells(ist, mesh);
 
+        mesh.updateSignature();
+
     }
 
 
