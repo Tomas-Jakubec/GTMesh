@@ -982,10 +982,6 @@ void testFPMA_poly(){
 
 int main()
 {
-    vector<size_t> v(10,1);
-    DBGVAR(v.data(), ((char *)&*(v.end())) - ((char*)&*(v.begin())));
-
-    void* p = 0;
 
     testMesh2D();
     //testMesh2DLoadAndWrite();
