@@ -287,7 +287,7 @@ struct ExportTest {
     std::vector<std::string> attrVec = {"tohle", "je", "nejlepsi", "debugovaci", "system"};
     tempData attrTempData{42.15, {1,2,1}};
 };
-MAKE_ATTRIBUTE_TRAIT(ExportTest, attrInt, attrDouble, attrChar, attrStr, attrVec, attrTempData);
+MAKE_ATTRIBUTE_TRAIT(ExportTest, attrInt, attrDouble, attrChar, attrStr, attrTempData, attrVec);
 
 void testMemberRef(){
 
@@ -312,6 +312,297 @@ void testMemberRef(){
 
 
 
+/*
+Test of trasposing vector of struct to struct of vectors
+*/
+
+
+template <typename DataType, typename DataTypeTrait = typename Traits<DataType>::ttype>
+struct Container{
+    template <unsigned int index = 0, typename Dummy = void>
+    struct StructOfArrays : public StructOfArrays<index + 1>{
+        std::vector<typename DataTypeTrait::template type<index>> vec;
+    };
+
+
+    template <typename Dummy>
+    struct StructOfArrays<Traits<DataType>::ttype::size() - 1, Dummy>{
+        std::vector<typename DataTypeTrait::template type<DataTypeTrait::size() - 1>> vec;
+    };
+
+    StructOfArrays<> data;
+
+    static constexpr unsigned int size() {
+        return DataTypeTrait::size();
+    }
+
+    template <unsigned int pos>
+    const std::string& name() {
+        return DataTypeTrait::template getName<pos>();
+    }
+
+    template <unsigned int pos>
+    std::vector<typename Traits<DataType>::ttype::template type<pos>>& getDataAtPos() {
+        return data.StructOfArrays<pos>::vec;
+    }
+};
+
+
+
+void testStructTransposition() {
+    Container<ExportTest, Traits<ExportTest>::ttype> data;
+
+    data.getDataAtPos<5>().resize(2);
+    DBGVAR(data.size(), data.getDataAtPos<5>(), data.name<5>());
+
+};
+
+
+/**
+  Test TraitApply
+  */
+/*
+template <typename T, typename Void = void>
+struct TraitApply {
+
+};
+*/
+
+
+template < unsigned int index>
+class TraitApply {
+public:
+    template <class Functor>
+    static auto apply (Functor f,...)
+    -> typename std::enable_if<std::is_assignable_v<
+    std::function<
+        void(unsigned int,
+             std::unique_ptr<
+                MemberApproach<
+                    ExportTest,
+                    Traits<ExportTest>::ttype::type<index>
+                >>&,
+             const std::string&
+             )
+    >, Functor>>::type
+    {
+
+        static_assert (std::is_assignable_v<
+                std::function<
+                    void(unsigned int,
+                         std::unique_ptr<
+                            MemberApproach<
+                                ExportTest,
+                                Traits<ExportTest>::ttype::type<index>
+                            >>&,
+                         const std::string&
+                         )
+                >, Functor>, "");
+
+        f(index, Traits<ExportTest>::ttype::getReference<index>(), Traits<ExportTest>::ttype::getName<index>());
+        TraitApply<index - 1>::apply(f);
+    }
+
+
+
+    template <class Functor>
+    static auto apply (Functor f)
+    -> typename std::enable_if<std::is_assignable_v<
+    std::function<
+        void(std::unique_ptr<
+                MemberApproach<
+                    ExportTest,
+                    Traits<ExportTest>::ttype::type<index>
+                >>&,
+             const std::string&
+             )
+    >, Functor>>::type
+    {
+
+        static_assert (std::is_assignable_v<
+                std::function<
+                    void(std::unique_ptr<
+                            MemberApproach<
+                                ExportTest,
+                                Traits<ExportTest>::ttype::type<index>
+                            >>&,
+                         const std::string&
+                         )
+                >, Functor>, "");
+
+        f(Traits<ExportTest>::ttype::getReference<index>(), Traits<ExportTest>::ttype::getName<index>());
+        TraitApply<index - 1>::apply(f);
+    }
+
+    template <template <typename, typename>class Functor>
+    static auto apply ()
+    -> typename std::enable_if<std::is_class<Functor<ExportTest, Traits<ExportTest>::ttype::type<index>>>::value>::type
+    {
+
+        static_assert (std::is_assignable<
+                std::function<
+                    void(unsigned int,
+                         std::unique_ptr<
+                            MemberApproach<
+                                ExportTest,
+                                Traits<ExportTest>::ttype::type<index>
+                            >>&,
+                         const std::string&
+                         )
+                >, Functor<ExportTest, Traits<ExportTest>::ttype::type<index>>>::value, "");
+
+
+        Functor<ExportTest, Traits<ExportTest>::ttype::type<index>>()(index, Traits<ExportTest>::ttype::getReference<index>(), Traits<ExportTest>::ttype::getName<index>());
+        TraitApply<index - 1>::template apply<Functor>();
+    }
+
+};
+
+
+template <>
+class TraitApply<0> {
+public:
+    template <class Functor>
+    static auto apply (Functor f,...)
+    -> typename std::enable_if<std::is_assignable_v<
+    std::function<
+        void(unsigned int,
+             std::unique_ptr<
+                MemberApproach<
+                    ExportTest,
+                    Traits<ExportTest>::ttype::type<0>
+                >>&,
+             const std::string&
+             )
+    >, Functor>>::type
+    {
+        f(0, Traits<ExportTest>::ttype::getReference<0>(), Traits<ExportTest>::ttype::getName<0>());
+    }
+
+
+    template <class Functor>
+    static auto apply (Functor f)
+    -> typename std::enable_if<std::is_assignable_v<
+    std::function<
+        void(std::unique_ptr<
+                MemberApproach<
+                    ExportTest,
+                    Traits<ExportTest>::ttype::type<0>
+                >>&,
+             const std::string&
+             )
+    >, Functor>>::type
+    {
+        f(Traits<ExportTest>::ttype::getReference<0>(), Traits<ExportTest>::ttype::getName<0>());
+    }
+
+    template <template <typename, typename>class Functor>
+    static auto apply ()
+    -> typename std::enable_if<std::is_class<Functor<ExportTest,Traits<ExportTest>::ttype::type<0>>>::value>::type
+    {
+        Functor<ExportTest, Traits<ExportTest>::ttype::type<0>>()(0, Traits<ExportTest>::ttype::getReference<0>(), Traits<ExportTest>::ttype::getName<0>());
+    }
+};
+
+struct Depth {
+    int value = 0;
+};
+
+template <typename Class, typename T>
+class Func {
+public:
+
+    template <typename U = T>
+    auto operator()(unsigned int index, const std::unique_ptr<MemberApproach<Class, T>>&, const std::string& name)
+    -> typename std::enable_if<!(HasDefaultTraits<U>::value)>::type
+    {
+        DBGVAR(Singleton<Depth>::getInstance().value,index, name);
+    }
+
+    template <typename U = T>
+    auto operator()(unsigned int index, const std::unique_ptr<MemberApproach<Class, T>>&, const std::string& name)
+    -> typename std::enable_if<HasDefaultTraits<U>::value>::type
+    {
+        DBGVAR(Singleton<Depth>::getInstance().value,index, name);
+        Singleton<Depth>::getInstance().value++;
+        Traits<T>::ttype::template apply<Func>();
+        Singleton<Depth>::getInstance().value--;
+    }
+};
+
+
+
+void testTraitApply() {
+
+    auto lambda = [](unsigned int index, auto& , const std::string& name){DBGVAR(index, name);};
+
+    DBGVAR(std::is_function<decltype (lambda)>::value);
+
+    TraitApply<5>::apply(lambda);
+
+    auto lambda1 = []( auto& , const std::string& name){DBGVAR(name);};
+
+    TraitApply<5>::apply(lambda1);
+DBGMSG("Tady");
+    Traits<ExportTest>::ttype::apply<Func>();
+    //TraitApply<5>::apply<Func>();
+
+    Traits<ExportTest>::ttype::apply(lambda);
+
+    Traits<ExportTest>::ttype::apply(lambda1);
+
+    //Traits<ExportTest>::ttype::apply<Func>();
+
+
+}
+
+
+/*
+ *
+ * Compile time traits
+ */
+
+#include <cstdio>
+
+struct Foo {
+   int m;
+   int r;
+
+   int getM() {return m;}
+   void setM(const int& _m) {m = _m;}
+} foo = {2, 3};
+
+
+
+template<typename R1, typename R2, R1 Mem1, R2 Mem2>
+struct B {
+   static constexpr R1 get = Mem1;
+
+   static constexpr R2 set = Mem2;
+
+
+   static typename MemberReferenceType<std::pair<R1,R2>>::type getValue(typename MemberReferenceType<std::pair<R1,R2>>::typeClass& foo) {
+       return (foo.*(get))();
+   }
+};
+
+
+template<typename Ref, Ref Mem>
+struct B<Ref,Ref, Mem, Mem> {
+   static constexpr Ref mp = Mem;
+
+   inline static typename MemberReferenceType<Ref>::type& getValue(typename MemberReferenceType<Ref>::typeClass& foo) {
+       return foo.*mp;
+   }
+};
+
+#include<cstdio>
+void testCompileTimeTraits() {
+    typedef B<decltype(&Foo::m),decltype(&Foo::m), &Foo::m, &Foo::m> Bm;
+    typedef B<decltype(&Foo::getM),decltype (&Foo::setM), &Foo::getM,&Foo::setM> Bp;
+    typedef B<decltype(&Foo::r),decltype(&Foo::r), &Foo::r, &Foo::r> Br;
+    DBGVAR(foo.*(Bm::mp), Bm::getValue(foo), foo.*(Br::mp), (foo.*(Bp::get))());
+}
 
 #include "../src/Singleton/Singleton.h"
 /*
@@ -517,7 +808,127 @@ void testOperator() {
 }
 
 
+#include <chrono>
 
+void testTraitPerformance() {
+
+    size_t size;
+    DBGMSG("input size");
+    cin >> size;
+
+    std::vector<ExportTest> vec(size);
+    double ini;
+    DBGMSG("input ini");
+    std::cin >> ini;
+
+    for (auto& val : vec) {
+        val.attrDouble = ini;
+    }
+
+    DBGMSG("input rep");
+    int maxRep;
+    cin >> maxRep;
+
+    DBGVAR(size * ini);
+
+    auto clock = std::chrono::high_resolution_clock();
+    DBGMSG("primary approach");
+    long long deviation = 0;
+
+    auto start = clock.now();
+    double res = 0;
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+            res += vec[i].attrDouble;
+        }
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+    }
+
+    auto avgDuration = (clock.now() - start).count() / maxRep;
+    DBGVAR(res, avgDuration , sqrt((deviation / maxRep )- pow(avgDuration,2)));
+    deviation = 0;
+
+
+
+    DBGMSG("constexpr ref");
+
+    typedef B<decltype(&ExportTest::attrDouble),decltype(&ExportTest::attrDouble), &ExportTest::attrDouble, &ExportTest::attrDouble> doubleAttr;
+    start = clock.now();
+    res = 0;
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+            res += doubleAttr::getValue(vec[i]);
+        }
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+    }
+
+    avgDuration = (clock.now() - start).count() / maxRep;
+    DBGVAR(res, avgDuration , sqrt((deviation / maxRep )- pow(avgDuration,2)));
+    deviation = 0;
+
+    start = clock.now();
+    res = 0;
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+            res += vec[i].*(doubleAttr::mp);
+        }
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+    }
+
+    avgDuration = (clock.now() - start).count() / maxRep;
+    DBGVAR(res, avgDuration , sqrt((deviation / maxRep )- pow(avgDuration,2)));
+    deviation = 0;
+
+    DBGMSG("member reference");
+    //typedef B<decltype(&ExportTest::attrDouble),decltype(&ExportTest::attrDouble), &ExportTest::attrDouble, &ExportTest::attrDouble> doubleAttr;
+
+    MemberReference<ExportTest, double, decltype (&ExportTest::attrDouble)> MR(&ExportTest::attrDouble);
+    start = clock.now();
+    res = 0;
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+            res += MR.getValue(vec[i]);
+        }
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+    }
+
+    avgDuration = (clock.now() - start).count() / maxRep;
+    DBGVAR(res, avgDuration , sqrt((deviation / maxRep )- pow(avgDuration,2)));
+    deviation = 0;
+
+
+    start = clock.now();
+    res = 0;
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+            res += vec[i].*(MR.ref);
+        }
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+    }
+
+    avgDuration = (clock.now() - start).count() / maxRep;
+    DBGVAR(res, avgDuration , sqrt((deviation / maxRep )- pow(avgDuration,2)));
+    deviation = 0;
+
+
+    DBGVAR(Traits<ExportTest>::ttype::getName<1>());
+    start = clock.now();
+    res = 0;
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+            res += Traits<ExportTest>::ttype::getValue<1>(vec[i]);
+        }
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+    }
+
+    avgDuration = (clock.now() - start).count() / maxRep;
+    DBGVAR(res, avgDuration , sqrt((deviation / maxRep )- pow(avgDuration,2)));
+    deviation = 0;
+
+
+
+
+}
 
 void applyFunc(function_ptr<int, int>::type f, int arg) {
     DBGVAR(f(arg));
@@ -549,35 +960,35 @@ void testFunction() {
 
 
 
-template <unsigned int dim, unsigned int Dim, CalculationMethod Method = DEFAULT>
+template <unsigned int dim, unsigned int Dim, ComputationMethod Method = DEFAULT>
 struct calcCent{
     static void run() {DBGMSG("running default", dim);calcCent<dim + 1, Dim, Method>::run();}
 };
 
-template <unsigned int Dim, CalculationMethod Method>
+template <unsigned int Dim, ComputationMethod Method>
 struct calcCent<Dim, Dim, Method>{
     static void run() {DBGMSG("running default", Dim);}
 };
 
-template <unsigned int Dim, CalculationMethod Method>
+template <unsigned int Dim, ComputationMethod Method>
 struct calcCent<0, Dim, Method>{
     static void run() {DBGMSG("running default", 0);calcCent<1, Dim, Method>::run();}
 };
 
-template <unsigned int Dim, CalculationMethod Method>
+template <unsigned int Dim, ComputationMethod Method>
 struct calcCent<1, Dim, Method>{
     static void run() {DBGMSG("running default", 1);calcCent<2, Dim, Method>::run();}
 };
 
 template <>
-struct calcCent<2, 3, MESH_TESSELLATED>{
-    static void run() {DBGMSG("running MESH_TESSELLATED");calcCent<3, 3, MESH_TESSELLATED>::run();}
+struct calcCent<2, 3, TESSELLATED>{
+    static void run() {DBGMSG("running MESH_TESSELLATED");calcCent<3, 3, TESSELLATED>::run();}
 };
 
 
 void testCalcCent() {
     calcCent<0,3>::run();
-    calcCent<0,3, MESH_TESSELLATED>::run();
+    calcCent<0,3, TESSELLATED>::run();
 }
 
 int main()
@@ -587,7 +998,11 @@ int main()
     //testMemberRef();
     //testConstrucorOrder();
     //testFunction();
-    testCalcCent();
+    //testCalcCent();
+    //testStructTransposition();
+    //testTraitApply();
+    //testCompileTimeTraits();
+    testTraitPerformance();
     return 0;
 }
 

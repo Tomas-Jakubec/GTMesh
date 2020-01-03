@@ -434,17 +434,17 @@ public:
 
         ist >> buf;
         if (buf == "POINTS") {
-            DBGTRY(loadPoints(ist, mesh);)
+            loadPoints(ist, mesh);
         }
 
         ist >> buf;
         if (buf == "CELLS") {
-            DBGTRY(loadCells(ist, mesh);)
+            loadCells(ist, mesh);
         }
 
         ist >> buf;
         if (buf == "CELL_TYPES") {
-            DBGTRY(loadCellTypes(ist, mesh);)
+            loadCellTypes(ist, mesh);
         }
 
         mesh.updateSignature();

@@ -32,12 +32,13 @@ template <typename Class, typename ValueType>
 class MemberReference<Class, ValueType, ValueType Class::*> : public MemberApproach<Class, ValueType>{
 
     using refType = ValueType Class::*;
-    refType ref;
+public:
+    refType const ref;
 
 public:
 
-    MemberReference(refType referenceToMember){
-        ref = referenceToMember;
+    MemberReference(refType referenceToMember) : ref(referenceToMember){
+        //ref = referenceToMember;
     }
 
     virtual ValueType getValue(const Class* c) override {
@@ -63,12 +64,14 @@ class MemberReference<Class, ValueType, ValueType& (Class::*)()> : public Member
 
     using refType = ValueType& (Class::*)();
 
-    refType ref;
+    refType const ref;
 
 public:
 
-    MemberReference(refType referenceToMember){
-        ref = referenceToMember;
+    MemberReference(refType referenceToMember)
+        : ref(referenceToMember)
+    {
+        //ref = referenceToMember;
     }
 
     virtual ValueType getValue(const Class* c) override {
@@ -100,15 +103,16 @@ class MemberReference<
 : public MemberApproach<Class, ValueType>{
 
     using getter = ValueType (Class::*)();
-    getter refGet;
+    getter const refGet;
     using setter = void (Class::*)(const ValueType&);
-    setter refSet;
+    setter const refSet;
 
 public:
 
-     MemberReference(std::pair<getter, setter> getSet){
-         refGet = getSet.first;
-         refSet = getSet.second;
+     MemberReference(std::pair<getter, setter> getSet)
+         :refGet(getSet.first), refSet(getSet.second){
+         //refGet = getSet.first;
+         //refSet = getSet.second;
      }
 
      virtual ValueType getValue(const Class* c) override {
@@ -138,15 +142,16 @@ class MemberReference<
 : public MemberApproach<Class, ValueType>{
 
     using getter = ValueType (Class::*)() const;
-    getter refGet;
+    getter const refGet;
     using setter = void (Class::*)(const ValueType&);
-    setter refSet;
+    setter const refSet;
 
 public:
 
-     MemberReference(std::pair<getter, setter> getSet){
-         refGet = getSet.first;
-         refSet = getSet.second;
+     MemberReference(std::pair<getter, setter> getSet)
+         :refGet(getSet.first), refSet(getSet.second){
+         //refGet = getSet.first;
+         //refSet = getSet.second;
      }
 
      virtual ValueType getValue(const Class* c) override {
@@ -176,15 +181,16 @@ class MemberReference<
 : public MemberApproach<Class, ValueType>{
 
     using getter = const ValueType& (Class::*)() const;
-    getter refGet;
+    getter const refGet;
     using setter = void (Class::*)(const ValueType&);
-    setter refSet;
+    setter const refSet;
 
 public:
 
-     MemberReference(std::pair<getter, setter> getSet){
-         refGet = getSet.first;
-         refSet = getSet.second;
+     MemberReference(std::pair<getter, setter> getSet)
+         :refGet(getSet.first), refSet(getSet.second){
+         //refGet = getSet.first;
+         //refSet = getSet.second;
      }
 
      virtual ValueType getValue(const Class* c) override {
@@ -214,15 +220,16 @@ class MemberReference<
 : public MemberApproach<Class, ValueType>{
 
     using getter = const ValueType& (Class::*)();
-    getter refGet;
+    getter const refGet;
     using setter = void (Class::*)(const ValueType&);
-    setter refSet;
+    setter const refSet;
 
 public:
 
-     MemberReference(std::pair<getter, setter> getSet){
-         refGet = getSet.first;
-         refSet = getSet.second;
+     MemberReference(std::pair<getter, setter> getSet)
+         :refGet(getSet.first), refSet(getSet.second){
+         //refGet = getSet.first;
+         //refSet = getSet.second;
      }
 
      virtual ValueType getValue(const Class* c) override {
@@ -253,33 +260,39 @@ or a pair of getter and setter (std::pair<MemberType (Class::*)(), void (Class::
 template <typename Class, typename MemberType>
 struct MemberReferenceType <MemberType Class::*>{
     using type = MemberType;
+    using typeClass = Class;
 };
 
 
 template <typename Class, typename MemberType>
 struct MemberReferenceType <MemberType& (Class::*)()>{
     using type = MemberType;
+    using typeClass = Class;
 };
 
 
 template <typename Class, typename MemberType>
 struct MemberReferenceType <std::pair<MemberType (Class::*)(), void (Class::*)(const MemberType&)>>{
     using type = MemberType;
+    using typeClass = Class;
 };
 
 template <typename Class, typename MemberType>
 struct MemberReferenceType <std::pair<MemberType (Class::*)()const, void (Class::*)(const MemberType&)>>{
     using type = MemberType;
+    using typeClass = Class;
 };
 
 template <typename Class, typename MemberType>
 struct MemberReferenceType <std::pair<const MemberType& (Class::*)()const, void (Class::*)(const MemberType&)>>{
     using type = MemberType;
+    using typeClass = Class;
 };
 
 template <typename Class, typename MemberType>
 struct MemberReferenceType <std::pair<const MemberType& (Class::*)(), void (Class::*)(const MemberType&)>>{
     using type = MemberType;
+    using typeClass = Class;
 };
 
 #endif // MEMBERAPPROACH_H

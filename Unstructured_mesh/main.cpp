@@ -427,10 +427,38 @@ void testMesh2DLoadAndWrite(){
     writer.writeToStream(ofst, mesh, reader.getCellTypes());
 }
 
+void meshSize() {
+    DBGVAR(
+                (sizeof(UnstructuredMesh<3, size_t, double, 12>::ElementType<0>)),
+                (sizeof(UnstructuredMesh<3, size_t, double, 12>::ElementType<1>)),
+                (sizeof(UnstructuredMesh<3, size_t, double, 12>::ElementType<2>)),
+                (sizeof(UnstructuredMesh<3, size_t, double, 12>::ElementType<3>)),
+
+                (sizeof(UnstructuredMesh<3, unsigned int, double, 6>::ElementType<0>)),
+                (sizeof(UnstructuredMesh<3, unsigned int, double, 6>::ElementType<1>)),
+                (sizeof(UnstructuredMesh<3, unsigned int, double, 6>::ElementType<2>)),
+                (sizeof(UnstructuredMesh<3, unsigned int, double, 6>::ElementType<3>)),
+
+                (sizeof(UnstructuredMesh<3, unsigned int, double, 12>::ElementType<0>)),
+                (sizeof(UnstructuredMesh<3, unsigned int, double, 12>::ElementType<1>)),
+                (sizeof(UnstructuredMesh<3, unsigned int, double, 12>::ElementType<2>)),
+                (sizeof(UnstructuredMesh<3, unsigned int, double, 12>::ElementType<3>)),
+
+                (sizeof(UnstructuredMesh<3, size_t, float, 12>::ElementType<0>)),
+                (sizeof(UnstructuredMesh<3, size_t, float, 12>::ElementType<1>)),
+                (sizeof(UnstructuredMesh<3, size_t, float, 12>::ElementType<2>)),
+                (sizeof(UnstructuredMesh<3, size_t, float, 12>::ElementType<3>))
+           );
+
+}
+
+
 void testMesh3D() {
     DBGMSG("3D test");
 
     using sit3 = UnstructuredMesh<3, size_t, double, 6>;
+
+
     UnstructuredMesh<3, size_t, double, 6> mesh3;
     twoPrisms(mesh3);
     mesh3.setupBoundaryCells();
@@ -982,18 +1010,17 @@ void testFPMA_poly(){
 
 int main()
 {
-
-    testMesh2D();
+    meshSize();
+    //testMesh2D();
     //testMesh2DLoadAndWrite();
-    testMesh3D();
-    test3DMeshDeformedPrisms();
-    testMeshRefine();
-    testMeshDataContainer();
+    //testMesh3D();
+    //test3DMeshDeformedPrisms();
+    //testMeshRefine();
+    //testMeshDataContainer();
     //UnstructuredMesh<5, size_t, double, 6,5,4> m;
     //m.ComputeElementMeasures();
     //test3DMeshLoad();
 
     //testFPMA_poly();
-    DBGVAR(vector<double>());
 
 }

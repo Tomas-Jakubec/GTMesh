@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include "../Singleton/Singleton.h"
+#include <functional>
 
 template<typename Class, typename...Types>
 class Traits {
@@ -40,14 +41,14 @@ private:
     template<unsigned int Pos, typename ref>
     static void _makeReferences(const std::string& name, ref member) {
         refs::getInstance().MemRefs<Pos, void>::name = name;
-        refs::getInstance().MemRefs<Pos, void>::ref = std::unique_ptr<MemberApproach<Class, type<Pos>>>(new MemberReference<Class, type<Pos>, decltype(member)>(member));
+        refs::getInstance().MemRefs<Pos, void>::ref = std::unique_ptr<MemberApproach<Class, type<Pos>>>(new MemberReference<Class, type<Pos>, ref>(member));
     }
 
 
     template<unsigned int Pos, typename ref>
     static void _makeReferences(const char* name, ref member) {
         refs::getInstance().MemRefs<Pos, void>::name = name;
-        refs::getInstance().MemRefs<Pos, void>::ref = std::unique_ptr<MemberApproach<Class, type<Pos>>>(new MemberReference<Class, type<Pos>, decltype(member)>(member));
+        refs::getInstance().MemRefs<Pos, void>::ref = std::unique_ptr<MemberApproach<Class, type<Pos>>>(new MemberReference<Class, type<Pos>, ref>(member));
     }
 
 
@@ -102,6 +103,205 @@ public:
         _makeReferences<0>(refsAndNames...);
     }
 
+
+private:
+
+    template<unsigned int Index = 0, typename Dummy = void>
+    struct Apply {
+        using ThisTrait = Traits<Class, Types...>;
+
+        template <class Functor>
+        static auto apply (Functor f,...)
+        -> typename std::enable_if<std::is_assignable<
+        std::function<
+            void(unsigned int,
+                 std::unique_ptr<
+                    MemberApproach<
+                        Class,
+                        typename ThisTrait::template type<Index>
+                    >>&,
+                 const std::string&
+                 )
+        >, Functor>::value>::type
+        {
+
+            static_assert (std::is_assignable<
+                    std::function<
+                        void(unsigned int,
+                             std::unique_ptr<
+                                MemberApproach<
+                                    Class,
+                                    typename ThisTrait::template type<Index>
+                                >>&,
+                             const std::string&
+                             )
+                    >, Functor>::value, "");
+
+            f(Index, ThisTrait::getReference<Index>(), ThisTrait::getName<Index>());
+            Apply<Index + 1>::apply(f);
+        }
+
+
+
+        template <class Functor>
+        static auto apply (Functor f)
+        -> typename std::enable_if<std::is_assignable<
+        std::function<
+            void(std::unique_ptr<
+                    MemberApproach<
+                        Class,
+                        typename ThisTrait::template type<Index>
+                    >>&,
+                 const std::string&
+                 )
+        >, Functor>::value>::type
+        {
+
+            static_assert (std::is_assignable<
+                    std::function<
+                        void(std::unique_ptr<
+                                MemberApproach<
+                                    Class,
+                                    typename ThisTrait::template type<Index>
+                                >>&,
+                             const std::string&
+                             )
+                    >, Functor>::value, "");
+
+            f(ThisTrait::getReference<Index>(), ThisTrait::getName<Index>());
+            Apply<Index + 1>::apply(f);
+        }
+
+        template <template <typename, typename>class Functor>
+        static auto apply ()
+        -> typename std::enable_if<std::is_class<Functor<Class, typename ThisTrait::template type<Index>>>::value>::type
+        {
+
+            static_assert (std::is_assignable<
+                    std::function<
+                        void(unsigned int,
+                             std::unique_ptr<
+                                MemberApproach<
+                                    Class,
+                                    typename ThisTrait::template type<Index>
+                                >>&,
+                             const std::string&
+                             )
+                    >, Functor<Class, typename ThisTrait::template type<Index>>>::value, "");
+
+
+            Functor<Class, typename ThisTrait::template type<Index>>()(Index, ThisTrait::getReference<Index>(), ThisTrait::getName<Index>());
+            Apply<Index + 1>::template apply<Functor>();
+        }
+
+    };
+
+    template<typename Dummy>
+    struct Apply<size() - 1, Dummy> {
+        using ThisTrait = Traits<Class, Types...>;
+
+        template <class Functor>
+        static auto apply (Functor f,...)
+        -> typename std::enable_if<std::is_assignable<
+        std::function<
+            void(unsigned int,
+                 std::unique_ptr<
+                    MemberApproach<
+                        Class,
+                        typename ThisTrait::template type<ThisTrait::size() - 1>
+                    >>&,
+                 const std::string&
+                 )
+        >, Functor>::value>::type
+        {
+
+            static_assert (std::is_assignable<
+                    std::function<
+                        void(unsigned int,
+                             std::unique_ptr<
+                                MemberApproach<
+                                    Class,
+                                    typename ThisTrait::template type<ThisTrait::size() - 1>
+                                >>&,
+                             const std::string&
+                             )
+                    >, Functor>::value, "");
+
+            f(ThisTrait::size() - 1, ThisTrait::getReference<ThisTrait::size() - 1>(), ThisTrait::getName<ThisTrait::size() - 1>());
+
+        }
+
+
+
+        template <class Functor>
+        static auto apply (Functor f)
+        -> typename std::enable_if<std::is_assignable<
+        std::function<
+            void(std::unique_ptr<
+                    MemberApproach<
+                        Class,
+                        typename ThisTrait::template type<ThisTrait::size() - 1>
+                    >>&,
+                 const std::string&
+                 )
+        >, Functor>::value>::type
+        {
+
+            static_assert (std::is_assignable<
+                    std::function<
+                        void(std::unique_ptr<
+                                MemberApproach<
+                                    Class,
+                                    typename ThisTrait::template type<ThisTrait::size() - 1>
+                                >>&,
+                             const std::string&
+                             )
+                    >, Functor>::value, "");
+
+            f(ThisTrait::getReference<ThisTrait::size() - 1>(), ThisTrait::getName<ThisTrait::size() - 1>());
+
+        }
+
+        template <template <typename, typename>class Functor>
+        static auto apply ()
+        -> typename std::enable_if<std::is_class<Functor<Class, typename ThisTrait::template type<ThisTrait::size() - 1>>>::value>::type
+        {
+
+            static_assert (std::is_assignable<
+                    std::function<
+                        void(unsigned int,
+                             std::unique_ptr<
+                                MemberApproach<
+                                    Class,
+                                    typename ThisTrait::template type<ThisTrait::size() - 1>
+                                >>&,
+                             const std::string&
+                             )
+                    >, Functor<Class, typename ThisTrait::template type<ThisTrait::size() - 1>>>::value, "");
+
+
+            Functor<Class, typename ThisTrait::template type<ThisTrait::size() - 1>>()(ThisTrait::size() - 1, ThisTrait::getReference<ThisTrait::size() - 1>(), ThisTrait::getName<ThisTrait::size() - 1>());
+        }
+
+    };
+public:
+    /**
+     * @brief Traits apply function.
+     * This function automatically
+     * applies a lambda with specified
+     * arguments: <BR> (unsigned int,
+     * const auto& [as const std::unique_ptr<MemberApproach<Class, typename>>&]
+     * const std::string&)
+     */
+    template<typename Functor>
+        static void apply(Functor f) {
+            Apply<>::apply(f);
+        }
+
+    template<template <typename, typename>class Functor>
+        static void apply() {
+            Apply<>::template apply<Functor>();
+        }
 };
 
 
@@ -112,7 +312,7 @@ public:
 
 template<typename Class>
 class Traits<Class>: public std::false_type{
-    static_assert (true, "The Traits template must be specialized for given type and must contain Traits references using variadic Traits.");
+    //static_assert (false, "The Traits template must be specialized for given type and must contain Traits references using variadic Traits.");
 public:
     static constexpr std::false_type is_specialized{};
 };
