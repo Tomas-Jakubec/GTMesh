@@ -46,7 +46,7 @@ public:
 
 
     template<typename VAR_NAME, typename VAR, typename ... REST>
-    static void writeVar(int line, const char* cppFile, VAR_NAME name,const VAR& value, REST ... rest){
+    static void writeVar(int line, const char* cppFile, const VAR_NAME& name,const VAR& value,const REST& ... rest){
 
         writeVar(line, cppFile, name, value);
         writeVar(line, cppFile,  rest...);
