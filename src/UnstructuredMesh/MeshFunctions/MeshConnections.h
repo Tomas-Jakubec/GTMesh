@@ -34,7 +34,13 @@ struct MeshConnections {
         MeshApply<StartDim, TargetDim>::apply(mesh, [&result](IndexType ori, IndexType element){
             result.template getDataByPos<0>().at(ori).insert(element);
         });
-
+        MeshDataContainer<std::vector<IndexType>, StartDim> res(mesh);
+        for (IndexType i = IndexType(); i < res.template getDataByPos<0>().size(); i++) {
+            res.template getDataByPos<0>()[i].insert(
+                        res.template getDataByPos<0>()[i].begin(),
+                        result.template getDataByPos<0>()[i].begin(),
+                        result.template getDataByPos<0>()[i].end());
+        }
         return result;
     }
 };

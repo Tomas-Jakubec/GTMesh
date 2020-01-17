@@ -258,13 +258,17 @@ private:
     struct HashOfMeshElements <Dim, typename std::enable_if<(MeshElements<Dimension, IndexType, Real, Reserve...>::template reserve<Dim>() > 0), size_t>::type>{
         static size_t hash(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh)
         {
-
+#if __cplusplus <= 201702L // standard c++14 and older
             std::hash<std::string> hasher;
             // Use string as a byte container representing the array
             std::string tmpString(reinterpret_cast<char*>(mesh.template getElements<Dim>().data()), mesh.template getElements<Dim>().size() * sizeof (MeshElements<Dimension, IndexType, Real, Reserve...>::ElementType<Dim>));
-
             size_t elemHash = hasher(tmpString);
-
+#else // standard c++17 and later
+            std::hash<std::string_view> hasher;
+            // Use string as a byte container representing the array
+            std::string_view vectorView(reinterpret_cast<char*>(mesh.template getElements<Dim>().data()), mesh.template getElements<Dim>().size() * sizeof (MeshElements<Dimension, IndexType, Real, Reserve...>::ElementType<Dim>));
+            size_t elemHash = hasher(vectorView);
+#endif
             return elemHash ^ HashOfMeshElements<Dim - 1>::hash(mesh);
         }
     };
@@ -278,13 +282,19 @@ private:
         static size_t hash(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
 
             // Hash of cells
-
+#if __cplusplus <= 201702L // standard c++14 and older
             std::hash<std::string> hasher;
             // Use string as a byte container representing the array
             std::string tmpString(reinterpret_cast<char*>(mesh.getCells().data()), mesh.getCells().size() * sizeof (MeshElements<Dimension, IndexType, Real, Reserve...>::Cell));
 
             size_t cHash = hasher(tmpString);
+#else // standard c++17 and later
+            std::hash<std::string_view> hasher;
+            // Use string as a byte container representing the array
+            std::string_view vectorView(reinterpret_cast<char*>(mesh.getCells().data()), mesh.getCells().size() * sizeof (MeshElements<Dimension, IndexType, Real, Reserve...>::Cell));
 
+            size_t cHash = hasher(vectorView);
+#endif
 
             return cHash ^ HashOfMeshElements<Dimension -1>::hash(mesh);
         }
@@ -295,13 +305,19 @@ private:
         static size_t hash(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
 
             // Hash of edges
-
+#if __cplusplus <= 201702L // standard c++14 and older
             std::hash<std::string> hasher;
             // Use string as a byte container representing the array
             std::string tmpString(reinterpret_cast<char*>(mesh.getEdges().data()), mesh.getEdges().size() * sizeof (MeshElements<Dimension, IndexType, Real, Reserve...>::Edge));
 
             size_t eHash = hasher(tmpString);
+#else // standard c++17 and later
+            std::hash<std::string_view> hasher;
+            // Use string as a byte container representing the array
+            std::string_view vectorView(reinterpret_cast<char*>(mesh.getEdges().data()), mesh.getEdges().size() * sizeof (MeshElements<Dimension, IndexType, Real, Reserve...>::Edge));
 
+            size_t eHash = hasher(vectorView);
+#endif
             return eHash ^ HashOfMeshElements<0>::hash(mesh);
         }
     };
@@ -312,14 +328,21 @@ private:
         static size_t hash(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
 
             // Hash of vertices
-
+#if __cplusplus <= 201702L // standard c++14 and older
             std::hash<std::string> hasher;
 
             // Use string as a byte container representing the array
             std::string tmpString(reinterpret_cast<char*>(mesh.getVertices().data()), mesh.getVertices().size() * sizeof (MeshElements<Dimension, IndexType, Real, Reserve...>::Vertex));
 
             size_t vHash = hasher(tmpString);
+#else // standard c++17 and later
+            std::hash<std::string_view> hasher;
 
+            // Use string as a byte container representing the array
+            std::string_view tmpString(reinterpret_cast<char*>(mesh.getVertices().data()), mesh.getVertices().size() * sizeof (MeshElements<Dimension, IndexType, Real, Reserve...>::Vertex));
+
+            size_t vHash = hasher(tmpString);
+#endif
             return vHash;
         }
     };

@@ -6,6 +6,8 @@
 #include <type_traits>
 #include <iostream>
 #include <list>
+#include <unordered_map>
+#include <functional>
 #include <map>
 using namespace std;
 
@@ -62,8 +64,8 @@ void testDebug() {
         {"druhy", 2},
         {"treti", 3}
     };
-    ConsoleLogger::writeVar(__LINE__, __FILE__, "r", r, "i", i, "c", c, "list", list, "vec", vec, "b", b, "map", m);
-    ConsoleLogger::writeVar(__LINE__, __FILE__,"---", {5,4,3,2});
+    ConsoleLogger<>::writeVar(__LINE__, __FILE__, "r", r, "i", i, "c", c, "list", list, "vec", vec, "b", b, "map", m);
+    ConsoleLogger<>::writeVar(__LINE__, __FILE__,"---", {5,4,3,2});
     DBGVAR(r, i, c, list, vec, b, m);
 
     Vertex<7, double> vert;
@@ -991,6 +993,239 @@ void testCalcCent() {
     calcCent<0,3, TESSELLATED>::run();
 }
 
+
+/*
+    test of custom hash
+*/
+namespace std {
+template<typename IndexType>
+class hash<std::vector<IndexType>>{
+public:
+    size_t operator()(const std::vector<IndexType>& v) const {
+
+        std::string_view sv(reinterpret_cast<const char*>(v.data()), sizeof(IndexType) * v.size());
+        return std::hash<std::string_view>{}(sv);
+    }
+};
+
+template<unsigned int Dim, typename Real>
+class hash<Vertex<Dim, Real>>{
+public:
+    size_t operator()(const Vertex<Dim, Real>& vert) const {
+
+        std::string_view sv(reinterpret_cast<const char*>(&vert), sizeof(Real) * vert.size());
+        return std::hash<std::string_view>{}(sv);
+    }
+
+};
+}
+
+void testCustomUnorderedMap() {
+    std::unordered_map<std::vector<size_t>, size_t> m;
+
+    std::vector<size_t> v = {1,2,3};
+    std::vector<size_t> v2 = {3,2,1};
+
+    std::sort(v2.begin(), v2.end());
+    DBGVAR(v == v2, sizeof(std::vector<size_t>), sizeof(std::string));
+
+
+    DBGVAR(m[v] = 1, m[v2]);
+
+    Vertex<3, double> vert1 = {1,2,3};
+
+    std::unordered_map<Vertex<3,double>, size_t> mm;
+
+    DBGVAR(mm[vert1] = 3);
+    DBGVAR(*mm.begin(), sizeof(decltype(vert1)));
+
+
+    std::set<int> s = {1,15,6,8};
+
+    std::vector<int> vec(4);
+    std::vector<int> vec2;
+
+    std::copy(s.begin(), s.end(), vec.begin());
+
+    //std::copy(s.begin(), s.end(), std::inserter(vec2, vec2.begin()));
+
+    vec2.insert(vec2.begin(),s.begin(), s.end());
+
+    std::vector<int> vec3(s.begin(), s.end());
+
+    DBGVAR(vec,s, vec2, vec.capacity(), vec2.capacity(), vec3);
+}
+
+
+struct privateAttr{
+private:
+    std::string attr = "attr";
+public:
+    const std::string& getAttr(){return attr;}
+    friend Traits<privateAttr>;
+};
+
+MAKE_NAMED_ATTRIBUTE_TRAIT(privateAttr, "str_attr", attr);
+
+//#include <ciso646>
+void testPrivateTrait(){
+    privateAttr a;
+    DBGVAR(a);
+    Traits<privateAttr>::ttype::setValue<0>(a, "new value");
+    DBGVAR(a);
+
+}
+
+#include "json.hpp"
+
+
+struct person{
+   std::string name, surname;
+
+   struct address {
+       std::string address;
+       int num;
+   } addr;
+};
+
+MAKE_ATTRIBUTE_TRAIT(person::address, address, num);
+MAKE_ATTRIBUTE_TRAIT(person, name, surname, addr);
+
+using json = nlohmann::json;
+
+template <unsigned int Index>
+struct TraitToJson {
+    template<typename traitedClass>
+    static
+    typename enable_if<
+        (Traits<traitedClass>::ttype::size() - 1 > Index)
+    >::type
+    to_json(json& j, const traitedClass& t) {
+
+//        j.at(Traits<traitedClass>::ttype::template getName<Index>()) = Traits<traitedClass>::ttype::template getValue<Index>(t);
+        j.push_back({Traits<traitedClass>::ttype::template getName<Index>(), Traits<traitedClass>::ttype::template getValue<Index>(t)});
+        TraitToJson<Index + 1>::to_json(j, t);
+    }
+
+
+    template<typename traitedClass>
+    static
+    typename enable_if<
+        (Traits<traitedClass>::ttype::size() - 1 == Index)
+    >::type
+    to_json(json& j, const traitedClass& t) {
+
+        j.push_back({Traits<traitedClass>::ttype::template getName<Index>(), Traits<traitedClass>::ttype::template getValue<Index>(t)});
+        //j.at(Traits<traitedClass>::ttype::template getName<Index>()) = Traits<traitedClass>::ttype::template getValue<Index>(t);
+
+    }
+};
+
+template<typename traitedClass>
+typename
+std::enable_if<
+    HasDefaultTraits<traitedClass>::value
+>::type
+to_json(json& j, const traitedClass& t){
+    j = json::object();
+    TraitToJson<0>::to_json(j, t);
+}
+
+
+template <unsigned int Index>
+struct JsonToTrait {
+    template<typename traitedClass>
+    static
+    typename enable_if<
+        (Traits<traitedClass>::ttype::size() - 1 > Index)
+    >::type
+    from_json(const json& j, traitedClass& t) {
+
+        Traits<traitedClass>::ttype::template setValue<Index>(
+            t,
+            j.at(Traits<traitedClass>::ttype::template getName<Index>()).template get<typename Traits<traitedClass>::ttype::template type<Index>>()
+        );
+        JsonToTrait<Index + 1>::from_json(j, t);
+    }
+
+
+    template<typename traitedClass>
+    static
+    typename enable_if<
+        (Traits<traitedClass>::ttype::size() - 1 == Index)
+    >::type
+    from_json(const json& j, traitedClass& t) {
+
+        Traits<traitedClass>::ttype::template setValue<Index>(
+            t,
+            j.at(Traits<traitedClass>::ttype::template getName<Index>()).template get<typename Traits<traitedClass>::ttype::template type<Index>>()
+        );
+
+    }
+};
+
+template<typename traitedClass>
+typename
+std::enable_if<
+    HasDefaultTraits<traitedClass>::value
+>::type
+from_json(const json& j, traitedClass& t) {
+    JsonToTrait<0>::from_json(j,t);
+}
+
+namespace ns {
+    // a simple struct to model a person
+    struct person {
+        std::string name;
+        std::string address;
+        int age;
+    };
+}
+namespace ns {
+    void to_json(json& j, const person& p) {
+        j = json{{"name", p.name}, {"address", p.address}, {"age", p.age}};
+    }
+
+    void from_json(const json& j, person& p) {
+        j.at("name").get_to(p.name);
+        j.at("address").get_to(p.address);
+        j.at("age").get_to(p.age);
+    }
+} // namespace ns
+
+
+void testJson() {
+
+    auto js = R"({"name":"Tomik","surname":"Jakubec"})"_json;
+
+
+    // create a person
+    ns::person p {"Ned Flanders", "744 Evergreen Terrace", 60};
+
+    // conversion: person -> json
+    json j = p;
+
+    std::cout << j << std::endl;
+    // {"address":"744 Evergreen Terrace","age":60,"name":"Ned Flanders"}
+
+    // conversion: json -> person
+    auto p2 = j.get<ns::person>();
+
+    person p_test = {"tomik","...", {"MS", 334}};
+
+    json j_test = p_test;
+
+
+    j_test.at("name") = "Ivisek";
+
+    p_test = j_test;
+
+    std::cout << j_test << std::endl;
+    DBGVAR(j, p_test, j_test);
+
+}
+
+
 int main()
 {
     //testDebug();
@@ -1002,7 +1237,10 @@ int main()
     //testStructTransposition();
     //testTraitApply();
     //testCompileTimeTraits();
-    testTraitPerformance();
+    //testTraitPerformance();
+    //testCustomUnorderedMap();
+    //testPrivateTrait();
+    testJson();
     return 0;
 }
 

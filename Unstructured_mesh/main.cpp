@@ -1010,12 +1010,12 @@ void testFPMA_poly(){
 
 int main()
 {
-    meshSize();
+    //meshSize();
     //testMesh2D();
-    //testMesh2DLoadAndWrite();
-    //testMesh3D();
-    //test3DMeshDeformedPrisms();
-    //testMeshRefine();
+    testMesh2DLoadAndWrite();
+    testMesh3D();
+    test3DMeshDeformedPrisms();
+    testMeshRefine();
     //testMeshDataContainer();
     //UnstructuredMesh<5, size_t, double, 6,5,4> m;
     //m.ComputeElementMeasures();
