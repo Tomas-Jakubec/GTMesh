@@ -21,27 +21,105 @@ struct MeshConnections {
     /**
      * @brief connections<HR>
      * Detects connections of mesh elements of StartDim to TargetDim.
-     * Returns a MeshDataContainer of set<IndexType> allocated to StartDim elements.
+     * Returns a MeshDataContainer of vector<IndexType> allocated to StartDim elements.
      * The indexes are ordered in ascending way.
      * @param mesh
      * @return
      */
     template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
-    static MeshDataContainer<std::set<IndexType>, StartDim> connections(
+    static
+    typename std::enable_if <
+    (StartDim < TargetDim) && !((StartDim == MeshDimension - 1) && (TargetDim == MeshDimension)),
+    MeshDataContainer<std::vector<IndexType>, StartDim>
+    >::type
+    connections(
             MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
             ) {
-        MeshDataContainer<std::set<IndexType>, StartDim> result(mesh);
-        MeshApply<StartDim, TargetDim>::apply(mesh, [&result](IndexType ori, IndexType element){
-            result.template getDataByPos<0>().at(ori).insert(element);
+        MeshDataContainer<std::set<IndexType>, StartDim> tmpSet(mesh);
+        MeshApply<StartDim, TargetDim>::apply(mesh, [&tmpSet](IndexType ori, IndexType element){
+            tmpSet.template getDataByPos<0>().at(ori).insert(element);
         });
         MeshDataContainer<std::vector<IndexType>, StartDim> res(mesh);
         for (IndexType i = IndexType(); i < res.template getDataByPos<0>().size(); i++) {
             res.template getDataByPos<0>()[i].insert(
                         res.template getDataByPos<0>()[i].begin(),
-                        result.template getDataByPos<0>()[i].begin(),
-                        result.template getDataByPos<0>()[i].end());
+                        tmpSet.template getDataByPos<0>()[i].begin(),
+                        tmpSet.template getDataByPos<0>()[i].end());
         }
-        return result;
+        return res;
+    }
+
+    /**
+     * @brief connections<HR>
+     * Detects connections of mesh elements of StartDim to TargetDim.
+     * Returns a MeshDataContainer of vector<IndexType> allocated to StartDim elements.
+     * The indexes are ordered in ascending way.
+     * @param mesh
+     * @return
+     */
+    template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
+    static
+    typename std::enable_if <
+    (StartDim >= TargetDim),
+    MeshDataContainer<std::vector<IndexType>, StartDim>
+    >::type
+    connections(
+            MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
+            ) {
+
+        std::set<IndexType> tmpSet;
+        MeshDataContainer<std::vector<IndexType>, StartDim> res(mesh);
+
+        for(IndexType index = IndexType(); index < mesh.template getElements<StartDim>().size(); index++) {
+
+            MeshApply<StartDim, TargetDim>::apply(index, mesh, [&tmpSet](IndexType, IndexType element){
+                tmpSet.insert(element);
+            });
+
+            res.template getDataByPos<0>()[index].insert(
+                        res.template getDataByPos<0>()[index].begin(),
+                        tmpSet.begin(),
+                        tmpSet.end());
+
+            tmpSet.clear();
+        }
+
+        return res;
+    }
+
+
+    /**
+     * @brief connections<HR>
+     * Detects connections of mesh elements of StartDim to TargetDim.
+     * Returns a MeshDataContainer of vector<IndexType> allocated to StartDim elements.
+     * The indexes are ordered in ascending way.
+     * @param mesh
+     * @return
+     */
+    template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
+    static
+    typename std::enable_if <
+    (StartDim == MeshDimension - 1) && (TargetDim == MeshDimension),
+    MeshDataContainer<std::array<IndexType, 2>, StartDim>
+    >::type
+    connections(
+            MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
+            ) {
+
+
+        MeshDataContainer<std::array<IndexType, 2>, StartDim> res(mesh);
+
+        for(IndexType index = IndexType(); index < mesh.template getElements<StartDim>().size(); index++) {
+
+            auto& face = mesh.template getElements<StartDim>()[index];
+
+            res.template getDataByPos<0>()[index] = std::array<IndexType, 2>{{face.getCellLeftIndex(), face.getCellRightIndex()}};
+
+
+
+        }
+
+        return res;
     }
 };
 

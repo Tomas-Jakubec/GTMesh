@@ -12,11 +12,11 @@
 template <typename Class, typename ValueType>
 class MemberApproach{
 public:
-    virtual ValueType getValue(const Class*) = 0;
-    virtual void setValue(Class*, const ValueType&) = 0;
+    virtual ValueType getValue(const Class*) const = 0;
+    virtual void setValue(Class*, const ValueType&) const = 0;
 
-    virtual ValueType getValue(const Class&) = 0;
-    virtual void setValue(Class&, const ValueType&) = 0;
+    virtual ValueType getValue(const Class&) const = 0;
+    virtual void setValue(Class&, const ValueType&) const = 0;
 };
 
 
@@ -41,19 +41,19 @@ public:
         //ref = referenceToMember;
     }
 
-    virtual ValueType getValue(const Class* c) override {
+    virtual ValueType getValue(const Class* c) const override {
         return c->*ref;
     }
 
-    virtual void setValue(Class* c, const ValueType& val) override {
+    virtual void setValue(Class* c, const ValueType& val) const override {
         c->*ref = val;
     }
 
-    virtual ValueType getValue(const Class& c) override {
+    virtual ValueType getValue(const Class& c) const override {
         return c.*ref;
     }
 
-    virtual void setValue(Class& c, const ValueType& val) override {
+    virtual void setValue(Class& c, const ValueType& val) const override {
         c.*ref = val;
     }
 };
@@ -74,18 +74,18 @@ public:
         //ref = referenceToMember;
     }
 
-    virtual ValueType getValue(const Class* c) override {
+    virtual ValueType getValue(const Class* c) const override {
         return (c->*ref)();
     }
 
-    virtual void setValue(Class* c, const ValueType& val) override {
+    virtual void setValue(Class* c, const ValueType& val) const override {
         (c->*ref)() = val;
     }
-    virtual ValueType getValue(const Class& c) override {
+    virtual ValueType getValue(const Class& c) const override {
         return (c.*ref)();
     }
 
-    virtual void setValue(Class& c, const ValueType& val) override {
+    virtual void setValue(Class& c, const ValueType& val) const override {
         (c.*ref)() = val;
     }
 
@@ -115,19 +115,19 @@ public:
          //refSet = getSet.second;
      }
 
-     virtual ValueType getValue(const Class* c) override {
+     virtual ValueType getValue(const Class* c) const override {
          return (c->*refGet)();
      }
 
-     virtual void setValue(Class* c, const ValueType& val) override {
+     virtual void setValue(Class* c, const ValueType& val) const override {
          (c->*refSet)(val);
      }
 
-     virtual ValueType getValue(const Class& c) override {
+     virtual ValueType getValue(const Class& c) const override {
          return (c.*refGet)();
      }
 
-     virtual void setValue(Class& c, const ValueType& val) override {
+     virtual void setValue(Class& c, const ValueType& val) const override {
          (c.*refSet)(val);
      }
 };
@@ -154,19 +154,19 @@ public:
          //refSet = getSet.second;
      }
 
-     virtual ValueType getValue(const Class* c) override {
+     virtual ValueType getValue(const Class* c) const override {
          return (c->*refGet)();
      }
 
-     virtual void setValue(Class* c, const ValueType& val) override {
+     virtual void setValue(Class* c, const ValueType& val) const override {
          (c->*refSet)(val);
      }
 
-     virtual ValueType getValue(const Class& c) override {
+     virtual ValueType getValue(const Class& c) const override {
          return (c.*refGet)();
      }
 
-     virtual void setValue(Class& c, const ValueType& val) override {
+     virtual void setValue(Class& c, const ValueType& val) const override {
          (c.*refSet)(val);
      }
 };
@@ -193,19 +193,19 @@ public:
          //refSet = getSet.second;
      }
 
-     virtual ValueType getValue(const Class* c) override {
+     virtual ValueType getValue(const Class* c) const override {
          return (c->*refGet)();
      }
 
-     virtual void setValue(Class* c, const ValueType& val) override {
+     virtual void setValue(Class* c, const ValueType& val) const override {
          (c->*refSet)(val);
      }
 
-     virtual ValueType getValue(const Class& c) override {
+     virtual ValueType getValue(const Class& c) const override {
          return (c.*refGet)();
      }
 
-     virtual void setValue(Class& c, const ValueType& val) override {
+     virtual void setValue(Class& c, const ValueType& val) const override {
          (c.*refSet)(val);
      }
 };
@@ -232,19 +232,19 @@ public:
          //refSet = getSet.second;
      }
 
-     virtual ValueType getValue(const Class* c) override {
+     virtual ValueType getValue(const Class* c) const override {
          return (c->*refGet)();
      }
 
-     virtual void setValue(Class* c, const ValueType& val) override {
+     virtual void setValue(Class* c, const ValueType& val) const override {
          (c->*refSet)(val);
      }
 
-     virtual ValueType getValue(const Class& c) override {
+     virtual ValueType getValue(const Class& c) const override {
          return (c.*refGet)();
      }
 
-     virtual void setValue(Class& c, const ValueType& val) override {
+     virtual void setValue(Class& c, const ValueType& val) const override {
          (c.*refSet)(val);
      }
 };

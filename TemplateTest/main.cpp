@@ -812,6 +812,157 @@ void testOperator() {
 
 #include <chrono>
 
+template<typename Class, typename ValueType, typename Ref>
+class TestMemberReference{
+
+    TestMemberReference(Ref){}
+};
+
+
+template <typename Class, typename ValueType>
+class TestMemberReference<Class, ValueType, ValueType Class::*> : MemberApproach<Class, ValueType>{
+
+    using refType = ValueType Class::*;
+public:
+    refType const ref;
+
+public:
+
+    TestMemberReference(refType referenceToMember) : ref(referenceToMember){
+        //ref = referenceToMember;
+    }
+
+    inline ValueType getValue(const Class* c) const {
+        return c->*ref;
+    }
+
+    inline void setValue(Class* c, const ValueType& val) const {
+        c->*ref = val;
+    }
+
+    inline ValueType getValue(const Class& c) const {
+        return c.*ref;
+    }
+
+    inline void setValue(Class& c, const ValueType& val) const {
+        c.*ref = val;
+    }
+};
+
+template<typename Class, typename...RefTypes>
+class TestTraits {
+public:
+    template<unsigned int Index>
+    using refType = typename std::tuple_element<Index,std::tuple<RefTypes...>>::type;
+
+    template <unsigned int Index>
+    using type = typename MemberReferenceType<refType<Index>>::type;
+private:
+    template<unsigned int Index = 0, typename Dummy = void>
+    struct MemRefs: public MemRefs<Index + 1> {
+
+        const TestMemberReference<Class, type<Index>, refType<Index>> ref;
+        std::string name;
+
+        template <typename ... REST>
+        MemRefs(std::string n, refType<Index> r, REST... rest) : MemRefs<Index + 1> (rest...), ref(r), name(n){}
+    };
+
+    template<typename Dummy>
+    struct MemRefs<sizeof...(RefTypes) - 1, Dummy>{
+        const TestMemberReference<Class, type<sizeof...(RefTypes) - 1>, refType<sizeof...(RefTypes) - 1>> ref;
+        std::string name;
+
+        MemRefs(std::string n, refType<sizeof...(RefTypes) - 1> r) : ref(r), name(n){}
+    };
+
+    const MemRefs<0, void> refs;
+/*
+    using refs = Singleton<MemRefs<sizeof... (RefTypes) - 1, void>>;
+
+    template<unsigned int Pos = 0, typename ref, typename...Refs>
+    static void _makeReferences(const std::string& name, ref member,Refs... refsAndNames) {
+        _makeReferences<Pos, ref>(name, member);
+        _makeReferences<Pos+1>(refsAndNames...);
+    }
+
+    template<unsigned int Pos, typename ref>
+    static void _makeReferences(const std::string& name, ref member) {
+        refs::getInstance().MemRefs<Pos, void>::name = name;
+        refs::getInstance().MemRefs<Pos, void>::ref = MemberReference<Class, type<Pos>, refType<Pos>>(member);
+    }
+
+
+    template<unsigned int Pos, typename ref>
+    static void _makeReferences(const char* name, ref member) {
+        refs::getInstance().MemRefs<Pos, void>::name = name;
+        refs::getInstance().MemRefs<Pos, void>::ref = MemberReference<Class, type<Pos>, refType<Pos>>(member);
+    }
+*/
+
+public:
+
+
+
+    static constexpr unsigned int size(){
+        return sizeof... (RefTypes);
+    }
+
+
+    template<unsigned int Index>
+    const TestMemberReference<Class, type<Index>, refType<Index>>& getReference(){
+        return refs.MemRefs<Index, void>::ref;
+    }
+
+    template<unsigned int Index>
+    type<Index> getValue(const Class* c){
+        return getReference<Index>()->getValue(c);
+    }
+
+    template<unsigned int Index>
+    type<Index> getValue(const Class& c){
+        return getReference<Index>().getValue(c);
+    }
+
+    template<unsigned int Index>
+    void setValue(Class* c, const type<Index>& val){
+        getReference<Index>().setValue(c, val);
+    }
+
+    template<unsigned int Index>
+    void setValue(Class& c, const type<Index>& val){
+        getReference<Index>().setValue(c, val);
+    }
+
+
+    template<unsigned int Index>
+    const std::string& getName(){
+        return refs.MemRefs<Index, void>::name;
+    }
+
+
+    template<typename...Refs>
+    TestTraits(Refs... refsAndNames) : refs(refsAndNames...){}
+
+
+};
+
+
+void testTestTraits(){
+
+    TestTraits<ExportTest, decltype (&ExportTest::attrInt),  decltype (&ExportTest::attrDouble)> trait(
+                "attrInt", &ExportTest::attrInt,
+                "attrDouble", &ExportTest::attrDouble
+                );
+    ExportTest e;
+
+    trait.setValue<0>(e,7);
+
+    DBGVAR(trait.getValue<0>(e));
+
+}
+
+
 void testTraitPerformance() {
 
     size_t size;
@@ -836,19 +987,22 @@ void testTraitPerformance() {
     auto clock = std::chrono::high_resolution_clock();
     DBGMSG("primary approach");
     long long deviation = 0;
-
+    long long duration = 0;
     auto start = clock.now();
     double res = 0;
     for(int rep = 0; rep < maxRep; rep++){
         for(size_t i = 0; i < vec.size(); i++) {
             res += vec[i].attrDouble;
         }
+        duration += (clock.now() - start).count();
         deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
     }
 
-    auto avgDuration = (clock.now() - start).count() / maxRep;
-    DBGVAR(res, avgDuration , sqrt((deviation / maxRep )- pow(avgDuration,2)));
+    auto avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
     deviation = 0;
+    duration = 0;
 
 
 
@@ -861,42 +1015,52 @@ void testTraitPerformance() {
         for(size_t i = 0; i < vec.size(); i++) {
             res += doubleAttr::getValue(vec[i]);
         }
+        duration += (clock.now() - start).count();
         deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
     }
 
-    avgDuration = (clock.now() - start).count() / maxRep;
-    DBGVAR(res, avgDuration , sqrt((deviation / maxRep )- pow(avgDuration,2)));
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
     deviation = 0;
+    duration = 0;
 
+    DBGMSG("direct ref");
     start = clock.now();
     res = 0;
     for(int rep = 0; rep < maxRep; rep++){
         for(size_t i = 0; i < vec.size(); i++) {
             res += vec[i].*(doubleAttr::mp);
         }
+        duration += (clock.now() - start).count();
         deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
     }
 
-    avgDuration = (clock.now() - start).count() / maxRep;
-    DBGVAR(res, avgDuration , sqrt((deviation / maxRep )- pow(avgDuration,2)));
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
     deviation = 0;
+    duration = 0;
 
     DBGMSG("member reference");
     //typedef B<decltype(&ExportTest::attrDouble),decltype(&ExportTest::attrDouble), &ExportTest::attrDouble, &ExportTest::attrDouble> doubleAttr;
 
-    MemberReference<ExportTest, double, decltype (&ExportTest::attrDouble)> MR(&ExportTest::attrDouble);
+    TestMemberReference<ExportTest, double, decltype (&ExportTest::attrDouble)> MR(&ExportTest::attrDouble);
     start = clock.now();
     res = 0;
     for(int rep = 0; rep < maxRep; rep++){
         for(size_t i = 0; i < vec.size(); i++) {
             res += MR.getValue(vec[i]);
         }
+        duration += (clock.now() - start).count();
         deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
     }
 
-    avgDuration = (clock.now() - start).count() / maxRep;
-    DBGVAR(res, avgDuration , sqrt((deviation / maxRep )- pow(avgDuration,2)));
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
     deviation = 0;
+    duration = 0;
 
 
     start = clock.now();
@@ -905,28 +1069,91 @@ void testTraitPerformance() {
         for(size_t i = 0; i < vec.size(); i++) {
             res += vec[i].*(MR.ref);
         }
+        duration += (clock.now() - start).count();
         deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
     }
 
-    avgDuration = (clock.now() - start).count() / maxRep;
-    DBGVAR(res, avgDuration , sqrt((deviation / maxRep )- pow(avgDuration,2)));
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
     deviation = 0;
+    duration = 0;
+
+    DBGMSG("new test trait");
+    TestTraits<ExportTest, decltype (&ExportTest::attrInt),  decltype (&ExportTest::attrDouble)> trait(
+                "attrInt", &ExportTest::attrInt,
+                "attrDouble", &ExportTest::attrDouble
+                );
+
+    start = clock.now();
+    res = 0;
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+            res += trait.getValue<1>(vec[i]);
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("member reference virtual");
+    MemberReference<ExportTest, double, decltype (&ExportTest::attrDouble)> MR1(&ExportTest::attrDouble);
+    start = clock.now();
+    res = 0;
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+            res += MR1.getValue(vec[i]);
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("member reference virtual");
+    const MemberApproach<ExportTest, double>* MA = new MemberReference<ExportTest, double, decltype (&ExportTest::attrDouble)>(&ExportTest::attrDouble);
+    start = clock.now();
+    res = 0;
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+            res += MA->getValue(vec[i]);
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
 
 
-    DBGVAR(Traits<ExportTest>::ttype::getName<1>());
+    DBGMSG("traits");
     start = clock.now();
     res = 0;
     for(int rep = 0; rep < maxRep; rep++){
         for(size_t i = 0; i < vec.size(); i++) {
             res += Traits<ExportTest>::ttype::getValue<1>(vec[i]);
         }
+        duration += (clock.now() - start).count();
         deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
     }
 
-    avgDuration = (clock.now() - start).count() / maxRep;
-    DBGVAR(res, avgDuration , sqrt((deviation / maxRep )- pow(avgDuration,2)));
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
     deviation = 0;
-
+    duration = 0;
 
 
 
@@ -1067,7 +1294,7 @@ public:
 
 MAKE_NAMED_ATTRIBUTE_TRAIT(privateAttr, "str_attr", attr);
 
-//#include <ciso646>
+
 void testPrivateTrait(){
     privateAttr a;
     DBGVAR(a);
@@ -1076,6 +1303,7 @@ void testPrivateTrait(){
 
 }
 
+/*
 #include "json.hpp"
 
 
@@ -1223,7 +1451,11 @@ void testJson() {
     std::cout << j_test << std::endl;
     DBGVAR(j, p_test, j_test);
 
-}
+}*/
+
+
+
+
 
 
 int main()
@@ -1237,10 +1469,11 @@ int main()
     //testStructTransposition();
     //testTraitApply();
     //testCompileTimeTraits();
-    //testTraitPerformance();
+    testTraitPerformance();
     //testCustomUnorderedMap();
     //testPrivateTrait();
-    testJson();
+    //testJson();
+    //testTestTraits();
     return 0;
 }
 

@@ -116,43 +116,43 @@ void twoPrisms(UnstructuredMesh<3, size_t, double, 6>& mesh3){
         mesh3.getEdges().push_back({13,2,1});
     DBGCHECK;
     size_t index = 0;
-        mesh3.getFaces().push_back(index);
+        mesh3.getFaces().push_back(UnstructuredMesh<3, size_t, double, 6>::Face(index));
         mesh3.getFaces().at(index).getSubelements().addSubelement(0);
         mesh3.getFaces().at(index).getSubelements().addSubelement(1);
         mesh3.getFaces().at(index).getSubelements().addSubelement(13);
-        mesh3.getFaces().push_back(++index);
+        mesh3.getFaces().push_back(UnstructuredMesh<3, size_t, double, 6>::Face(++index));
         mesh3.getFaces().at(index).getSubelements().addSubelement(13);
         mesh3.getFaces().at(index).getSubelements().addSubelement(2);
         mesh3.getFaces().at(index).getSubelements().addSubelement(3);
-        mesh3.getFaces().push_back(++index);
+        mesh3.getFaces().push_back(UnstructuredMesh<3, size_t, double, 6>::Face(++index));
         mesh3.getFaces().at(index).getSubelements().addSubelement(0);
         mesh3.getFaces().at(index).getSubelements().addSubelement(5);
         mesh3.getFaces().at(index).getSubelements().addSubelement(8);
         mesh3.getFaces().at(index).getSubelements().addSubelement(4);
-        mesh3.getFaces().push_back(++index);
+        mesh3.getFaces().push_back(UnstructuredMesh<3, size_t, double, 6>::Face(++index));
         mesh3.getFaces().at(index).getSubelements().addSubelement(1);
         mesh3.getFaces().at(index).getSubelements().addSubelement(4);
         mesh3.getFaces().at(index).getSubelements().addSubelement(11);
         mesh3.getFaces().at(index).getSubelements().addSubelement(7);
-        mesh3.getFaces().push_back(++index);
+        mesh3.getFaces().push_back(UnstructuredMesh<3, size_t, double, 6>::Face(++index));
         mesh3.getFaces().at(index).getSubelements().addSubelement(3);
         mesh3.getFaces().at(index).getSubelements().addSubelement(6);
         mesh3.getFaces().at(index).getSubelements().addSubelement(10);
         mesh3.getFaces().at(index).getSubelements().addSubelement(7);
-        mesh3.getFaces().push_back(++index);
+        mesh3.getFaces().push_back(UnstructuredMesh<3, size_t, double, 6>::Face(++index));
         mesh3.getFaces().at(index).getSubelements().addSubelement(2);
         mesh3.getFaces().at(index).getSubelements().addSubelement(6);
         mesh3.getFaces().at(index).getSubelements().addSubelement(9);
         mesh3.getFaces().at(index).getSubelements().addSubelement(5);
-        mesh3.getFaces().push_back(++index);
+        mesh3.getFaces().push_back(UnstructuredMesh<3, size_t, double, 6>::Face(++index));
         mesh3.getFaces().at(index).getSubelements().addSubelement(8);
         mesh3.getFaces().at(index).getSubelements().addSubelement(12);
         mesh3.getFaces().at(index).getSubelements().addSubelement(11);
-        mesh3.getFaces().push_back(++index);
+        mesh3.getFaces().push_back(UnstructuredMesh<3, size_t, double, 6>::Face(++index));
         mesh3.getFaces().at(index).getSubelements().addSubelement(9);
         mesh3.getFaces().at(index).getSubelements().addSubelement(10);
         mesh3.getFaces().at(index).getSubelements().addSubelement(12);
-        mesh3.getFaces().push_back(++index);
+        mesh3.getFaces().push_back(UnstructuredMesh<3, size_t, double, 6>::Face(++index));
         mesh3.getFaces().at(index).getSubelements().addSubelement(12);
         mesh3.getFaces().at(index).getSubelements().addSubelement(7);
         mesh3.getFaces().at(index).getSubelements().addSubelement(13);
@@ -612,6 +612,12 @@ DBGMSG("tessellated cell volume");
         DBGVAR(vert.getIndex(), con1[vert]);
     }
 
+    DBGMSG("connection test oposite");
+    auto con2 = MeshConnections<2,3>::connections(mesh3);
+    for (auto& face : mesh3.getFaces()){
+        DBGVAR(face.getIndex(), con2[face]);
+    }
+
     DBGMSG("face to vertex colouring");
     auto colours = ColorMesh<2,0>::color(mesh3);
     for (auto& face : mesh3.getFaces()){
@@ -1012,10 +1018,10 @@ int main()
 {
     //meshSize();
     //testMesh2D();
-    testMesh2DLoadAndWrite();
+    //testMesh2DLoadAndWrite();
     testMesh3D();
-    test3DMeshDeformedPrisms();
-    testMeshRefine();
+    //test3DMeshDeformedPrisms();
+    //testMeshRefine();
     //testMeshDataContainer();
     //UnstructuredMesh<5, size_t, double, 6,5,4> m;
     //m.ComputeElementMeasures();
