@@ -832,6 +832,8 @@ public:
         //ref = referenceToMember;
     }
 
+    virtual ~TestMemberReference() = default;
+
     inline ValueType getValue(const Class* c) const {
         return c->*ref;
     }
