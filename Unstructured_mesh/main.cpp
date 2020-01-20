@@ -661,7 +661,7 @@ struct colourData {
     Vector<3, double> firstEdgeNormal;
 };
 
-MAKE_ATTRIBUTE_TRAIT(colourData, colour, firstEdgeNormal);
+MAKE_ATTRIBUTE_TRAIT(colourData, firstEdgeNormal, colour);
 
 void testMeshRefine() {
     UnstructuredMesh<3, size_t, double, 6> mesh;
@@ -722,7 +722,7 @@ void testMeshRefine() {
 
 
     ifstream in3D;
-    in3D.open("mesh_refine_1.vtk");
+    in3D.open("mesh_refine_1.vtk", std::ios::binary);
     VTKMeshReader<3> reader;
     reader.loadFromStream(in3D, mesh);
 
@@ -1019,9 +1019,9 @@ int main()
     //meshSize();
     //testMesh2D();
     //testMesh2DLoadAndWrite();
-    testMesh3D();
+    //testMesh3D();
     //test3DMeshDeformedPrisms();
-    //testMeshRefine();
+    testMeshRefine();
     //testMeshDataContainer();
     //UnstructuredMesh<5, size_t, double, 6,5,4> m;
     //m.ComputeElementMeasures();

@@ -29,15 +29,18 @@ class VTKMeshDataReader {
        >::type
     {
 
-        ist.seekg(dataPositions[Traits<T>::ttype::template getName<Index>()]);
+        ist.seekg(dataPositions[Traits<T>::tr.template getName<Index>()]);
+    std::string line;
+    std::getline(ist, line);
+        ist.seekg(dataPositions[Traits<T>::tr.template getName<Index>()]);
 
         typename Traits<T>::ttype::template type<Index> value;
 
         for (IndexType i = 0; i < data.size(); i++) {
-            for (unsigned int j = 0; j < Traits<T>::ttype::template getValue<Index>(data.at(i)).size(); j++){
+            for (unsigned int j = 0; j < Traits<T>::tr.template getValue<Index>(data.at(i)).size(); j++){
                 ist >> value[j];
             }
-            Traits<T>::ttype::template setValue<Index>(data.at(i), value);
+            Traits<T>::tr.template setValue<Index>(data.at(i), value);
         }
 
     }
@@ -57,13 +60,13 @@ class VTKMeshDataReader {
         typename Traits<T>::ttype::template type<Index> dummy;
 
         for (IndexType i = 0; i < data.size(); i++) {
-            for (unsigned int j = 0; j < Traits<T>::ttype::template getValue<Index>(data.at(i)).size(); j++){
+            for (unsigned int j = 0; j < Traits<T>::tr.template getValue<Index>(data.at(i)).size(); j++){
                 ist >> value[j];
             }
 
             ist >> dummy[0];
 
-            Traits<T>::ttype::template setValue<Index>(data.at(i), value);
+            Traits<T>::tr.template setValue<Index>(data.at(i), value);
         }
 
     }
@@ -77,13 +80,13 @@ class VTKMeshDataReader {
     {
 
 
-        ist.seekg(dataPositions[Traits<T>::ttype::template getName<Index>()]);
+        ist.seekg(dataPositions[Traits<T>::tr.template getName<Index>()]);
 
         typename Traits<T>::ttype::template type<Index> value;
 
         for (IndexType i = 0; i < data.size(); i++){
             ist >> value;
-            Traits<T>::ttype::template setValue<Index>(data.at(i), value);
+            Traits<T>::tr.template setValue<Index>(data.at(i), value);
         }
 
     }
@@ -98,7 +101,7 @@ private:
 
 
         static void read(std::istream& ist, DataContainer<T, MeshDimension> &data, std::map<std::string, std::istream::pos_type>& dataPositions){
-            DBGVAR(IsIndexable<typename Traits<T>::ttype::template type<Index>>::value);
+
             readColumn<T, Index>(ist, data, dataPositions);
             readCellData<Traits<T, Types...>, Index + 1>::read(ist, data, dataPositions);
 
@@ -122,10 +125,16 @@ public:
     static std::map<std::string, std::istream::pos_type> indexData(std::istream& ist) {
 
         std::map<std::string, std::istream::pos_type> dataPositions;
+        /*
+        if ((ist.flags() & std::ios::binary) != 0) {
+            std::runtime_error("open the file stream as binary to ensure correct behaviour of tellg");
+        }
+        */
 
         std::string line;
         ist.seekg(ist.beg);
-        while(getline(ist, line)) {
+        while(std::getline(ist, line, '\n')) {
+
             int flag = (line.find("SCALARS")!= line.npos ? 1
                              : line.find("VECTORS") != line.npos ? 2
                                    : 0 );
@@ -139,7 +148,9 @@ public:
                     ist.ignore(500, '\n');
                 }
 
+
                 dataPositions.insert(std::make_pair(dataName, ist.tellg()));
+                //ist.seekg(ist.tellg());
             }
         }
         ist.clear();

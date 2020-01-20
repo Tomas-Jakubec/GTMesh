@@ -298,12 +298,12 @@ void testMemberRef(){
 
     //DBGVAR(Traits<tempData>::ttype::getName<0>());
 
-    Traits<tempData>::ttype::getReference<0>()->setValue(&d, 0.0);
-    DBGVAR(Traits<tempData>::ttype::getReference<0>()->getValue(&d));
-    Traits<tempData>::ttype::getReference<0>()->setValue(d, 42.15);
-    Traits<tempData>::ttype::getReference<1>()->setValue(&d, {42.15,84.30,42.15});
+    Traits<tempData>::tr.getReference<0>().setValue(&d, 0.0);
+    DBGVAR(Traits<tempData>::tr.getReference<0>().getValue(&d));
+    Traits<tempData>::tr.getReference<0>().setValue(d, 42.15);
+    Traits<tempData>::tr.getReference<1>().setValue(&d, {42.15,84.30,42.15});
 
-    DBGVAR(Traits<tempData>::ttype::getName<0>(),(Traits<tempData>::ttype::getReference<0>()->getValue(&d)), Traits<tempData>::ttype::getName<1>(),(Traits<tempData, double, Vector<3,double>>::getReference<1>()->getValue(&d)), d.velocity);
+    DBGVAR(Traits<tempData>::tr.getName<0>(),(Traits<tempData>::tr.getReference<0>().getValue(&d)), Traits<tempData>::tr.getName<1>(), d.velocity);
     DBGVAR(Traits<tempData>::is_specialized,HasDefaultTraits<tempData>::value, d);
 
     ExportTest e;
@@ -319,7 +319,7 @@ Test of trasposing vector of struct to struct of vectors
 */
 
 
-template <typename DataType, typename DataTypeTrait = typename Traits<DataType>::ttype>
+template <typename DataType, typename DataTypeTrait = Traits<DataType>>
 struct Container{
     template <unsigned int index = 0, typename Dummy = void>
     struct StructOfArrays : public StructOfArrays<index + 1>{
@@ -340,7 +340,7 @@ struct Container{
 
     template <unsigned int pos>
     const std::string& name() {
-        return DataTypeTrait::template getName<pos>();
+        return Traits<DataType>::tr.template getName<pos>();
     }
 
     template <unsigned int pos>
@@ -350,7 +350,6 @@ struct Container{
 };
 
 
-
 void testStructTransposition() {
     Container<ExportTest, Traits<ExportTest>::ttype> data;
 
@@ -358,6 +357,7 @@ void testStructTransposition() {
     DBGVAR(data.size(), data.getDataAtPos<5>(), data.name<5>());
 
 };
+
 
 
 /**
@@ -370,7 +370,7 @@ struct TraitApply {
 };
 */
 
-
+/*
 template < unsigned int index>
 class TraitApply {
 public:
@@ -505,6 +505,7 @@ public:
         Functor<ExportTest, Traits<ExportTest>::ttype::type<0>>()(0, Traits<ExportTest>::ttype::getReference<0>(), Traits<ExportTest>::ttype::getName<0>());
     }
 };
+*/
 
 struct Depth {
     int value = 0;
@@ -515,19 +516,19 @@ class Func {
 public:
 
     template <typename U = T>
-    auto operator()(unsigned int index, const std::unique_ptr<MemberApproach<Class, T>>&, const std::string& name)
+    auto operator()(unsigned int index, const MemberApproach<Class, T>&, const std::string& name)
     -> typename std::enable_if<!(HasDefaultTraits<U>::value)>::type
     {
         DBGVAR(Singleton<Depth>::getInstance().value,index, name);
     }
 
     template <typename U = T>
-    auto operator()(unsigned int index, const std::unique_ptr<MemberApproach<Class, T>>&, const std::string& name)
+    auto operator()(unsigned int index, const MemberApproach<Class, T>&, const std::string& name)
     -> typename std::enable_if<HasDefaultTraits<U>::value>::type
     {
         DBGVAR(Singleton<Depth>::getInstance().value,index, name);
         Singleton<Depth>::getInstance().value++;
-        Traits<T>::ttype::template apply<Func>();
+        Traits<T>::tr.template apply<Func>();
         Singleton<Depth>::getInstance().value--;
     }
 };
@@ -540,18 +541,18 @@ void testTraitApply() {
 
     DBGVAR(std::is_function<decltype (lambda)>::value);
 
-    TraitApply<5>::apply(lambda);
+    //TraitApply<5>::apply(lambda);
 
     auto lambda1 = []( auto& , const std::string& name){DBGVAR(name);};
 
-    TraitApply<5>::apply(lambda1);
+    //TraitApply<5>::apply(lambda1);
 DBGMSG("Tady");
-    Traits<ExportTest>::ttype::apply<Func>();
+    Traits<ExportTest>::tr.apply<Func>();
     //TraitApply<5>::apply<Func>();
 
-    Traits<ExportTest>::ttype::apply(lambda);
+    Traits<ExportTest>::tr.apply(lambda);
 
-    Traits<ExportTest>::ttype::apply(lambda1);
+    Traits<ExportTest>::tr.apply(lambda1);
 
     //Traits<ExportTest>::ttype::apply<Func>();
 
@@ -561,7 +562,7 @@ DBGMSG("Tady");
 
 /*
  *
- * Compile time traits
+ * Compile time traits DONE
  */
 
 #include <cstdio>
@@ -863,7 +864,7 @@ private:
     template<unsigned int Index = 0, typename Dummy = void>
     struct MemRefs: public MemRefs<Index + 1> {
 
-        const TestMemberReference<Class, type<Index>, refType<Index>> ref;
+        const MemberReference<Class, type<Index>, refType<Index>> ref;
         std::string name;
 
         template <typename ... REST>
@@ -872,7 +873,7 @@ private:
 
     template<typename Dummy>
     struct MemRefs<sizeof...(RefTypes) - 1, Dummy>{
-        const TestMemberReference<Class, type<sizeof...(RefTypes) - 1>, refType<sizeof...(RefTypes) - 1>> ref;
+        const MemberReference<Class, type<sizeof...(RefTypes) - 1>, refType<sizeof...(RefTypes) - 1>> ref;
         std::string name;
 
         MemRefs(std::string n, refType<sizeof...(RefTypes) - 1> r) : ref(r), name(n){}
@@ -912,7 +913,7 @@ public:
 
 
     template<unsigned int Index>
-    const TestMemberReference<Class, type<Index>, refType<Index>>& getReference(){
+    const MemberReference<Class, type<Index>, refType<Index>>& getReference(){
         return refs.MemRefs<Index, void>::ref;
     }
 
@@ -1145,7 +1146,7 @@ void testTraitPerformance() {
     res = 0;
     for(int rep = 0; rep < maxRep; rep++){
         for(size_t i = 0; i < vec.size(); i++) {
-            res += Traits<ExportTest>::ttype::getValue<1>(vec[i]);
+            res += Traits<ExportTest>::tr.getValue<1>(vec[i]);
         }
         duration += (clock.now() - start).count();
         deviation += (clock.now() - start).count() * (clock.now() - start).count();
@@ -1300,7 +1301,7 @@ MAKE_NAMED_ATTRIBUTE_TRAIT(privateAttr, "str_attr", attr);
 void testPrivateTrait(){
     privateAttr a;
     DBGVAR(a);
-    Traits<privateAttr>::ttype::setValue<0>(a, "new value");
+    Traits<privateAttr>::tr.setValue<0>(a, "new value");
     DBGVAR(a);
 
 }
@@ -1471,7 +1472,7 @@ int main()
     //testStructTransposition();
     //testTraitApply();
     //testCompileTimeTraits();
-    testTraitPerformance();
+    //testTraitPerformance();
     //testCustomUnorderedMap();
     //testPrivateTrait();
     //testJson();

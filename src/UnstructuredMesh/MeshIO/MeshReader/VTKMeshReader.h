@@ -148,7 +148,8 @@ public:
         ist.ignore(1024, '\n');
         // ASCII or BINARY
         std::string buf;
-        std::getline(ist, buf);
+
+        ist >> buf;
         if (buf != "ASCII"){
             throw std::runtime_error("ASCII expected but got " + buf);
         }
@@ -415,7 +416,8 @@ public:
         ist.ignore(1024, '\n');
         // ASCII or BINARY
         std::string buf;
-        std::getline(ist, buf);
+        ist >> buf;
+
         if (buf != "ASCII"){
             throw std::runtime_error("ASCII expected but got " + buf);
         }

@@ -153,8 +153,8 @@ struct VariableExport {
     template<typename T,unsigned int Index = 0, typename Void = void>
     struct PrintClass{
         static void print(std::ostream& ost, const T &traitedClass){
-            ost << '"' << Traits<T>::ttype::template getName<Index>() << "\" : ";
-            VariableExport::exportVariable(ost, Traits<T>::ttype::template getReference<Index>()->getValue(traitedClass));
+            ost << '"' << Traits<T>::tr.template getName<Index>() << "\" : ";
+            VariableExport::exportVariable(ost, Traits<T>::tr.template getValue<Index>(traitedClass));
             ost << ", ";
             PrintClass<T, Index + 1>::print(ost, traitedClass);
 
@@ -163,9 +163,9 @@ struct VariableExport {
 
     template<typename T,unsigned int Index, typename... Types>
     struct PrintClass <Traits<T, Types...>, Index, typename std::enable_if<Index < Traits<T, Types...>::size() - 1>::type>{
-        static void print(std::ostream& ost, const T &traitedClass){
-            ost << '"' << Traits<T, Types...>::template getName<Index>() << "\" : ";
-            VariableExport::exportVariable(ost, Traits<T, Types...>::template getReference<Index>()->getValue(traitedClass));
+        static void print(std::ostream& ost, const T &traitedClass, const Traits<T, Types...>& trait = Traits<T>::tr){
+            ost << '"' << trait.template getName<Index>() << "\" : ";
+            VariableExport::exportVariable(ost, trait.template getValue<Index>(traitedClass));
             ost << ", ";
             PrintClass<Traits<T, Types...>, Index + 1>::print(ost, traitedClass);
 
@@ -174,17 +174,17 @@ struct VariableExport {
 
     template<typename T,unsigned int Index, typename ... Types>
     struct PrintClass <Traits<T, Types...>, Index, typename std::enable_if<Index == Traits<T, Types...>::size() - 1>::type>{
-        static void print(std::ostream& ost, const T &traitedClass){
-            ost << '"' << Traits<T, Types...>::template getName<Traits<T, Types...>::size() - 1>() << "\" : ";
-            VariableExport::exportVariable(ost, Traits<T, Types...>::template getReference<Traits<T, Types...>::size() - 1>()->getValue(traitedClass));
+        static void print(std::ostream& ost, const T &traitedClass, const Traits<T, Types...>& trait = Traits<T>::tr){
+            ost << '"' << trait.template getName<Traits<T, Types...>::size() - 1>() << "\" : ";
+            VariableExport::exportVariable(ost, trait.template getValue<Traits<T, Types...>::size() - 1>(traitedClass));
         }
     };
 
     template<typename T, unsigned int Index>
     struct PrintClass<T, Index, typename std::enable_if<Index == Traits<T>::ttype::size() - 1>::type>{
         static void print(std::ostream& ost, const T &traitedClass){
-            ost << '"' << Traits<T>::ttype::template getName<Traits<T>::ttype::size() - 1>() << "\" : ";
-            VariableExport::exportVariable(ost, Traits<T>::ttype::template getReference<Traits<T>::ttype::size() - 1>()->getValue(traitedClass));
+            ost << '"' << Traits<T>::tr.template getName<Traits<T>::ttype::size() - 1>() << "\" : ";
+            VariableExport::exportVariable(ost, Traits<T>::tr.template getValue<Traits<T>::tr.size() - 1>(traitedClass));
         }
     };
 

@@ -6,112 +6,86 @@
 #include "../Singleton/Singleton.h"
 #include <functional>
 
-template<typename Class, typename...Types>
+template<typename Class, typename...RefTypes>
 class Traits {
 public:
+    template<unsigned int Index>
+    using refType = typename std::tuple_element<Index,std::tuple<RefTypes...>>::type;
+
     template <unsigned int Index>
-    using type = typename std::tuple_element<Index,std::tuple<Types...>>::type;
+    using type = typename MemberReferenceType<refType<Index>>::type;
 private:
-    template<unsigned int Index = sizeof...(Types) - 1, typename Dummy = void>
-    struct MemRefs: public MemRefs<Index - 1> {
-        friend class Singleton<MemRefs<1, void>>;
-        std::unique_ptr<MemberApproach<Class, type<Index>>> ref = nullptr;
+    template<unsigned int Index = 0, typename Dummy = void>
+    struct MemRefs: public MemRefs<Index + 1> {
+
+        const MemberReference<Class, type<Index>, refType<Index>> ref;
         std::string name;
 
-        MemRefs(){}
+        template <typename ... REST>
+        MemRefs(std::string n, refType<Index> r, REST... rest) : MemRefs<Index + 1> (rest...), ref(r), name(n){}
     };
 
     template<typename Dummy>
-    struct MemRefs<0, Dummy>{
-        friend class Singleton<MemRefs<0, void>>;
-        std::unique_ptr<MemberApproach<Class, type<0>>> ref = nullptr;
+    struct MemRefs<sizeof...(RefTypes) - 1, Dummy>{
+        const MemberReference<Class, type<sizeof...(RefTypes) - 1>, refType<sizeof...(RefTypes) - 1>> ref;
         std::string name;
 
-        MemRefs(){}
+        MemRefs(std::string n, refType<sizeof...(RefTypes) - 1> r) : ref(r), name(n){}
     };
 
-    using refs = Singleton<MemRefs<sizeof... (Types) - 1, void>>;
-
-    template<unsigned int Pos = 0, typename ref, typename...Refs>
-    static void _makeReferences(const std::string& name, ref member,Refs... refsAndNames) {
-        _makeReferences<Pos, ref>(name, member);
-        _makeReferences<Pos+1>(refsAndNames...);
-    }
-
-    template<unsigned int Pos, typename ref>
-    static void _makeReferences(const std::string& name, ref member) {
-        refs::getInstance().MemRefs<Pos, void>::name = name;
-        refs::getInstance().MemRefs<Pos, void>::ref = std::unique_ptr<MemberApproach<Class, type<Pos>>>(new MemberReference<Class, type<Pos>, ref>(member));
-    }
-
-
-    template<unsigned int Pos, typename ref>
-    static void _makeReferences(const char* name, ref member) {
-        refs::getInstance().MemRefs<Pos, void>::name = name;
-        refs::getInstance().MemRefs<Pos, void>::ref = std::unique_ptr<MemberApproach<Class, type<Pos>>>(new MemberReference<Class, type<Pos>, ref>(member));
-    }
-
+    const MemRefs<0, void> refs;
 
 public:
 
 
 
     static constexpr unsigned int size(){
-        return sizeof... (Types);
+        return sizeof... (RefTypes);
     }
 
 
     template<unsigned int Index>
-    static const std::unique_ptr<MemberApproach<Class, type<Index>>>& getReference(){
-        return refs::getInstance().MemRefs<Index, void>::ref;
+    const MemberReference<Class, type<Index>, refType<Index>>& getReference() const {
+        return refs.MemRefs<Index, void>::ref;
     }
 
     template<unsigned int Index>
-    static type<Index> getValue(const Class* c){
+    type<Index> getValue(const Class* c) const {
         return getReference<Index>()->getValue(c);
     }
 
     template<unsigned int Index>
-    static type<Index> getValue(const Class& c){
-        return getReference<Index>()->getValue(c);
+    type<Index> getValue(const Class& c) const {
+        return getReference<Index>().getValue(c);
     }
 
     template<unsigned int Index>
-    static void setValue(Class* c, const type<Index>& val){
-        getReference<Index>()->setValue(c, val);
+    void setValue(Class* c, const type<Index>& val) const {
+        getReference<Index>().setValue(c, val);
     }
 
     template<unsigned int Index>
-    static void setValue(Class& c, const type<Index>& val){
-        getReference<Index>()->setValue(c, val);
+    void setValue(Class& c, const type<Index>& val) const {
+        getReference<Index>().setValue(c, val);
     }
 
 
     template<unsigned int Index>
-    static const std::string& getName(){
-        return refs::getInstance().MemRefs<Index, void>::name;
+    const std::string& getName() const {
+        return refs.MemRefs<Index, void>::name;
     }
 
 
     template<typename...Refs>
-    Traits(Refs... refsAndNames){
-        makeReferences(refsAndNames...);
-    }
-
-    template<typename...Refs>
-    static void makeReferences(Refs... refsAndNames) {
-        _makeReferences<0>(refsAndNames...);
-    }
-
-
+    Traits(Refs... refsAndNames) : refs(refsAndNames...){}
 private:
 
     template<unsigned int Index = 0, typename Dummy = void>
     struct Apply {
-        using ThisTrait = Traits<Class, Types...>;
+        using ThisTrait = Traits<Class, RefTypes...>;
 
         template <class Functor>
-        static auto apply (Functor f,...)
+        static auto apply (const ThisTrait& trait, Functor f,...)
         -> typename std::enable_if<std::is_assignable<
         std::function<
             void(unsigned int,
@@ -137,14 +111,14 @@ private:
                              )
                     >, Functor>::value, "");
 
-            f(Index, ThisTrait::getReference<Index>(), ThisTrait::getName<Index>());
-            Apply<Index + 1>::apply(f);
+            f(Index, trait.template getReference<Index>(), trait.template getName<Index>());
+            Apply<Index + 1>::apply(trait, f);
         }
 
 
 
         template <class Functor>
-        static auto apply (Functor f)
+        static auto apply (const ThisTrait& trait, Functor f)
         -> typename std::enable_if<std::is_assignable<
         std::function<
             void(std::unique_ptr<
@@ -168,40 +142,40 @@ private:
                              )
                     >, Functor>::value, "");
 
-            f(ThisTrait::getReference<Index>(), ThisTrait::getName<Index>());
-            Apply<Index + 1>::apply(f);
+            f(trait.template getReference<Index>(), trait.template getName<Index>());
+            Apply<Index + 1>::apply(trait, f);
         }
 
         template <template <typename, typename>class Functor>
-        static auto apply ()
+        static auto apply (const ThisTrait& trait)
         -> typename std::enable_if<std::is_class<Functor<Class, typename ThisTrait::template type<Index>>>::value>::type
         {
 
             static_assert (std::is_assignable<
                     std::function<
                         void(unsigned int,
-                             std::unique_ptr<
-                                MemberApproach<
+                             MemberReference<
                                     Class,
-                                    typename ThisTrait::template type<Index>
-                                >>&,
+                                    typename ThisTrait::template type<Index>,
+                                    typename ThisTrait::template refType<Index>
+                                >&,
                              const std::string&
                              )
                     >, Functor<Class, typename ThisTrait::template type<Index>>>::value, "");
 
 
-            Functor<Class, typename ThisTrait::template type<Index>>()(Index, ThisTrait::getReference<Index>(), ThisTrait::getName<Index>());
-            Apply<Index + 1>::template apply<Functor>();
+            Functor<Class, typename ThisTrait::template type<Index>>()(Index, trait.template getReference<Index>(), trait.template getName<Index>());
+            Apply<Index + 1>::template apply<Functor>(trait);
         }
 
     };
 
     template<typename Dummy>
     struct Apply<size() - 1, Dummy> {
-        using ThisTrait = Traits<Class, Types...>;
+        using ThisTrait = Traits<Class, RefTypes...>;
 
         template <class Functor>
-        static auto apply (Functor f,...)
+        static auto apply (const ThisTrait& trait, Functor f,...)
         -> typename std::enable_if<std::is_assignable<
         std::function<
             void(unsigned int,
@@ -227,14 +201,14 @@ private:
                              )
                     >, Functor>::value, "");
 
-            f(ThisTrait::size() - 1, ThisTrait::getReference<ThisTrait::size() - 1>(), ThisTrait::getName<ThisTrait::size() - 1>());
+            f(trait.size() - 1, trait.template getReference<ThisTrait::size() - 1>(), trait.template getName<ThisTrait::size() - 1>());
 
         }
 
 
 
         template <class Functor>
-        static auto apply (Functor f)
+        static auto apply (const ThisTrait& trait, Functor f)
         -> typename std::enable_if<std::is_assignable<
         std::function<
             void(std::unique_ptr<
@@ -258,29 +232,30 @@ private:
                              )
                     >, Functor>::value, "");
 
-            f(ThisTrait::getReference<ThisTrait::size() - 1>(), ThisTrait::getName<ThisTrait::size() - 1>());
+            f(trait.template getReference<ThisTrait::size() - 1>(), trait.template getName<ThisTrait::size() - 1>());
 
         }
 
         template <template <typename, typename>class Functor>
-        static auto apply ()
+        static auto apply (const ThisTrait& trait)
         -> typename std::enable_if<std::is_class<Functor<Class, typename ThisTrait::template type<ThisTrait::size() - 1>>>::value>::type
         {
 
             static_assert (std::is_assignable<
                     std::function<
                         void(unsigned int,
-                             std::unique_ptr<
-                                MemberApproach<
+
+                                MemberReference<
                                     Class,
-                                    typename ThisTrait::template type<ThisTrait::size() - 1>
-                                >>&,
+                                    typename ThisTrait::template type<ThisTrait::size() - 1>,
+                                    typename ThisTrait::template refType<ThisTrait::size() - 1>
+                                >&,
                              const std::string&
                              )
                     >, Functor<Class, typename ThisTrait::template type<ThisTrait::size() - 1>>>::value, "");
 
 
-            Functor<Class, typename ThisTrait::template type<ThisTrait::size() - 1>>()(ThisTrait::size() - 1, ThisTrait::getReference<ThisTrait::size() - 1>(), ThisTrait::getName<ThisTrait::size() - 1>());
+            Functor<Class, typename ThisTrait::template type<ThisTrait::size() - 1>>()(ThisTrait::size() - 1, trait.template getReference<ThisTrait::size() - 1>(), trait.template getName<ThisTrait::size() - 1>());
         }
 
     };
@@ -294,13 +269,13 @@ public:
      * const std::string&)
      */
     template<typename Functor>
-        static void apply(Functor f) {
-            Apply<>::apply(f);
+        void apply(Functor f) const {
+            Apply<>::apply(*this,f);
         }
 
     template<template <typename, typename>class Functor>
-        static void apply() {
-            Apply<>::template apply<Functor>();
+        void apply() const {
+            Apply<>::template apply<Functor>(*this);
         }
 };
 
@@ -320,7 +295,7 @@ public:
 #include "../Macros/MacroForEach.h"
 
 
-#define MEMREF_TYPE_CUSTOM(name, memberRef) typename MemberReferenceType<decltype(memberRef)>::type
+#define MEMREF_TYPE_CUSTOM(name, memberRef) decltype(memberRef)
 #define MAKE_CUSTOM_ATTRIBUTE_TRAIT(Class,...)\
 template<>                              \
 class Traits<Class>{                 \
