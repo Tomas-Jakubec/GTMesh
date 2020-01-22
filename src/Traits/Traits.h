@@ -286,34 +286,58 @@ public:
 
 
 template<typename Class>
-class Traits<Class>: public std::false_type{
+class Traits<Class>{
     //static_assert (false, "The Traits template must be specialized for given type and must contain Traits references using variadic Traits.");
 public:
     static constexpr std::false_type is_specialized{};
 };
 
+
+template<typename Class>
+class DefaultIOTraits : public Traits<Class> {};
+
+template<typename Class>
+class DefaultArithmeticTraits : public Traits<Class> {};
+
 #include "../Macros/MacroForEach.h"
 
+#define IMPL_MEMREF_TYPE_CUSTOM(name, memberRef) decltype(memberRef)
+#define IMPL_NAME_AND_REF(Class, name, member) name, &Class::member
+#define IMPL_NAME_ATT(attribute) #attribute, attribute
 
-#define MEMREF_TYPE_CUSTOM(name, memberRef) decltype(memberRef)
-#define MAKE_CUSTOM_ATTRIBUTE_TRAIT(Class,...)\
+#define IMPL_MAKE_CUSTOM_ATTRIBUTE_TRAIT(TraitName,Class,...)\
 template<>                              \
-class Traits<Class>{                 \
+class TraitName<Class>{                 \
 public:                             \
     static constexpr std::true_type is_specialized{}; \
-    using ttype = Traits<Class, FOR_EACH_2ARGS(MEMREF_TYPE_CUSTOM, __VA_ARGS__)>; \
+    using ttype = ::Traits<Class, FOR_EACH_2ARGS(IMPL_MEMREF_TYPE_CUSTOM, __VA_ARGS__)>; \
     const static ttype tr;   \
-    Traits(){DBGMSG("TRAITS");}\
+    TraitName() = delete; \
+    static const ttype& getTraits() {return tr;} \
+    static constexpr unsigned int size() {return ttype::size();}\
 }; \
-const Traits<Class>::ttype Traits<Class>::tr(__VA_ARGS__); \
-
-#define NAME_AND_REF(Class, name, member) name, &Class::member
-
-#define MAKE_NAMED_ATTRIBUTE_TRAIT(Class, ...) MAKE_CUSTOM_ATTRIBUTE_TRAIT(Class, FOR_EACH_3ARGS_1STAT(NAME_AND_REF, Class, __VA_ARGS__))
-
-#define NAME_ATT(attribute) #attribute, attribute
-#define MAKE_ATTRIBUTE_TRAIT(Class, ...) MAKE_NAMED_ATTRIBUTE_TRAIT(Class, FOR_EACH(NAME_ATT, __VA_ARGS__))
+const TraitName<Class>::ttype TraitName<Class>::tr(__VA_ARGS__); \
 
 
+
+#define MAKE_CUSTOM_ATTRIBUTE_TRAIT(Class,...) IMPL_MAKE_CUSTOM_ATTRIBUTE_TRAIT(Traits, Class, __VA_ARGS__) // defining specialization for Traits
+
+#define MAKE_NAMED_ATTRIBUTE_TRAIT(Class, ...) MAKE_CUSTOM_ATTRIBUTE_TRAIT(Class, FOR_EACH_3ARGS_1STAT(IMPL_NAME_AND_REF, Class, __VA_ARGS__))
+
+#define MAKE_ATTRIBUTE_TRAIT(Class, ...) MAKE_NAMED_ATTRIBUTE_TRAIT(Class, FOR_EACH(IMPL_NAME_ATT, __VA_ARGS__))
+
+
+#define MAKE_CUSTOM_ATTRIBUTE_TRAIT_IO(Class,...) IMPL_MAKE_CUSTOM_ATTRIBUTE_TRAIT(DefaultIOTraits, Class,__VA_ARGS__) // defining specialization for DefaultIOTraits
+
+#define MAKE_NAMED_ATTRIBUTE_TRAIT_IO(Class, ...) MAKE_CUSTOM_ATTRIBUTE_TRAIT_IO(Class, FOR_EACH_3ARGS_1STAT(IMPL_NAME_AND_REF, Class, __VA_ARGS__))
+
+#define MAKE_ATTRIBUTE_TRAIT_IO(Class, ...) MAKE_NAMED_ATTRIBUTE_TRAIT_IO(Class, FOR_EACH(IMPL_NAME_ATT, __VA_ARGS__))
+
+
+#define MAKE_CUSTOM_ATTRIBUTE_TRAIT_ARITHMETIC(Class,...) IMPL_MAKE_CUSTOM_ATTRIBUTE_TRAIT(DefaultArithmeticTraits, Class,__VA_ARGS__) // defining specialization for Traits
+
+#define MAKE_NAMED_ATTRIBUTE_TRAIT_ARITHMETIC(Class, ...) MAKE_CUSTOM_ATTRIBUTE_TRAIT_ARITHMETIC(Class, FOR_EACH_3ARGS_1STAT(IMPL_NAME_AND_REF, Class, __VA_ARGS__))
+
+#define MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(Class, ...) MAKE_NAMED_ATTRIBUTE_TRAIT_ARITHMETIC(Class, FOR_EACH(IMPL_NAME_ATT, __VA_ARGS__))
 
 #endif // TRAITS_H

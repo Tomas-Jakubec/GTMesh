@@ -85,6 +85,35 @@ struct __has_default_traits<
             Traits<T1>::is_specialized
         >::type
         > : public std::integral_constant<bool, true> {};
+
+
+
+template <typename T1, typename VOID = void>
+struct __has_default_io_traits : public std::integral_constant<bool, false> {};
+
+
+template <typename T1>
+struct __has_default_io_traits<
+        T1,
+        typename std::enable_if<
+            DefaultIOTraits<T1>::is_specialized
+        >::type
+        > : public std::integral_constant<bool, true> {};
+
+
+
+template <typename T1, typename VOID = void>
+struct __has_default_arithmetic_traits : public std::integral_constant<bool, false> {};
+
+
+template <typename T1>
+struct __has_default_arithmetic_traits<
+        T1,
+        typename std::enable_if<
+            DefaultArithmeticTraits<T1>::is_specialized
+        >::type
+        > : public std::integral_constant<bool, true> {};
+
 }
 
 
@@ -106,6 +135,12 @@ struct IsTNLIndexable : public Detail::__is_tnl_indexable<T1>
 {};
 
 template<typename T>
-struct HasDefaultTraits : Detail::__has_default_traits<T> {};
+struct HasDefaultTraits : public Detail::__has_default_traits<T> {};
+
+template<typename T>
+struct HasDefaultIOTraits : public Detail::__has_default_io_traits<T> {};
+
+template<typename T>
+struct HasDefaultArithmeticTraits : public Detail::__has_default_arithmetic_traits<T> {};
 
 #endif // CUSTOMTRAITS_H

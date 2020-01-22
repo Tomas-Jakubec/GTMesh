@@ -656,12 +656,14 @@ DBGMSG("tessellated cell volume");
 }
 
 
-struct colourData {
-    unsigned int colour;
+struct colorData {
+    unsigned int color;
     Vector<3, double> firstEdgeNormal;
 };
 
-MAKE_ATTRIBUTE_TRAIT(colourData, firstEdgeNormal, colour);
+MAKE_ATTRIBUTE_TRAIT(colorData, firstEdgeNormal, color);
+//MAKE_ATTRIBUTE_TRAIT_IO(colorData, firstEdgeNormal);
+//MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(colorData, color);
 
 void testMeshRefine() {
     UnstructuredMesh<3, size_t, double, 6> mesh;
@@ -692,11 +694,11 @@ void testMeshRefine() {
     writer1.writeToStream(out3D, mesh, types1);
     auto colours1 = MeshColoring<3,0>::color(mesh);
 
-    MeshDataContainer<colourData, 3> cd(mesh);
+    MeshDataContainer<colorData, 3> cd(mesh);
     auto normals = mesh.computeFaceNormals();
 
     for(auto& cell : mesh.getCells()){
-        cd.at(cell).colour = colours1.at(cell);
+        cd.at(cell).color = colours1.at(cell);
         cd.at(cell).firstEdgeNormal = normals.getDataByDim<2>().at(mesh.getFaces().at(cell.getBoundaryElementIndex()).getNextBElem(cell.getIndex()));
     }
     DBGVAR(cd.getDataByDim<3>());
@@ -726,7 +728,7 @@ void testMeshRefine() {
     VTKMeshReader<3> reader;
     reader.loadFromStream(in3D, mesh);
 
-    MeshDataContainer<colourData, 3> cd1(mesh);
+    MeshDataContainer<colorData, 3> cd1(mesh);
     VTKMeshDataReader<3, size_t>::readData(in3D, cd1.getDataByPos<0>());
 
     DBGVAR(cd1.getDataByDim<3>());

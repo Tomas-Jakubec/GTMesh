@@ -163,7 +163,7 @@ struct VariableExport {
 
     template<typename T,unsigned int Index, typename... Types>
     struct PrintClass <Traits<T, Types...>, Index, typename std::enable_if<Index < Traits<T, Types...>::size() - 1>::type>{
-        static void print(std::ostream& ost, const T &traitedClass, const Traits<T, Types...>& trait = Traits<T>::tr){
+        static void print(std::ostream& ost, const T &traitedClass, const Traits<T, Types...>& trait = DefaultIOTraits<T>::getTraits()){
             ost << '"' << trait.template getName<Index>() << "\" : ";
             VariableExport::exportVariable(ost, trait.template getValue<Index>(traitedClass));
             ost << ", ";
@@ -174,7 +174,7 @@ struct VariableExport {
 
     template<typename T,unsigned int Index, typename ... Types>
     struct PrintClass <Traits<T, Types...>, Index, typename std::enable_if<Index == Traits<T, Types...>::size() - 1>::type>{
-        static void print(std::ostream& ost, const T &traitedClass, const Traits<T, Types...>& trait = Traits<T>::tr){
+        static void print(std::ostream& ost, const T &traitedClass, const Traits<T, Types...>& trait = DefaultIOTraits<T>::getTraits()){
             ost << '"' << trait.template getName<Traits<T, Types...>::size() - 1>() << "\" : ";
             VariableExport::exportVariable(ost, trait.template getValue<Traits<T, Types...>::size() - 1>(traitedClass));
         }
@@ -192,11 +192,11 @@ struct VariableExport {
     template<typename T>
     static auto exportVariable(std::ostream& ost, const T &traitedClass)
       -> typename std::enable_if<
-             HasDefaultTraits<T>::value
+             HasDefaultIOTraits<T>::value
          >::type
     {
         ost << "{ ";
-        PrintClass<typename Traits<T>::ttype>::print(ost, traitedClass);
+        PrintClass<typename DefaultIOTraits<T>::ttype>::print(ost, traitedClass);
         ost << " }";
     }
 
@@ -403,13 +403,13 @@ struct VariableExport<VARIABLE_EXPORT_METHOD::stdio> {
     template<typename T>
     static auto exportVariable(const T &traitedClass)
       -> typename std::enable_if<
-             HasDefaultTraits<T>::value,
+             HasDefaultIOTraits<T>::value,
              std::string
          >::type
     {
         std::string res;
         res += "{ ";
-        res += PrintClass<typename Traits<T>::ttype>::print(traitedClass);
+        res += PrintClass<typename DefaultIOTraits<T>::ttype>::print(traitedClass);
         res += " }";
         return res;
     }

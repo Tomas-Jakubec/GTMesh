@@ -24,23 +24,23 @@ class VTKMeshDataReader {
     template<typename T, unsigned int Index>
     static auto readColumn(std::istream& ist, DataContainer<T, MeshDimension> &data,std::map<std::string, std::istream::pos_type>& dataPositions)
     -> typename std::enable_if<
-        IsIndexable<typename Traits<T>::ttype::template type<Index>>::value &&
+        IsIndexable<typename DefaultIOTraits<T>::ttype::template type<Index>>::value &&
         MeshDimension == 3
        >::type
     {
 
-        ist.seekg(dataPositions[Traits<T>::tr.template getName<Index>()]);
+        ist.seekg(dataPositions[DefaultIOTraits<T>::tr.template getName<Index>()]);
     std::string line;
     std::getline(ist, line);
-        ist.seekg(dataPositions[Traits<T>::tr.template getName<Index>()]);
+        ist.seekg(dataPositions[DefaultIOTraits<T>::tr.template getName<Index>()]);
 
-        typename Traits<T>::ttype::template type<Index> value;
+        typename DefaultIOTraits<T>::ttype::template type<Index> value;
 
         for (IndexType i = 0; i < data.size(); i++) {
-            for (unsigned int j = 0; j < Traits<T>::tr.template getValue<Index>(data.at(i)).size(); j++){
+            for (unsigned int j = 0; j < DefaultIOTraits<T>::tr.template getValue<Index>(data.at(i)).size(); j++){
                 ist >> value[j];
             }
-            Traits<T>::tr.template setValue<Index>(data.at(i), value);
+            DefaultIOTraits<T>::tr.template setValue<Index>(data.at(i), value);
         }
 
     }
@@ -49,24 +49,24 @@ class VTKMeshDataReader {
     template<typename T, unsigned int Index>
     static auto readColumn(std::istream& ist, DataContainer<T, MeshDimension> &data,std::map<std::string, std::istream::pos_type>& dataPositions)
     -> typename std::enable_if<
-        IsIndexable<typename Traits<T>::ttype::template type<Index>>::value &&
+        IsIndexable<typename DefaultIOTraits<T>::ttype::template type<Index>>::value &&
         MeshDimension == 2
        >::type
     {
 
-        ist.seekg(dataPositions[Traits<T>::ttype::template getName<Index>()]);
+        ist.seekg(dataPositions[DefaultIOTraits<T>::ttype::template getName<Index>()]);
 
-        typename Traits<T>::ttype::template type<Index> value;
-        typename Traits<T>::ttype::template type<Index> dummy;
+        typename DefaultIOTraits<T>::ttype::template type<Index> value;
+        typename DefaultIOTraits<T>::ttype::template type<Index> dummy;
 
         for (IndexType i = 0; i < data.size(); i++) {
-            for (unsigned int j = 0; j < Traits<T>::tr.template getValue<Index>(data.at(i)).size(); j++){
+            for (unsigned int j = 0; j < DefaultIOTraits<T>::tr.template getValue<Index>(data.at(i)).size(); j++){
                 ist >> value[j];
             }
 
             ist >> dummy[0];
 
-            Traits<T>::tr.template setValue<Index>(data.at(i), value);
+            DefaultIOTraits<T>::tr.template setValue<Index>(data.at(i), value);
         }
 
     }
@@ -75,18 +75,18 @@ class VTKMeshDataReader {
     template<typename T, unsigned int Index>
     static auto readColumn(std::istream& ist, DataContainer<T, MeshDimension> &data,std::map<std::string, std::istream::pos_type>& dataPositions)
     -> typename std::enable_if<
-        !IsIndexable<typename Traits<T>::ttype::template type<Index>>::value
+        !IsIndexable<typename DefaultIOTraits<T>::ttype::template type<Index>>::value
     >::type
     {
 
 
-        ist.seekg(dataPositions[Traits<T>::tr.template getName<Index>()]);
+        ist.seekg(dataPositions[DefaultIOTraits<T>::tr.template getName<Index>()]);
 
-        typename Traits<T>::ttype::template type<Index> value;
+        typename DefaultIOTraits<T>::ttype::template type<Index> value;
 
         for (IndexType i = 0; i < data.size(); i++){
             ist >> value;
-            Traits<T>::tr.template setValue<Index>(data.at(i), value);
+            DefaultIOTraits<T>::tr.template setValue<Index>(data.at(i), value);
         }
 
     }
@@ -162,7 +162,7 @@ public:
 
         std::map<std::string, std::istream::pos_type> dataPositions = indexData(ist);
 
-        readCellData<typename Traits<T>::ttype>::read(ist, data, dataPositions);
+        readCellData<typename DefaultIOTraits<T>::ttype>::read(ist, data, dataPositions);
     }
 };
 
