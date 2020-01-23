@@ -17,6 +17,7 @@ HEADERS += \
     ../src/NumericStaticArray/InlineArrayOperations.h \
     ../src/Traits/CustomTypeTraits.h \
     ../src/Traits/MemberApproach/MemberApproach.h \
+    ../src/Traits/TraitsAlgorithm/TraitsAlgorithm.h \
     ../src/UnstructuredMesh/MeshDataContainer/MeshDataContainer.h \
     ../src/UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataReader.h \
     ../src/UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataWriter.h \

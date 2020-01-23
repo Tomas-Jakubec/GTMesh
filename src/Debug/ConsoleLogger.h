@@ -25,9 +25,25 @@ public:
     template<typename MSGTYPE>
     static void writeMessage(const char* prefix, int line, const char* sourceFile, const MSGTYPE& message) {
 
+#ifdef CONSOLE_COLORED_OUTPUT
+#ifdef _WIN32
+        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+        std::cerr << prefix << " " << sourceFile << " << " << line << " >> ==> ";
+        SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_INTENSITY);
+        VariableExport<>::exportVariable(std::cerr, message);
+        SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+        std::cerr << " <==\n";
+#else
+        std::cerr << prefix << " " << sourceFile << " << " << line << " >> ==> \033[0;32m";
+        VariableExport<>::exportVariable(std::cerr, message);
+        std::cerr << "\033[0m <==\n";
+
+#endif
+#else
         std::cerr << prefix << " " << sourceFile << " << " << line << " >> ==> ";
         VariableExport<>::exportVariable(std::cerr, message);
         std::cerr << " <==\n";
+#endif
     }
 
     template<typename VAR_NAME, typename VAR, typename ... REST>

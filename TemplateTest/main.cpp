@@ -1,7 +1,10 @@
+#define CONSOLE_COLORED_OUTPUT
 #include "../src/Debug/Debug.h"
 #include "../src/UnstructuredMesh/UnstructuredMesh.h"
 #include "../src/Traits/MemberApproach/MemberApproach.h"
 #include "../src/Traits/Traits.h"
+
+#include <chrono>
 #include <functional>
 #include <type_traits>
 #include <iostream>
@@ -165,7 +168,7 @@ void testTemplate() {
 }
 
 
-template<typename T, typename VOID = void>
+template<typename T, typename Void = void>
 struct is_indexable : public integral_constant<bool, false>{};
 
 template<typename T>
@@ -280,6 +283,7 @@ const Traits<tempData>::ttype Traits<tempData>::tr("density", &tempData::density
 //MAKE_ATTRIBUTE_TRAIT(tempData, density, velocity);
 
 MAKE_CUSTOM_ATTRIBUTE_TRAIT(tempData, "density", &tempData::density, "momentum", std::make_pair(&tempData::getMomentum, &tempData::setMomentum))
+MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(tempData, density, velocity);
 
 struct ExportTest {
     int attrInt = 1;
@@ -290,7 +294,15 @@ struct ExportTest {
     tempData attrTempData{42.15, {1,2,1}};
 };
 MAKE_ATTRIBUTE_TRAIT(ExportTest, attrInt, attrDouble, attrChar, attrStr, attrTempData, attrVec);
+MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(ExportTest, attrInt, attrDouble, attrTempData);
 
+#include "../src/Traits/TraitsAlgorithm/TraitsAlgorithm.h"
+
+struct dataStruct {
+    int iD;
+    double dD;
+
+}; MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(dataStruct, iD, dD);
 void testMemberRef(){
 
 
@@ -298,20 +310,790 @@ void testMemberRef(){
 
     //DBGVAR(Traits<tempData>::ttype::getName<0>());
 
-    Traits<tempData>::tr.getReference<0>().setValue(&d, 0.0);
-    DBGVAR(Traits<tempData>::tr.getReference<0>().getValue(&d));
-    Traits<tempData>::tr.getReference<0>().setValue(d, 42.15);
-    Traits<tempData>::tr.getReference<1>().setValue(&d, {42.15,84.30,42.15});
+    Traits<tempData>::getTraits().getReference<0>().setValue(&d, 0.0);
+    DBGVAR(Traits<tempData>::getTraits().getReference<0>().getValue(&d));
+    Traits<tempData>::getTraits().getReference<0>().setValue(d, 42.15);
+    Traits<tempData>::getTraits().getReference<1>().setValue(&d, {42.15,84.30,42.15});
 
-    DBGVAR(Traits<tempData>::tr.getName<0>(),(Traits<tempData>::tr.getReference<0>().getValue(&d)), Traits<tempData>::tr.getName<1>(), d.velocity);
+    DBGVAR(Traits<tempData>::getTraits().getName<0>(),(Traits<tempData>::getTraits().getReference<0>().getValue(&d)), Traits<tempData>::getTraits().getName<1>(), d.velocity);
     DBGVAR(Traits<tempData>::is_specialized,HasDefaultTraits<tempData>::value, d);
 
     ExportTest e;
     DBGVAR(e, ClassC<>());
 }
 
+void testTraitsAlgorithms() {
+    ExportTest e1, e2;
+    ExportTest res = e1 + e2;
+    std::vector<ExportTest> vec(40, ExportTest());
+
+    DBGVAR(2.45*e1,e1 + e2, e1, e2,HasDefaultArithmeticTraits<int>::value, max(e2), min(e2), max(vec));
+}
 
 
+struct NumStruct {
+    double data;
+};
+MAKE_ATTRIBUTE_TRAIT(NumStruct, data);
+
+
+struct NumStruct2 {
+    double data1;
+    double data2;
+};
+MAKE_ATTRIBUTE_TRAIT(NumStruct2, data1, data2);
+
+
+template <unsigned int Index>
+const MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<Index>, DefaultArithmeticTraits<tempData>::traitsType::refType<Index>>
+getReference() {
+    if constexpr (Index == 0){
+        MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<0>, DefaultArithmeticTraits<tempData>::traitsType::refType<0>>
+                mr1(&tempData::density);
+        return mr1;
+    }
+    else{
+        MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<1>, DefaultArithmeticTraits<tempData>::traitsType::refType<1>>
+                mr2(&tempData::velocity);
+        return mr2;
+    }
+}
+
+struct References {
+    template<unsigned int Index>
+    using refType = typename DefaultArithmeticTraits<tempData>::traitsType::refType<Index>;
+
+    template <unsigned int Index>
+    using type = typename DefaultArithmeticTraits<tempData>::traitsType::type<Index>;
+
+
+    template<unsigned int Index = 0, typename Dummy = void>
+    struct MemRefs: public MemRefs<Index + 1> {
+
+        const MemberReference<tempData, type<Index>, refType<Index>> ref;
+        const char* name;
+
+
+        template <typename ... REST>
+        MemRefs(const char* n, refType<Index> r, REST... rest) : MemRefs<Index + 1> (rest...), ref(r), name(n){}
+    };
+
+    template<typename Dummy>
+    struct MemRefs<1, Dummy>{
+        const MemberReference<tempData, type<1>, refType<1>> ref;
+        const char* name;
+
+        MemRefs(const char* n, refType<1> r) : ref(r), name(n){}
+    };
+
+    const MemRefs<0, void> refs;
+
+    References() : refs("",&tempData::density,"", &tempData::velocity){}
+
+    template <unsigned int Index>
+    const MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<Index>, DefaultArithmeticTraits<tempData>::traitsType::refType<Index>>
+    getReference() {
+        return refs.MemRefs<Index,void>::ref;
+    }
+};
+
+
+struct traitPublisher {
+    static const
+    Traits<tempData, typename DefaultArithmeticTraits<tempData>::traitsType::refType<0>,
+         typename DefaultArithmeticTraits<tempData>::traitsType::refType<1>> trait;
+
+    static const
+    Traits<tempData, typename DefaultArithmeticTraits<tempData>::traitsType::refType<0>,
+    typename DefaultArithmeticTraits<tempData>::traitsType::refType<1>> getTrait(){
+        return Traits<tempData, typename DefaultArithmeticTraits<tempData>::traitsType::refType<0>,
+                typename DefaultArithmeticTraits<tempData>::traitsType::refType<1>>("1",&tempData::density,"2",&tempData::velocity);
+    }
+
+    static const
+        MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<0>, DefaultArithmeticTraits<tempData>::traitsType::refType<0>>
+                mr1;
+    static const
+        MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<1>, DefaultArithmeticTraits<tempData>::traitsType::refType<1>>
+                mr2;
+};
+const
+Traits<tempData, typename DefaultArithmeticTraits<tempData>::traitsType::refType<0>,
+typename DefaultArithmeticTraits<tempData>::traitsType::refType<1>> traitPublisher::trait("1",&tempData::density,"2",&tempData::velocity);
+const
+        MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<0>, DefaultArithmeticTraits<tempData>::traitsType::refType<0>>
+                traitPublisher::mr1(&tempData::density);
+const
+    MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<1>, DefaultArithmeticTraits<tempData>::traitsType::refType<1>>
+            traitPublisher::mr2(&tempData::velocity);
+
+
+void testNumericTraitsPerformance() {
+
+    size_t size;
+    DBGMSG("input size");
+    cin >> size;
+
+    std::vector<tempData> vec(size, {1, {1,1,1}});
+    double ini;
+    DBGMSG("input ini");
+    std::cin >> ini;
+
+    for (auto& val : vec) {
+        val *= ini;
+    }
+
+    DBGMSG("input rep");
+    int maxRep;
+    cin >> maxRep;
+
+    DBGVAR(size * ini * maxRep);
+
+
+
+    auto clock = std::chrono::high_resolution_clock();
+    DBGMSG("primary approach +=");
+    long long deviation = 0;
+    long long duration = 0;
+    auto start = clock.now();
+    tempData res({1,{1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+            res.density += vec[i].density;
+
+            res.velocity += vec[i].velocity;
+
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    auto avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("primary approach = +");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+            res.density = res.density + vec[i].density;
+
+            res.velocity = res.velocity + vec[i].velocity;
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("numeric traits +=");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+            res += vec[i];
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DefaultArithmeticTraits<tempData>::traitsType::refType<0> const r1(&tempData::density);
+
+    DefaultArithmeticTraits<tempData>::traitsType::refType<1> const r2(&tempData::velocity);
+
+    DBGMSG("simulation numeric traits += (one ref one direct)");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+            res.density += vec[i].*r1;
+
+            res.velocity += vec[i].*r2;
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+
+    DBGMSG("simulation numeric traits += (both ref)");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+            res.*r1 += vec[i].*r1;
+
+            res.*r2 += vec[i].*r2;
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("simulation numeric traits = +");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+            res.*r1 = res.*r1 + vec[i].*r1;
+
+            res.*r2 = res.*r2 + vec[i].*r2;
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+
+    DefaultArithmeticTraits<tempData>::traitsType::refType<0> volatile r1_1(&tempData::density);
+
+    DefaultArithmeticTraits<tempData>::traitsType::refType<1> volatile r2_1(&tempData::velocity);
+
+
+    DBGMSG("both volatile references = +");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+            res.*r1 = res.*r1_1 + vec[i].*r1_1;
+
+            res.*r2 = res.*r2 + vec[i].*r2_1;
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("second reference is volatile = +");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+            res.*r1 = res.*r1 + vec[i].*r1_1;
+
+            res.*r2 = res.*r2 + vec[i].*r2_1;
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<0>, DefaultArithmeticTraits<tempData>::traitsType::refType<0>>
+            mr1(&tempData::density);
+    MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<1>, DefaultArithmeticTraits<tempData>::traitsType::refType<1>>
+            mr2(&tempData::velocity);
+
+
+    DBGMSG("MemberReference +=");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+            mr1.getAttr(res) += mr1.getAttr(vec[i]);
+
+            mr2.getAttr(res) += mr2.getAttr(vec[i]);
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("MemberReference = +");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+            mr1.setValue(res, mr1.getValue(res) + mr1.getAttr(vec[i]));
+
+            mr2.setValue(res, mr2.getValue(res) + mr2.getAttr(vec[i]));
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("published MemberReference +=");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+            traitPublisher::mr1.getAttr(res) += traitPublisher::mr1.getAttr(vec[i]);
+
+            traitPublisher::mr2.getAttr(res) += traitPublisher::mr2.getAttr(vec[i]);
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    References rr;
+
+    const MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<0>, DefaultArithmeticTraits<tempData>::traitsType::refType<0>>&
+            rmr1 = rr.getReference<0>();//DefaultArithmeticTraits<tempData>::tr.getReference<0>();
+    const MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<1>, DefaultArithmeticTraits<tempData>::traitsType::refType<1>>&
+            rmr2 = rr.getReference<1>();//DefaultArithmeticTraits<tempData>::tr.getReference<1>();
+
+
+    DBGMSG("reference to MemberReference +=");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+            rmr1.getAttr(res) += rmr1.getAttr(vec[i]);
+
+            rmr2.getAttr(res) += rmr2.getAttr(vec[i]);
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("reference to MemberReference = +");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+            rmr1.setValue(res, rmr1.getValue(res) + rmr1.getAttr(vec[i]));
+
+            rmr2.setValue(res, rmr2.getValue(res) + rmr2.getAttr(vec[i]));
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+
+
+    DBGMSG("numeric traits inplace direct approach of tr +=");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+
+            DefaultArithmeticTraits<tempData>::getTraits().template getReference<0>().getAttr(res) +=
+                    DefaultArithmeticTraits<tempData>::getTraits().template getReference<0>().getAttr(vec[i]);
+
+            DefaultArithmeticTraits<tempData>::getTraits().template getReference<1>().getAttr(res) +=
+                    DefaultArithmeticTraits<tempData>::getTraits().template getReference<1>().getAttr(vec[i]);
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("numeric traits inplace +=");
+
+    const auto tr1 = DefaultArithmeticTraits<tempData>::getTraits();
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+
+            tr1.template getReference<0>().getAttr(res) +=
+                    tr1.template getReference<0>().getAttr(vec[i]);
+
+            tr1.template getReference<1>().getAttr(res) +=
+                    tr1.template getReference<1>().getAttr(vec[i]);
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+
+    Traits<tempData, typename DefaultArithmeticTraits<tempData>::traitsType::refType<0>,
+         typename DefaultArithmeticTraits<tempData>::traitsType::refType<1>>const trait("1",r1,"2",r2);
+
+    DBGMSG("numeric traits inplace only RHS +=");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+
+            res.density += trait.getReference<0>().getAttr(vec[i]);
+
+            res.velocity += trait.getReference<1>().getAttr(vec[i]);
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("numeric traits inplace = +");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+
+            res.density = trait.getReference<0>().getAttr(res) + trait.getReference<0>().getAttr(vec[i]);
+
+            res.velocity = trait.getReference<1>().getAttr(res) + trait.getReference<1>().getAttr(vec[i]);
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("numeric traits inplace both referenced +=");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+
+            trait.getReference<0>().getAttr(res) += trait.getReference<0>().getAttr(vec[i]);
+            trait.getReference<1>().getAttr(res) += trait.getReference<1>().getAttr(vec[i]);
+
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("numeric traits static published both referenced +=");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+
+            traitPublisher::trait.getReference<0>().getAttr(res) += traitPublisher::trait.getReference<0>().getAttr(vec[i]);
+            traitPublisher::trait.getReference<1>().getAttr(res) += traitPublisher::trait.getReference<1>().getAttr(vec[i]);
+
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("numeric traits static published getTrait() both referenced +=");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+
+            traitPublisher::getTrait().getReference<0>().getAttr(res) += traitPublisher::getTrait().getReference<0>().getAttr(vec[i]);
+            traitPublisher::getTrait().getReference<1>().getAttr(res) += traitPublisher::getTrait().getReference<1>().getAttr(vec[i]);
+
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+
+    DBGMSG("numeric traits inplace +=");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+
+            trait.getReference<0>().setValue(res, res.density + trait.getReference<0>().getAttr(vec[i]));
+            trait.getReference<1>().setValue(res, res.velocity + trait.getReference<1>().getAttr(vec[i]));
+
+
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("simple numeric data test");
+
+    vector<NumStruct> numVec(size,{ini});
+
+    DBGMSG("direct approach +=");
+
+    start = clock.now();
+    NumStruct res1 = NumStruct({0});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < numVec.size(); i++) {
+
+            res1.data += numVec[i].data;
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res1, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("numeric traits +=");
+
+    start = clock.now();
+    res1 = NumStruct({0});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < numVec.size(); i++) {
+
+            res1 += numVec[i];
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res1, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+
+
+    DBGMSG("simple numeric data test");
+
+    vector<NumStruct2> numVec2(size,{ini,ini});
+
+    DBGMSG("direct approach +=");
+
+    start = clock.now();
+    NumStruct2 res2 = NumStruct2({0,0});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < numVec2.size(); i++) {
+
+            res2.data1 += numVec2[i].data1;
+
+            res2.data2 += numVec2[i].data2;
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res2, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+
+
+    DBGMSG("Traits approach instead of numeric traits +=");
+    Traits<NumStruct2> t;
+    start = clock.now();
+    res2 = NumStruct2({0,0});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < numVec2.size(); i++) {
+
+            t.getTraits().getReference<0>().getAttr(res2) += t.getTraits().getReference<0>().getAttr(numVec2[i]);
+
+            t.getTraits().getReference<1>().getAttr(res2) += t.getTraits().getReference<1>().getAttr(numVec2[i]);
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res2, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+
+    DBGMSG("numeric traits +=");
+
+    start = clock.now();
+    res2 = NumStruct2({0,0});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < numVec2.size(); i++) {
+
+            res2 += numVec2[i];
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res2, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+
+    DBGMSG("\n","ExportTest performance, direct approach");
+
+    std::vector<ExportTest> vec3(size, ExportTest());
+
+    start = clock.now();
+    ExportTest res3 = ExportTest();
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec3.size(); i++) {
+
+            res3.attrInt += vec3[i].attrInt;
+
+            res3.attrDouble += vec3[i].attrDouble;
+
+            res3.attrTempData.density = res3.attrTempData.density + vec3[i].attrTempData.density;
+
+            res3.attrTempData.velocity = res3.attrTempData.velocity + vec3[i].attrTempData.velocity;
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res3, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("numeric traits +=");
+
+    start = clock.now();
+    res3 = ExportTest();
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec3.size(); i++) {
+            res3 += vec3[i];
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res3, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+}
 
 
 /*
@@ -328,7 +1110,7 @@ struct Container{
 
 
     template <typename Dummy>
-    struct StructOfArrays<Traits<DataType>::ttype::size() - 1, Dummy>{
+    struct StructOfArrays<Traits<DataType>::traitsType::size() - 1, Dummy>{
         std::vector<typename DataTypeTrait::template type<DataTypeTrait::size() - 1>> vec;
     };
 
@@ -339,19 +1121,19 @@ struct Container{
     }
 
     template <unsigned int pos>
-    const std::string& name() {
-        return Traits<DataType>::tr.template getName<pos>();
+    const char* name() {
+        return Traits<DataType>::getTraits().template getName<pos>();
     }
 
     template <unsigned int pos>
-    std::vector<typename Traits<DataType>::ttype::template type<pos>>& getDataAtPos() {
+    std::vector<typename Traits<DataType>::traitsType::template type<pos>>& getDataAtPos() {
         return data.StructOfArrays<pos>::vec;
     }
 };
 
 
 void testStructTransposition() {
-    Container<ExportTest, Traits<ExportTest>::ttype> data;
+    Container<ExportTest, Traits<ExportTest>::traitsType> data;
 
     data.getDataAtPos<5>().resize(2);
     DBGVAR(data.size(), data.getDataAtPos<5>(), data.name<5>());
@@ -528,7 +1310,7 @@ public:
     {
         DBGVAR(Singleton<Depth>::getInstance().value,index, name);
         Singleton<Depth>::getInstance().value++;
-        Traits<T>::tr.template apply<Func>();
+        Traits<T>::getTraits().template apply<Func>();
         Singleton<Depth>::getInstance().value--;
     }
 };
@@ -547,12 +1329,12 @@ void testTraitApply() {
 
     //TraitApply<5>::apply(lambda1);
 DBGMSG("Tady");
-    Traits<ExportTest>::tr.apply<Func>();
+    Traits<ExportTest>::getTraits().apply<Func>();
     //TraitApply<5>::apply<Func>();
 
-    Traits<ExportTest>::tr.apply(lambda);
+    Traits<ExportTest>::getTraits().apply(lambda);
 
-    Traits<ExportTest>::tr.apply(lambda1);
+    Traits<ExportTest>::getTraits().apply(lambda1);
 
     //Traits<ExportTest>::ttype::apply<Func>();
 
@@ -811,7 +1593,6 @@ void testOperator() {
 }
 
 
-#include <chrono>
 
 template<typename Class, typename ValueType, typename Ref>
 class TestMemberReference{
@@ -1146,7 +1927,7 @@ void testTraitPerformance() {
     res = 0;
     for(int rep = 0; rep < maxRep; rep++){
         for(size_t i = 0; i < vec.size(); i++) {
-            res += Traits<ExportTest>::tr.getValue<1>(vec[i]);
+            res += Traits<ExportTest>::getTraits().getValue<1>(vec[i]);
         }
         duration += (clock.now() - start).count();
         deviation += (clock.now() - start).count() * (clock.now() - start).count();
@@ -1301,7 +2082,7 @@ MAKE_NAMED_ATTRIBUTE_TRAIT(privateAttr, "str_attr", attr);
 void testPrivateTrait(){
     privateAttr a;
     DBGVAR(a);
-    Traits<privateAttr>::tr.setValue<0>(a, "new value");
+    Traits<privateAttr>::getTraits().setValue<0>(a, "new value");
     DBGVAR(a);
 
 }
@@ -1477,6 +2258,8 @@ int main()
     //testPrivateTrait();
     //testJson();
     //testTestTraits();
+    //testTraitsAlgorithms();
+    testNumericTraitsPerformance();
     return 0;
 }
 

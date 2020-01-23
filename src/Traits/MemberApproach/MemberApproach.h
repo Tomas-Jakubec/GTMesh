@@ -32,14 +32,18 @@ template <typename Class, typename ValueType>
 class MemberReference<Class, ValueType, ValueType Class::*> : public MemberApproach<Class, ValueType>{
 
     using refType = ValueType Class::*;
-public:
-    refType const ref;
+
+    const refType ref;
 
 public:
 
     MemberReference(refType referenceToMember) : ref(referenceToMember){
         //ref = referenceToMember;
     }
+
+    MemberReference(const MemberReference<Class, ValueType, ValueType Class::*>&) = default;
+
+    MemberReference(MemberReference<Class, ValueType, ValueType Class::*>&&) = default;
 
     virtual ValueType getValue(const Class* c) const override {
         return c->*ref;
@@ -55,6 +59,10 @@ public:
 
     virtual void setValue(Class& c, const ValueType& val) const override {
         c.*ref = val;
+    }
+
+    ValueType& getAttr(Class& c) const {
+        return c.*ref;
     }
 };
 

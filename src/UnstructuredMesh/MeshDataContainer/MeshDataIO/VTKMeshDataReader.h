@@ -24,7 +24,7 @@ class VTKMeshDataReader {
     template<typename T, unsigned int Index>
     static auto readColumn(std::istream& ist, DataContainer<T, MeshDimension> &data,std::map<std::string, std::istream::pos_type>& dataPositions)
     -> typename std::enable_if<
-        IsIndexable<typename DefaultIOTraits<T>::ttype::template type<Index>>::value &&
+        IsIndexable<typename DefaultIOTraits<T>::traitsType::template type<Index>>::value &&
         MeshDimension == 3
        >::type
     {
@@ -34,7 +34,7 @@ class VTKMeshDataReader {
     std::getline(ist, line);
         ist.seekg(dataPositions[DefaultIOTraits<T>::tr.template getName<Index>()]);
 
-        typename DefaultIOTraits<T>::ttype::template type<Index> value;
+        typename DefaultIOTraits<T>::traitsType::template type<Index> value;
 
         for (IndexType i = 0; i < data.size(); i++) {
             for (unsigned int j = 0; j < DefaultIOTraits<T>::tr.template getValue<Index>(data.at(i)).size(); j++){
@@ -49,15 +49,15 @@ class VTKMeshDataReader {
     template<typename T, unsigned int Index>
     static auto readColumn(std::istream& ist, DataContainer<T, MeshDimension> &data,std::map<std::string, std::istream::pos_type>& dataPositions)
     -> typename std::enable_if<
-        IsIndexable<typename DefaultIOTraits<T>::ttype::template type<Index>>::value &&
+        IsIndexable<typename DefaultIOTraits<T>::traitsType::template type<Index>>::value &&
         MeshDimension == 2
        >::type
     {
 
-        ist.seekg(dataPositions[DefaultIOTraits<T>::ttype::template getName<Index>()]);
+        ist.seekg(dataPositions[DefaultIOTraits<T>::traitsType::template getName<Index>()]);
 
-        typename DefaultIOTraits<T>::ttype::template type<Index> value;
-        typename DefaultIOTraits<T>::ttype::template type<Index> dummy;
+        typename DefaultIOTraits<T>::traitsType::template type<Index> value;
+        typename DefaultIOTraits<T>::traitsType::template type<Index> dummy;
 
         for (IndexType i = 0; i < data.size(); i++) {
             for (unsigned int j = 0; j < DefaultIOTraits<T>::tr.template getValue<Index>(data.at(i)).size(); j++){
@@ -75,14 +75,14 @@ class VTKMeshDataReader {
     template<typename T, unsigned int Index>
     static auto readColumn(std::istream& ist, DataContainer<T, MeshDimension> &data,std::map<std::string, std::istream::pos_type>& dataPositions)
     -> typename std::enable_if<
-        !IsIndexable<typename DefaultIOTraits<T>::ttype::template type<Index>>::value
+        !IsIndexable<typename DefaultIOTraits<T>::traitsType::template type<Index>>::value
     >::type
     {
 
 
         ist.seekg(dataPositions[DefaultIOTraits<T>::tr.template getName<Index>()]);
 
-        typename DefaultIOTraits<T>::ttype::template type<Index> value;
+        typename DefaultIOTraits<T>::traitsType::template type<Index> value;
 
         for (IndexType i = 0; i < data.size(); i++){
             ist >> value;
@@ -162,7 +162,7 @@ public:
 
         std::map<std::string, std::istream::pos_type> dataPositions = indexData(ist);
 
-        readCellData<typename DefaultIOTraits<T>::ttype>::read(ist, data, dataPositions);
+        readCellData<typename DefaultIOTraits<T>::traitsType>::read(ist, data, dataPositions);
     }
 };
 

@@ -14,23 +14,27 @@ public:
 
     template <unsigned int Index>
     using type = typename MemberReferenceType<refType<Index>>::type;
+
 private:
+    template<unsigned int Index>
+    using memRefType = MemberReference<Class, type<Index>, refType<Index>>;
+
     template<unsigned int Index = 0, typename Dummy = void>
     struct MemRefs: public MemRefs<Index + 1> {
 
         const MemberReference<Class, type<Index>, refType<Index>> ref;
-        std::string name;
+        const char* name;
 
         template <typename ... REST>
-        MemRefs(std::string n, refType<Index> r, REST... rest) : MemRefs<Index + 1> (rest...), ref(r), name(n){}
+        MemRefs(const char* n, refType<Index> r, REST... rest) : MemRefs<Index + 1> (rest...), ref(r), name(n){}
     };
 
     template<typename Dummy>
     struct MemRefs<sizeof...(RefTypes) - 1, Dummy>{
         const MemberReference<Class, type<sizeof...(RefTypes) - 1>, refType<sizeof...(RefTypes) - 1>> ref;
-        std::string name;
+        const char* name;
 
-        MemRefs(std::string n, refType<sizeof...(RefTypes) - 1> r) : ref(r), name(n){}
+        MemRefs(const char* n, refType<sizeof...(RefTypes) - 1> r) : ref(r), name(n){}
     };
 
     const MemRefs<0, void> refs;
@@ -45,7 +49,7 @@ public:
 
 
     template<unsigned int Index>
-    const MemberReference<Class, type<Index>, refType<Index>>& getReference() const {
+    MemberReference<Class, type<Index>, refType<Index>>const getReference() const {
         return refs.MemRefs<Index, void>::ref;
     }
 
@@ -71,7 +75,7 @@ public:
 
 
     template<unsigned int Index>
-    const std::string& getName() const {
+    const char* getName() const {
         return refs.MemRefs<Index, void>::name;
     }
 
@@ -89,11 +93,7 @@ private:
         -> typename std::enable_if<std::is_assignable<
         std::function<
             void(unsigned int,
-                 std::unique_ptr<
-                    MemberApproach<
-                        Class,
-                        typename ThisTrait::template type<Index>
-                    >>&,
+                 memRefType<Index>&,
                  const std::string&
                  )
         >, Functor>::value>::type
@@ -102,11 +102,7 @@ private:
             static_assert (std::is_assignable<
                     std::function<
                         void(unsigned int,
-                             std::unique_ptr<
-                                MemberApproach<
-                                    Class,
-                                    typename ThisTrait::template type<Index>
-                                >>&,
+                             memRefType<Index>&,
                              const std::string&
                              )
                     >, Functor>::value, "");
@@ -121,11 +117,8 @@ private:
         static auto apply (const ThisTrait& trait, Functor f)
         -> typename std::enable_if<std::is_assignable<
         std::function<
-            void(std::unique_ptr<
-                    MemberApproach<
-                        Class,
-                        typename ThisTrait::template type<Index>
-                    >>&,
+            void(
+                 memRefType<Index>&,
                  const std::string&
                  )
         >, Functor>::value>::type
@@ -133,11 +126,8 @@ private:
 
             static_assert (std::is_assignable<
                     std::function<
-                        void(std::unique_ptr<
-                                MemberApproach<
-                                    Class,
-                                    typename ThisTrait::template type<Index>
-                                >>&,
+                        void(
+                             memRefType<Index>&,
                              const std::string&
                              )
                     >, Functor>::value, "");
@@ -154,11 +144,7 @@ private:
             static_assert (std::is_assignable<
                     std::function<
                         void(unsigned int,
-                             MemberReference<
-                                    Class,
-                                    typename ThisTrait::template type<Index>,
-                                    typename ThisTrait::template refType<Index>
-                                >&,
+                             memRefType<Index>&,
                              const std::string&
                              )
                     >, Functor<Class, typename ThisTrait::template type<Index>>>::value, "");
@@ -179,11 +165,7 @@ private:
         -> typename std::enable_if<std::is_assignable<
         std::function<
             void(unsigned int,
-                 std::unique_ptr<
-                    MemberApproach<
-                        Class,
-                        typename ThisTrait::template type<ThisTrait::size() - 1>
-                    >>&,
+                 memRefType<size() - 1>&,
                  const std::string&
                  )
         >, Functor>::value>::type
@@ -192,11 +174,7 @@ private:
             static_assert (std::is_assignable<
                     std::function<
                         void(unsigned int,
-                             std::unique_ptr<
-                                MemberApproach<
-                                    Class,
-                                    typename ThisTrait::template type<ThisTrait::size() - 1>
-                                >>&,
+                             memRefType<size() - 1>&,
                              const std::string&
                              )
                     >, Functor>::value, "");
@@ -211,11 +189,8 @@ private:
         static auto apply (const ThisTrait& trait, Functor f)
         -> typename std::enable_if<std::is_assignable<
         std::function<
-            void(std::unique_ptr<
-                    MemberApproach<
-                        Class,
-                        typename ThisTrait::template type<ThisTrait::size() - 1>
-                    >>&,
+            void(
+                 memRefType<size() - 1>&,
                  const std::string&
                  )
         >, Functor>::value>::type
@@ -223,11 +198,8 @@ private:
 
             static_assert (std::is_assignable<
                     std::function<
-                        void(std::unique_ptr<
-                                MemberApproach<
-                                    Class,
-                                    typename ThisTrait::template type<ThisTrait::size() - 1>
-                                >>&,
+                        void(
+                             memRefType<size() - 1>&,
                              const std::string&
                              )
                     >, Functor>::value, "");
@@ -244,12 +216,7 @@ private:
             static_assert (std::is_assignable<
                     std::function<
                         void(unsigned int,
-
-                                MemberReference<
-                                    Class,
-                                    typename ThisTrait::template type<ThisTrait::size() - 1>,
-                                    typename ThisTrait::template refType<ThisTrait::size() - 1>
-                                >&,
+                             memRefType<size() - 1>&,
                              const std::string&
                              )
                     >, Functor<Class, typename ThisTrait::template type<ThisTrait::size() - 1>>>::value, "");
@@ -265,7 +232,7 @@ public:
      * This function automatically
      * applies a lambda with specified
      * arguments: <BR> (unsigned int,
-     * const auto& [as const std::unique_ptr<MemberApproach<Class, typename>>&]
+     * const auto& [as const MemberApproach<Class, typename>&]
      * const std::string&)
      */
     template<typename Functor>
@@ -310,13 +277,10 @@ template<>                              \
 class TraitName<Class>{                 \
 public:                             \
     static constexpr std::true_type is_specialized{}; \
-    using ttype = ::Traits<Class, FOR_EACH_2ARGS(IMPL_MEMREF_TYPE_CUSTOM, __VA_ARGS__)>; \
-    const static ttype tr;   \
-    TraitName() = delete; \
-    static const ttype& getTraits() {return tr;} \
-    static constexpr unsigned int size() {return ttype::size();}\
-}; \
-const TraitName<Class>::ttype TraitName<Class>::tr(__VA_ARGS__); \
+    using traitsType = ::Traits<Class, FOR_EACH_2ARGS(IMPL_MEMREF_TYPE_CUSTOM, __VA_ARGS__)>; \
+    static const traitsType getTraits() {return traitsType(__VA_ARGS__);} \
+    static constexpr unsigned int size() {return traitsType::size();}\
+};
 
 
 

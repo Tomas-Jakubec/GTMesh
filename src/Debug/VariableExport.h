@@ -181,9 +181,9 @@ struct VariableExport {
     };
 
     template<typename T, unsigned int Index>
-    struct PrintClass<T, Index, typename std::enable_if<Index == Traits<T>::ttype::size() - 1>::type>{
+    struct PrintClass<T, Index, typename std::enable_if<Index == Traits<T>::traitsType::size() - 1>::type>{
         static void print(std::ostream& ost, const T &traitedClass){
-            ost << '"' << Traits<T>::tr.template getName<Traits<T>::ttype::size() - 1>() << "\" : ";
+            ost << '"' << Traits<T>::tr.template getName<Traits<T>::traitsType::size() - 1>() << "\" : ";
             VariableExport::exportVariable(ost, Traits<T>::tr.template getValue<Traits<T>::tr.size() - 1>(traitedClass));
         }
     };
@@ -196,7 +196,7 @@ struct VariableExport {
          >::type
     {
         ost << "{ ";
-        PrintClass<typename DefaultIOTraits<T>::ttype>::print(ost, traitedClass);
+        PrintClass<typename DefaultIOTraits<T>::traitsType>::print(ost, traitedClass);
         ost << " }";
     }
 
@@ -359,8 +359,8 @@ struct VariableExport<VARIABLE_EXPORT_METHOD::stdio> {
     struct PrintClass{
         static std::string print(const T &traitedClass){
             std::string res;
-            res += '"' + Traits<T>::ttype::template getName<Index>() + "\" : ";
-            VariableExport::exportVariable(Traits<T>::ttype::template getReference<Index>()->getValue(traitedClass));
+            res += '"' + Traits<T>::traitsType::template getName<Index>() + "\" : ";
+            VariableExport::exportVariable(Traits<T>::traitsType::template getReference<Index>()->getValue(traitedClass));
             res += ", ";
             res += PrintClass<T, Index + 1>::print( traitedClass);
             return res;
@@ -390,11 +390,11 @@ struct VariableExport<VARIABLE_EXPORT_METHOD::stdio> {
     };
 
     template<typename T, unsigned int Index>
-    struct PrintClass<T, Index, typename std::enable_if<Index == Traits<T>::ttype::size() - 1>::type>{
+    struct PrintClass<T, Index, typename std::enable_if<Index == Traits<T>::traitsType::size() - 1>::type>{
         static std::string print(const T &traitedClass){
             std::string res;
-            res += '"' + Traits<T>::ttype::template getName<Traits<T>::ttype::size() - 1>() + "\" : ";
-            VariableExport::exportVariable(Traits<T>::ttype::template getReference<Traits<T>::ttype::size() - 1>()->getValue(traitedClass));
+            res += '"' + Traits<T>::traitsType::template getName<Traits<T>::traitsType::size() - 1>() + "\" : ";
+            VariableExport::exportVariable(Traits<T>::traitsType::template getReference<Traits<T>::traitsType::size() - 1>()->getValue(traitedClass));
             return res;
         }
     };
@@ -409,7 +409,7 @@ struct VariableExport<VARIABLE_EXPORT_METHOD::stdio> {
     {
         std::string res;
         res += "{ ";
-        res += PrintClass<typename DefaultIOTraits<T>::ttype>::print(traitedClass);
+        res += PrintClass<typename DefaultIOTraits<T>::traitsType>::print(traitedClass);
         res += " }";
         return res;
     }

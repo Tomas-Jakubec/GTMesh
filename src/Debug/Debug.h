@@ -1,10 +1,6 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
-
-
-
-
 #ifndef UNDEBUG
 #include "../Macros/MacroForEach.h"
 #include <iostream>
