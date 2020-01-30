@@ -2238,8 +2238,57 @@ void testJson() {
 }*/
 
 
+struct testTuple{
+    double attr1;
+    int attr2;
+    std::string attr3;
+};
+
+double& getData1(testTuple& s){return s.attr1;}
+
+int& getData2(testTuple& s){return s.attr2;}
+
+std::string& getData3(testTuple& s){return s.attr3;}
 
 
+const double& getData1(const testTuple& s){return s.attr1;}
+
+const int& getData2(const testTuple& s){return s.attr2;}
+
+const std::string& getData3(const testTuple& s){return s.attr3;}
+
+
+MAKE_CUSTOM_ATTRIBUTE_TRAIT_IO(
+        testTuple,
+        "1", std::make_pair(static_cast<double&(*)(testTuple&)>(getData1), static_cast<const double&(*)(const testTuple&)>(getData1)),
+        "2", std::make_pair(static_cast<int&(*)(testTuple&)>(getData2), static_cast<const int&(*)(const testTuple&)>(getData2)),
+        "3", std::make_pair(static_cast<std::string&(*)(testTuple&)>(getData3), static_cast<const std::string&(*)(const testTuple&)>(getData3))
+        );
+
+using double_tuple = std::tuple<double>;
+
+MAKE_CUSTOM_ATTRIBUTE_TRAIT(
+        double_tuple,
+        "double attr", std::make_pair(static_cast<double&(*)(std::tuple<double>&)>(std::get<0>), static_cast<const double&(*)(const std::tuple<double>&)>(std::get<0>))
+        );
+
+template <typename ...T>
+class Traits<std::tuple<T...>>{
+    static constexpr std::true_type is_specialized{};
+    using traitsType = ::Traits<std::tuple<T...>, T...>;
+};
+
+void testTraitsTuple(){
+    testTuple tt;
+    DefaultIOTraits<testTuple>::getTraits().setValue<1>(tt, 5);
+    DefaultIOTraits<testTuple>::getTraits().setValue<2>(tt, "Hello :)");
+    DBGVAR(tt);
+
+    std::tuple<double> t{1.5};
+    get<0>(t) = 2.5;
+    auto foo = static_cast<double&(*)(std::tuple<double>&)>(std::get<0>);
+    DBGVAR(foo(t), t);
+}
 
 
 int main()
@@ -2259,7 +2308,8 @@ int main()
     //testJson();
     //testTestTraits();
     //testTraitsAlgorithms();
-    testNumericTraitsPerformance();
+    //testNumericTraitsPerformance();
+    testTraitsTuple();
     return 0;
 }
 

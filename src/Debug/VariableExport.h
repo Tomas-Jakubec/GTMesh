@@ -31,7 +31,8 @@ struct VariableExport {
             !std::is_same<T, std::string>::value &&
             !std::is_same<T, const char*>::value &&
             !std::is_same<T, char*>::value &&
-            !std::is_same<T, const char>::value
+            !std::is_same<T, const char>::value &&
+            !HasDefaultIOTraits<T>::value
          >::type
     {
         ost << b;

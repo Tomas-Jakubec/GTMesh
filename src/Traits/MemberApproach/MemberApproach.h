@@ -53,6 +53,10 @@ public:
         c->*ref = val;
     }
 
+    ValueType& getAttr(Class* c) const {
+        return c->*ref;
+    }
+
     virtual ValueType getValue(const Class& c) const override {
         return c.*ref;
     }
@@ -65,6 +69,9 @@ public:
         return c.*ref;
     }
 };
+
+
+
 
 
 template <typename Class, typename ValueType>
@@ -259,6 +266,111 @@ public:
 
 
 
+template <typename Class, typename ValueType>
+class MemberReference<Class, ValueType, std::pair<ValueType&(*)(Class&), const ValueType&(*)(const Class&)>> : public MemberApproach<Class, ValueType>{
+
+    using setter = ValueType& (*)(Class&);
+
+    const setter set;
+
+    using getter = const ValueType&(*)(const Class&);
+
+    const getter get;
+
+public:
+
+    MemberReference(std::pair<ValueType&(*)(Class&), const ValueType&(*)(const Class&)> referenceToMember)
+        : set(referenceToMember.first), get(referenceToMember.second)
+    {
+        //ref = referenceToMember;
+    }
+
+    MemberReference(const MemberReference<Class, ValueType, std::pair<ValueType&(*)(Class&), const ValueType&(*)(const Class&)>>&) = default;
+
+    MemberReference(MemberReference<Class, ValueType, std::pair<ValueType&(*)(Class&), const ValueType&(*)(const Class&)>>&&) = default;
+
+    virtual ValueType getValue(const Class* c) const override {
+        return get(*c);
+    }
+
+
+    virtual void setValue(Class* c, const ValueType& val) const override {
+        set(*c) = val;
+    }
+
+    virtual ValueType getValue(const Class& c) const override {
+        return get(c);
+    }
+
+
+    virtual void setValue(Class& c, const ValueType& val) const override {
+        set(c) = val;
+    }
+
+    ValueType& getAttr(Class& c) const {
+        return set(c);
+    }
+
+    ValueType& getAttr(Class* c) const {
+        return set(*c);
+    }
+};
+
+
+template <typename Class, typename ValueType>
+class MemberReference<Class, ValueType, std::pair<ValueType&(*)(Class*), const ValueType&(*)(const Class*)>> : public MemberApproach<Class, ValueType>{
+
+    using setter = ValueType& (*)(Class*);
+
+    const setter set;
+
+    using getter = const ValueType&(*)(const Class*);
+
+    const getter get;
+
+public:
+
+    MemberReference(std::pair<ValueType&(*)(Class*), const ValueType&(*)(const Class*)> referenceToMember)
+        : set(referenceToMember.first), get(referenceToMember.second)
+    {
+        //ref = referenceToMember;
+    }
+
+    MemberReference(const MemberReference<Class, ValueType, std::pair<ValueType&(*)(Class*), const ValueType&(*)(const Class*)>>&) = default;
+
+    MemberReference(MemberReference<Class, ValueType, std::pair<ValueType&(*)(Class*), const ValueType&(*)(const Class*)>>&&) = default;
+
+    virtual ValueType getValue(const Class* c) const override {
+        return get(c);
+    }
+
+
+    virtual void setValue(Class* c, const ValueType& val) const override {
+        set(c) = val;
+    }
+
+    virtual ValueType getValue(const Class& c) const override {
+        return get(&c);
+    }
+
+
+    virtual void setValue(Class& c, const ValueType& val) const override {
+        set(&c) = val;
+    }
+
+    ValueType& getAttr(Class& c) const {
+        return set(&c);
+    }
+
+    ValueType& getAttr(Class* c) const {
+        return set(c);
+    }
+};
+
+
+
+
+
 template <typename Ref>
 struct MemberReferenceType {
     static_assert (std::is_trivial<Ref>::value, "The Ref must be a type of member reference (MemberType Class::*) or reference getter (MemberType& (Class::*)()) into class \
@@ -299,6 +411,18 @@ struct MemberReferenceType <std::pair<const MemberType& (Class::*)()const, void 
 
 template <typename Class, typename MemberType>
 struct MemberReferenceType <std::pair<const MemberType& (Class::*)(), void (Class::*)(const MemberType&)>>{
+    using type = MemberType;
+    using typeClass = Class;
+};
+
+template <typename Class, typename MemberType>
+struct MemberReferenceType <std::pair<MemberType&(*)(Class&), const MemberType&(*)(const Class&)>>{
+    using type = MemberType;
+    using typeClass = Class;
+};
+
+template <typename Class, typename MemberType>
+struct MemberReferenceType <std::pair<MemberType&(*)(Class*), const MemberType&(*)(const Class*)>>{
     using type = MemberType;
     using typeClass = Class;
 };

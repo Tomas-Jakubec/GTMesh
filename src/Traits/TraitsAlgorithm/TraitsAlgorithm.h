@@ -49,6 +49,7 @@ operator+=(TraitT& op1, const TraitT& op2) noexcept {
 template <typename TraitT>
 typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
 operator+(const TraitT& op1, const TraitT& op2) noexcept {
+    DBGMSG("+");
     TraitT res(op1);
     return operator+=(res, op2);
 }
@@ -59,6 +60,23 @@ operator+(const TraitT& op1, const TraitT& op2) noexcept {
 template <typename TraitT>
 typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
 operator+(const TraitT& op1, TraitT&& op2) noexcept {
+    DBGMSG("+=");
+    return op2 += op1;
+}
+
+
+template <typename TraitT>
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
+operator+(TraitT&& op1, const TraitT& op2) noexcept {
+    DBGMSG("+=");
+    return op1 += op2;
+}
+
+
+template <typename TraitT>
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
+operator+(TraitT&& op1, TraitT&& op2) noexcept {
+    DBGMSG("+=");
     return op2 += op1;
 }
 
@@ -275,6 +293,24 @@ max(const T& array) noexcept {
     return  res;
 }
 
+template <typename T>
+typename std::enable_if<
+    IsTNLIndexable<T>::value,
+    double
+>::type
+max(const T& array) noexcept {
+
+    double res = std::numeric_limits<double>::min();
+    for (decltype (array.getSize()) index = 0; index < array.getSize(); index++){
+        double m = max(array[index]);
+        if (res < m){
+            res = m;
+        }
+
+    }
+    return  res;
+}
+
 template <typename TraitT>
 typename std::enable_if<
     HasDefaultArithmeticTraits<TraitT>::value,
@@ -344,5 +380,69 @@ min(const TraitT& op1) noexcept {
     );
     return  res;
 }
+
+
+
+
+template <typename T>
+typename std::enable_if<
+    !std::is_class<T>::value,
+    T
+>::type
+abs(const T& arg) noexcept {
+
+    return  std::abs(arg);
+}
+
+template <typename T>
+typename std::enable_if<
+    IsIndexable<T>::value,
+    T
+>::type
+abs(const T& array) noexcept {
+
+    T resArray(array);
+
+    for (decltype (resArray.size()) index = 0; index < resArray.size(); index++){
+        resArray[index] = abs(resArray[index]);
+
+    }
+    return  resArray;
+}
+
+
+template <typename T>
+typename std::enable_if<
+    IsTNLIndexable<T>::value,
+    T
+>::type
+abs(const T& array) noexcept {
+
+    T resArray(array);
+
+    for (decltype (resArray.getSize()) index = 0; index < resArray.getSize(); index++){
+        resArray[index] = abs(resArray[index]);
+
+    }
+    return  resArray;
+}
+
+
+template <typename TraitT>
+typename std::enable_if<
+    HasDefaultArithmeticTraits<TraitT>::value,
+    TraitT
+>::type
+abs(const TraitT& op1) noexcept {
+    TraitT res;
+
+    DefaultArithmeticTraits<TraitT>::getTraits().apply(
+                [&res, &op1](unsigned int, const auto& ref, const std::string&) noexcept {
+         ref.setValue(res, abs(ref.getValue(op1)));
+    }
+    );
+    return  res;
+}
+
 
 #endif // TRAITSALGORITHM_H
