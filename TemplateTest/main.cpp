@@ -3,7 +3,7 @@
 #include "../src/UnstructuredMesh/UnstructuredMesh.h"
 #include "../src/Traits/MemberApproach/MemberApproach.h"
 #include "../src/Traits/Traits.h"
-
+#include "../src/Singleton/Singleton.h"
 #include <chrono>
 #include <functional>
 #include <type_traits>
@@ -322,14 +322,6 @@ void testMemberRef(){
     DBGVAR(e, ClassC<>());
 }
 
-void testTraitsAlgorithms() {
-    ExportTest e1, e2;
-    ExportTest res = e1 + e2;
-    std::vector<ExportTest> vec(40, ExportTest());
-
-    DBGVAR(2.45*e1,e1 + e2, e1, e2,HasDefaultArithmeticTraits<int>::value, max(e2), min(e2), max(vec));
-}
-
 
 struct NumStruct {
     double data;
@@ -340,8 +332,30 @@ MAKE_ATTRIBUTE_TRAIT(NumStruct, data);
 struct NumStruct2 {
     double data1;
     double data2;
+
+    NumStruct2(double d1 = 0.0, double d2 = 0.0): data1(d1), data2(d2){}
 };
 MAKE_ATTRIBUTE_TRAIT(NumStruct2, data1, data2);
+
+
+void testTraitsAlgorithms() {
+    ExportTest e1, e2;
+    ExportTest res = e1 + e2;
+    std::vector<ExportTest> vec(40, ExportTest());
+
+    DBGVAR(2.45*e1,e1 + e2, e1, e2,HasDefaultArithmeticTraits<int>::value, max(e2), min(e2), max(vec));
+
+    NumStruct2 ns{21,15}, ns2{2,3};
+    DBGVAR(ns * ns2,
+           -(ns + 4 * ns2),
+           max(-(ns + 4 * ns2)),
+           max(abs(-(ns + 4 * ns2))),
+           log(ns), exp(log(ns)),
+           pow(sqrt(ns), 2)
+           );
+}
+
+
 
 
 template <unsigned int Index>
@@ -1048,6 +1062,24 @@ void testNumericTraitsPerformance() {
     duration = 0;
 
 
+    DBGMSG("numeric traits = +");
+
+    start = clock.now();
+    res2 = NumStruct2();
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < numVec2.size(); i++) {
+            res2 = res2 + numVec2[i];
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res2, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
     DBGMSG("\n","ExportTest performance, direct approach");
 
     std::vector<ExportTest> vec3(size, ExportTest());
@@ -1092,6 +1124,9 @@ void testNumericTraitsPerformance() {
     DBGVAR(res3, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
     deviation = 0;
     duration = 0;
+
+
+
 
 }
 
@@ -1297,15 +1332,15 @@ template <typename Class, typename T>
 class Func {
 public:
 
-    template <typename U = T>
-    auto operator()(unsigned int index, const MemberApproach<Class, T>&, const std::string& name)
+    template <typename U = T,  typename refType>
+    auto operator()(unsigned int index, const MemberReference<Class, T, refType>&, const std::string& name)
     -> typename std::enable_if<!(HasDefaultTraits<U>::value)>::type
     {
         DBGVAR(Singleton<Depth>::getInstance().value,index, name);
     }
 
-    template <typename U = T>
-    auto operator()(unsigned int index, const MemberApproach<Class, T>&, const std::string& name)
+    template <typename U = T, typename refType>
+    auto operator()(unsigned int index, const MemberReference<Class, T, refType>&, const std::string& name)
     -> typename std::enable_if<HasDefaultTraits<U>::value>::type
     {
         DBGVAR(Singleton<Depth>::getInstance().value,index, name);
@@ -1602,7 +1637,7 @@ class TestMemberReference{
 
 
 template <typename Class, typename ValueType>
-class TestMemberReference<Class, ValueType, ValueType Class::*> : MemberApproach<Class, ValueType>{
+class TestMemberReference<Class, ValueType, ValueType Class::*> /*: MemberApproach<Class, ValueType>*/{
 
     using refType = ValueType Class::*;
 public:
@@ -1902,7 +1937,7 @@ void testTraitPerformance() {
     DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
     deviation = 0;
     duration = 0;
-
+/*
     DBGMSG("member reference virtual");
     const MemberApproach<ExportTest, double>* MA = new MemberReference<ExportTest, double, decltype (&ExportTest::attrDouble)>(&ExportTest::attrDouble);
     start = clock.now();
@@ -1920,7 +1955,7 @@ void testTraitPerformance() {
     DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
     deviation = 0;
     duration = 0;
-
+*/
 
     DBGMSG("traits");
     start = clock.now();
@@ -2290,6 +2325,38 @@ void testTraitsTuple(){
     DBGVAR(foo(t), t);
 }
 
+/*
+template <unsigned int n, unsigned int _n = 1>
+constexpr typename std::enable_if<(_n == n), unsigned int>::type
+factorial(){
+    return _n;
+}
+
+template <unsigned int n, unsigned int _n = 1>
+constexpr typename std::enable_if<(_n < n), unsigned int>::type
+factorial(){
+    return factorial<n,_n+1>() * _n;
+}
+*/
+namespace Impl {
+template <unsigned int n, unsigned int _n = 1>
+constexpr typename std::enable_if<(_n == n), unsigned int>::type
+factorial(){
+    return _n;
+}
+
+template <unsigned int n, unsigned int _n = 1>
+constexpr typename std::enable_if<(_n < n), unsigned int>::type
+factorial(){
+    return Impl::factorial<n,_n+1>() * _n;
+}
+}
+
+
+void testFactorial() {
+
+    DBGVAR(Impl::factorial<5>());
+}
 
 int main()
 {
@@ -2308,8 +2375,9 @@ int main()
     //testJson();
     //testTestTraits();
     //testTraitsAlgorithms();
-    //testNumericTraitsPerformance();
-    testTraitsTuple();
+    testNumericTraitsPerformance();
+    //testTraitsTuple();
+    //testFactorial();
     return 0;
 }
 

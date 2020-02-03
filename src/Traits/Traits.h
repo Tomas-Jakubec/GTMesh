@@ -3,7 +3,6 @@
 #include "MemberApproach/MemberApproach.h"
 #include <string>
 #include <memory>
-#include "../Singleton/Singleton.h"
 #include <functional>
 
 template<typename Class, typename...RefTypes>
@@ -71,6 +70,19 @@ public:
     template<unsigned int Index>
     void setValue(Class& c, const type<Index>& val) const {
         getReference<Index>().setValue(c, val);
+    }
+
+
+    template<unsigned int Index>
+    type<Index>& getAttr(Class* c) const {
+        static_assert (IsDirectReference<memRefType<Index>>::value, "The current reference to the member does not provide direct approach.");
+        return getReference<Index>()->getAttr(c);
+    }
+
+    template<unsigned int Index>
+    type<Index>& getAttr(Class& c) const {
+        static_assert (IsDirectReference<memRefType<Index>>::value, "The current reference to the member does not provide direct approach.");
+        return getReference<Index>().getAttr(c);
     }
 
 
@@ -261,11 +273,60 @@ public:
 
 
 
+
 template<typename Class>
 class DefaultIOTraits : public Traits<Class> {};
 
 template<typename Class>
 class DefaultArithmeticTraits : public Traits<Class> {};
+
+
+#include "CustomTypeTraits.h"
+
+namespace Impl {
+template <unsigned int Index, unsigned int ...Indexes>
+struct TraitedAttributeGetter{
+    template<typename TraitT, typename = typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value>::type>
+    static auto& get(TraitT& arg){
+        return TraitedAttributeGetter<Indexes...>::get(DefaultArithmeticTraits<TraitT>::getTraits().template getAttr<Index>(arg));
+    }
+
+    template<typename TraitT, typename = typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value>::type>
+    static auto& get(TraitT* arg){
+        return TraitedAttributeGetter<Indexes...>::get(DefaultArithmeticTraits<TraitT>::getTraits().template getAttr<Index>(arg));
+    }
+};
+
+template <unsigned int Index>
+struct TraitedAttributeGetter<Index>{
+    template<typename TraitT, typename = typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value>::type>
+    static auto& get(TraitT& arg){
+        return DefaultArithmeticTraits<TraitT>::getTraits().template getAttr<Index>(arg);
+    }
+
+    template<typename TraitT, typename = typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value>::type>
+    static auto& get(TraitT* arg){
+        return DefaultArithmeticTraits<TraitT>::getTraits().template getAttr<Index>(arg);
+    }
+};
+
+} //Impl
+
+
+template <typename ArythmeticTraitT, unsigned int ...Indexes, typename = typename std::enable_if<HasDefaultArithmeticTraits<ArythmeticTraitT>::value>::type>
+auto& getTraitedAttribute(ArythmeticTraitT& arg){
+    return Impl::TraitedAttributeGetter<Indexes...>::get(arg);
+}
+
+
+template <typename ArythmeticTraitT, unsigned int ...Indexes, typename = typename std::enable_if<HasDefaultArithmeticTraits<ArythmeticTraitT>::value>::type>
+auto& getTraitedAttribute(ArythmeticTraitT* arg){
+    return Impl::TraitedAttributeGetter<Indexes...>::get(arg);
+}
+
+
+
+
 
 #include "../Macros/MacroForEach.h"
 
@@ -273,10 +334,10 @@ class DefaultArithmeticTraits : public Traits<Class> {};
 #define IMPL_NAME_AND_REF(Class, name, member) name, &Class::member
 #define IMPL_NAME_ATT(attribute) #attribute, attribute
 
-#define IMPL_MAKE_CUSTOM_ATTRIBUTE_TRAIT(TraitName,Class,...)\
-template<>                              \
-class TraitName<Class>{                 \
-public:                             \
+#define IMPL_MAKE_CUSTOM_ATTRIBUTE_TRAIT(TraitName,Class,...) \
+template<> \
+class TraitName<Class>{ \
+public: \
     static constexpr std::true_type is_specialized{}; \
     using traitsType = ::Traits<Class, FOR_EACH_2ARGS(IMPL_MEMREF_TYPE_CUSTOM, __VA_ARGS__)>; \
     static const traitsType getTraits() {return traitsType(__VA_ARGS__);} \

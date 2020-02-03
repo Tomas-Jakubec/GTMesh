@@ -4,20 +4,43 @@
 #include <utility>
 
 
-/**
- * @brief The MemberApproach class
- * Generic abstract class providing the approach to
- * any attribute of a class using getValue and setValue
- */
-template <typename Class, typename ValueType>
-class MemberApproach{
-public:
-    virtual ValueType getValue(const Class*) const = 0;
-    virtual void setValue(Class*, const ValueType&) const = 0;
 
-    virtual ValueType getValue(const Class&) const = 0;
-    virtual void setValue(Class&, const ValueType&) const = 0;
+/**
+ * @brief The DirectReference struct determines that the
+ * reference can provide direct approach to the member.
+ */
+struct DirectReference{
+    static constexpr std::true_type is_direct{};
 };
+
+
+
+
+
+namespace Impl {
+template <typename T, typename = void>
+struct IsDirectReference : public std::false_type {};
+
+template <typename T>
+struct IsDirectReference
+        <
+        T,
+        typename std::enable_if<T::is_direct>::type
+        >
+        : public std::true_type {};
+
+} // Impl
+
+
+
+/**
+ * @brief The IsDirectReference struct inherits
+ * @ref std::true_type if the class MemberReference provides direct
+ * approach to the member using function getAttr.
+ */
+template <typename T>
+struct IsDirectReference : public Impl::IsDirectReference<T> {};
+
 
 
 template<typename Class, typename ValueType, typename Ref>
@@ -29,7 +52,7 @@ class MemberReference{
 
 
 template <typename Class, typename ValueType>
-class MemberReference<Class, ValueType, ValueType Class::*> : public MemberApproach<Class, ValueType>{
+class MemberReference<Class, ValueType, ValueType Class::*> : public DirectReference {
 
     using refType = ValueType Class::*;
 
@@ -45,11 +68,11 @@ public:
 
     MemberReference(MemberReference<Class, ValueType, ValueType Class::*>&&) = default;
 
-    virtual ValueType getValue(const Class* c) const override {
+    ValueType getValue(const Class* c) const {
         return c->*ref;
     }
 
-    virtual void setValue(Class* c, const ValueType& val) const override {
+    void setValue(Class* c, const ValueType& val) const {
         c->*ref = val;
     }
 
@@ -57,11 +80,11 @@ public:
         return c->*ref;
     }
 
-    virtual ValueType getValue(const Class& c) const override {
+    ValueType getValue(const Class& c) const {
         return c.*ref;
     }
 
-    virtual void setValue(Class& c, const ValueType& val) const override {
+    void setValue(Class& c, const ValueType& val) const {
         c.*ref = val;
     }
 
@@ -75,7 +98,7 @@ public:
 
 
 template <typename Class, typename ValueType>
-class MemberReference<Class, ValueType, ValueType& (Class::*)()> : public MemberApproach<Class, ValueType>{
+class MemberReference<Class, ValueType, ValueType& (Class::*)()> : public DirectReference {
 
     using refType = ValueType& (Class::*)();
 
@@ -89,19 +112,27 @@ public:
         //ref = referenceToMember;
     }
 
-    virtual ValueType getValue(const Class* c) const override {
+    ValueType getValue(const Class* c) const {
         return (c->*ref)();
     }
 
-    virtual void setValue(Class* c, const ValueType& val) const override {
+    ValueType& getAttr(Class* c) const {
+        return (c->*ref)();
+    }
+
+    void setValue(Class* c, const ValueType& val) const {
         (c->*ref)() = val;
     }
-    virtual ValueType getValue(const Class& c) const override {
+    ValueType getValue(const Class& c) const {
         return (c.*ref)();
     }
 
-    virtual void setValue(Class& c, const ValueType& val) const override {
+    void setValue(Class& c, const ValueType& val) const {
         (c.*ref)() = val;
+    }
+
+    ValueType& getAttr(Class& c) const {
+        return (c->*ref)();
     }
 
 };
@@ -115,7 +146,7 @@ class MemberReference<
         ValueType,
         std::pair<ValueType (Class::*)(), void (Class::*)(const ValueType&)>
 >
-: public MemberApproach<Class, ValueType>{
+{
 
     using getter = ValueType (Class::*)();
     getter const refGet;
@@ -130,19 +161,19 @@ public:
          //refSet = getSet.second;
      }
 
-     virtual ValueType getValue(const Class* c) const override {
+     ValueType getValue(const Class* c) const {
          return (c->*refGet)();
      }
 
-     virtual void setValue(Class* c, const ValueType& val) const override {
+     void setValue(Class* c, const ValueType& val) const {
          (c->*refSet)(val);
      }
 
-     virtual ValueType getValue(const Class& c) const override {
+     ValueType getValue(const Class& c) const {
          return (c.*refGet)();
      }
 
-     virtual void setValue(Class& c, const ValueType& val) const override {
+     void setValue(Class& c, const ValueType& val) const {
          (c.*refSet)(val);
      }
 };
@@ -154,7 +185,7 @@ class MemberReference<
         ValueType,
         std::pair<ValueType (Class::*)() const, void (Class::*)(const ValueType&)>
 >
-: public MemberApproach<Class, ValueType>{
+{
 
     using getter = ValueType (Class::*)() const;
     getter const refGet;
@@ -169,19 +200,19 @@ public:
          //refSet = getSet.second;
      }
 
-     virtual ValueType getValue(const Class* c) const override {
+     ValueType getValue(const Class* c) const {
          return (c->*refGet)();
      }
 
-     virtual void setValue(Class* c, const ValueType& val) const override {
+     void setValue(Class* c, const ValueType& val) const {
          (c->*refSet)(val);
      }
 
-     virtual ValueType getValue(const Class& c) const override {
+     ValueType getValue(const Class& c) const {
          return (c.*refGet)();
      }
 
-     virtual void setValue(Class& c, const ValueType& val) const override {
+     void setValue(Class& c, const ValueType& val) const {
          (c.*refSet)(val);
      }
 };
@@ -193,7 +224,7 @@ class MemberReference<
         ValueType,
         std::pair<const ValueType& (Class::*)() const, void (Class::*)(const ValueType&)>
 >
-: public MemberApproach<Class, ValueType>{
+{
 
     using getter = const ValueType& (Class::*)() const;
     getter const refGet;
@@ -208,19 +239,19 @@ public:
          //refSet = getSet.second;
      }
 
-     virtual ValueType getValue(const Class* c) const override {
+     ValueType getValue(const Class* c) const {
          return (c->*refGet)();
      }
 
-     virtual void setValue(Class* c, const ValueType& val) const override {
+     void setValue(Class* c, const ValueType& val) const {
          (c->*refSet)(val);
      }
 
-     virtual ValueType getValue(const Class& c) const override {
+     ValueType getValue(const Class& c) const {
          return (c.*refGet)();
      }
 
-     virtual void setValue(Class& c, const ValueType& val) const override {
+     void setValue(Class& c, const ValueType& val) const {
          (c.*refSet)(val);
      }
 };
@@ -232,7 +263,7 @@ class MemberReference<
         ValueType,
         std::pair<const ValueType& (Class::*)(), void (Class::*)(const ValueType&)>
 >
-: public MemberApproach<Class, ValueType>{
+{
 
     using getter = const ValueType& (Class::*)();
     getter const refGet;
@@ -247,19 +278,19 @@ public:
          //refSet = getSet.second;
      }
 
-     virtual ValueType getValue(const Class* c) const override {
+     ValueType getValue(const Class* c) const {
          return (c->*refGet)();
      }
 
-     virtual void setValue(Class* c, const ValueType& val) const override {
+     void setValue(Class* c, const ValueType& val) const {
          (c->*refSet)(val);
      }
 
-     virtual ValueType getValue(const Class& c) const override {
+     ValueType getValue(const Class& c) const {
          return (c.*refGet)();
      }
 
-     virtual void setValue(Class& c, const ValueType& val) const override {
+     void setValue(Class& c, const ValueType& val) const {
          (c.*refSet)(val);
      }
 };
@@ -267,7 +298,8 @@ public:
 
 
 template <typename Class, typename ValueType>
-class MemberReference<Class, ValueType, std::pair<ValueType&(*)(Class&), const ValueType&(*)(const Class&)>> : public MemberApproach<Class, ValueType>{
+class MemberReference<Class, ValueType, std::pair<ValueType&(*)(Class&), const ValueType&(*)(const Class&)>>
+: public DirectReference {
 
     using setter = ValueType& (*)(Class&);
 
@@ -289,21 +321,21 @@ public:
 
     MemberReference(MemberReference<Class, ValueType, std::pair<ValueType&(*)(Class&), const ValueType&(*)(const Class&)>>&&) = default;
 
-    virtual ValueType getValue(const Class* c) const override {
+    ValueType getValue(const Class* c) const {
         return get(*c);
     }
 
 
-    virtual void setValue(Class* c, const ValueType& val) const override {
+    void setValue(Class* c, const ValueType& val) const {
         set(*c) = val;
     }
 
-    virtual ValueType getValue(const Class& c) const override {
+    ValueType getValue(const Class& c) const {
         return get(c);
     }
 
 
-    virtual void setValue(Class& c, const ValueType& val) const override {
+    void setValue(Class& c, const ValueType& val) const {
         set(c) = val;
     }
 
@@ -318,7 +350,8 @@ public:
 
 
 template <typename Class, typename ValueType>
-class MemberReference<Class, ValueType, std::pair<ValueType&(*)(Class*), const ValueType&(*)(const Class*)>> : public MemberApproach<Class, ValueType>{
+class MemberReference<Class, ValueType, std::pair<ValueType&(*)(Class*), const ValueType&(*)(const Class*)>>
+: public DirectReference {
 
     using setter = ValueType& (*)(Class*);
 
@@ -340,21 +373,21 @@ public:
 
     MemberReference(MemberReference<Class, ValueType, std::pair<ValueType&(*)(Class*), const ValueType&(*)(const Class*)>>&&) = default;
 
-    virtual ValueType getValue(const Class* c) const override {
+    ValueType getValue(const Class* c) const {
         return get(c);
     }
 
 
-    virtual void setValue(Class* c, const ValueType& val) const override {
+    void setValue(Class* c, const ValueType& val) const {
         set(c) = val;
     }
 
-    virtual ValueType getValue(const Class& c) const override {
+    ValueType getValue(const Class& c) const {
         return get(&c);
     }
 
 
-    virtual void setValue(Class& c, const ValueType& val) const override {
+    void setValue(Class& c, const ValueType& val) const {
         set(&c) = val;
     }
 

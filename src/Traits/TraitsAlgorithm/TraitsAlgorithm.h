@@ -4,43 +4,219 @@
 #include "../Traits.h"
 #include "../CustomTypeTraits.h"
 #include <limits>
+#include <cmath>
 
 /*
     operators for arithmetic traits
 */
 
 
-struct AddProcesor {
+/**
+ * @brief The TraitsBinaryExpressionProcesor struct applies
+ * a binary operator on each member of a traited struct.
+ */
+template<template<typename, typename> class Operator>
+struct TraitsBinaryExpressionProcesor {
+
+/*
     template<typename TraitT, unsigned int Index = 0>
     inline static
     typename std::enable_if<(Index < DefaultArithmeticTraits<TraitT>::size() - 1)>::type
-    exec(TraitT& op1, const TraitT& op2){
-
-        DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getAttr(op1) +=
-                DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getValue(op2);
-
-        AddProcesor::exec<TraitT, Index + 1>(op1, op2);
+    evaluate(TraitT& op1, const TraitT& op2){
+        Operator<
+                typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>,
+                typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>
+                >::evaluate(
+            DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getAttr(op1),
+            DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getValue(op2)
+        );
+        TraitsBinaryExpressionProcesor<Operator>::evaluate<TraitT, Index + 1>(op1, op2);
 
     }
 
     template<typename TraitT, unsigned int Index = 0>
     inline static
     typename std::enable_if<(Index == DefaultArithmeticTraits<TraitT>::size() - 1)>::type
-    exec(TraitT& op1,  const TraitT& op2){
+    evaluate(TraitT& op1,  const TraitT& op2){
 
-        DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getAttr(op1) +=
-                DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getValue(op2);
+        Operator<
+                typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>,
+                typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>
+                >::evaluate(
+            DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getAttr(op1),
+            DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getValue(op2)
+        );
 
+    }
+*/
+
+    template<typename TraitT, unsigned int Index = 0>
+    inline static
+    typename std::enable_if<(Index < DefaultArithmeticTraits<TraitT>::size() - 1)>::type
+    evaluate(TraitT& res, const TraitT& op1, const TraitT& op2){
+
+        DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getAttr(res) =
+                Operator<
+                        typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>,
+                        typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>
+                        >::evaluate(
+                    DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getValue(op1),
+                    DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getValue(op2)
+                );
+        TraitsBinaryExpressionProcesor<Operator>::evaluate<TraitT, Index + 1>(res, op1, op2);
+
+    }
+
+    template<typename TraitT, unsigned int Index = 0>
+    inline static
+    typename std::enable_if<(Index == DefaultArithmeticTraits<TraitT>::size() - 1)>::type
+    evaluate(TraitT&res, const TraitT& op1,  const TraitT& op2){
+
+        DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getAttr(res) =
+                Operator<
+                        typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>,
+                        typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>
+                        >::evaluate(
+                    DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getValue(op1),
+                    DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getValue(op2)
+                );
+
+    }
+/*
+    template<typename TraitT, typename Real, unsigned int Index = 0>
+    inline static
+    typename std::enable_if<(Index < DefaultArithmeticTraits<TraitT>::size() - 1)>::type
+    evaluate(TraitT& op1, const Real& op2){
+        Operator<
+                typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>,
+                Real
+                >::evaluate(
+            DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getAttr(op1),
+            op2
+        );
+        TraitsBinaryExpressionProcesor<Operator>::evaluate<TraitT, Real, Index + 1>(op1, op2);
+
+    }
+
+    template<typename TraitT, typename Real, unsigned int Index = 0>
+    inline static
+    typename std::enable_if<(Index == DefaultArithmeticTraits<TraitT>::size() - 1)>::type
+    evaluate(TraitT& op1, const Real& op2){
+        Operator<
+                typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>,
+                Real
+                >::evaluate(
+            DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getAttr(op1),
+            op2
+        );
+    }
+*/
+
+    template<typename TraitT, typename Real, unsigned int Index = 0>
+    inline static
+    typename std::enable_if<(Index < DefaultArithmeticTraits<TraitT>::size() - 1)>::type
+    evaluate(TraitT& res, const TraitT& op1, const Real& op2){
+
+        DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getAttr(res) =
+                Operator<
+                        typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>,
+                        Real
+                        >::evaluate(
+                    DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index>(op1),
+                    op2
+                );
+        TraitsBinaryExpressionProcesor<Operator>::evaluate<TraitT, Real, Index + 1>(res, op1, op2);
+
+    }
+
+    template<typename TraitT, typename Real, unsigned int Index = 0>
+    inline static
+    typename std::enable_if<(Index == DefaultArithmeticTraits<TraitT>::size() - 1)>::type
+    evaluate(TraitT&res, const TraitT& op1,  const Real& op2){
+
+        DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getAttr(res) =
+                Operator<
+                        typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>,
+                        Real
+                        >::evaluate(
+                    DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getValue(op1),
+                    op2
+                );
 
     }
 
 };
 
+
+
+/**
+ * @brief The TraitsUnaryExpressionProcesor struct applies
+ * a binary operator on each member of a traited struct.
+ */
+template<template<typename> class Operator>
+struct TraitsUnaryExpressionProcesor {
+
+
+    template<typename TraitT, unsigned int Index = 0>
+    inline static
+    typename std::enable_if<(Index < DefaultArithmeticTraits<TraitT>::size() - 1)>::type
+    evaluate(TraitT& res, const TraitT& op1){
+
+        DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getAttr(res) =
+                Operator<
+                        typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>
+                        >::evaluate(
+                    DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getValue(op1)
+                );
+        TraitsUnaryExpressionProcesor<Operator>::evaluate<TraitT, Index + 1>(res, op1);
+
+    }
+
+    template<typename TraitT, unsigned int Index = 0>
+    inline static
+    typename std::enable_if<(Index == DefaultArithmeticTraits<TraitT>::size() - 1)>::type
+    evaluate(TraitT& res, const TraitT& op1){
+
+        DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getAttr(res) =
+                Operator<
+                        typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>
+                        >::evaluate(
+                    DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getValue(op1)
+                );
+    }
+};
+
+
+
+////
+/// Addition operators
+///
+
+template< typename T1, typename T2 >
+struct BinaryPlus
+{
+   static auto evaluate( const T1& a, const T2& b ) -> decltype( a + b )
+   {
+      return a + b;
+   }
+};
+
+/* This is not necessary since it is equivalent to a = a + b
+template< typename T1, typename T2 >
+struct PlusEqual
+{
+   static auto evaluate( T1& a, const T2& b ) -> decltype( a += b )
+   {
+      return a += b;
+   }
+};
+*/
+
 template <typename TraitT>
 typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type&
 operator+=(TraitT& op1, const TraitT& op2) noexcept {
 
-    AddProcesor::exec(op1, op2);
+    TraitsBinaryExpressionProcesor<BinaryPlus>::evaluate(op1, op1, op2);
 
     return  op1;
 }
@@ -49,9 +225,10 @@ operator+=(TraitT& op1, const TraitT& op2) noexcept {
 template <typename TraitT>
 typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
 operator+(const TraitT& op1, const TraitT& op2) noexcept {
-    DBGMSG("+");
-    TraitT res(op1);
-    return operator+=(res, op2);
+
+    TraitT res;
+    TraitsBinaryExpressionProcesor<BinaryPlus>::evaluate(res, op1, op2);
+    return res;
 }
 
 
@@ -60,7 +237,7 @@ operator+(const TraitT& op1, const TraitT& op2) noexcept {
 template <typename TraitT>
 typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
 operator+(const TraitT& op1, TraitT&& op2) noexcept {
-    DBGMSG("+=");
+
     return op2 += op1;
 }
 
@@ -68,7 +245,6 @@ operator+(const TraitT& op1, TraitT&& op2) noexcept {
 template <typename TraitT>
 typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
 operator+(TraitT&& op1, const TraitT& op2) noexcept {
-    DBGMSG("+=");
     return op1 += op2;
 }
 
@@ -76,38 +252,56 @@ operator+(TraitT&& op1, const TraitT& op2) noexcept {
 template <typename TraitT>
 typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
 operator+(TraitT&& op1, TraitT&& op2) noexcept {
-    DBGMSG("+=");
     return op2 += op1;
 }
 
-/*
 
-template <typename TraitT>
-typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
-operator+(TraitT&& op1, const TraitT& op2) noexcept {
-    return op1 += op2;
-}
+////
+/// Subtraction operators
+///
+
+template< typename T1, typename T2 >
+struct BinaryMinus
+{
+   static auto evaluate( const T1& a, const T2& b ) -> decltype( a - b )
+   {
+      return a - b;
+   }
+};
+
+
+/*This is not necessary since it is equivalent to a = a - b
+template< typename T1, typename T2 >
+struct MinusEqual
+{
+   static auto evaluate( T1& a, const T2& b ) -> decltype( a -= b )
+   {
+      return a -= b;
+   }
+};
 */
-
 
 template <typename TraitT>
 typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type&
 operator-=(TraitT& op1, const TraitT& op2) noexcept {
 
-    DefaultArithmeticTraits<TraitT>::getTraits().apply(
-                [&op1, &op2](unsigned int, const auto& ref, const std::string&) noexcept {
-        ref.setValue(op1, ref.getValue(op1) - ref.getValue(op2));
-    }
-    );
+    TraitsBinaryExpressionProcesor<BinaryMinus>::evaluate(op1, op1, op2);
+
     return  op1;
 }
+
 
 template <typename TraitT>
 typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
 operator-(const TraitT& op1, const TraitT& op2) noexcept {
-    TraitT res(op1);
-    return operator-=(res, op2);
+
+    TraitT res;
+    TraitsBinaryExpressionProcesor<BinaryMinus>::evaluate(res, op1, op2);
+    return res;
 }
+
+
+
 
 template <typename TraitT>
 typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
@@ -116,27 +310,76 @@ operator-(const TraitT& op1, TraitT&& op2) noexcept {
     return op2 -= op1;
 }
 
-/*
+
 template <typename TraitT>
 typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
 operator-(TraitT&& op1, const TraitT& op2) noexcept {
-
     return op1 -= op2;
 }
+
+
+template <typename TraitT>
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
+operator-(TraitT&& op1, TraitT&& op2) noexcept {
+    return op2 -= op1;
+}
+
+
+
+
+
+////
+/// Multiplication operators
+///
+
+template< typename T1, typename T2 >
+struct BinaryStar
+{
+   static auto evaluate( const T1& a, const T2& b ) -> decltype( a * b )
+   {
+      return a * b;
+   }
+};
+
+/* This is not necessary since it is equivalent to a = a * b
+template< typename T1, typename T2 >
+struct StarEqual
+{
+   static auto evaluate( T1& a, const T2& b ) -> decltype( a *= b )
+   {
+      return a *= b;
+   }
+};
 */
+
+
+///
+/// Multiplication of traited class with a real number
+///
+template <typename TraitT, typename Real>
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type&
+operator*=(TraitT& op1, const Real& op2) noexcept {
+
+    TraitsBinaryExpressionProcesor<BinaryStar>::evaluate(op1, op1, op2);
+
+    return  op1;
+}
+
+
+template <typename TraitT, typename Real>
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
+operator*(const TraitT& op1, const Real& op2) noexcept {
+
+    TraitT res;
+    TraitsBinaryExpressionProcesor<BinaryStar>::evaluate(res, op1, op2);
+    return res;
+}
+
 
 template <typename Real, typename TraitT>
 typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
 operator*(const Real& op1, const TraitT& op2) noexcept {
-    TraitT res(op2);
-    return operator*=(res, op1);
-}
-
-template <typename Real, typename TraitT>
-typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
-operator*(const TraitT& op1, const Real& op2) noexcept {
-    TraitT res(op1);
-    return operator*=(res, op2);
+    return operator*(op2, op1);
 }
 
 
@@ -153,25 +396,48 @@ operator*(TraitT&& op1, const Real& op2) noexcept {
     return operator*=(op1, op2);
 }
 
-template <typename Real, typename TraitT>
-typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type&
-operator*=(TraitT& op1, const Real& op2) noexcept {
 
-    DefaultArithmeticTraits<TraitT>::getTraits().apply(
-                [&op1, &op2](unsigned int, const auto& ref, const std::string&) noexcept {
-        ref.setValue(op1, ref.getValue(op1) * op2);
-    }
-    );
+
+
+///
+/// Multiplication of two traited classes (by elements)
+///
+
+template <typename TraitT>
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type&
+operator*=(TraitT& op1, const TraitT& op2) noexcept {
+
+    TraitsBinaryExpressionProcesor<BinaryStar>::evaluate(op1, op1, op2);
+
     return  op1;
 }
 
 
-template <typename Real, typename TraitT>
+template <typename TraitT>
 typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
-operator/(const Real& op1, const TraitT& op2) noexcept {
+operator*(const TraitT& op1, const TraitT& op2) noexcept {
 
-    return (1.0/op1) * op2;
+    TraitT res;
+    TraitsBinaryExpressionProcesor<BinaryStar>::evaluate(res, op1, op2);
+    return res;
 }
+
+template <typename TraitT>
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
+operator*(const TraitT& op1, TraitT&& op2) noexcept {
+    return operator*=(op2, op1);
+}
+
+template <typename TraitT>
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
+operator*(TraitT&& op1, const TraitT& op2) noexcept {
+    return operator*=(op1, op2);
+}
+
+
+///
+/// Division of traited class with a real number
+///
 
 template <typename Real, typename TraitT>
 typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
@@ -183,16 +449,369 @@ operator/(const TraitT& op1, const Real& op2) noexcept {
 
 template <typename Real, typename TraitT>
 typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
-operator/(const Real& op1, TraitT&& op2) noexcept {
-
-    return (1.0/op1) * op2;
-}
-
-template <typename Real, typename TraitT>
-typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
 operator/(TraitT&& op1, const Real& op2) noexcept {
 
     return (1.0/op2) * op1;
+}
+
+
+
+////
+/// Power
+///
+
+template< typename T1, typename T2 >
+struct Pow
+{
+   static auto evaluate( const T1& a, const T2& b ) -> decltype( std::pow(a,b) )
+   {
+      return std::pow(a,b);
+   }
+};
+
+
+
+
+///
+/// Power of traited class to a real number
+///
+template <typename TraitT, typename Real>
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type&
+pow(TraitT&& op1, const Real& op2) noexcept {
+
+    TraitsBinaryExpressionProcesor<Pow>::evaluate(op1, op1, op2);
+
+    return  op1;
+}
+
+
+template <typename TraitT, typename Real>
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
+pow(const TraitT& op1, const Real& op2) noexcept {
+
+    TraitT res;
+    TraitsBinaryExpressionProcesor<Pow>::evaluate(res, op1, op2);
+    return res;
+}
+
+
+template <typename Real, typename TraitT>
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
+pow(const Real& op1, const TraitT& op2) noexcept {
+    return pow(op2, op1);
+}
+
+
+
+template <typename Real, typename TraitT>
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
+pow(const Real& op1, TraitT&& op2) noexcept {
+    return pow(op2, op1);
+}
+
+
+
+////
+/// Exp
+///
+
+template< typename T1 >
+struct Exp
+{
+   static auto evaluate( const T1& a ) -> decltype( std::exp(a) )
+   {
+      return std::exp(a);
+   }
+};
+
+
+
+
+///
+/// E to each traited class member
+///
+template <typename TraitT>
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type&
+exp(TraitT&& op1) noexcept {
+
+    TraitsUnaryExpressionProcesor<Exp>::evaluate(op1, op1);
+
+    return  op1;
+}
+
+
+template <typename TraitT>
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
+exp(const TraitT& op1) noexcept {
+
+    TraitT res;
+    TraitsUnaryExpressionProcesor<Exp>::evaluate(res, op1);
+    return res;
+}
+
+
+
+
+
+////
+/// Exp
+///
+
+template< typename T1 >
+struct Log
+{
+   static auto evaluate( const T1& a ) -> decltype( std::log(a) )
+   {
+      return std::log(a);
+   }
+};
+
+
+
+
+///
+/// Logarithm of each traited class member
+///
+template <typename TraitT>
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type&
+log(TraitT&& op1) noexcept {
+
+    TraitsUnaryExpressionProcesor<Log>::evaluate(op1, op1);
+
+    return  op1;
+}
+
+
+template <typename TraitT>
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
+log(const TraitT& op1) noexcept {
+
+    TraitT res;
+    TraitsUnaryExpressionProcesor<Log>::evaluate(res, op1);
+    return res;
+}
+
+
+
+////
+/// Log2
+///
+
+template< typename T1 >
+struct Log2
+{
+   static auto evaluate( const T1& a ) -> decltype( std::log2(a) )
+   {
+      return std::log2(a);
+   }
+};
+
+
+
+
+///
+/// Logarithm of each traited class member
+///
+template <typename TraitT>
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type&
+log2(TraitT&& op1) noexcept {
+
+    TraitsUnaryExpressionProcesor<Log2>::evaluate(op1, op1);
+
+    return  op1;
+}
+
+
+template <typename TraitT>
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
+log2(const TraitT& op1) noexcept {
+
+    TraitT res;
+    TraitsUnaryExpressionProcesor<Log2>::evaluate(res, op1);
+    return res;
+}
+
+
+
+
+////
+/// Log10
+///
+
+template< typename T1 >
+struct Log10
+{
+   static auto evaluate( const T1& a ) -> decltype( std::log10(a) )
+   {
+      return std::log10(a);
+   }
+};
+
+
+
+
+///
+/// Logarithm of each traited class member
+///
+template <typename TraitT>
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type&
+log10(TraitT&& op1) noexcept {
+
+    TraitsUnaryExpressionProcesor<Log10>::evaluate(op1, op1);
+
+    return  op1;
+}
+
+
+template <typename TraitT>
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
+log10(const TraitT& op1) noexcept {
+
+    TraitT res;
+    TraitsUnaryExpressionProcesor<Log10>::evaluate(res, op1);
+    return res;
+}
+
+
+
+////
+/// Sqrt
+///
+
+template< typename T1 >
+struct Sqrt
+{
+   static auto evaluate( const T1& a ) -> decltype( std::sqrt(a) )
+   {
+      return std::sqrt(a);
+   }
+};
+
+
+
+
+///
+/// Sqrt of each traited class member
+///
+template <typename TraitT>
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type&
+sqrt(TraitT&& op1) noexcept {
+
+    TraitsUnaryExpressionProcesor<Sqrt>::evaluate(op1, op1);
+
+    return  op1;
+}
+
+
+template <typename TraitT>
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
+sqrt(const TraitT& op1) noexcept {
+
+    TraitT res;
+    TraitsUnaryExpressionProcesor<Sqrt>::evaluate(res, op1);
+    return res;
+}
+
+
+////
+/// Cbrt
+///
+
+template< typename T1 >
+struct Cbrt
+{
+   static auto evaluate( const T1& a ) -> decltype( std::cbrt(a) )
+   {
+      return std::cbrt(a);
+   }
+};
+
+
+
+
+///
+/// Cbrt of each traited class member
+///
+template <typename TraitT>
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type&
+cbrt(TraitT&& op1) noexcept {
+
+    TraitsUnaryExpressionProcesor<Cbrt>::evaluate(op1, op1);
+
+    return  op1;
+}
+
+
+template <typename TraitT>
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
+cbrt(const TraitT& op1) noexcept {
+
+    TraitT res;
+    TraitsUnaryExpressionProcesor<Cbrt>::evaluate(res, op1);
+    return res;
+}
+
+///
+/// Unary minus
+///
+
+template< typename T1 >
+struct UnaryMinus
+{
+   static auto evaluate( const T1& a ) -> decltype( -1 * a )
+   {
+      return -a;
+   }
+};
+
+template <typename TraitT>
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
+operator-(const TraitT& op1) noexcept {
+
+    TraitT res;
+    TraitsUnaryExpressionProcesor<UnaryMinus>::evaluate(res, op1);
+    return res;
+}
+
+template <typename TraitT>
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type&
+operator-(TraitT&& op1) noexcept {
+
+    TraitsUnaryExpressionProcesor<UnaryMinus>::evaluate(op1, op1);
+
+    return op1;
+}
+
+
+///
+/// Absolute value
+///
+
+template< typename T1 >
+struct Abs
+{
+   static auto evaluate( const T1& a ) -> decltype( std::abs(a) )
+   {
+      return std::abs(a);
+   }
+};
+
+template <typename TraitT>
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
+abs(const TraitT& op1) noexcept {
+
+    TraitT res;
+    TraitsUnaryExpressionProcesor<Abs>::evaluate(res, op1);
+    return res;
+}
+
+template <typename TraitT>
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type&
+abs(TraitT&& op1) noexcept {
+
+    TraitsUnaryExpressionProcesor<Abs>::evaluate(op1, op1);
+
+    return op1;
 }
 
 
@@ -317,7 +936,7 @@ typename std::enable_if<
     double //typename TraitCommonType<TraitT>::type
 >::type
 max(const TraitT& op1) noexcept {
-    double res = std::numeric_limits<double>::min();
+    double res = -std::numeric_limits<double>::max();
     //typename TraitCommonType<TraitT>::type res = std::numeric_limits<typename TraitCommonType<TraitT>::type>::min();
 
     DefaultArithmeticTraits<TraitT>::getTraits().apply(
@@ -428,21 +1047,6 @@ abs(const T& array) noexcept {
 }
 
 
-template <typename TraitT>
-typename std::enable_if<
-    HasDefaultArithmeticTraits<TraitT>::value,
-    TraitT
->::type
-abs(const TraitT& op1) noexcept {
-    TraitT res;
-
-    DefaultArithmeticTraits<TraitT>::getTraits().apply(
-                [&res, &op1](unsigned int, const auto& ref, const std::string&) noexcept {
-         ref.setValue(res, abs(ref.getValue(op1)));
-    }
-    );
-    return  res;
-}
 
 
 #endif // TRAITSALGORITHM_H
