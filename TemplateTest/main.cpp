@@ -338,7 +338,7 @@ struct NumStruct2 {
 
     template<unsigned int... Idxs>
     auto& operator[](integer_sequence<unsigned int, Idxs...>){
-        return getTraitedAttribute<Idxs...>(*this);
+        return get<Idxs...>(*this);
     }
 };
 MAKE_ATTRIBUTE_TRAIT(NumStruct2, data1, data2);
@@ -364,7 +364,7 @@ public:
 
     template<unsigned int... Idxs>
     auto& operator[](integer_sequence<unsigned int, Idxs...>){
-        return getTraitedAttribute<Idxs...>(*this);
+        return get<Idxs...>(*this);
     }
 };
 }
