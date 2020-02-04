@@ -313,13 +313,13 @@ struct TraitedAttributeGetter<Index>{
 } //Impl
 
 
-template <typename ArythmeticTraitT, unsigned int ...Indexes, typename = typename std::enable_if<HasDefaultArithmeticTraits<ArythmeticTraitT>::value>::type>
+template <unsigned int ...Indexes, typename ArythmeticTraitT, typename = typename std::enable_if<HasDefaultArithmeticTraits<ArythmeticTraitT>::value>::type>
 auto& getTraitedAttribute(ArythmeticTraitT& arg){
     return Impl::TraitedAttributeGetter<Indexes...>::get(arg);
 }
 
 
-template <typename ArythmeticTraitT, unsigned int ...Indexes, typename = typename std::enable_if<HasDefaultArithmeticTraits<ArythmeticTraitT>::value>::type>
+template <unsigned int ...Indexes, typename ArythmeticTraitT, typename = typename std::enable_if<HasDefaultArithmeticTraits<ArythmeticTraitT>::value>::type>
 auto& getTraitedAttribute(ArythmeticTraitT* arg){
     return Impl::TraitedAttributeGetter<Indexes...>::get(arg);
 }

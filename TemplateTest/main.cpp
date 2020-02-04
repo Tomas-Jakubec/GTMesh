@@ -1,8 +1,9 @@
 #define CONSOLE_COLORED_OUTPUT
 #include "../src/Debug/Debug.h"
+#include "../src/Traits/TraitsAlgorithm/TraitsAlgorithm.h"
+//#include "../src/Traits/Traits.h"
 #include "../src/UnstructuredMesh/UnstructuredMesh.h"
 #include "../src/Traits/MemberApproach/MemberApproach.h"
-#include "../src/Traits/Traits.h"
 #include "../src/Singleton/Singleton.h"
 #include <chrono>
 #include <functional>
@@ -296,7 +297,7 @@ struct ExportTest {
 MAKE_ATTRIBUTE_TRAIT(ExportTest, attrInt, attrDouble, attrChar, attrStr, attrTempData, attrVec);
 MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(ExportTest, attrInt, attrDouble, attrTempData);
 
-#include "../src/Traits/TraitsAlgorithm/TraitsAlgorithm.h"
+
 
 struct dataStruct {
     int iD;
@@ -334,9 +335,42 @@ struct NumStruct2 {
     double data2;
 
     NumStruct2(double d1 = 0.0, double d2 = 0.0): data1(d1), data2(d2){}
+
+    template<unsigned int... Idxs>
+    auto& operator[](integer_sequence<unsigned int, Idxs...>){
+        return getTraitedAttribute<Idxs...>(*this);
+    }
 };
 MAKE_ATTRIBUTE_TRAIT(NumStruct2, data1, data2);
 
+
+struct TraitedStruct {
+    Vector<3, double>sarr = {1,2,3};
+};
+MAKE_ATTRIBUTE_TRAIT(TraitedStruct, sarr);
+namespace ns {
+
+
+class TraitedClass{
+public:
+    double d1 = 1;
+    double d2 = 2;
+    TraitedStruct ts;
+public:
+    explicit TraitedClass() {DBGMSG("TC construtor");}
+    //TraitedClass(const TraitedClass& rhs) = default;
+    //TraitedClass(TraitedClass&&) = default;
+    friend class Traits<TraitedClass>;
+
+    template<unsigned int... Idxs>
+    auto& operator[](integer_sequence<unsigned int, Idxs...>){
+        return getTraitedAttribute<Idxs...>(*this);
+    }
+};
+}
+
+
+MAKE_ATTRIBUTE_TRAIT(ns::TraitedClass, d1, d2, ts);
 
 void testTraitsAlgorithms() {
     ExportTest e1, e2;
@@ -351,8 +385,20 @@ void testTraitsAlgorithms() {
            max(-(ns + 4 * ns2)),
            max(abs(-(ns + 4 * ns2))),
            log(ns), exp(log(ns)),
-           pow(sqrt(ns), 2)
+           pow(sqrt(ns), 2),
+           abs(pow(e1,2))
            );
+
+    DBGVAR(abs(ns::TraitedClass()));
+
+    std::vector<ns::TraitedClass> vv;
+    vv.resize(5, ns::TraitedClass());
+
+    integer_sequence<unsigned int, 0> d1;
+    integer_sequence<unsigned int, 1> d2;
+    integer_sequence<unsigned int, 2,0> sarr;
+    DBGVAR(abs(vv), pow(vv,2.5), ns[d1], vv[0][d1], vv[0][d2], vv[0][sarr]);
+
 }
 
 
@@ -2374,8 +2420,8 @@ int main()
     //testPrivateTrait();
     //testJson();
     //testTestTraits();
-    //testTraitsAlgorithms();
-    testNumericTraitsPerformance();
+    testTraitsAlgorithms();
+    //testNumericTraitsPerformance();
     //testTraitsTuple();
     //testFactorial();
     return 0;

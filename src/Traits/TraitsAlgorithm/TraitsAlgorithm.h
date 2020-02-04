@@ -463,9 +463,9 @@ operator/(TraitT&& op1, const Real& op2) noexcept {
 template< typename T1, typename T2 >
 struct Pow
 {
-   static auto evaluate( const T1& a, const T2& b ) -> decltype( std::pow(a,b) )
+   static auto evaluate( const T1& a, const T2& b ) -> decltype( pow(a,b) )
    {
-      return std::pow(a,b);
+      return pow(a,b);
    }
 };
 
@@ -509,6 +509,49 @@ pow(const Real& op1, TraitT&& op2) noexcept {
     return pow(op2, op1);
 }
 
+
+/*
+template <typename T, typename Real>
+typename std::enable_if<
+    !std::is_class<T>::value,
+    T
+>::type
+pow(const T& arg, const Real& p) noexcept {
+
+    return  std::pow(arg, p);
+}
+*/
+template <typename T, typename Real>
+typename std::enable_if<
+    IsIndexable<T>::value,
+    T
+>::type
+pow(const T& array, const Real& p) noexcept {
+
+    T resArray(array);
+
+    for (decltype (resArray.size()) index = 0; index < resArray.size(); index++){
+        resArray[index] = pow(resArray[index], p);
+
+    }
+    return  resArray;
+}
+
+template <typename T,typename Real>
+typename std::enable_if<
+    IsTNLIndexable<T>::value,
+    T
+>::type
+pow(const T& array, const Real& p) noexcept {
+
+    T resArray(array);
+
+    for (decltype (resArray.getSize()) index = 0; index < resArray.getSize(); index++){
+        resArray[index] = pow(resArray[index], p);
+
+    }
+    return  resArray;
+}
 
 
 ////
@@ -554,7 +597,7 @@ exp(const TraitT& op1) noexcept {
 
 
 ////
-/// Exp
+/// Log
 ///
 
 template< typename T1 >
@@ -790,11 +833,15 @@ operator-(TraitT&& op1) noexcept {
 template< typename T1 >
 struct Abs
 {
-   static auto evaluate( const T1& a ) -> decltype( std::abs(a) )
-   {
-      return std::abs(a);
-   }
+
+    static auto evaluate( const T1& a ) -> T1 {
+        return abs(a);
+    }
+
 };
+
+
+
 
 template <typename TraitT>
 typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
@@ -813,6 +860,51 @@ abs(TraitT&& op1) noexcept {
 
     return op1;
 }
+
+
+
+template <typename T>
+typename std::enable_if<
+    !std::is_class<T>::value,
+    T
+>::type
+abs(const T& arg) noexcept {
+
+    return  std::abs(arg);
+}
+
+template <typename T>
+typename std::enable_if<
+    IsIndexable<T>::value,
+    T
+>::type
+abs(const T& array) noexcept {
+
+    T resArray(array);
+
+    for (decltype (resArray.size()) index = 0; index < resArray.size(); index++){
+        resArray[index] = abs(resArray[index]);
+
+    }
+    return  resArray;
+}
+/*
+template <typename T>
+typename std::enable_if<
+    IsTNLIndexable<T>::value,
+    T
+>::type
+abs(const T& array) noexcept {
+
+    T resArray(array);
+
+    for (decltype (resArray.getSize()) index = 0; index < resArray.getSize(); index++){
+        resArray[index] = abs(resArray[index]);
+
+    }
+    return  resArray;
+}
+*/
 
 
 
@@ -1003,50 +1095,10 @@ min(const TraitT& op1) noexcept {
 
 
 
-template <typename T>
-typename std::enable_if<
-    !std::is_class<T>::value,
-    T
->::type
-abs(const T& arg) noexcept {
-
-    return  std::abs(arg);
-}
-
-template <typename T>
-typename std::enable_if<
-    IsIndexable<T>::value,
-    T
->::type
-abs(const T& array) noexcept {
-
-    T resArray(array);
-
-    for (decltype (resArray.size()) index = 0; index < resArray.size(); index++){
-        resArray[index] = abs(resArray[index]);
-
-    }
-    return  resArray;
-}
-
-
-template <typename T>
-typename std::enable_if<
-    IsTNLIndexable<T>::value,
-    T
->::type
-abs(const T& array) noexcept {
-
-    T resArray(array);
-
-    for (decltype (resArray.getSize()) index = 0; index < resArray.getSize(); index++){
-        resArray[index] = abs(resArray[index]);
-
-    }
-    return  resArray;
-}
-
 
 
 
 #endif // TRAITSALGORITHM_H
+
+
+
