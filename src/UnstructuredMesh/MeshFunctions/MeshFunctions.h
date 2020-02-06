@@ -8,7 +8,7 @@
 #include "EdgesOrientation.h"
 #include "MeshConnections.h"
 #include "MeshNeighborhood.h"
-#include "MeshColouring.h"
+#include "MeshColoring.h"
 
 
 

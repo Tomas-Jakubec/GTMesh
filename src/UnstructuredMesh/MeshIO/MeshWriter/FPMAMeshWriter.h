@@ -2,7 +2,7 @@
 #define FPMAMESHWRITER_H
 
 #include "MeshWriter.h"
-#include "../../MeshElements/MeshElement.h"
+#include "../../MeshElements/MeshElements.h"
 #include "../../MeshDataContainer/MeshDataContainer.h"
 #include "../../MeshFunctions/MeshFunctions.h"
 #include <map>
@@ -35,8 +35,7 @@ class FPMAMeshWriter<3, IndexType, Real> : public MeshWriter<3>{
     MeshDataContainer<std::vector<IndexType>, 3> cellFace;
 
     /**
-     * @brief indexFace<HR>
-     * This funcion return indexes of vertices of a face in correct order
+     * @brief This funcion return indexes of vertices of a face in correct order
      * with respect to edge orientation
      * in output vector verticesIndexed
      * @param mesh the structure of the mesh
@@ -59,16 +58,17 @@ class FPMAMeshWriter<3, IndexType, Real> : public MeshWriter<3>{
 
         IndexType lastWrittenEdge = face.getSubelements()[0].index;
         while (startVertex != nextVertex){
+
             for (auto& sube : face.getSubelements()) {
                 auto &edge = mesh.getEdges().at(sube.index);
 
-                if (edge.getIndex() != lastWrittenEdge) {
+                if (sube.index != lastWrittenEdge) {
                     if (edge.getVertexAIndex() == nextVertex) {
-                        lastWrittenEdge = edge.getIndex();
+                        lastWrittenEdge = sube.index;
                         verticesIndexed.push_back(edge.getVertexAIndex());
                         nextVertex = edge.getVertexBIndex();
                     } else if (edge.getVertexBIndex() == nextVertex) {
-                        lastWrittenEdge = edge.getIndex();
+                        lastWrittenEdge = sube.index;
                         verticesIndexed.push_back(edge.getVertexBIndex());
                         nextVertex = edge.getVertexAIndex();
                     }

@@ -12,15 +12,15 @@ class Vertex {
      * @brief coordinates<HR>
      * coordinates of the vertex in the space
      */
-    std::array<Real, Dim> coordinates = {};
+    std::array<Real, Dim> coordinates;
 
 public:
-    Vertex(){}
-    Vertex(std::initializer_list<Real> l){
+    Vertex() = default;
+    Vertex(const std::initializer_list<Real>& l){
         *this = l;
     }
 
-    Vertex<Dim, Real>& operator =(std::initializer_list<Real> l);
+    Vertex<Dim, Real>& operator =(const std::initializer_list<Real>& l);
 
     void setCoordinate(Real coord, unsigned int pos){
         coordinates[pos] = coord;
@@ -57,9 +57,7 @@ public:
     Vertex<Dim, Real> operator/(const Real&) const;
 
     /**
-     * @brief operator *
-     *
-     * Scalar product of two vectors
+     * @brief Scalar product of two vectors
      * @param v
      * @return
      */
@@ -77,7 +75,7 @@ public:
 
 
 template<unsigned int Dim, typename Real>
-Vertex<Dim, Real>& Vertex<Dim, Real>::operator =(std::initializer_list<Real> l){
+Vertex<Dim, Real>& Vertex<Dim, Real>::operator =(const std::initializer_list<Real> &l){
     unsigned int i = 0;
 
     for(Real x : l){

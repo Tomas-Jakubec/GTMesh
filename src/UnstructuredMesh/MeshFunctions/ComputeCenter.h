@@ -23,7 +23,7 @@ struct _ComputeCenters {
         for (IndexType i = 0; i < mesh.template getElements<dim>().size(); i++) {
 
             Real subElemCnt = 0;
-            MeshApply<dim, dim - 1, Dimension>::apply(
+            MeshApply<dim, dim - 1>::apply(
                         i,
                         mesh,
                         [&elemCenters, &subElemCenters, &subElemCnt](IndexType elementIndex, IndexType subelementIndex){
@@ -58,7 +58,7 @@ struct _ComputeCenters<Dimension, Dimension, Method>{
         for (IndexType i = 0; i < mesh.template getElements<Dimension>().size(); i++) {
 
             Real subElemCnt = 0;
-            MeshApply<Dimension, Dimension - 1, Dimension>::apply(
+            MeshApply<Dimension, Dimension - 1>::apply(
                         i,
                         mesh,
                         [&elemCenters, &subElemCenters, &subElemCnt](IndexType elementIndex, IndexType subelementIndex){
@@ -83,9 +83,10 @@ struct _ComputeCenters<1, Dimension, Method>{
 
         std::vector<Vertex<Dimension, Real>>& edgeCenters = centers.template getDataByDim<1>();
 
-        for (auto& edge : mesh.template getElements<1>()) {
+        for (IndexType edgeIndex = 0; edgeIndex < mesh.template getElements<1>().size(); edgeIndex++) {
+            auto& edge = mesh.getEdges().at(edgeIndex);
 
-            edgeCenters.at(edge.getIndex()) = (mesh.template getElements<0>().at(edge.getVertexAIndex()) +
+            edgeCenters.at(edgeIndex) = (mesh.template getElements<0>().at(edge.getVertexAIndex()) +
                                 mesh.template getElements<0>().at(edge.getVertexBIndex())) * 0.5;
         }
 
@@ -113,7 +114,7 @@ struct _ComputeCenters<2, 3, ComputationMethod::TESSELLATED> {
         for (IndexType i = 0; i < mesh.template getElements<2>().size(); i++) {
 
             Real subElemCnt = 0;
-            MeshApply<2, 1, 3>::apply(i, mesh,[&](IndexType faceIndex, IndexType edgeIndex){
+            MeshApply<2, 1>::apply(i, mesh,[&](IndexType faceIndex, IndexType edgeIndex){
 
                 elemCenters.at(faceIndex) +=  subElemCenters.at(edgeIndex);
                 subElemCnt++;
@@ -124,7 +125,7 @@ struct _ComputeCenters<2, 3, ComputationMethod::TESSELLATED> {
 
             Vertex<3, Real> tempVert = {};
             Real surfTotal = 0.0;
-            MeshApply<2, 1, 3>::apply(i, mesh,[&](IndexType faceIndex, IndexType edgeIndex){
+            MeshApply<2, 1>::apply(i, mesh,[&](IndexType faceIndex, IndexType edgeIndex){
 
                 IndexType AI = mesh.getEdges().at(edgeIndex).getVertexAIndex();
                 IndexType BI = mesh.getEdges().at(edgeIndex).getVertexBIndex();

@@ -1,5 +1,5 @@
 TEMPLATE = app
-CONFIG += console c++14
+CONFIG += console c++17
 CONFIG -= app_bundle
 CONFIG -= qt
 
@@ -17,6 +17,7 @@ HEADERS += \
     ../src/NumericStaticArray/InlineArrayOperations.h \
     ../src/Traits/CustomTypeTraits.h \
     ../src/Traits/MemberApproach/MemberApproach.h \
+    ../src/Traits/TraitsAlgorithm/TraitsAlgorithm.h \
     ../src/UnstructuredMesh/MeshDataContainer/MeshDataContainer.h \
     ../src/UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataReader.h \
     ../src/UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataWriter.h \
@@ -26,12 +27,13 @@ HEADERS += \
     ../src/UnstructuredMesh/MeshElements/CellConnection.h \
     ../src/UnstructuredMesh/MeshElements/ComputationalySignificantElement.h \
     ../src/UnstructuredMesh/MeshElements/MeshElement.h \
+    ../src/UnstructuredMesh/MeshElements/MeshElements.h \
     ../src/UnstructuredMesh/MeshFunctions/ComputeCenter.h \
     ../src/UnstructuredMesh/MeshFunctions/ComputeMeasures.h \
     ../src/UnstructuredMesh/MeshFunctions/ComputeNormals.h \
     ../src/UnstructuredMesh/MeshFunctions/EdgesOrientation.h \
     ../src/UnstructuredMesh/MeshFunctions/MeshApply.h \
-    ../src/UnstructuredMesh/MeshFunctions/MeshColouring.h \
+    ../src/UnstructuredMesh/MeshFunctions/MeshColoring.h \
     ../src/UnstructuredMesh/MeshFunctions/MeshConnections.h \
     ../src/UnstructuredMesh/MeshFunctions/MeshFunctions.h \
     ../src/UnstructuredMesh/MeshFunctions/MeshFunctionsDefine.h \

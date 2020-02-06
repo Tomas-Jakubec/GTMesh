@@ -1,10 +1,6 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
-
-
-
-
 #ifndef UNDEBUG
 #include "../Macros/MacroForEach.h"
 #include <iostream>
@@ -29,15 +25,15 @@ namespace dbg {
 #define STRVAR(var) #var, var
 
 
-#define DBGVAR(...) ConsoleLogger::writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
+#define DBGVAR(...) ConsoleLogger<>::writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
 #define DBGVARCOND(condition, ...) if(condition) DBGVAR(__VA_ARGS__)
 
-#define DBGMSG(...) ConsoleLogger::writeMessage("++", __LINE__, __FILE__, __VA_ARGS__)
+#define DBGMSG(...) ConsoleLogger<>::writeMessage("++", __LINE__, __FILE__, __VA_ARGS__)
 
 #define DBGTRY(code)                        \
 try{code;}                                   \
 catch(const std::exception& e){              \
-ConsoleLogger::writeMessage("!!", __LINE__, __FILE__, std::string("something went wrong in try block: ") + e.what());   \
+ConsoleLogger<>::writeMessage("!!", __LINE__, __FILE__, std::string("something went wrong in try block: ") + e.what());   \
 abort();}
 
 // Macros using html debug output
@@ -49,7 +45,7 @@ abort();}
 #define DBGVARCOND_CSV(condition, ...) if(condition) DBGVAR_HTML(__VA_ARGS__)
 
 
-#define DBGCHECK ConsoleLogger::writeMessage("--", __LINE__, __FILE__, "check line")
+#define DBGCHECK ConsoleLogger<>::writeMessage("--", __LINE__, __FILE__, "check line")
 
 
 #else

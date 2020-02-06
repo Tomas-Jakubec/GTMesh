@@ -2,7 +2,7 @@
 #define MESHWRITER_H
 #include "../MeshNativeType.h"
 #include "../../../NumericStaticArray/Vertex.h"
-#include "../../MeshElements/MeshElement.h"
+#include "../../MeshElements/MeshElements.h"
 
 template<unsigned int MeshDimension>
 class MeshWriter{
@@ -52,6 +52,7 @@ public:
     static size_t computeHash(MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh){
 
         // A vector of ones that simplifies the sum of coordinates
+        /*
         Vertex<MeshDimension, Real> ones;
         for(unsigned int dim = 0; dim < MeshDimension; dim++){
             ones[dim] = 1.0;
@@ -67,8 +68,9 @@ public:
         HashUni<IndexType, Real> uni;
         uni.data = {numberOfElements, totalVert};
         std::hash<std::string> hasher;
-        return hasher(uni.bytes);
+        return hasher(uni.bytes);*/
         //return hasher(std::to_string(totalVert)+";"+std::to_string(numberOfElements));
+        return mesh.updateSignature();
     }
 };
 

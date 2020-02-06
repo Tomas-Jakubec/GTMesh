@@ -1,11 +1,17 @@
+#define CONSOLE_COLORED_OUTPUT
 #include "../src/Debug/Debug.h"
+#include "../src/Traits/TraitsAlgorithm/TraitsAlgorithm.h"
+//#include "../src/Traits/Traits.h"
 #include "../src/UnstructuredMesh/UnstructuredMesh.h"
 #include "../src/Traits/MemberApproach/MemberApproach.h"
-#include "../src/Traits/Traits.h"
+#include "../src/Singleton/Singleton.h"
+#include <chrono>
 #include <functional>
 #include <type_traits>
 #include <iostream>
 #include <list>
+#include <unordered_map>
+#include <functional>
 #include <map>
 using namespace std;
 
@@ -62,8 +68,8 @@ void testDebug() {
         {"druhy", 2},
         {"treti", 3}
     };
-    ConsoleLogger::writeVar(__LINE__, __FILE__, "r", r, "i", i, "c", c, "list", list, "vec", vec, "b", b, "map", m);
-    ConsoleLogger::writeVar(__LINE__, __FILE__,"---", {5,4,3,2});
+    ConsoleLogger<>::writeVar(__LINE__, __FILE__, "r", r, "i", i, "c", c, "list", list, "vec", vec, "b", b, "map", m);
+    ConsoleLogger<>::writeVar(__LINE__, __FILE__,"---", {5,4,3,2});
     DBGVAR(r, i, c, list, vec, b, m);
 
     Vertex<7, double> vert;
@@ -163,7 +169,7 @@ void testTemplate() {
 }
 
 
-template<typename T, typename VOID = void>
+template<typename T, typename Void = void>
 struct is_indexable : public integral_constant<bool, false>{};
 
 template<typename T>
@@ -278,6 +284,7 @@ const Traits<tempData>::ttype Traits<tempData>::tr("density", &tempData::density
 //MAKE_ATTRIBUTE_TRAIT(tempData, density, velocity);
 
 MAKE_CUSTOM_ATTRIBUTE_TRAIT(tempData, "density", &tempData::density, "momentum", std::make_pair(&tempData::getMomentum, &tempData::setMomentum))
+MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(tempData, density, velocity);
 
 struct ExportTest {
     int attrInt = 1;
@@ -287,8 +294,16 @@ struct ExportTest {
     std::vector<std::string> attrVec = {"tohle", "je", "nejlepsi", "debugovaci", "system"};
     tempData attrTempData{42.15, {1,2,1}};
 };
-MAKE_ATTRIBUTE_TRAIT(ExportTest, attrInt, attrDouble, attrChar, attrStr, attrVec, attrTempData);
+MAKE_ATTRIBUTE_TRAIT(ExportTest, attrInt, attrDouble, attrChar, attrStr, attrTempData, attrVec);
+MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(ExportTest, attrInt, attrDouble, attrTempData);
 
+
+
+struct dataStruct {
+    int iD;
+    double dD;
+
+}; MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(dataStruct, iD, dD);
 void testMemberRef(){
 
 
@@ -296,12 +311,12 @@ void testMemberRef(){
 
     //DBGVAR(Traits<tempData>::ttype::getName<0>());
 
-    Traits<tempData>::ttype::getReference<0>()->setValue(&d, 0.0);
-    DBGVAR(Traits<tempData>::ttype::getReference<0>()->getValue(&d));
-    Traits<tempData>::ttype::getReference<0>()->setValue(d, 42.15);
-    Traits<tempData>::ttype::getReference<1>()->setValue(&d, {42.15,84.30,42.15});
+    Traits<tempData>::getTraits().getReference<0>().setValue(&d, 0.0);
+    DBGVAR(Traits<tempData>::getTraits().getReference<0>().getValue(&d));
+    Traits<tempData>::getTraits().getReference<0>().setValue(d, 42.15);
+    Traits<tempData>::getTraits().getReference<1>().setValue(&d, {42.15,84.30,42.15});
 
-    DBGVAR(Traits<tempData>::ttype::getName<0>(),(Traits<tempData>::ttype::getReference<0>()->getValue(&d)), Traits<tempData>::ttype::getName<1>(),(Traits<tempData, double, Vector<3,double>>::getReference<1>()->getValue(&d)), d.velocity);
+    DBGVAR(Traits<tempData>::getTraits().getName<0>(),(Traits<tempData>::getTraits().getReference<0>().getValue(&d)), Traits<tempData>::getTraits().getName<1>(), d.velocity);
     DBGVAR(Traits<tempData>::is_specialized,HasDefaultTraits<tempData>::value, d);
 
     ExportTest e;
@@ -309,9 +324,1151 @@ void testMemberRef(){
 }
 
 
+struct NumStruct {
+    double data;
+};
+MAKE_ATTRIBUTE_TRAIT(NumStruct, data);
+
+
+struct NumStruct2 {
+    double data1;
+    double data2;
+
+    NumStruct2(double d1 = 0.0, double d2 = 0.0): data1(d1), data2(d2){}
+
+    template<unsigned int... Idxs>
+    auto& operator[](integer_sequence<unsigned int, Idxs...>){
+        return get<Idxs...>(*this);
+    }
+};
+MAKE_ATTRIBUTE_TRAIT(NumStruct2, data1, data2);
+
+
+struct TraitedStruct {
+    Vector<3, double>sarr = {1,2,3};
+};
+MAKE_ATTRIBUTE_TRAIT(TraitedStruct, sarr);
+namespace ns {
+
+
+class TraitedClass{
+public:
+    double d1 = 1;
+    double d2 = 2;
+    TraitedStruct ts;
+public:
+    explicit TraitedClass() {DBGMSG("TC construtor");}
+    //TraitedClass(const TraitedClass& rhs) = default;
+    //TraitedClass(TraitedClass&&) = default;
+    friend class Traits<TraitedClass>;
+
+    template<unsigned int... Idxs>
+    auto& operator[](integer_sequence<unsigned int, Idxs...>){
+        return get<Idxs...>(*this);
+    }
+};
+}
+
+
+MAKE_ATTRIBUTE_TRAIT(ns::TraitedClass, d1, d2, ts);
+
+void testTraitsAlgorithms() {
+    ExportTest e1, e2;
+    ExportTest res = e1 + e2;
+    std::vector<ExportTest> vec(40, ExportTest());
+
+    DBGVAR(2.45*e1,e1 + e2, e1, e2,HasDefaultArithmeticTraits<int>::value, max(e2), min(e2), max(vec));
+
+    NumStruct2 ns{21,15}, ns2{2,3};
+    DBGVAR(ns * ns2,
+           -(ns + 4 * ns2),
+           max(-(ns + 4 * ns2)),
+           max(abs(-(ns + 4 * ns2))),
+           log(ns), exp(log(ns)),
+           pow(sqrt(ns), 2),
+           abs(pow(e1,2))
+           );
+
+    DBGVAR(abs(ns::TraitedClass()));
+
+    std::vector<ns::TraitedClass> vv;
+    vv.resize(5, ns::TraitedClass());
+
+    integer_sequence<unsigned int, 0> d1;
+    integer_sequence<unsigned int, 1> d2;
+    integer_sequence<unsigned int, 2,0> sarr;
+    DBGVAR(abs(vv), pow(vv,2.5), ns[d1], vv[0][d1], vv[0][d2], vv[0][sarr]);
+
+}
 
 
 
+
+template <unsigned int Index>
+const MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<Index>, DefaultArithmeticTraits<tempData>::traitsType::refType<Index>>
+getReference() {
+    if constexpr (Index == 0){
+        MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<0>, DefaultArithmeticTraits<tempData>::traitsType::refType<0>>
+                mr1(&tempData::density);
+        return mr1;
+    }
+    else{
+        MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<1>, DefaultArithmeticTraits<tempData>::traitsType::refType<1>>
+                mr2(&tempData::velocity);
+        return mr2;
+    }
+}
+
+struct References {
+    template<unsigned int Index>
+    using refType = typename DefaultArithmeticTraits<tempData>::traitsType::refType<Index>;
+
+    template <unsigned int Index>
+    using type = typename DefaultArithmeticTraits<tempData>::traitsType::type<Index>;
+
+
+    template<unsigned int Index = 0, typename Dummy = void>
+    struct MemRefs: public MemRefs<Index + 1> {
+
+        const MemberReference<tempData, type<Index>, refType<Index>> ref;
+        const char* name;
+
+
+        template <typename ... REST>
+        MemRefs(const char* n, refType<Index> r, REST... rest) : MemRefs<Index + 1> (rest...), ref(r), name(n){}
+    };
+
+    template<typename Dummy>
+    struct MemRefs<1, Dummy>{
+        const MemberReference<tempData, type<1>, refType<1>> ref;
+        const char* name;
+
+        MemRefs(const char* n, refType<1> r) : ref(r), name(n){}
+    };
+
+    const MemRefs<0, void> refs;
+
+    References() : refs("",&tempData::density,"", &tempData::velocity){}
+
+    template <unsigned int Index>
+    const MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<Index>, DefaultArithmeticTraits<tempData>::traitsType::refType<Index>>
+    getReference() {
+        return refs.MemRefs<Index,void>::ref;
+    }
+};
+
+
+struct traitPublisher {
+    static const
+    Traits<tempData, typename DefaultArithmeticTraits<tempData>::traitsType::refType<0>,
+         typename DefaultArithmeticTraits<tempData>::traitsType::refType<1>> trait;
+
+    static const
+    Traits<tempData, typename DefaultArithmeticTraits<tempData>::traitsType::refType<0>,
+    typename DefaultArithmeticTraits<tempData>::traitsType::refType<1>> getTrait(){
+        return Traits<tempData, typename DefaultArithmeticTraits<tempData>::traitsType::refType<0>,
+                typename DefaultArithmeticTraits<tempData>::traitsType::refType<1>>("1",&tempData::density,"2",&tempData::velocity);
+    }
+
+    static const
+        MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<0>, DefaultArithmeticTraits<tempData>::traitsType::refType<0>>
+                mr1;
+    static const
+        MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<1>, DefaultArithmeticTraits<tempData>::traitsType::refType<1>>
+                mr2;
+};
+const
+Traits<tempData, typename DefaultArithmeticTraits<tempData>::traitsType::refType<0>,
+typename DefaultArithmeticTraits<tempData>::traitsType::refType<1>> traitPublisher::trait("1",&tempData::density,"2",&tempData::velocity);
+const
+        MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<0>, DefaultArithmeticTraits<tempData>::traitsType::refType<0>>
+                traitPublisher::mr1(&tempData::density);
+const
+    MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<1>, DefaultArithmeticTraits<tempData>::traitsType::refType<1>>
+            traitPublisher::mr2(&tempData::velocity);
+
+
+void testNumericTraitsPerformance() {
+
+    size_t size;
+    DBGMSG("input size");
+    cin >> size;
+
+    std::vector<tempData> vec(size, {1, {1,1,1}});
+    double ini;
+    DBGMSG("input ini");
+    std::cin >> ini;
+
+    for (auto& val : vec) {
+        val *= ini;
+    }
+
+    DBGMSG("input rep");
+    int maxRep;
+    cin >> maxRep;
+
+    DBGVAR(size * ini * maxRep);
+
+
+
+    auto clock = std::chrono::high_resolution_clock();
+    DBGMSG("primary approach +=");
+    long long deviation = 0;
+    long long duration = 0;
+    auto start = clock.now();
+    tempData res({1,{1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+            res.density += vec[i].density;
+
+            res.velocity += vec[i].velocity;
+
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    auto avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("primary approach = +");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+            res.density = res.density + vec[i].density;
+
+            res.velocity = res.velocity + vec[i].velocity;
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("numeric traits +=");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+            res += vec[i];
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DefaultArithmeticTraits<tempData>::traitsType::refType<0> const r1(&tempData::density);
+
+    DefaultArithmeticTraits<tempData>::traitsType::refType<1> const r2(&tempData::velocity);
+
+    DBGMSG("simulation numeric traits += (one ref one direct)");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+            res.density += vec[i].*r1;
+
+            res.velocity += vec[i].*r2;
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+
+    DBGMSG("simulation numeric traits += (both ref)");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+            res.*r1 += vec[i].*r1;
+
+            res.*r2 += vec[i].*r2;
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("simulation numeric traits = +");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+            res.*r1 = res.*r1 + vec[i].*r1;
+
+            res.*r2 = res.*r2 + vec[i].*r2;
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+
+    DefaultArithmeticTraits<tempData>::traitsType::refType<0> volatile r1_1(&tempData::density);
+
+    DefaultArithmeticTraits<tempData>::traitsType::refType<1> volatile r2_1(&tempData::velocity);
+
+
+    DBGMSG("both volatile references = +");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+            res.*r1 = res.*r1_1 + vec[i].*r1_1;
+
+            res.*r2 = res.*r2 + vec[i].*r2_1;
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("second reference is volatile = +");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+            res.*r1 = res.*r1 + vec[i].*r1_1;
+
+            res.*r2 = res.*r2 + vec[i].*r2_1;
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<0>, DefaultArithmeticTraits<tempData>::traitsType::refType<0>>
+            mr1(&tempData::density);
+    MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<1>, DefaultArithmeticTraits<tempData>::traitsType::refType<1>>
+            mr2(&tempData::velocity);
+
+
+    DBGMSG("MemberReference +=");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+            mr1.getAttr(res) += mr1.getAttr(vec[i]);
+
+            mr2.getAttr(res) += mr2.getAttr(vec[i]);
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("MemberReference = +");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+            mr1.setValue(res, mr1.getValue(res) + mr1.getAttr(vec[i]));
+
+            mr2.setValue(res, mr2.getValue(res) + mr2.getAttr(vec[i]));
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("published MemberReference +=");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+            traitPublisher::mr1.getAttr(res) += traitPublisher::mr1.getAttr(vec[i]);
+
+            traitPublisher::mr2.getAttr(res) += traitPublisher::mr2.getAttr(vec[i]);
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    References rr;
+
+    const MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<0>, DefaultArithmeticTraits<tempData>::traitsType::refType<0>>&
+            rmr1 = rr.getReference<0>();//DefaultArithmeticTraits<tempData>::tr.getReference<0>();
+    const MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<1>, DefaultArithmeticTraits<tempData>::traitsType::refType<1>>&
+            rmr2 = rr.getReference<1>();//DefaultArithmeticTraits<tempData>::tr.getReference<1>();
+
+
+    DBGMSG("reference to MemberReference +=");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+            rmr1.getAttr(res) += rmr1.getAttr(vec[i]);
+
+            rmr2.getAttr(res) += rmr2.getAttr(vec[i]);
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("reference to MemberReference = +");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+            rmr1.setValue(res, rmr1.getValue(res) + rmr1.getAttr(vec[i]));
+
+            rmr2.setValue(res, rmr2.getValue(res) + rmr2.getAttr(vec[i]));
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+
+
+    DBGMSG("numeric traits inplace direct approach of tr +=");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+
+            DefaultArithmeticTraits<tempData>::getTraits().template getReference<0>().getAttr(res) +=
+                    DefaultArithmeticTraits<tempData>::getTraits().template getReference<0>().getAttr(vec[i]);
+
+            DefaultArithmeticTraits<tempData>::getTraits().template getReference<1>().getAttr(res) +=
+                    DefaultArithmeticTraits<tempData>::getTraits().template getReference<1>().getAttr(vec[i]);
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("numeric traits inplace +=");
+
+    const auto tr1 = DefaultArithmeticTraits<tempData>::getTraits();
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+
+            tr1.template getReference<0>().getAttr(res) +=
+                    tr1.template getReference<0>().getAttr(vec[i]);
+
+            tr1.template getReference<1>().getAttr(res) +=
+                    tr1.template getReference<1>().getAttr(vec[i]);
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+
+    Traits<tempData, typename DefaultArithmeticTraits<tempData>::traitsType::refType<0>,
+         typename DefaultArithmeticTraits<tempData>::traitsType::refType<1>>const trait("1",r1,"2",r2);
+
+    DBGMSG("numeric traits inplace only RHS +=");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+
+            res.density += trait.getReference<0>().getAttr(vec[i]);
+
+            res.velocity += trait.getReference<1>().getAttr(vec[i]);
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("numeric traits inplace = +");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+
+            res.density = trait.getReference<0>().getAttr(res) + trait.getReference<0>().getAttr(vec[i]);
+
+            res.velocity = trait.getReference<1>().getAttr(res) + trait.getReference<1>().getAttr(vec[i]);
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("numeric traits inplace both referenced +=");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+
+            trait.getReference<0>().getAttr(res) += trait.getReference<0>().getAttr(vec[i]);
+            trait.getReference<1>().getAttr(res) += trait.getReference<1>().getAttr(vec[i]);
+
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("numeric traits static published both referenced +=");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+
+            traitPublisher::trait.getReference<0>().getAttr(res) += traitPublisher::trait.getReference<0>().getAttr(vec[i]);
+            traitPublisher::trait.getReference<1>().getAttr(res) += traitPublisher::trait.getReference<1>().getAttr(vec[i]);
+
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("numeric traits static published getTrait() both referenced +=");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+
+            traitPublisher::getTrait().getReference<0>().getAttr(res) += traitPublisher::getTrait().getReference<0>().getAttr(vec[i]);
+            traitPublisher::getTrait().getReference<1>().getAttr(res) += traitPublisher::getTrait().getReference<1>().getAttr(vec[i]);
+
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+
+    DBGMSG("numeric traits inplace +=");
+
+    start = clock.now();
+    res = tempData({1, {1,1,1}});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+
+
+            trait.getReference<0>().setValue(res, res.density + trait.getReference<0>().getAttr(vec[i]));
+            trait.getReference<1>().setValue(res, res.velocity + trait.getReference<1>().getAttr(vec[i]));
+
+
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("simple numeric data test");
+
+    vector<NumStruct> numVec(size,{ini});
+
+    DBGMSG("direct approach +=");
+
+    start = clock.now();
+    NumStruct res1 = NumStruct({0});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < numVec.size(); i++) {
+
+            res1.data += numVec[i].data;
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res1, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("numeric traits +=");
+
+    start = clock.now();
+    res1 = NumStruct({0});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < numVec.size(); i++) {
+
+            res1 += numVec[i];
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res1, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+
+
+    DBGMSG("simple numeric data test");
+
+    vector<NumStruct2> numVec2(size,{ini,ini});
+
+    DBGMSG("direct approach +=");
+
+    start = clock.now();
+    NumStruct2 res2 = NumStruct2({0,0});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < numVec2.size(); i++) {
+
+            res2.data1 += numVec2[i].data1;
+
+            res2.data2 += numVec2[i].data2;
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res2, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+
+
+    DBGMSG("Traits approach instead of numeric traits +=");
+    Traits<NumStruct2> t;
+    start = clock.now();
+    res2 = NumStruct2({0,0});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < numVec2.size(); i++) {
+
+            t.getTraits().getReference<0>().getAttr(res2) += t.getTraits().getReference<0>().getAttr(numVec2[i]);
+
+            t.getTraits().getReference<1>().getAttr(res2) += t.getTraits().getReference<1>().getAttr(numVec2[i]);
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res2, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+
+    DBGMSG("numeric traits +=");
+
+    start = clock.now();
+    res2 = NumStruct2({0,0});
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < numVec2.size(); i++) {
+
+            res2 += numVec2[i];
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res2, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+
+    DBGMSG("numeric traits = +");
+
+    start = clock.now();
+    res2 = NumStruct2();
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < numVec2.size(); i++) {
+            res2 = res2 + numVec2[i];
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res2, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("\n","ExportTest performance, direct approach");
+
+    std::vector<ExportTest> vec3(size, ExportTest());
+
+    start = clock.now();
+    ExportTest res3 = ExportTest();
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec3.size(); i++) {
+
+            res3.attrInt += vec3[i].attrInt;
+
+            res3.attrDouble += vec3[i].attrDouble;
+
+            res3.attrTempData.density = res3.attrTempData.density + vec3[i].attrTempData.density;
+
+            res3.attrTempData.velocity = res3.attrTempData.velocity + vec3[i].attrTempData.velocity;
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res3, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("numeric traits +=");
+
+    start = clock.now();
+    res3 = ExportTest();
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec3.size(); i++) {
+            res3 += vec3[i];
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res3, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+
+
+
+}
+
+
+/*
+Test of trasposing vector of struct to struct of vectors
+*/
+
+
+template <typename DataType, typename DataTypeTrait = Traits<DataType>>
+struct Container{
+    template <unsigned int index = 0, typename Dummy = void>
+    struct StructOfArrays : public StructOfArrays<index + 1>{
+        std::vector<typename DataTypeTrait::template type<index>> vec;
+    };
+
+
+    template <typename Dummy>
+    struct StructOfArrays<Traits<DataType>::traitsType::size() - 1, Dummy>{
+        std::vector<typename DataTypeTrait::template type<DataTypeTrait::size() - 1>> vec;
+    };
+
+    StructOfArrays<> data;
+
+    static constexpr unsigned int size() {
+        return DataTypeTrait::size();
+    }
+
+    template <unsigned int pos>
+    const char* name() {
+        return Traits<DataType>::getTraits().template getName<pos>();
+    }
+
+    template <unsigned int pos>
+    std::vector<typename Traits<DataType>::traitsType::template type<pos>>& getDataAtPos() {
+        return data.StructOfArrays<pos>::vec;
+    }
+};
+
+
+void testStructTransposition() {
+    Container<ExportTest, Traits<ExportTest>::traitsType> data;
+
+    data.getDataAtPos<5>().resize(2);
+    DBGVAR(data.size(), data.getDataAtPos<5>(), data.name<5>());
+
+};
+
+
+
+/**
+  Test TraitApply
+  */
+/*
+template <typename T, typename Void = void>
+struct TraitApply {
+
+};
+*/
+
+/*
+template < unsigned int index>
+class TraitApply {
+public:
+    template <class Functor>
+    static auto apply (Functor f,...)
+    -> typename std::enable_if<std::is_assignable_v<
+    std::function<
+        void(unsigned int,
+             std::unique_ptr<
+                MemberApproach<
+                    ExportTest,
+                    Traits<ExportTest>::ttype::type<index>
+                >>&,
+             const std::string&
+             )
+    >, Functor>>::type
+    {
+
+        static_assert (std::is_assignable_v<
+                std::function<
+                    void(unsigned int,
+                         std::unique_ptr<
+                            MemberApproach<
+                                ExportTest,
+                                Traits<ExportTest>::ttype::type<index>
+                            >>&,
+                         const std::string&
+                         )
+                >, Functor>, "");
+
+        f(index, Traits<ExportTest>::ttype::getReference<index>(), Traits<ExportTest>::ttype::getName<index>());
+        TraitApply<index - 1>::apply(f);
+    }
+
+
+
+    template <class Functor>
+    static auto apply (Functor f)
+    -> typename std::enable_if<std::is_assignable_v<
+    std::function<
+        void(std::unique_ptr<
+                MemberApproach<
+                    ExportTest,
+                    Traits<ExportTest>::ttype::type<index>
+                >>&,
+             const std::string&
+             )
+    >, Functor>>::type
+    {
+
+        static_assert (std::is_assignable_v<
+                std::function<
+                    void(std::unique_ptr<
+                            MemberApproach<
+                                ExportTest,
+                                Traits<ExportTest>::ttype::type<index>
+                            >>&,
+                         const std::string&
+                         )
+                >, Functor>, "");
+
+        f(Traits<ExportTest>::ttype::getReference<index>(), Traits<ExportTest>::ttype::getName<index>());
+        TraitApply<index - 1>::apply(f);
+    }
+
+    template <template <typename, typename>class Functor>
+    static auto apply ()
+    -> typename std::enable_if<std::is_class<Functor<ExportTest, Traits<ExportTest>::ttype::type<index>>>::value>::type
+    {
+
+        static_assert (std::is_assignable<
+                std::function<
+                    void(unsigned int,
+                         std::unique_ptr<
+                            MemberApproach<
+                                ExportTest,
+                                Traits<ExportTest>::ttype::type<index>
+                            >>&,
+                         const std::string&
+                         )
+                >, Functor<ExportTest, Traits<ExportTest>::ttype::type<index>>>::value, "");
+
+
+        Functor<ExportTest, Traits<ExportTest>::ttype::type<index>>()(index, Traits<ExportTest>::ttype::getReference<index>(), Traits<ExportTest>::ttype::getName<index>());
+        TraitApply<index - 1>::template apply<Functor>();
+    }
+
+};
+
+
+template <>
+class TraitApply<0> {
+public:
+    template <class Functor>
+    static auto apply (Functor f,...)
+    -> typename std::enable_if<std::is_assignable_v<
+    std::function<
+        void(unsigned int,
+             std::unique_ptr<
+                MemberApproach<
+                    ExportTest,
+                    Traits<ExportTest>::ttype::type<0>
+                >>&,
+             const std::string&
+             )
+    >, Functor>>::type
+    {
+        f(0, Traits<ExportTest>::ttype::getReference<0>(), Traits<ExportTest>::ttype::getName<0>());
+    }
+
+
+    template <class Functor>
+    static auto apply (Functor f)
+    -> typename std::enable_if<std::is_assignable_v<
+    std::function<
+        void(std::unique_ptr<
+                MemberApproach<
+                    ExportTest,
+                    Traits<ExportTest>::ttype::type<0>
+                >>&,
+             const std::string&
+             )
+    >, Functor>>::type
+    {
+        f(Traits<ExportTest>::ttype::getReference<0>(), Traits<ExportTest>::ttype::getName<0>());
+    }
+
+    template <template <typename, typename>class Functor>
+    static auto apply ()
+    -> typename std::enable_if<std::is_class<Functor<ExportTest,Traits<ExportTest>::ttype::type<0>>>::value>::type
+    {
+        Functor<ExportTest, Traits<ExportTest>::ttype::type<0>>()(0, Traits<ExportTest>::ttype::getReference<0>(), Traits<ExportTest>::ttype::getName<0>());
+    }
+};
+*/
+
+struct Depth {
+    int value = 0;
+};
+
+template <typename Class, typename T>
+class Func {
+public:
+
+    template <typename U = T,  typename refType>
+    auto operator()(unsigned int index, const MemberReference<Class, T, refType>&, const std::string& name)
+    -> typename std::enable_if<!(HasDefaultTraits<U>::value)>::type
+    {
+        DBGVAR(Singleton<Depth>::getInstance().value,index, name);
+    }
+
+    template <typename U = T, typename refType>
+    auto operator()(unsigned int index, const MemberReference<Class, T, refType>&, const std::string& name)
+    -> typename std::enable_if<HasDefaultTraits<U>::value>::type
+    {
+        DBGVAR(Singleton<Depth>::getInstance().value,index, name);
+        Singleton<Depth>::getInstance().value++;
+        Traits<T>::getTraits().template apply<Func>();
+        Singleton<Depth>::getInstance().value--;
+    }
+};
+
+
+
+void testTraitApply() {
+
+    auto lambda = [](unsigned int index, auto& , const std::string& name){DBGVAR(index, name);};
+
+    DBGVAR(std::is_function<decltype (lambda)>::value);
+
+    //TraitApply<5>::apply(lambda);
+
+    auto lambda1 = []( auto& , const std::string& name){DBGVAR(name);};
+
+    //TraitApply<5>::apply(lambda1);
+DBGMSG("Tady");
+    Traits<ExportTest>::getTraits().apply<Func>();
+    //TraitApply<5>::apply<Func>();
+
+    Traits<ExportTest>::getTraits().apply(lambda);
+
+    Traits<ExportTest>::getTraits().apply(lambda1);
+
+    //Traits<ExportTest>::ttype::apply<Func>();
+
+
+}
+
+
+/*
+ *
+ * Compile time traits DONE
+ */
+
+#include <cstdio>
+
+struct Foo {
+   int m;
+   int r;
+
+   int getM() {return m;}
+   void setM(const int& _m) {m = _m;}
+} foo = {2, 3};
+
+
+
+template<typename R1, typename R2, R1 Mem1, R2 Mem2>
+struct B {
+   static constexpr R1 get = Mem1;
+
+   static constexpr R2 set = Mem2;
+
+
+   static typename MemberReferenceType<std::pair<R1,R2>>::type getValue(typename MemberReferenceType<std::pair<R1,R2>>::typeClass& foo) {
+       return (foo.*(get))();
+   }
+};
+
+
+template<typename Ref, Ref Mem>
+struct B<Ref,Ref, Mem, Mem> {
+   static constexpr Ref mp = Mem;
+
+   inline static typename MemberReferenceType<Ref>::type& getValue(typename MemberReferenceType<Ref>::typeClass& foo) {
+       return foo.*mp;
+   }
+};
+
+#include<cstdio>
+void testCompileTimeTraits() {
+    typedef B<decltype(&Foo::m),decltype(&Foo::m), &Foo::m, &Foo::m> Bm;
+    typedef B<decltype(&Foo::getM),decltype (&Foo::setM), &Foo::getM,&Foo::setM> Bp;
+    typedef B<decltype(&Foo::r),decltype(&Foo::r), &Foo::r, &Foo::r> Br;
+    DBGVAR(foo.*(Bm::mp), Bm::getValue(foo), foo.*(Br::mp), (foo.*(Bp::get))());
+}
 
 #include "../src/Singleton/Singleton.h"
 /*
@@ -518,6 +1675,354 @@ void testOperator() {
 
 
 
+template<typename Class, typename ValueType, typename Ref>
+class TestMemberReference{
+
+    TestMemberReference(Ref){}
+};
+
+
+template <typename Class, typename ValueType>
+class TestMemberReference<Class, ValueType, ValueType Class::*> /*: MemberApproach<Class, ValueType>*/{
+
+    using refType = ValueType Class::*;
+public:
+    refType const ref;
+
+public:
+
+    TestMemberReference(refType referenceToMember) : ref(referenceToMember){
+        //ref = referenceToMember;
+    }
+
+    virtual ~TestMemberReference() = default;
+
+    inline ValueType getValue(const Class* c) const {
+        return c->*ref;
+    }
+
+    inline void setValue(Class* c, const ValueType& val) const {
+        c->*ref = val;
+    }
+
+    inline ValueType getValue(const Class& c) const {
+        return c.*ref;
+    }
+
+    inline void setValue(Class& c, const ValueType& val) const {
+        c.*ref = val;
+    }
+};
+
+template<typename Class, typename...RefTypes>
+class TestTraits {
+public:
+    template<unsigned int Index>
+    using refType = typename std::tuple_element<Index,std::tuple<RefTypes...>>::type;
+
+    template <unsigned int Index>
+    using type = typename MemberReferenceType<refType<Index>>::type;
+private:
+    template<unsigned int Index = 0, typename Dummy = void>
+    struct MemRefs: public MemRefs<Index + 1> {
+
+        const MemberReference<Class, type<Index>, refType<Index>> ref;
+        std::string name;
+
+        template <typename ... REST>
+        MemRefs(std::string n, refType<Index> r, REST... rest) : MemRefs<Index + 1> (rest...), ref(r), name(n){}
+    };
+
+    template<typename Dummy>
+    struct MemRefs<sizeof...(RefTypes) - 1, Dummy>{
+        const MemberReference<Class, type<sizeof...(RefTypes) - 1>, refType<sizeof...(RefTypes) - 1>> ref;
+        std::string name;
+
+        MemRefs(std::string n, refType<sizeof...(RefTypes) - 1> r) : ref(r), name(n){}
+    };
+
+    const MemRefs<0, void> refs;
+/*
+    using refs = Singleton<MemRefs<sizeof... (RefTypes) - 1, void>>;
+
+    template<unsigned int Pos = 0, typename ref, typename...Refs>
+    static void _makeReferences(const std::string& name, ref member,Refs... refsAndNames) {
+        _makeReferences<Pos, ref>(name, member);
+        _makeReferences<Pos+1>(refsAndNames...);
+    }
+
+    template<unsigned int Pos, typename ref>
+    static void _makeReferences(const std::string& name, ref member) {
+        refs::getInstance().MemRefs<Pos, void>::name = name;
+        refs::getInstance().MemRefs<Pos, void>::ref = MemberReference<Class, type<Pos>, refType<Pos>>(member);
+    }
+
+
+    template<unsigned int Pos, typename ref>
+    static void _makeReferences(const char* name, ref member) {
+        refs::getInstance().MemRefs<Pos, void>::name = name;
+        refs::getInstance().MemRefs<Pos, void>::ref = MemberReference<Class, type<Pos>, refType<Pos>>(member);
+    }
+*/
+
+public:
+
+
+
+    static constexpr unsigned int size(){
+        return sizeof... (RefTypes);
+    }
+
+
+    template<unsigned int Index>
+    const MemberReference<Class, type<Index>, refType<Index>>& getReference(){
+        return refs.MemRefs<Index, void>::ref;
+    }
+
+    template<unsigned int Index>
+    type<Index> getValue(const Class* c){
+        return getReference<Index>()->getValue(c);
+    }
+
+    template<unsigned int Index>
+    type<Index> getValue(const Class& c){
+        return getReference<Index>().getValue(c);
+    }
+
+    template<unsigned int Index>
+    void setValue(Class* c, const type<Index>& val){
+        getReference<Index>().setValue(c, val);
+    }
+
+    template<unsigned int Index>
+    void setValue(Class& c, const type<Index>& val){
+        getReference<Index>().setValue(c, val);
+    }
+
+
+    template<unsigned int Index>
+    const std::string& getName(){
+        return refs.MemRefs<Index, void>::name;
+    }
+
+
+    template<typename...Refs>
+    TestTraits(Refs... refsAndNames) : refs(refsAndNames...){}
+
+
+};
+
+
+void testTestTraits(){
+
+    TestTraits<ExportTest, decltype (&ExportTest::attrInt),  decltype (&ExportTest::attrDouble)> trait(
+                "attrInt", &ExportTest::attrInt,
+                "attrDouble", &ExportTest::attrDouble
+                );
+    ExportTest e;
+
+    trait.setValue<0>(e,7);
+
+    DBGVAR(trait.getValue<0>(e));
+
+}
+
+
+void testTraitPerformance() {
+
+    size_t size;
+    DBGMSG("input size");
+    cin >> size;
+
+    std::vector<ExportTest> vec(size);
+    double ini;
+    DBGMSG("input ini");
+    std::cin >> ini;
+
+    for (auto& val : vec) {
+        val.attrDouble = ini;
+    }
+
+    DBGMSG("input rep");
+    int maxRep;
+    cin >> maxRep;
+
+    DBGVAR(size * ini);
+
+    auto clock = std::chrono::high_resolution_clock();
+    DBGMSG("primary approach");
+    long long deviation = 0;
+    long long duration = 0;
+    auto start = clock.now();
+    double res = 0;
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+            res += vec[i].attrDouble;
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    auto avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+
+
+    DBGMSG("constexpr ref");
+
+    typedef B<decltype(&ExportTest::attrDouble),decltype(&ExportTest::attrDouble), &ExportTest::attrDouble, &ExportTest::attrDouble> doubleAttr;
+    start = clock.now();
+    res = 0;
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+            res += doubleAttr::getValue(vec[i]);
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("direct ref");
+    start = clock.now();
+    res = 0;
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+            res += vec[i].*(doubleAttr::mp);
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("member reference");
+    //typedef B<decltype(&ExportTest::attrDouble),decltype(&ExportTest::attrDouble), &ExportTest::attrDouble, &ExportTest::attrDouble> doubleAttr;
+
+    TestMemberReference<ExportTest, double, decltype (&ExportTest::attrDouble)> MR(&ExportTest::attrDouble);
+    start = clock.now();
+    res = 0;
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+            res += MR.getValue(vec[i]);
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+
+    start = clock.now();
+    res = 0;
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+            res += vec[i].*(MR.ref);
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("new test trait");
+    TestTraits<ExportTest, decltype (&ExportTest::attrInt),  decltype (&ExportTest::attrDouble)> trait(
+                "attrInt", &ExportTest::attrInt,
+                "attrDouble", &ExportTest::attrDouble
+                );
+
+    start = clock.now();
+    res = 0;
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+            res += trait.getValue<1>(vec[i]);
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+    DBGMSG("member reference virtual");
+    MemberReference<ExportTest, double, decltype (&ExportTest::attrDouble)> MR1(&ExportTest::attrDouble);
+    start = clock.now();
+    res = 0;
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+            res += MR1.getValue(vec[i]);
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+/*
+    DBGMSG("member reference virtual");
+    const MemberApproach<ExportTest, double>* MA = new MemberReference<ExportTest, double, decltype (&ExportTest::attrDouble)>(&ExportTest::attrDouble);
+    start = clock.now();
+    res = 0;
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+            res += MA->getValue(vec[i]);
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+*/
+
+    DBGMSG("traits");
+    start = clock.now();
+    res = 0;
+    for(int rep = 0; rep < maxRep; rep++){
+        for(size_t i = 0; i < vec.size(); i++) {
+            res += Traits<ExportTest>::getTraits().getValue<1>(vec[i]);
+        }
+        duration += (clock.now() - start).count();
+        deviation += (clock.now() - start).count() * (clock.now() - start).count();
+        start = clock.now();
+    }
+
+    avgDuration = duration / maxRep;
+    DBGVAR(res, avgDuration , sqrt(((deviation)- maxRep * pow(avgDuration,2)) / (maxRep - 1)));
+    deviation = 0;
+    duration = 0;
+
+
+
+}
 
 void applyFunc(function_ptr<int, int>::type f, int arg) {
     DBGVAR(f(arg));
@@ -549,35 +2054,354 @@ void testFunction() {
 
 
 
-template <unsigned int dim, unsigned int Dim, CalculationMethod Method = DEFAULT>
+template <unsigned int dim, unsigned int Dim, ComputationMethod Method = DEFAULT>
 struct calcCent{
     static void run() {DBGMSG("running default", dim);calcCent<dim + 1, Dim, Method>::run();}
 };
 
-template <unsigned int Dim, CalculationMethod Method>
+template <unsigned int Dim, ComputationMethod Method>
 struct calcCent<Dim, Dim, Method>{
     static void run() {DBGMSG("running default", Dim);}
 };
 
-template <unsigned int Dim, CalculationMethod Method>
+template <unsigned int Dim, ComputationMethod Method>
 struct calcCent<0, Dim, Method>{
     static void run() {DBGMSG("running default", 0);calcCent<1, Dim, Method>::run();}
 };
 
-template <unsigned int Dim, CalculationMethod Method>
+template <unsigned int Dim, ComputationMethod Method>
 struct calcCent<1, Dim, Method>{
     static void run() {DBGMSG("running default", 1);calcCent<2, Dim, Method>::run();}
 };
 
 template <>
-struct calcCent<2, 3, MESH_TESSELLATED>{
-    static void run() {DBGMSG("running MESH_TESSELLATED");calcCent<3, 3, MESH_TESSELLATED>::run();}
+struct calcCent<2, 3, TESSELLATED>{
+    static void run() {DBGMSG("running MESH_TESSELLATED");calcCent<3, 3, TESSELLATED>::run();}
 };
 
 
 void testCalcCent() {
     calcCent<0,3>::run();
-    calcCent<0,3, MESH_TESSELLATED>::run();
+    calcCent<0,3, TESSELLATED>::run();
+}
+
+
+/*
+    test of custom hash
+*/
+namespace std {
+template<typename IndexType>
+class hash<std::vector<IndexType>>{
+public:
+    size_t operator()(const std::vector<IndexType>& v) const {
+
+        std::string_view sv(reinterpret_cast<const char*>(v.data()), sizeof(IndexType) * v.size());
+        return std::hash<std::string_view>{}(sv);
+    }
+};
+
+template<unsigned int Dim, typename Real>
+class hash<Vertex<Dim, Real>>{
+public:
+    size_t operator()(const Vertex<Dim, Real>& vert) const {
+
+        std::string_view sv(reinterpret_cast<const char*>(&vert), sizeof(Real) * vert.size());
+        return std::hash<std::string_view>{}(sv);
+    }
+
+};
+}
+
+void testCustomUnorderedMap() {
+    std::unordered_map<std::vector<size_t>, size_t> m;
+
+    std::vector<size_t> v = {1,2,3};
+    std::vector<size_t> v2 = {3,2,1};
+
+    std::sort(v2.begin(), v2.end());
+    DBGVAR(v == v2, sizeof(std::vector<size_t>), sizeof(std::string));
+
+
+    DBGVAR(m[v] = 1, m[v2]);
+
+    Vertex<3, double> vert1 = {1,2,3};
+
+    std::unordered_map<Vertex<3,double>, size_t> mm;
+
+    DBGVAR(mm[vert1] = 3);
+    DBGVAR(*mm.begin(), sizeof(decltype(vert1)));
+
+
+    std::set<int> s = {1,15,6,8};
+
+    std::vector<int> vec(4);
+    std::vector<int> vec2;
+
+    std::copy(s.begin(), s.end(), vec.begin());
+
+    //std::copy(s.begin(), s.end(), std::inserter(vec2, vec2.begin()));
+
+    vec2.insert(vec2.begin(),s.begin(), s.end());
+
+    std::vector<int> vec3(s.begin(), s.end());
+
+    DBGVAR(vec,s, vec2, vec.capacity(), vec2.capacity(), vec3);
+}
+
+
+struct privateAttr{
+private:
+    std::string attr = "attr";
+public:
+    const std::string& getAttr(){return attr;}
+    friend Traits<privateAttr>;
+};
+
+MAKE_NAMED_ATTRIBUTE_TRAIT(privateAttr, "str_attr", attr);
+
+
+void testPrivateTrait(){
+    privateAttr a;
+    DBGVAR(a);
+    Traits<privateAttr>::getTraits().setValue<0>(a, "new value");
+    DBGVAR(a);
+
+}
+
+/*
+#include "json.hpp"
+
+
+struct person{
+   std::string name, surname;
+
+   struct address {
+       std::string address;
+       int num;
+   } addr;
+};
+
+MAKE_ATTRIBUTE_TRAIT(person::address, address, num);
+MAKE_ATTRIBUTE_TRAIT(person, name, surname, addr);
+
+using json = nlohmann::json;
+
+template <unsigned int Index>
+struct TraitToJson {
+    template<typename traitedClass>
+    static
+    typename enable_if<
+        (Traits<traitedClass>::ttype::size() - 1 > Index)
+    >::type
+    to_json(json& j, const traitedClass& t) {
+
+//        j.at(Traits<traitedClass>::ttype::template getName<Index>()) = Traits<traitedClass>::ttype::template getValue<Index>(t);
+        j.push_back({Traits<traitedClass>::ttype::template getName<Index>(), Traits<traitedClass>::ttype::template getValue<Index>(t)});
+        TraitToJson<Index + 1>::to_json(j, t);
+    }
+
+
+    template<typename traitedClass>
+    static
+    typename enable_if<
+        (Traits<traitedClass>::ttype::size() - 1 == Index)
+    >::type
+    to_json(json& j, const traitedClass& t) {
+
+        j.push_back({Traits<traitedClass>::ttype::template getName<Index>(), Traits<traitedClass>::ttype::template getValue<Index>(t)});
+        //j.at(Traits<traitedClass>::ttype::template getName<Index>()) = Traits<traitedClass>::ttype::template getValue<Index>(t);
+
+    }
+};
+
+template<typename traitedClass>
+typename
+std::enable_if<
+    HasDefaultTraits<traitedClass>::value
+>::type
+to_json(json& j, const traitedClass& t){
+    j = json::object();
+    TraitToJson<0>::to_json(j, t);
+}
+
+
+template <unsigned int Index>
+struct JsonToTrait {
+    template<typename traitedClass>
+    static
+    typename enable_if<
+        (Traits<traitedClass>::ttype::size() - 1 > Index)
+    >::type
+    from_json(const json& j, traitedClass& t) {
+
+        Traits<traitedClass>::ttype::template setValue<Index>(
+            t,
+            j.at(Traits<traitedClass>::ttype::template getName<Index>()).template get<typename Traits<traitedClass>::ttype::template type<Index>>()
+        );
+        JsonToTrait<Index + 1>::from_json(j, t);
+    }
+
+
+    template<typename traitedClass>
+    static
+    typename enable_if<
+        (Traits<traitedClass>::ttype::size() - 1 == Index)
+    >::type
+    from_json(const json& j, traitedClass& t) {
+
+        Traits<traitedClass>::ttype::template setValue<Index>(
+            t,
+            j.at(Traits<traitedClass>::ttype::template getName<Index>()).template get<typename Traits<traitedClass>::ttype::template type<Index>>()
+        );
+
+    }
+};
+
+template<typename traitedClass>
+typename
+std::enable_if<
+    HasDefaultTraits<traitedClass>::value
+>::type
+from_json(const json& j, traitedClass& t) {
+    JsonToTrait<0>::from_json(j,t);
+}
+
+namespace ns {
+    // a simple struct to model a person
+    struct person {
+        std::string name;
+        std::string address;
+        int age;
+    };
+}
+namespace ns {
+    void to_json(json& j, const person& p) {
+        j = json{{"name", p.name}, {"address", p.address}, {"age", p.age}};
+    }
+
+    void from_json(const json& j, person& p) {
+        j.at("name").get_to(p.name);
+        j.at("address").get_to(p.address);
+        j.at("age").get_to(p.age);
+    }
+} // namespace ns
+
+
+void testJson() {
+
+    auto js = R"({"name":"Tomik","surname":"Jakubec"})"_json;
+
+
+    // create a person
+    ns::person p {"Ned Flanders", "744 Evergreen Terrace", 60};
+
+    // conversion: person -> json
+    json j = p;
+
+    std::cout << j << std::endl;
+    // {"address":"744 Evergreen Terrace","age":60,"name":"Ned Flanders"}
+
+    // conversion: json -> person
+    auto p2 = j.get<ns::person>();
+
+    person p_test = {"tomik","...", {"MS", 334}};
+
+    json j_test = p_test;
+
+
+    j_test.at("name") = "Ivisek";
+
+    p_test = j_test;
+
+    std::cout << j_test << std::endl;
+    DBGVAR(j, p_test, j_test);
+
+}*/
+
+
+struct testTuple{
+    double attr1;
+    int attr2;
+    std::string attr3;
+};
+
+double& getData1(testTuple& s){return s.attr1;}
+
+int& getData2(testTuple& s){return s.attr2;}
+
+std::string& getData3(testTuple& s){return s.attr3;}
+
+
+const double& getData1(const testTuple& s){return s.attr1;}
+
+const int& getData2(const testTuple& s){return s.attr2;}
+
+const std::string& getData3(const testTuple& s){return s.attr3;}
+
+
+MAKE_CUSTOM_ATTRIBUTE_TRAIT_IO(
+        testTuple,
+        "1", std::make_pair(static_cast<double&(*)(testTuple&)>(getData1), static_cast<const double&(*)(const testTuple&)>(getData1)),
+        "2", std::make_pair(static_cast<int&(*)(testTuple&)>(getData2), static_cast<const int&(*)(const testTuple&)>(getData2)),
+        "3", std::make_pair(static_cast<std::string&(*)(testTuple&)>(getData3), static_cast<const std::string&(*)(const testTuple&)>(getData3))
+        );
+
+using double_tuple = std::tuple<double>;
+
+MAKE_CUSTOM_ATTRIBUTE_TRAIT(
+        double_tuple,
+        "double attr", std::make_pair(static_cast<double&(*)(std::tuple<double>&)>(std::get<0>), static_cast<const double&(*)(const std::tuple<double>&)>(std::get<0>))
+        );
+
+template <typename ...T>
+class Traits<std::tuple<T...>>{
+    static constexpr std::true_type is_specialized{};
+    using traitsType = ::Traits<std::tuple<T...>, T...>;
+};
+
+void testTraitsTuple(){
+    testTuple tt;
+    DefaultIOTraits<testTuple>::getTraits().setValue<1>(tt, 5);
+    DefaultIOTraits<testTuple>::getTraits().setValue<2>(tt, "Hello :)");
+    DBGVAR(tt);
+
+    std::tuple<double> t{1.5};
+    get<0>(t) = 2.5;
+    auto foo = static_cast<double&(*)(std::tuple<double>&)>(std::get<0>);
+    DBGVAR(foo(t), t);
+}
+
+/*
+template <unsigned int n, unsigned int _n = 1>
+constexpr typename std::enable_if<(_n == n), unsigned int>::type
+factorial(){
+    return _n;
+}
+
+template <unsigned int n, unsigned int _n = 1>
+constexpr typename std::enable_if<(_n < n), unsigned int>::type
+factorial(){
+    return factorial<n,_n+1>() * _n;
+}
+*/
+namespace Impl {
+template <unsigned int n, unsigned int _n = 1>
+constexpr typename std::enable_if<(_n == n), unsigned int>::type
+factorial(){
+    return _n;
+}
+
+template <unsigned int n, unsigned int _n = 1>
+constexpr typename std::enable_if<(_n < n), unsigned int>::type
+factorial(){
+    return Impl::factorial<n,_n+1>() * _n;
+}
+}
+
+
+void testFactorial() {
+
+    DBGVAR(Impl::factorial<5>());
 }
 
 int main()
@@ -587,7 +2411,19 @@ int main()
     //testMemberRef();
     //testConstrucorOrder();
     //testFunction();
-    testCalcCent();
+    //testCalcCent();
+    //testStructTransposition();
+    //testTraitApply();
+    //testCompileTimeTraits();
+    //testTraitPerformance();
+    //testCustomUnorderedMap();
+    //testPrivateTrait();
+    //testJson();
+    //testTestTraits();
+    testTraitsAlgorithms();
+    //testNumericTraitsPerformance();
+    //testTraitsTuple();
+    //testFactorial();
     return 0;
 }
 

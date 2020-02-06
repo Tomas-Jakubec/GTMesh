@@ -4,10 +4,10 @@
 #include "MeshConnections.h"
 
 template<unsigned int FromDim, unsigned int ToDim, bool Descend = true>
-struct MeshColouring {
+struct MeshColoring {
 
     template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
-    static MeshDataContainer<unsigned int, FromDim> colour(
+    static MeshDataContainer<unsigned int, FromDim> color(
             MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
             ) {
         MeshDataContainer<unsigned int, FromDim> result(mesh);
@@ -18,16 +18,12 @@ struct MeshColouring {
 
 
 
-        for (auto& startElement : mesh.template getElements<FromDim>()){
+        for (IndexType elementIndex = 0; elementIndex < mesh.template getElements<FromDim>().size(); elementIndex++){
             std::valarray<bool> possibleColours(true,reserve);
-            MeshRun<FromDim, FromDim, ToDim, MeshDimension, false, true>::
-                run(mesh,
-                    startElement.getIndex(),
-                    startElement.getIndex(),
-                    [&possibleColours, &attachedColours](IndexType, IndexType element){
-                        DBGTRY(possibleColours &= !attachedColours.template getDataByPos<0>().at(element);)
-                    }
-                );
+            MeshApply<FromDim, ToDim>::apply(elementIndex, mesh,
+                 [&possibleColours, &attachedColours](IndexType, IndexType element){
+                     DBGTRY(possibleColours &= !attachedColours.template getDataByPos<0>().at(element);)
+            });
 
             // Select the first possible colour
             unsigned int selectedColour = 0;
@@ -46,15 +42,12 @@ struct MeshColouring {
                     break;
                 }
             }
-            result.template getDataByPos<0>().at(startElement.getIndex()) = selectedColour;
-            MeshRun<FromDim, FromDim, ToDim, MeshDimension, false, true>::
-                run(mesh,
-                    startElement.getIndex(),
-                    startElement.getIndex(),
-                    [selectedColour, &attachedColours](IndexType, IndexType element){
-                        DBGTRY(attachedColours.template getDataByPos<0>().at(element)[selectedColour] = true;)
-                    }
-                );
+            result.template getDataByPos<0>().at(elementIndex) = selectedColour;
+            MeshApply<FromDim, ToDim>::apply(elementIndex, mesh,
+                 [selectedColour, &attachedColours](IndexType, IndexType element){
+                     DBGTRY(attachedColours.template getDataByPos<0>().at(element)[selectedColour] = true;)
+            });
+
         }
         return result;
     }
@@ -62,9 +55,9 @@ struct MeshColouring {
 
 
 template<unsigned int FromDim, unsigned int ToDim>
-struct MeshColouring <FromDim, ToDim, false> {
+struct MeshColoring <FromDim, ToDim, false> {
     template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
-    static MeshDataContainer<unsigned int, FromDim> colour(
+    static MeshDataContainer<unsigned int, FromDim> color(
             MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
             ) {
         // resulting container of colours
@@ -77,9 +70,9 @@ struct MeshColouring <FromDim, ToDim, false> {
 
         auto connections = MeshConnections<FromDim, ToDim>::connections(mesh);
 
-        for (auto& startElement : mesh.template getElements<FromDim>()){
+        for (IndexType elementIndex = 0; elementIndex < mesh.template getElements<FromDim>().size(); elementIndex++){
             std::valarray<bool> possibleColours(true,reserve);
-            for (IndexType element : connections.at(startElement)){
+            for (IndexType element : connections.template getDataByPos<0>().at(elementIndex)){
 
                 DBGTRY(possibleColours &= !attachedColours.template getDataByPos<0>().at(element);)
 
@@ -105,9 +98,9 @@ struct MeshColouring <FromDim, ToDim, false> {
                 }
             }
 
-            result.template getDataByPos<0>().at(startElement.getIndex()) = selectedColour;
+            result.template getDataByPos<0>().at(elementIndex) = selectedColour;
 
-            for (IndexType element : connections.at(startElement)){
+            for (IndexType element : connections.template getDataByPos<0>().at(elementIndex)){
                 DBGTRY(attachedColours.template getDataByPos<0>().at(element)[selectedColour] = true;)
             }
         }
@@ -117,13 +110,13 @@ struct MeshColouring <FromDim, ToDim, false> {
 
 
 template <unsigned int FromDim, unsigned int ToDim>
-struct ColourMesh{
+struct ColorMesh{
 
 template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
-static MeshDataContainer<unsigned int, FromDim> colour(
+static MeshDataContainer<unsigned int, FromDim> color(
             MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
         ){
-    return MeshColouring<FromDim, ToDim, (FromDim > ToDim)>::colour(mesh);
+    return MeshColoring<FromDim, ToDim, (FromDim > ToDim)>::color(mesh);
 }
 };
 

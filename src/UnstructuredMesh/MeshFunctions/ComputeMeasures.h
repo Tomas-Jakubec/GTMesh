@@ -29,8 +29,9 @@ struct _ComputeMeasures<1, Dimension, Method>{
 
         auto& edgeLengths = measures.template getDataByDim<1>();
 
-        for (auto& edge : mesh.getEdges()) {
-            edgeLengths.at(edge.getIndex()) = (mesh.getVertices().at(edge.getVertexAIndex()) -
+        for (IndexType edgeIndex = 0; edgeIndex < mesh.template getElements<1>().size(); edgeIndex++) {
+            auto& edge = mesh.getEdges().at(edgeIndex);
+            edgeLengths.at(edgeIndex) = (mesh.getVertices().at(edge.getVertexAIndex()) -
                                                mesh.getVertices().at(edge.getVertexBIndex())).normEukleid();
         }
 
@@ -46,7 +47,9 @@ struct _ComputeMeasures<3, 3, Method>{
 
         auto& cellMeasures = measures.template getDataByDim<3>();
 
-        for (typename MeshElements<3, IndexType, Real, Reserve...>::template ElementType<3>& cell : mesh.getCells()) {
+        for (IndexType cellIndex = 0; cellIndex < mesh.getCells().size(); cellIndex++) {
+
+            typename MeshElements<3, IndexType, Real, Reserve...>::template ElementType<3>& cell = mesh.getCells().at(cellIndex);
             IndexType tmpFace = cell.getBoundaryElementIndex();
             Real measure = Real();
             Vertex<3,Real>& cellCenter = cell.getCenter();
@@ -83,10 +86,10 @@ struct _ComputeMeasures<3, 3, Method>{
                 Real tmp = distance * measures.template getDataByDim<2>().at(tmpFace);
                 measure += tmp / 3.0;
 
-                tmpFace = mesh.getFaces().at(tmpFace).getNextBElem(cell.getIndex());
+                tmpFace = mesh.getFaces().at(tmpFace).getNextBElem(cellIndex);
             } while (tmpFace != cell.getBoundaryElementIndex());
 
-            cellMeasures.at(cell.getIndex()) = measure;
+            cellMeasures.at(cellIndex) = measure;
         }
     }
 };
@@ -98,7 +101,8 @@ struct _ComputeMeasures<2, 2, Method>{
 
         auto& surfaceMeasures = measures.template getDataByDim<2>();
 
-        for (typename MeshElements<2, IndexType, Real, Reserve...>::template ElementType<2>& cell : mesh.getCells()) {
+        for (IndexType cellIndex = 0; cellIndex < mesh.getCells().size(); cellIndex++) {
+            typename MeshElements<2, IndexType, Real, Reserve...>::template ElementType<2>& cell = mesh.getCells().at(cellIndex);
             IndexType tmpEdge = cell.getBoundaryElementIndex();
             Real measure = Real();
             Vertex<2,Real>& cellCenter = cell.getCenter();
@@ -109,10 +113,10 @@ struct _ComputeMeasures<2, 2, Method>{
                 tmp -= (cellCenter[1] - a[1]) * (b[0] - a[0]);
                 measure += 0.5 * fabs(tmp);
 
-                tmpEdge = mesh.getEdges().at(tmpEdge).getNextBElem(cell.getIndex());
+                tmpEdge = mesh.getEdges().at(tmpEdge).getNextBElem(cellIndex);
             } while (tmpEdge != cell.getBoundaryElementIndex());
 
-            surfaceMeasures.at(cell.getIndex()) = measure;
+            surfaceMeasures.at(cellIndex) = measure;
         }
     }
 };
@@ -126,8 +130,9 @@ struct _ComputeMeasures<2, 3, Method>{
 
         auto& surfaceMeasures = measures.template getDataByDim<2>();
 
-        for (typename MeshElements<3, IndexType, Real, Reserve...>::template ElementType<2>& face : mesh.template getElements<2>()) {
+        for (IndexType faceIndex = 0; faceIndex < mesh.getFaces().size(); faceIndex++) {
 
+            typename MeshElements<3, IndexType, Real, Reserve...>::template ElementType<2>& face = mesh.template getElements<2>().at(faceIndex);
             Real measure = Real();
             Vertex<3,Real>& faceCenter = face.getCenter();
             for(auto sube : face.getSubelements()){
@@ -144,7 +149,7 @@ struct _ComputeMeasures<2, 3, Method>{
                 Real tmp = distance * measures.template getDataByDim<1>().at(sube.index);
                 measure += tmp * 0.5;
             }
-            surfaceMeasures.at(face.getIndex()) = measure;
+            surfaceMeasures.at(faceIndex) = measure;
         }
         _ComputeMeasures<3, 3>::compute(measures, mesh);
     }
@@ -164,17 +169,18 @@ struct _ComputeMeasures<3, 3, TESSELLATED>{
 
         auto& cellMeasures = measures.template getDataByDim<3>();
 
-        for (typename MeshElements<3, IndexType, Real, Reserve...>::template ElementType<3>& cell : mesh.getCells()) {
+        for (IndexType cellIndex = 0; cellIndex < mesh.getCells().size(); cellIndex++) {
+            typename MeshElements<3, IndexType, Real, Reserve...>::template ElementType<3>& cell = mesh.getCells().at(cellIndex);
             Vertex<3,Real>& cellCenter = cell.getCenter();
             Real measure = Real();
-            MeshApply<3,2,3>::apply(
-                        cell.getIndex(),
+            MeshApply<3,2>::apply(
+                        cellIndex,
                         mesh,
                 [&cellCenter, &cellMeasures, &mesh, &measure](IndexType , IndexType faceIndex){
 
                 Vertex<3,Real>& faceCenter = mesh.getFaces().at(faceIndex).getCenter();
 
-                MeshApply<2,1,3>::apply(faceIndex, mesh, [&](IndexType , IndexType edgeIndex){
+                MeshApply<2,1>::apply(faceIndex, mesh, [&](IndexType , IndexType edgeIndex){
                     Vertex<3,Real>& vertA = mesh.getVertices().at(mesh.getEdges().at(edgeIndex).getVertexAIndex());
                     Vertex<3,Real>& vertB = mesh.getVertices().at(mesh.getEdges().at(edgeIndex).getVertexBIndex());
 
@@ -189,7 +195,7 @@ struct _ComputeMeasures<3, 3, TESSELLATED>{
 
             );
 
-            cellMeasures.at(cell.getIndex()) = measure;
+            cellMeasures.at(cellIndex) = measure;
         }
     }
 };

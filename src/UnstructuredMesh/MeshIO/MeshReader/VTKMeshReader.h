@@ -3,7 +3,7 @@
 
 #include "MeshReader.h"
 #include "../../MeshDataContainer/MeshDataContainer.h"
-#include "../../MeshElements/MeshElement.h"
+#include "../../MeshElements/MeshElements.h"
 #include <istream>
 #include <string>
 #include <unordered_map>
@@ -148,7 +148,8 @@ public:
         ist.ignore(1024, '\n');
         // ASCII or BINARY
         std::string buf;
-        std::getline(ist, buf);
+
+        ist >> buf;
         if (buf != "ASCII"){
             throw std::runtime_error("ASCII expected but got " + buf);
         }
@@ -415,7 +416,8 @@ public:
         ist.ignore(1024, '\n');
         // ASCII or BINARY
         std::string buf;
-        std::getline(ist, buf);
+        ist >> buf;
+
         if (buf != "ASCII"){
             throw std::runtime_error("ASCII expected but got " + buf);
         }
@@ -434,19 +436,20 @@ public:
 
         ist >> buf;
         if (buf == "POINTS") {
-            DBGTRY(loadPoints(ist, mesh);)
+            loadPoints(ist, mesh);
         }
 
         ist >> buf;
         if (buf == "CELLS") {
-            DBGTRY(loadCells(ist, mesh);)
+            loadCells(ist, mesh);
         }
 
         ist >> buf;
         if (buf == "CELL_TYPES") {
-            DBGTRY(loadCellTypes(ist, mesh);)
+            loadCellTypes(ist, mesh);
         }
 
+        mesh.updateSignature();
     }
 
 
