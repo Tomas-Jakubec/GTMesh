@@ -240,7 +240,7 @@ private:
         template<typename _DataType, unsigned int ... _Dimensions>
         static void allocateMemory(MeshDataContainer<DataType, Dimensions...>& parent ,
                                   const MeshDataContainer<_DataType, _Dimensions...>& meshDataContainer,
-                                  const DataType& initialValue = DataType()) {
+                                  const DataType& initialValue) {
             parent.template getDataByPos<0>().resize(
                         meshDataContainer.template getDataByDim<parent.template dimensionAt<0>()>().size(),
                         initialValue);

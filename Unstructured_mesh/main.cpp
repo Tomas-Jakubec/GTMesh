@@ -11,9 +11,11 @@
 #include "../src/UnstructuredMesh/MeshIO/MeshReader/FPMAMeshReader.h"
 #include "../src/UnstructuredMesh/MeshIO/MeshWriter/FPMAMeshWriter.h"
 
-#include "../src/Traits/MemberApproach/MemberApproach.h"
+#include "../src/Traits/Traits.h"
+#include "../src/Traits/TraitsAlgorithm/TraitsAlgorithm.h"
 #include <fstream>
 #include <list>
+#include <chrono>
 using namespace std;
 
 
@@ -25,9 +27,14 @@ struct CellData {
 
 
 struct CompData {
-    double T = 300;
+    double T;
+    //CompData(const CompData&) = default;
+    //CompData(CompData&&) = default;
+    CompData(double _T = 0){T = _T;}
+
 };
 MAKE_NAMED_ATTRIBUTE_TRAIT(CompData, "Temperature", T);
+MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(CompData, T);
 
 struct FaceData {
     double volOverDist;
@@ -36,7 +43,11 @@ struct FaceData {
 template <unsigned int ProblemDimension, typename Real>
 class HeatCunduction {
 public:
-    UnstructuredMesh<ProblemDimension,size_t, double, 12> mesh;
+    using MeshType = UnstructuredMesh<ProblemDimension,size_t, double, 12>;
+    using ResultType = CompData;
+
+public:
+    MeshType mesh;
     MeshDataContainer<std::tuple<CellData, FaceData>, 3,2> meshData;
     VTKMeshWriter<ProblemDimension, size_t, Real> writer;
 
@@ -44,7 +55,7 @@ public:
     }
 
     void loadMesh(const std::string& fileName) {
-        FPMAMeshReader<3> reader;
+        FPMAMeshReader<MeshType::meshDimension()> reader;
         ifstream file(fileName);
         reader.loadFromStream(file, mesh);
 
@@ -77,34 +88,34 @@ public:
 
     void calculateRHS(
             Real,//time is unused in this problem
-            MeshDataContainer<CompData, 3>& compData,
-            MeshDataContainer<double, 3>& outDeltas) {
+            MeshDataContainer<CompData, ProblemDimension>& compData,
+            MeshDataContainer<CompData, ProblemDimension>& outDeltas) {
 
-        for (double& dT : outDeltas.getDataByPos<0>()){
-            dT = 0;
+        for (CompData& dT : outDeltas.template getDataByPos<0>()){
+            dT.T = 0;
         }
 
         for (auto& face : mesh.getFaces()) {
-            double lT = 1000;
+            CompData lT(1000);
             bool lIn = false;
             if(!((face.getCellLeftIndex() & BOUNDARY_INDEX(size_t)) == BOUNDARY_INDEX(size_t))){
-                lT = compData.getDataByDim<3>().at(face.getCellLeftIndex()).T;
+                lT = compData.template getDataByDim<3>().at(face.getCellLeftIndex());
                 lIn = true;
             }
 
-            double rT = 1000;
+            CompData rT(1000);
             bool rIn = false;
             if(!((face.getCellRightIndex() & BOUNDARY_INDEX(size_t)) == BOUNDARY_INDEX(size_t))){
-                rT = compData.getDataByDim<3>().at(face.getCellRightIndex()).T;
+                rT = compData.template getDataByDim<3>().at(face.getCellRightIndex());
                 rIn = true;
             }
 
 
-            double dT = meshData.at(face).volOverDist * (lT - rT);
+            CompData dT = meshData.at(face).volOverDist * (lT - rT);
             if (rIn)
-                outDeltas.getDataByDim<3>().at(face.getCellRightIndex()) += dT;
+                outDeltas.template getDataByDim<3>().at(face.getCellRightIndex()) += dT;
             if (lIn)
-                outDeltas.getDataByDim<3>().at(face.getCellLeftIndex()) -= dT;
+                outDeltas.template getDataByDim<3>().at(face.getCellLeftIndex()) -= dT;
 
         }
 
@@ -130,24 +141,80 @@ public:
     }
 };
 
+struct watch{
 
-void RKMSolver(HeatCunduction<3,double>& problem,
-                MeshDataContainer<CompData, 3>& compData,//x_ini
-                double tau_ini,//tau_ini
-                double startTime,
-                double finalT,
-                double delta){
+    std::chrono::high_resolution_clock clock;
+    std::chrono::time_point<std::chrono::high_resolution_clock> timeStart;
+    long long duration;
+    long long deviation;
+    unsigned long lapCnt;
 
+    watch(){
+        reset();
+    }
+
+    void reset(){
+        duration = 0;
+        deviation = 0;
+        lapCnt = 0;
+    }
+
+    void start(){
+        timeStart = clock.now();
+    }
+
+    void lap(){
+        auto lapTime = clock.now() - timeStart;
+        duration += lapTime.count();
+        deviation += lapTime.count() * lapTime.count();
+        lapCnt++;
+    }
+
+
+    struct stats{
+        double avg;
+        double dev;
+        unsigned long lapCnt;
+    };
+
+    stats getResult(){
+        double avg = double(duration)/lapCnt;
+        double dev = sqrt(((deviation) - lapCnt * pow(avg,2)) / (lapCnt - 1));
+        return stats{avg, dev, lapCnt};
+    }
+};
+
+MAKE_ATTRIBUTE_TRAIT_IO(watch::stats, avg, dev, lapCnt);
+
+watch
+wK1,
+wK2,
+wK3,
+wK4,
+wError;
+
+
+template <typename Problem, typename = typename std::enable_if<HasDefaultArithmeticTraits<typename Problem::ResultType>::value>::type>
+void RKMSolver(
+        Problem& problem,
+        MeshDataContainer<typename Problem::ResultType, Problem::MeshType::meshDimension()>& compData,//x_ini
+        double tau_ini,//tau_ini
+        double startTime,
+        double finalT,
+        double delta
+        )
+{
+    constexpr unsigned int MeshDimension = Problem::MeshType::meshDimension();
     double tau = tau_ini;
 
-    MeshDataContainer<CompData, 3> Ktemp;
+    MeshDataContainer<typename Problem::ResultType, MeshDimension> Ktemp;
     Ktemp.allocateData(compData);
 
-    MeshDataContainer<double, 3> K1(problem.mesh);
-    MeshDataContainer<double, 3> K2(problem.mesh);
-    MeshDataContainer<double, 3> K3(problem.mesh);
-    MeshDataContainer<double, 3> K4(problem.mesh);
-    MeshDataContainer<double, 3> K5(problem.mesh);
+    MeshDataContainer<typename Problem::ResultType, MeshDimension> K1(compData);
+    MeshDataContainer<typename Problem::ResultType, MeshDimension> K2(compData);
+    MeshDataContainer<typename Problem::ResultType, MeshDimension> K3(compData);
+    MeshDataContainer<typename Problem::ResultType, MeshDimension> K4(compData);
+    MeshDataContainer<typename Problem::ResultType, MeshDimension> K5(compData);
     double time = startTime;
     bool run = true;
     while (run) {
@@ -157,47 +224,47 @@ void RKMSolver(HeatCunduction<3,double>& problem,
         }
 
         problem.calculateRHS(time, compData, K1);
-
-        for (size_t i = 0; i < Ktemp.getDataByPos<0>().size(); i++){
-            Ktemp.getDataByPos<0>().at(i).T = compData.getDataByDim<3>().at(i).T + (tau * (1.0 / 3.0) * K1.getDataByDim<3>().at(i));
+wK1.start();
+        for (size_t i = 0; i < Ktemp.template getDataByPos<0>().size(); i++){
+            Ktemp.template getDataByPos<0>().at(i) = compData.template getDataByDim<MeshDimension>().at(i) + (tau * (1.0 / 3.0) * K1.template getDataByDim<MeshDimension>().at(i));
         }
-
+wK1.lap();
         problem.calculateRHS(time, Ktemp, K2);
-
-        for (size_t i = 0; i < Ktemp.getDataByPos<0>().size(); i++){
-            Ktemp.getDataByPos<0>().at(i).T = compData.getDataByDim<3>().at(i).T + (tau * (1.0 / 6.0) * (K1.getDataByDim<3>().at(i) + K2.getDataByDim<3>().at(i)));
+wK2.start();
+        for (size_t i = 0; i < Ktemp.template getDataByPos<0>().size(); i++){
+            Ktemp.template getDataByPos<0>().at(i) = compData.template getDataByDim<MeshDimension>().at(i) + (tau * (1.0 / 6.0) * (K1.template getDataByDim<MeshDimension>().at(i) + K2.template getDataByDim<MeshDimension>().at(i)));
         }
-
+wK2.lap();
 
         problem.calculateRHS(time, Ktemp, K3);
-
-        for (size_t i = 0; i < Ktemp.getDataByPos<0>().size(); i++){
-            Ktemp.getDataByPos<0>().at(i).T = compData.getDataByDim<3>().at(i).T + (tau * (0.125 * K1.getDataByDim<3>().at(i) + 0.375 * K3.getDataByDim<3>().at(i)));
+wK3.start();
+        for (size_t i = 0; i < Ktemp.template getDataByPos<0>().size(); i++){
+            Ktemp.template getDataByPos<0>().at(i) = compData.template getDataByDim<MeshDimension>().at(i) + (tau * (0.125 * K1.template getDataByDim<MeshDimension>().at(i) + 0.375 * K3.template getDataByDim<MeshDimension>().at(i)));
         }
-
+wK3.lap();
         problem.calculateRHS(time, Ktemp, K4);
-
-        for (size_t i = 0; i < Ktemp.getDataByPos<0>().size(); i++){
-            Ktemp.getDataByPos<0>().at(i).T = compData.getDataByDim<3>().at(i).T + (tau * ((0.5 * K1.getDataByDim<3>().at(i)) - (1.5 * K3.getDataByDim<3>().at(i)) + (2.0 * K4.getDataByPos<0>().at(i))));
+wK4.start();
+        for (size_t i = 0; i < Ktemp.template getDataByPos<0>().size(); i++){
+            Ktemp.template getDataByPos<0>().at(i) = compData.template getDataByDim<MeshDimension>().at(i) + (tau * ((0.5 * K1.template getDataByDim<MeshDimension>().at(i)) - (1.5 * K3.template getDataByDim<MeshDimension>().at(i)) + (2.0 * K4.template getDataByPos<0>().at(i))));
         }
-
+wK4.lap();
         problem.calculateRHS(time, Ktemp, K5);
 
         double error = 0.0;
-
-        for (size_t i = 0; i < K4.getDataByPos<0>().size(); i++){
-            double tmpE = abs(0.2 * K1.getDataByPos<0>().at(i) - 0.9 * K3.getDataByPos<0>().at(i) +
-                    0.8 * K4.getDataByPos<0>().at(i) - 0.1 * K5.getDataByPos<0>().at(i));
+wError.start();
+        for (size_t i = 0; i < K4.template getDataByPos<0>().size(); i++){
+            double tmpE = max(abs(0.2 * K1.template getDataByPos<0>().at(i) - 0.9 * K3.template getDataByPos<0>().at(i) +
+                    0.8 * K4.template getDataByPos<0>().at(i) - 0.1 * K5.template getDataByPos<0>().at(i)));
             if (tmpE > error) {
                 error = tmpE;
             }
         }
-
+wError.lap();
         error *= tau * (1.0 / 3.0);
         if (error < delta) {
-            for (size_t i = 0; i < K4.getDataByPos<0>().size(); i++){
-                auto& _compData = compData.getDataByPos<0>().at(i);
-                _compData.T += tau * (1.0 / 6.0) * (((K1.getDataByDim<3>().at(i) + K5.getDataByDim<3>().at(i))) + (4.0 * K4.getDataByPos<0>().at(i)));
+            for (size_t i = 0; i < K4.template getDataByPos<0>().size(); i++){
+                auto& _compData = compData.template getDataByPos<0>().at(i);
+                _compData += tau * (1.0 / 6.0) * (((K1.template getDataByDim<MeshDimension>().at(i) + K5.template getDataByDim<MeshDimension>().at(i))) + (4.0 * K4.template getDataByPos<0>().at(i)));
             }
             time += tau;
             tau *= 1.05;
@@ -305,11 +372,11 @@ void testHeatConduction1() {
 
     hcProblem.loadMesh("Poly_2_5_level2.fpma");
 
-    double startTime = 0.0, finalTime = 0.5 , tau = 1e-4;
+    double startTime = 0.0, finalTime = 0.1 , tau = 1e-4;
 
     VTKMeshWriter<3, size_t, double> writer;
 
-    MeshDataContainer<CompData, 3> compData(hcProblem.mesh);
+    MeshDataContainer<CompData, 3> compData(hcProblem.mesh, CompData(300));
 
     hcProblem.exportData(startTime, compData);
 
@@ -317,7 +384,9 @@ void testHeatConduction1() {
                    tau,
                    startTime,
                    finalTime,
-                   1e-2);
+                   1);
+DBGVAR(wK1.getResult(),wK2.getResult(),wK3.getResult(),wK4.getResult(),wError.getResult());
+wK1.reset();wK2.reset();wK3.reset();wK4.reset();wError.reset();
 
     hcProblem.exportData(finalTime, compData);
 
@@ -329,11 +398,12 @@ void testHeatConduction1() {
                    tau,
                    startTime,
                    finalTime,
-                   1e-2);
+                   1);
 
 
     hcProblem.exportData(finalTime, compData);
 
+DBGVAR(wK1.getResult(),wK2.getResult(),wK3.getResult(),wK4.getResult(),wError.getResult());
 
 
 
