@@ -307,7 +307,8 @@ template <typename TraitT>
 typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
 operator-(const TraitT& op1, TraitT&& op2) noexcept {
 
-    return op2 -= op1;
+    TraitsBinaryExpressionProcesor<BinaryMinus>::evaluate(op2, op1, op2);
+
 }
 
 
@@ -321,7 +322,7 @@ operator-(TraitT&& op1, const TraitT& op2) noexcept {
 template <typename TraitT>
 typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
 operator-(TraitT&& op1, TraitT&& op2) noexcept {
-    return op2 -= op1;
+    return op1 -= op2;
 }
 
 
@@ -853,7 +854,7 @@ abs(const TraitT& op1) noexcept {
 }
 
 template <typename TraitT>
-typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type&
+typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value, TraitT>::type
 abs(TraitT&& op1) noexcept {
 
     TraitsUnaryExpressionProcesor<Abs>::evaluate(op1, op1);
@@ -870,7 +871,7 @@ typename std::enable_if<
 >::type
 abs(const T& arg) noexcept {
 
-    return  std::abs(arg);
+    return  abs(arg);
 }
 
 template <typename T>
@@ -1022,24 +1023,43 @@ max(const T& array) noexcept {
     return  res;
 }
 
+namespace ImplMax {
+template<typename TraitT, unsigned int Index = DefaultArithmeticTraits<TraitT>::size() - 1>
+typename std::enable_if<
+    Index == 0 ,
+    double //typename TraitCommonType<TraitT>::type
+>::type
+max(const TraitT& op1){
+    using ::max;
+    return max(DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index>(op1));
+}
+
+template<typename TraitT, unsigned int Index = DefaultArithmeticTraits<TraitT>::size() - 1>
+typename std::enable_if<
+    (Index > 0) && (Index < DefaultArithmeticTraits<TraitT>::size() - 1) ,
+    double
+>::type
+max(const TraitT& op1){
+
+    return std::max(
+                    max(DefaultArithmeticTraits<TraitT>::getTraits().template getAttr<Index - 1>(op1)),
+                    DefaultArithmeticTraits<TraitT>::getTraits().template getAttr(get<Index>(op1))
+                );
+
+}
+
+
+}
+
+
 template <typename TraitT>
 typename std::enable_if<
     HasDefaultArithmeticTraits<TraitT>::value,
     double //typename TraitCommonType<TraitT>::type
 >::type
 max(const TraitT& op1) noexcept {
-    double res = -std::numeric_limits<double>::max();
-    //typename TraitCommonType<TraitT>::type res = std::numeric_limits<typename TraitCommonType<TraitT>::type>::min();
 
-    DefaultArithmeticTraits<TraitT>::getTraits().apply(
-                [&res, &op1](unsigned int, const auto& ref, const std::string&) noexcept {
-         auto m = max(ref.getValue(op1));
-         if (res < m) {
-             res = m;
-         }
-    }
-    );
-    return  res;
+    return  ImplMax::max(op1);
 }
 
 

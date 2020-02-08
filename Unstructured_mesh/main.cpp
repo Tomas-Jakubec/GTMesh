@@ -1,6 +1,6 @@
 #include <iostream>
 //#define UNDEBUG
-#define CONSOLE_COLOURED_OUTPUT
+#define CONSOLE_COLORED_OUTPUT
 #include "../src/Debug/Debug.h"
 #include "../src/UnstructuredMesh/UnstructuredMesh.h"
 #include "../src/UnstructuredMesh/MeshFunctions/MeshFunctions.h"
@@ -193,7 +193,6 @@ wK3,
 wK4,
 wError;
 
-
 template <typename Problem, typename = typename std::enable_if<HasDefaultArithmeticTraits<typename Problem::ResultType>::value>::type>
 void RKMSolver(
         Problem& problem,
@@ -222,13 +221,13 @@ void RKMSolver(
             tau = finalT - time;
             run = false;
         }
-
         problem.calculateRHS(time, compData, K1);
 wK1.start();
         for (size_t i = 0; i < Ktemp.template getDataByPos<0>().size(); i++){
             Ktemp.template getDataByPos<0>().at(i) = compData.template getDataByDim<MeshDimension>().at(i) + (tau * (1.0 / 3.0) * K1.template getDataByDim<MeshDimension>().at(i));
         }
 wK1.lap();
+
         problem.calculateRHS(time, Ktemp, K2);
 wK2.start();
         for (size_t i = 0; i < Ktemp.template getDataByPos<0>().size(); i++){
@@ -247,19 +246,24 @@ wK4.start();
         for (size_t i = 0; i < Ktemp.template getDataByPos<0>().size(); i++){
             Ktemp.template getDataByPos<0>().at(i) = compData.template getDataByDim<MeshDimension>().at(i) + (tau * ((0.5 * K1.template getDataByDim<MeshDimension>().at(i)) - (1.5 * K3.template getDataByDim<MeshDimension>().at(i)) + (2.0 * K4.template getDataByPos<0>().at(i))));
         }
+
 wK4.lap();
         problem.calculateRHS(time, Ktemp, K5);
+
 
         double error = 0.0;
 wError.start();
         for (size_t i = 0; i < K4.template getDataByPos<0>().size(); i++){
             double tmpE = max(abs(0.2 * K1.template getDataByPos<0>().at(i) - 0.9 * K3.template getDataByPos<0>().at(i) +
                     0.8 * K4.template getDataByPos<0>().at(i) - 0.1 * K5.template getDataByPos<0>().at(i)));
+
             if (tmpE > error) {
                 error = tmpE;
             }
         }
 wError.lap();
+//DBGVAR_CSV(error);
+
         error *= tau * (1.0 / 3.0);
         if (error < delta) {
             for (size_t i = 0; i < K4.template getDataByPos<0>().size(); i++){
@@ -408,6 +412,8 @@ DBGVAR(wK1.getResult(),wK2.getResult(),wK3.getResult(),wK4.getResult(),wError.ge
 
 
 }
+
+
 
 int main()
 {
