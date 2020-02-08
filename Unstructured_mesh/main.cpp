@@ -382,7 +382,7 @@ void testHeatConduction1() {
 
     MeshDataContainer<CompData, 3> compData(hcProblem.mesh, CompData(300));
 
-    hcProblem.exportData(startTime, compData);
+//    hcProblem.exportData(startTime, compData);
 
     RKMSolver(hcProblem, compData,
                    tau,
@@ -392,7 +392,7 @@ void testHeatConduction1() {
 DBGVAR(wK1.getResult(),wK2.getResult(),wK3.getResult(),wK4.getResult(),wError.getResult());
 wK1.reset();wK2.reset();wK3.reset();wK4.reset();wError.reset();
 
-    hcProblem.exportData(finalTime, compData);
+//    hcProblem.exportData(finalTime, compData);
 
 
 
@@ -405,7 +405,7 @@ wK1.reset();wK2.reset();wK3.reset();wK4.reset();wError.reset();
                    1);
 
 
-    hcProblem.exportData(finalTime, compData);
+//    hcProblem.exportData(finalTime, compData);
 
 DBGVAR(wK1.getResult(),wK2.getResult(),wK3.getResult(),wK4.getResult(),wError.getResult());
 
