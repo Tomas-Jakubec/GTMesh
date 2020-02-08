@@ -50,6 +50,11 @@ public:
     template<unsigned int ElementDimension>
     using ElementType = MeshElement<Dimension, ElementDimension, IndexType, Real, _Reserve<ElementDimension>::value>;
 
+
+    static unsigned int constexpr meshDimension() {
+        return Dimension;
+    }
+
 private:
     template <unsigned int ElemDim = Dimension, typename Dummy = void>
     struct _MeshElements : public _MeshElements<ElemDim - 1, Dummy>{

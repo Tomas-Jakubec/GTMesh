@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 //#define UNDEBUG
-#define CONSOLE_COLOURED_OUTPUT
+#define CONSOLE_COLORED_OUTPUT
 #include "../src/Debug/Debug.h"
 #include "../src/UnstructuredMesh/UnstructuredMesh.h"
 #include "../src/UnstructuredMesh/MeshFunctions/MeshFunctions.h"
@@ -1019,9 +1019,9 @@ void testFPMA_poly(){
 int main()
 {
     //meshSize();
-    //testMesh2D();
+    testMesh2D();
     //testMesh2DLoadAndWrite();
-    //testMesh3D();
+    testMesh3D();
     //test3DMeshDeformedPrisms();
     testMeshRefine();
     //testMeshDataContainer();

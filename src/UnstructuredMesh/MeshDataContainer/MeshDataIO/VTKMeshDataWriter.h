@@ -30,33 +30,33 @@ class VTKMeshDataWriter {
        >::type
     {
 
-        if (DefaultIOTraits<T>::tr.template getValue<Index>(data.at(0)).size() == MeshDimension)
+        if (DefaultIOTraits<T>::getTraits().template getValue<Index>(data.at(0)).size() == MeshDimension)
             ost << "VECTORS ";
-        else if (DefaultIOTraits<T>::tr.template getValue<Index>(data.at(0)).size() == MeshDimension * MeshDimension)
+        else if (DefaultIOTraits<T>::getTraits().template getValue<Index>(data.at(0)).size() == MeshDimension * MeshDimension)
             ost << "TENZORS ";
 
-        ost << DefaultIOTraits<T>::tr.template getName<Index>() << " double\n";
+        ost << DefaultIOTraits<T>::getTraits().template getName<Index>() << " double\n";
 
 
         IndexType realIndex = 0;
         IndexType localIndex = 0;
         for(const std::pair<IndexType, IndexType>& key : writer.backwardCellIndexMapping) {
             while (localIndex < key.first) {
-                    for (unsigned int j = 0; j < DefaultIOTraits<T>::tr.template getValue<Index>(data.at(0)).size(); j++) {
-                    ost << DefaultIOTraits<T>::tr.template getValue<Index>(data.at(realIndex))[j] << ' ';
+                    for (unsigned int j = 0; j < DefaultIOTraits<T>::getTraits().template getValue<Index>(data.at(0)).size(); j++) {
+                    ost << DefaultIOTraits<T>::getTraits().template getValue<Index>(data.at(realIndex))[j] << ' ';
                 }
                 realIndex++;
                 localIndex++;
             }
             realIndex = key.second;
             localIndex++;
-            for (unsigned int j = 0; j < DefaultIOTraits<T>::tr.template getValue<Index>(data.at(0)).size(); j++) {
-                ost << DefaultIOTraits<T>::tr.template getValue<Index>(data.at(realIndex))[j] << ' ';
+            for (unsigned int j = 0; j < DefaultIOTraits<T>::getTraits().template getValue<Index>(data.at(0)).size(); j++) {
+                ost << DefaultIOTraits<T>::getTraits().template getValue<Index>(data.at(realIndex))[j] << ' ';
             }
         }
         while (realIndex < data.size() - 1) {
-            for (unsigned int j = 0; j < DefaultIOTraits<T>::tr.template getValue<Index>(data.at(0)).size(); j++) {
-                ost << DefaultIOTraits<T>::tr.template getValue<Index>(data.at(realIndex))[j] << ' ';
+            for (unsigned int j = 0; j < DefaultIOTraits<T>::getTraits().template getValue<Index>(data.at(0)).size(); j++) {
+                ost << DefaultIOTraits<T>::getTraits().template getValue<Index>(data.at(realIndex))[j] << ' ';
             }
             realIndex++;
         }
@@ -113,22 +113,22 @@ class VTKMeshDataWriter {
     {
 
 
-        ost << "SCALARS " << DefaultIOTraits<T>::tr.template getName<Index>() << " double 1\nLOOKUP_TABLE default\n";
+        ost << "SCALARS " << DefaultIOTraits<T>::getTraits().template getName<Index>() << " double 1\nLOOKUP_TABLE default\n";
 
         IndexType realIndex = 0;
         IndexType localIndex = 0;
         for(const std::pair<IndexType, IndexType>& key : writer.backwardCellIndexMapping) {
             while (localIndex < key.first) {
-                ost << DefaultIOTraits<T>::tr.template getValue<Index>(data.at(realIndex)) << ' ';
+                ost << DefaultIOTraits<T>::getTraits().template getValue<Index>(data.at(realIndex)) << ' ';
                 realIndex++;
                 localIndex++;
             }
             realIndex = key.second;
             localIndex++;
-            ost << DefaultIOTraits<T>::tr.template getValue<Index>(data.at(realIndex)) << ' ';
+            ost << DefaultIOTraits<T>::getTraits().template getValue<Index>(data.at(realIndex)) << ' ';
         }
         while (realIndex < data.size() - 1) {
-            ost << DefaultIOTraits<T>::tr.template getValue<Index>(data.at(realIndex)) << ' ';
+            ost << DefaultIOTraits<T>::getTraits().template getValue<Index>(data.at(realIndex)) << ' ';
             realIndex++;
         }
     }

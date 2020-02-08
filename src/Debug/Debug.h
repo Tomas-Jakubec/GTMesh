@@ -6,6 +6,7 @@
 #include <iostream>
 #include "HTMLLogger.h"
 #include "CSVLogger.h"
+#include "JSONLogger.h"
 #include "ConsoleLogger.h"
 #include <stdexcept>
 /*
@@ -16,10 +17,12 @@ namespace dbg {
     struct DBGStatics {
         static HtmlLogger HDBGLog;
         static CSVLogger CSVDBGLog;
+        static JSONLogger JSONDBGLog;
     };
 
     HtmlLogger DBGStatics::HDBGLog("DBG.html");
     CSVLogger DBGStatics::CSVDBGLog("DBG.csv");
+    JSONLogger DBGStatics::JSONDBGLog("DBG.json");
 }
 
 #define STRVAR(var) #var, var
@@ -30,10 +33,10 @@ namespace dbg {
 
 #define DBGMSG(...) ConsoleLogger<>::writeMessage("++", __LINE__, __FILE__, __VA_ARGS__)
 
-#define DBGTRY(code)                        \
-try{code;}                                   \
-catch(const std::exception& e){              \
-ConsoleLogger<>::writeMessage("!!", __LINE__, __FILE__, std::string("something went wrong in try block: ") + e.what());   \
+#define DBGTRY(code) \
+try{code;} \
+catch(const std::exception& e){ \
+ConsoleLogger<>::writeMessage("!!", __LINE__, __FILE__, std::string("something went wrong in try block: ") + e.what()); \
 abort();}
 
 // Macros using html debug output
@@ -42,7 +45,12 @@ abort();}
 
 // Macros using csv debug output
 #define DBGVAR_CSV(...) dbg::DBGStatics::CSVDBGLog.writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
-#define DBGVARCOND_CSV(condition, ...) if(condition) DBGVAR_HTML(__VA_ARGS__)
+#define DBGVARCOND_CSV(condition, ...) if(condition) DBGVAR_CSV(__VA_ARGS__)
+
+// Macros using json debug output
+#define DBGVAR_JSON(...) dbg::DBGStatics::JSONDBGLog.writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
+#define DBGVARCOND_JSON(condition, ...) if(condition) DBGVAR_JSON(__VA_ARGS__)
+
 
 
 #define DBGCHECK ConsoleLogger<>::writeMessage("--", __LINE__, __FILE__, "check line")
@@ -62,13 +70,18 @@ abort();}
 
 #define DBGTRY(code) code
 
-#define HTMLDBGVAR(...)
+#define DBGVAR_HTML(...)
 
-#define HTMLDBGCOND(condition, ...)
+#define DBGVARCOND_HTML(condition, ...)
 
-#define CSVDBGVAR(...)
+#define DBGVAR_CSV(...)
 
-#define CSVDBGCOND(condition, ...)
+#define DBGVARCOND_CSV(condition, ...)
+
+#define DBGVAR_JSON(...)
+
+#define DBGVARCOND_JSON(condition, ...)
+
 #endif //UNDEBUG
 
 #endif // DEBUG_H
