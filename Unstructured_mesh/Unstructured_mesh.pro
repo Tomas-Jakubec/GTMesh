@@ -5,6 +5,7 @@ CONFIG -= qt
 
 SOURCES += \
         main.cpp \
+    multiphaseflow.cpp
 
 HEADERS += \
     ../src/Macros/MacroForEach.h \
@@ -49,7 +50,8 @@ HEADERS += \
     ../src/UnstructuredMesh/UnstructedMeshDefine.h \
     ../src/UnstructuredMesh/UnstructuredMesh.h \
     ../src/NumericStaticArray/Vector.h \
-    ../src/NumericStaticArray/Vertex.h
+    ../src/NumericStaticArray/Vertex.h \
+    multiphaseflow.h
 
 DISTFILES += \
     ../src/Debug/README.md \

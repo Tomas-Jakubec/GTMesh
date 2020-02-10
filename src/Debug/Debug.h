@@ -14,12 +14,17 @@
 */
 namespace dbg {
     struct DBGStatics {
-        static HtmlLogger HDBGLog;
-        static CSVLogger CSVDBGLog;
-    };
+        static HtmlLogger getHTMLLogger(){
+            static HtmlLogger HDBGLog("DBG.html");
+            return HDBGLog;
+        }
 
-    HtmlLogger DBGStatics::HDBGLog("DBG.html");
-    CSVLogger DBGStatics::CSVDBGLog("DBG.csv");
+
+        static CSVLogger getCSVLogger(){
+            static CSVLogger CSVDBGLog("DBG.csv");
+            return CSVDBGLog;
+        }
+    };
 }
 
 #define STRVAR(var) #var, var
@@ -37,11 +42,11 @@ ConsoleLogger<>::writeMessage("!!", __LINE__, __FILE__, std::string("something w
 abort();}
 
 // Macros using html debug output
-#define DBGVAR_HTML(...) dbg::DBGStatics::HDBGLog.writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
+#define DBGVAR_HTML(...) dbg::DBGStatics::getHTMLLogger().writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
 #define DBGVARCOND_HTML(condition, ...) if(condition) DBGVAR_HTML(__VA_ARGS__)
 
 // Macros using csv debug output
-#define DBGVAR_CSV(...) dbg::DBGStatics::CSVDBGLog.writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
+#define DBGVAR_CSV(...) dbg::DBGStatics::getCSVLogger().writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
 #define DBGVARCOND_CSV(condition, ...) if(condition) DBGVAR_HTML(__VA_ARGS__)
 
 
