@@ -8,6 +8,7 @@ SOURCES += \
     multiphaseflow.cpp
 
 HEADERS += \
+    ../src/Debug/JSONLogger.h \
     ../src/Macros/MacroForEach.h \
     ../src/Debug/CSVLogger.h \
     ../src/Debug/ConsoleLogger.h \

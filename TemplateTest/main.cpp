@@ -2369,6 +2369,8 @@ void testTraitsTuple(){
     get<0>(t) = 2.5;
     auto foo = static_cast<double&(*)(std::tuple<double>&)>(std::get<0>);
     DBGVAR(foo(t), t);
+    DBGVAR_JSON(t,t,t,t);
+    DBGCHECK;
 }
 
 /*
@@ -2420,9 +2422,9 @@ int main()
     //testPrivateTrait();
     //testJson();
     //testTestTraits();
-    testTraitsAlgorithms();
+    //testTraitsAlgorithms();
     //testNumericTraitsPerformance();
-    //testTraitsTuple();
+    testTraitsTuple();
     //testFactorial();
     return 0;
 }

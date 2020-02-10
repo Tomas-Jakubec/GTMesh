@@ -29,18 +29,18 @@ class VTKMeshDataReader {
        >::type
     {
 
-        ist.seekg(dataPositions[DefaultIOTraits<T>::tr.template getName<Index>()]);
+        ist.seekg(dataPositions[DefaultIOTraits<T>::getTraits().template getName<Index>()]);
     std::string line;
     std::getline(ist, line);
-        ist.seekg(dataPositions[DefaultIOTraits<T>::tr.template getName<Index>()]);
+        ist.seekg(dataPositions[DefaultIOTraits<T>::getTraits().template getName<Index>()]);
 
         typename DefaultIOTraits<T>::traitsType::template type<Index> value;
 
         for (IndexType i = 0; i < data.size(); i++) {
-            for (unsigned int j = 0; j < DefaultIOTraits<T>::tr.template getValue<Index>(data.at(i)).size(); j++){
+            for (unsigned int j = 0; j < DefaultIOTraits<T>::getTraits().template getValue<Index>(data.at(i)).size(); j++){
                 ist >> value[j];
             }
-            DefaultIOTraits<T>::tr.template setValue<Index>(data.at(i), value);
+            DefaultIOTraits<T>::getTraits().template setValue<Index>(data.at(i), value);
         }
 
     }
@@ -60,13 +60,13 @@ class VTKMeshDataReader {
         typename DefaultIOTraits<T>::traitsType::template type<Index> dummy;
 
         for (IndexType i = 0; i < data.size(); i++) {
-            for (unsigned int j = 0; j < DefaultIOTraits<T>::tr.template getValue<Index>(data.at(i)).size(); j++){
+            for (unsigned int j = 0; j < DefaultIOTraits<T>::getTraits().template getValue<Index>(data.at(i)).size(); j++){
                 ist >> value[j];
             }
 
             ist >> dummy[0];
 
-            DefaultIOTraits<T>::tr.template setValue<Index>(data.at(i), value);
+            DefaultIOTraits<T>::getTraits().template setValue<Index>(data.at(i), value);
         }
 
     }
@@ -80,13 +80,13 @@ class VTKMeshDataReader {
     {
 
 
-        ist.seekg(dataPositions[DefaultIOTraits<T>::tr.template getName<Index>()]);
+        ist.seekg(dataPositions[DefaultIOTraits<T>::getTraits().template getName<Index>()]);
 
         typename DefaultIOTraits<T>::traitsType::template type<Index> value;
 
         for (IndexType i = 0; i < data.size(); i++){
             ist >> value;
-            DefaultIOTraits<T>::tr.template setValue<Index>(data.at(i), value);
+            DefaultIOTraits<T>::getTraits().template setValue<Index>(data.at(i), value);
         }
 
     }

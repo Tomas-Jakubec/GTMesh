@@ -5,6 +5,7 @@
 #include "../CustomTypeTraits.h"
 #include <limits>
 #include <cmath>
+#include <algorithm>
 
 /*
     operators for arithmetic traits
@@ -1036,14 +1037,14 @@ max(const TraitT& op1){
 
 template<typename TraitT, unsigned int Index = DefaultArithmeticTraits<TraitT>::size() - 1>
 typename std::enable_if<
-    (Index > 0) && (Index < DefaultArithmeticTraits<TraitT>::size() - 1) ,
+    (Index > 0) && (Index <= DefaultArithmeticTraits<TraitT>::size() - 1) ,
     double
 >::type
 max(const TraitT& op1){
-
+    using ::max;
     return std::max(
-                    max(DefaultArithmeticTraits<TraitT>::getTraits().template getAttr<Index - 1>(op1)),
-                    DefaultArithmeticTraits<TraitT>::getTraits().template getAttr(get<Index>(op1))
+                    max(DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index - 1>(op1)),
+                    max(DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index>(op1))
                 );
 
 }
