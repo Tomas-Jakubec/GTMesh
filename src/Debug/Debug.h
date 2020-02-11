@@ -8,6 +8,7 @@
 #include "CSVLogger.h"
 #include "JSONLogger.h"
 #include "ConsoleLogger.h"
+#include "../Singleton/Singleton.h"
 #include <stdexcept>
 /*
 ** Macros intended for sending
@@ -15,21 +16,11 @@
 */
 namespace dbg {
     struct DBGStatics {
-        static HtmlLogger getHTMLLogger(){
-            static HtmlLogger HDBGLog("DBG.html");
-            return HDBGLog;
-        }
+        HtmlLogger HDBGLog = HtmlLogger("DBG.html");
 
+        CSVLogger CSVDBGLog = CSVLogger("DBG.csv");
 
-        static CSVLogger getCSVLogger(){
-            static CSVLogger CSVDBGLog("DBG.csv");
-            return CSVDBGLog;
-        }
-        
-        static JSONLogger getJSONLogger(){
-            static JSONLogger JSONDBGLog("DBG.json");
-            return JSONDBGLog;
-        }
+        JSONLogger JSONDBGLog = JSONLogger("DBG.json");
 
     };
 }
@@ -49,15 +40,15 @@ ConsoleLogger<>::writeMessage("!!", __LINE__, __FILE__, std::string("something w
 abort();}
 
 // Macros using html debug output
-#define DBGVAR_HTML(...) dbg::DBGStatics::getHTMLLogger().writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
+#define DBGVAR_HTML(...) Singleton<dbg::DBGStatics>::getInstance().HDBGLog.writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
 #define DBGVARCOND_HTML(condition, ...) if(condition) DBGVAR_HTML(__VA_ARGS__)
 
 // Macros using csv debug output
-#define DBGVAR_CSV(...) dbg::DBGStatics::getCSVLogger().writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
+#define DBGVAR_CSV(...) Singleton<dbg::DBGStatics>::getInstance().CSVDBGLog.writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
 #define DBGVARCOND_CSV(condition, ...) if(condition) DBGVAR_CSV(__VA_ARGS__)
 
 // Macros using json debug output
-#define DBGVAR_JSON(...) dbg::DBGStatics::getJSONLogger().writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
+#define DBGVAR_JSON(...) Singleton<dbg::DBGStatics>::getInstance().JSONDBGLog.writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
 #define DBGVARCOND_JSON(condition, ...) if(condition) DBGVAR_JSON(__VA_ARGS__)
 
 

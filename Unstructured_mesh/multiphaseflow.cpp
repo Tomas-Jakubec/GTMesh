@@ -1,9 +1,43 @@
 #include "multiphaseflow.h"
 double FlowData::rho_s = 0;
+double FlowData::R_spec = 0;
+double FlowData::T = 0;
 #include <stdexcept>
 
 
 
+
+void MultiphaseFlow::calculateRHS(double, MeshDataContainer<MultiphaseFlow::ResultType, MultiphaseFlow::ProblemDimension> &compData, MeshDataContainer<MultiphaseFlow::ResultType, MultiphaseFlow::ProblemDimension> &outDeltas)
+{
+    // in single compute step
+    // we have to:
+
+//#pragma omp parallel
+{
+    for (auto& cell : mesh.getCells()){
+        FlowData& cellData = compData.at(cell);
+        if (cellData.eps_s <= 0.0) {
+             cellData.eps_s = 0.0;
+             cellData.p_s = {};
+         }
+    }
+    // first: compute vertexes values
+    ActualizePointData(compData);
+    // second: compute fluxes over edges
+    for (auto& face : mesh.getFaces())
+        DBGTRY(ComputeFlux(face, compData);)
+    //FluxComputationParallel(*this);
+//#pragma omp barrier
+    //FVMethod::CellSourceComputationParallel(*this);
+    for (auto& cell : mesh.getCells()){
+        DBGTRY(ComputeSource(cell, compData, outDeltas);)
+    }
+//#pragma omp barrier
+    // third: compute values of new time step
+    //FVMethod::TimeStepParallel(*this);
+}
+
+}
 
 
 /*
@@ -29,19 +63,18 @@ void MultiphaseFlow::ComputeStep()
 */
 
 
-/*
-void MultiphaseFlow::ComputeFlux(FVMethod::FluxComputeData &fcData)
-{
 
+void MultiphaseFlow::ComputeFlux(const MeshType::Face &fcData, const MeshDataContainer<ResultType, ProblemDimension>& compData)
+{
     // first compute all variables interpolated
     // in the center of the edge
-    if (fcData.GetCellRight().GetCellFlag() == INNER && fcData.GetCellLeft().GetCellFlag() == INNER) {
+    if (fcData.getCellRightIndex() < BOUNDARY_INDEX(size_t) && fcData.getCellLeftIndex() < BOUNDARY_INDEX(size_t)) {
 
-        FlowData &leftData = PrevState.GetDataAt(fcData.GetCellLeftIndex());
+        const FlowData &leftData = compData.getDataByDim<ProblemDimension>().at(fcData.getCellLeftIndex());
 
-        FlowData &rightData = PrevState.GetDataAt(fcData.GetCellRightIndex());
+        const FlowData &rightData = compData.getDataByDim<ProblemDimension>().at(fcData.getCellRightIndex());
 
-        EdgeData &currEdgeData = EdgesData.at(fcData.GetCurrEdgeIndex());
+        EdgeData &currEdgeData = meshData.at(fcData);
 
         // Computation of fluxes of density and momentum of gaseous part
         ComputeFluxGas_inner(leftData, rightData, currEdgeData, fcData);
@@ -52,22 +85,22 @@ void MultiphaseFlow::ComputeFlux(FVMethod::FluxComputeData &fcData)
 
     } else {
         // Applying boundary conditions
-        const Cell* innerCell = nullptr;
-        const Cell* outerCell = nullptr;
-        if (fcData.GetCellRight().GetCellFlag() == INNER ){
-            innerCell = &fcData.GetCellRight();
-            outerCell = &fcData.GetCellLeft();
+        const MeshType::Cell* innerCell = nullptr;
+        const MeshType::Cell* outerCell = nullptr;
+        if (fcData.getCellRightIndex() < BOUNDARY_INDEX(size_t)){
+            innerCell = &mesh.getCells().at(fcData.getCellRightIndex());
+            outerCell = &mesh.getBoundaryCells().at(fcData.getCellLeftIndex() & EXTRACTING_INDEX(size_t));
         } else {
-            innerCell = &fcData.GetCellLeft();
-            outerCell = &fcData.GetCellRight();
+            innerCell = &mesh.getCells().at(fcData.getCellLeftIndex());
+            outerCell = &mesh.getBoundaryCells().at(fcData.getCellRightIndex() & EXTRACTING_INDEX(size_t));
         }
 
-        FlowData *innerCellData = &PrevState.GetDataAt(innerCell->GetCellIndex());
+        const FlowData *innerCellData = &compData.at(*innerCell);
 
-        EdgeData *currEdgeData = &EdgesData.at(fcData.GetCurrEdgeIndex());
+        EdgeData *currEdgeData = &meshData.at(fcData);
 
-        switch(outerCell->GetCellFlag()){
-        case INPUT : {
+        switch(outerCell->getFlag()){
+        case INFLOW : {
 
 
             ComputeFluxGas_inflow(*innerCellData, *innerCell, *currEdgeData, fcData);
@@ -75,7 +108,7 @@ void MultiphaseFlow::ComputeFlux(FVMethod::FluxComputeData &fcData)
             //ComputeFluxSolid_wall(*innerCellData, *currEdgeData, fcData);
         } break;
 
-        case OUTPUT :{
+        case OUTFLOW :{
 
             ComputeFluxGas_outflow(*innerCellData, *currEdgeData, fcData);
             ComputeFluxSolid_outflow(*innerCellData, *currEdgeData, fcData);
@@ -91,63 +124,88 @@ void MultiphaseFlow::ComputeFlux(FVMethod::FluxComputeData &fcData)
             } break;
 
         default : {
-            throw std::runtime_error("unknown cell flag: " + std::to_string(outerCell->GetCellFlag()) +
-                                     " in cell number: " + std::to_string(outerCell->GetCellIndex()));
+            throw std::runtime_error("unknown cell flag: " + std::to_string(outerCell->getFlag()) +
+                                     " in cell number: " + std::to_string(outerCell->getIndex()));
             }
         }
     }
 
 }
-*/
 
 
 
 
 
-/*
-void MultiphaseFlow::ComputeSource(FVMethod::CellComputeData &ccData)
+
+
+void MultiphaseFlow::ComputeSource(const MeshType::Cell& ccData,
+                                   MeshDataContainer<ResultType, ProblemDimension>& compData,
+                                   MeshDataContainer<MultiphaseFlow::ResultType, MultiphaseFlow::ProblemDimension> &outDeltas)
 {
-    FlowData& cellData = PrevState.GetDataAt(ccData.GetCurCellIndex());
+    FlowData& cellData = compData.at(ccData);
 
 
-    double invCellVol = 1.0 / (CellsVolumes.at(ccData.GetCurCellIndex()));
 
     cellData.fluxRho_g = 0;
     cellData.fluxRho_s = 0;
-    cellData.fluxP_g = Vector(0.0,0.0);
-    cellData.fluxP_s = Vector(0.0,0.0);
+    cellData.fluxP_g = {};
+    cellData.fluxP_s = {};
 
-    size_t tmpEI = ccData.GetCurCell().GetCellEdgeIndex();
-    do {
-        if (ccData.GetCurCellIndex() == GetMesh().GetEdges().at(tmpEI).GetCellLeftIndex()){
-            cellData.fluxRho_g += EdgesData.at(tmpEI).fluxRho_g;
-            cellData.fluxRho_s += EdgesData.at(tmpEI).fluxRho_s;
-            cellData.fluxP_g += EdgesData.at(tmpEI).fluxP_g;
-            cellData.fluxP_s += EdgesData.at(tmpEI).fluxP_s;
-        } else {
-            cellData.fluxRho_g -= EdgesData.at(tmpEI).fluxRho_g;
-            cellData.fluxRho_s -= EdgesData.at(tmpEI).fluxRho_s;
-            cellData.fluxP_g -= EdgesData.at(tmpEI).fluxP_g;
-            cellData.fluxP_s -= EdgesData.at(tmpEI).fluxP_s;
+    MeshApply<ProblemDimension, ProblemDimension - 1>::apply(
+                ccData.getIndex(),
+                mesh,
+                // aplication of sum lambda to all cell faces
+                [&](size_t cellIndex, size_t faceIndex){
+            EdgeData& eData = meshData.getDataByDim<ProblemDimension - 1>().at(faceIndex);
+            if (cellIndex == mesh.getFaces().at(faceIndex).getCellLeftIndex()){
+                cellData.fluxRho_g += eData.fluxRho_g;
+                cellData.fluxRho_s += eData.fluxRho_s;
+                cellData.fluxP_g += eData.fluxP_g;
+                cellData.fluxP_s += eData.fluxP_s;
+            } else {
+                cellData.fluxRho_g -= eData.fluxRho_g;
+                cellData.fluxRho_s -= eData.fluxRho_s;
+                cellData.fluxP_g -= eData.fluxP_g;
+                cellData.fluxP_s -= eData.fluxP_s;
+            }
         }
-        tmpEI = GetMesh().GetEdges().at(tmpEI).GetNextEdge(ccData.GetCurCellIndex());
-    } while (tmpEI != ccData.GetCurCell().GetCellEdgeIndex());
+    );
 
 
-    cellData.fluxP_g *= invCellVol;
-    cellData.fluxRho_g *= invCellVol;
-    cellData.fluxP_s *= invCellVol;
-    cellData.fluxRho_s *= invCellVol;
+    cellData.fluxP_g *= meshData.at(ccData).invVolume;
+    cellData.fluxRho_g *= meshData.at(ccData).invVolume;
+    cellData.fluxP_s *= meshData.at(ccData).invVolume;
+    cellData.fluxRho_s *= meshData.at(ccData).invVolume;
 
 
-    Vector drag = Beta_s(cellData) * (cellData.u_s - cellData.u_g);
+    Vector<ProblemDimension, double> drag = Beta_s(cellData) * (cellData.getVelocitySolid() - cellData.getVelocityGas());
 
-    cellData.fluxP_g += (cellData.rho_g * Vector(0, -9.81) + drag);
+    Vector<ProblemDimension,double> g_acceleration = {0, -9.81};
 
-    cellData.fluxP_s += ((rho_s - cellData.rho_g) * cellData.eps_s * Vector(0, -9.81) - drag);
+    cellData.fluxP_g += (cellData.rho_g * g_acceleration + drag);
+
+    cellData.fluxP_s += ((rho_s - cellData.rho_g) * cellData.eps_s * g_acceleration - drag);
+
+    // now prepare the result
+    FlowData& resultData = outDeltas.at(ccData);
+
+    resultData.p_s = cellData.fluxP_s;
+    resultData.eps_s = cellData.fluxRho_s / rho_s;
+
+
+    resultData.p_g = cellData.fluxP_g;
+
+    resultData.rho_g = cellData.fluxRho_g / reg(cellData.getEps_g());
+
+
+
+
+    //cellData.T = cellData.T;
+//These two can be considered as functions of other variables
+    //resultData.eps_g = 1.0 - resultData.eps_s;
+    //resultData.p = resultData.rho_g * R_spec * T;
 
 }
-*/
 
 
 
@@ -203,12 +261,12 @@ void MultiphaseFlow::ComputeSource(FVMethod::CellComputeData &ccData)
 
 
 
-double MultiphaseFlow::FlowModulation(double x)
+double MultiphaseFlow::FlowModulation(const Vertex<MeshType::meshDimension(), double>& x)
 {
-    double inFlowModulation = x;
+    double inFlowModulation = x[0];
 
-    inFlowModulation = (- inFlowModulation * inFlowModulation + inFlowModulation - 0.0099) * 4.164931279;
-    //inFlowModulation = -(inFlowModulation -1.9) * (inFlowModulation - 4.7) * 0.5102;//(-inFlowModulation * inFlowModulation + 6.6 * inFlowModulation - 8.93) * 0.5102;
+    //inFlowModulation = (- inFlowModulation * inFlowModulation + inFlowModulation - 0.0099) * 4.164931279;
+    inFlowModulation = -(inFlowModulation -1.9) * (inFlowModulation - 4.7) * 0.5102;//(-inFlowModulation * inFlowModulation + 6.6 * inFlowModulation - 8.93) * 0.5102;
     return inFlowModulation;
 }
 
@@ -243,6 +301,7 @@ void MultiphaseFlow::setupMeshData(const std::string& fileName){
 
     auto dists = ComputeCellsDistance(mesh);
 
+    vertToCellCon = MeshConnections<0, MeshType::meshDimension()>::connections(mesh);
 
     // Calculation of mesh properties
     auto faceNormals = mesh.computeFaceNormals();
@@ -267,8 +326,6 @@ void MultiphaseFlow::setupMeshData(const std::string& fileName){
 
         meshData.at(face).n = faceNormals.at(face);
 
-        DBGVAR_CSV(face.getCellLeftIndex(), face.getCellRightIndex(), EXTRACTING_INDEX(size_t) & face.getCellLeftIndex(), EXTRACTING_INDEX(size_t) & face.getCellRightIndex());
-
         Vertex<2, double>& lv = (face.getCellLeftIndex() >= BOUNDARY_INDEX(size_t)) ?
                     mesh.getBoundaryCells().at(EXTRACTING_INDEX(size_t) & face.getCellLeftIndex()).getCenter() :
                     mesh.getCells().at(face.getCellLeftIndex()).getCenter();
@@ -283,6 +340,8 @@ void MultiphaseFlow::setupMeshData(const std::string& fileName){
 
     }
 
+
+    InitializePointData();
 }
 
 
@@ -294,101 +353,154 @@ void MultiphaseFlow::setupMeshData(const std::string& fileName){
 
 
 
+#define BOUNDARY_NEIGHBOR 13
 
-///**
-// * @brief MultiphaseFlow::InitializePointData
-// * Initializes point data this means point type
-// * and first point velocity value
-// */
-//void MultiphaseFlow::InitializePointData()
-//{
-//    PointData ini;
-//    ini.PointType = Type::INNER;
-//    ini.cellKoef = 0;
-//
-//    PointData.resize(GetMesh().GetPoints().size(), ini);
-//
-//    /**
-//    ****
-//    **** Initialization of point types
-//    **** according the type of the point
-//    **** will decided which condition use
-//    ****
-//    **** if it is inner point then velocity
-//    **** in the point is average of values
-//    **** over cells neigboring with the point
-//    ****
-//    **** if it is outer point with
-//    **** - wall condition
-//    **** then its velocity is equal to zero
-//    **** - input condition
-//    **** then its velocity is equal to
-//    **** inflow velocity
-//    **** - output condition
-//    **** then the velocity is equal to average
-//    **** of the two neigboring cells velocities
-//    ****
-//    **** outer has higher priority than inner
-//    **** wall condition has the highest
-//    **** priority
-//    ****
-//    */
-//    for (size_t i = 0; i < mesh.getBoundaryCells().size(); i++) {
-//
-//        Type cellType = TypeOfCell(mesh().getBoundaryCells().at(i));
-//
-//        size_t tmpEdgeIndex = GetMesh().GetBoundaryCells().at(i).GetCellEdgeIndex();
-//
-//        size_t tmpPointAIndex = GetMesh().GetEdges().at(tmpEdgeIndex).GetPointAIndex();
-//
-//        size_t tmpPointBIndex = GetMesh().GetEdges().at(tmpEdgeIndex).GetPointBIndex();
-//
-//        PointData.at(tmpPointAIndex).PointType = Type(PointData.at(tmpPointAIndex).PointType | cellType);
-//
-//        PointData.at(tmpPointAIndex).cellKoef++;
-//
-//        PointData.at(tmpPointBIndex).PointType = Type(PointData.at(tmpPointBIndex).PointType | cellType);
-//
-//        PointData.at(tmpPointBIndex).cellKoef++;
-//    }
-//    // Now all points are marked with its type
-//
-//    auto connections = MeshConnections<0,2>::connections(mesh);
-//
-//    for (const auto& vert : mesh.getVertices()){
-//        meshData.at(vert). cellKoef = 1.0 / connections.at(vert).size();
-//    }
-//
-//    DBGTRY(ActualizePointData());
-//
-//}
 
-/*
-void MultiphaseFlow::ActualizePointData() {
+/**
+ * @brief MultiphaseFlow::InitializePointData
+ * Initializes point data this means point type
+ * and first point velocity value
+ */
+void MultiphaseFlow::InitializePointData()
+{
+    PointData ini;
+    ini.PointType = Type::INNER;
+    ini.cellKoef = 0;
+
+    for (PointData& pd : meshData.getDataByDim<0>()) {
+        pd = ini;
+    }
+
+    /**
+    ****
+    **** Initialization of point types
+    **** according the type of the point
+    **** will decided which condition use
+    ****
+    **** if it is inner point then velocity
+    **** in the point is average of values
+    **** over cells neigboring with the point
+    ****
+    **** if it is outer point with
+    **** - wall condition
+    **** then its velocity is equal to zero
+    **** - input condition
+    **** then its velocity is equal to
+    **** inflow velocity
+    **** - output condition
+    **** then the velocity is equal to average
+    **** of the two neigboring cells velocities
+    ****
+    **** outer has higher priority than inner
+    **** wall condition has the highest
+    **** priority
+    ****
+    */
+    DBGCHECK;
+    for (size_t i = 0; i < mesh.getBoundaryCells().size(); i++) {
+
+        Type cellType = TypeOfCell(mesh.getBoundaryCells().at(i));
+
+        mesh.getBoundaryCells().at(i).getFlag() = cellType;
+
+        size_t tmpEdgeIndex = mesh.getBoundaryCells().at(i).getBoundaryElementIndex();
+
+        size_t tmpPointAIndex = mesh.getEdges().at(tmpEdgeIndex).getVertexAIndex();
+
+        size_t tmpPointBIndex = mesh.getEdges().at(tmpEdgeIndex).getVertexBIndex();
+
+        meshData.getDataByDim<0>().at(tmpPointAIndex).PointType = Type(meshData.getDataByDim<0>().at(tmpPointAIndex).PointType | cellType);
+
+        meshData.getDataByDim<0>().at(tmpPointAIndex).cellKoef++;
+
+        meshData.getDataByDim<0>().at(tmpPointBIndex).PointType = Type(meshData.getDataByDim<0>().at(tmpPointBIndex).PointType | cellType);
+
+        meshData.getDataByDim<0>().at(tmpPointBIndex).cellKoef++;
+
+        // mark the cells next to boundary
+        mesh.getCells().at(mesh.getEdges().at(tmpEdgeIndex).getOtherCellIndex(i | BOUNDARY_INDEX(size_t))).getFlag() = BOUNDARY_NEIGHBOR;
+    }
+    // Now all points are marked with its type
+
+    for (const auto& vert : mesh.getVertices()){
+        meshData.at(vert).cellKoef += vertToCellCon.at(vert).size();
+        meshData.at(vert).cellKoef = 1.0 / meshData.at(vert).cellKoef;
+    }
+
+
+}
+
+
+void MultiphaseFlow::ActualizePointData(const MeshDataContainer<FlowData, MeshType::meshDimension()>& data) {
 
     // Initialize vector with zeros
-//    #pragma omp for
-    for(size_t i = 0; i < PointData.size(); i++) {
-        PointData.at(i).u_g = Vector();
-        PointData.at(i).u_s = Vector();
+    for(size_t i = 0; i < meshData.getDataByDim<0>().size(); i++) {
+        meshData.getDataByDim<0>().at(i).u_g = {};
+        meshData.getDataByDim<0>().at(i).u_s = {};
     }
 
-    // Calculate vertex data of each inner cell
-    for(auto& one_colour : CellToVertexColoring){
-//        #pragma omp for
-        for(size_t index = 0; index < one_colour.size(); index++){
+    // can run in parallel without limitations
+    for (const auto& vert : mesh.getVertices()) {
+        for (const auto& cellIndex : vertToCellCon.at(vert)) {
 
-            Mesh::MeshCell cell = GetMesh().GetMeshCell(one_colour.at(index));
+            const MeshType::Cell& cell = mesh.getCells().at(cellIndex);
 
-            CalculateVertexData(cell, PrevState);
+            if ((meshData.at(vert).PointType & Type::WALL) == Type::WALL){
+
+                meshData.at(vert).u_g = {};
+                meshData.at(vert).u_s = {};
+
+            } else {
+
+                if ((meshData.at(vert).PointType & Type::OUTFLOW) == Type::OUTFLOW){
+
+                    if (cell.getFlag() == BOUNDARY_NEIGHBOR){
+                        // if the cell over the edge is boundary then
+                        // the boundary condition set in this cell is
+                        // Neuman => the velocity remains same
+
+                        meshData.at(vert).u_g += data.at(cell).getVelocityGas() * 2 * meshData.at(vert).cellKoef;
+
+                        meshData.at(vert).u_s += data.at(cell).getVelocitySolid() * 2 * meshData.at(vert).cellKoef;
+
+                    } else {
+
+
+                        meshData.at(vert).u_g += data.at(cell).getVelocityGas() * meshData.at(vert).cellKoef;
+
+                        meshData.at(vert).u_s += data.at(cell).getVelocitySolid() * meshData.at(vert).cellKoef;
+
+                    }
+
+
+                } else {
+
+                    if ((meshData.at(vert).PointType & Type::INFLOW) == Type::INFLOW){
+
+                        meshData.at(vert).u_g = inFlow_u_g * FlowModulation(vert);
+
+                        meshData.at(vert).u_s = inFlow_u_s * FlowModulation(vert);
+
+                    } else {
+
+                        if ((meshData.at(vert).PointType & Type::INNER) == Type::INNER){
+
+                            meshData.at(vert).u_g += data.at(cell).getVelocityGas() * meshData.at(vert).cellKoef;
+
+                            meshData.at(vert).u_s += data.at(cell).getVelocitySolid() * meshData.at(vert).cellKoef;
+
+
+                        }
+                    }
+                }
+            }
 
         }
-
     }
+
+
+
 }
-
-*/
-
 
 
 
@@ -466,22 +578,21 @@ void MultiphaseFlow::CalculateVertexData(Mesh::MeshCell &cell, const NumData<Flo
 
 
 
-/*
 
-MultiphaseFlow::Type MultiphaseFlow::TypeOfCell(const MeshType::Cell &cell) {
-    if (cell.getIndex() > BOUNDARY_INDEX){
+
+Type MultiphaseFlow::TypeOfCell(const MeshType::Cell &cell) {
+    if (cell.getIndex() >= BOUNDARY_INDEX(size_t)){
 
         if (cell.getCenter()[1] <= 1e-5) {
-            return Type::INPUT;
+            return Type::INFLOW;
         }
 
-        if (//cell.GetCenter().GetY() >= 34.349
-            //cell.GetCenter().GetX() > 2 && (cell.GetCenter().GetY() < 32.0 && cell.GetCenter().GetY() > 30)
-            //cell.GetCenter().GetX() > 8 && cell.GetCenter().GetY() >= 33.39
-            cell.getCenter()[1] >= 1.999
+        if (cell.getCenter()[1] >= 34.349
+            //cell.GetCenter()[0] > 2 && (cell.GetCenter()[1] < 32.0 && cell.GetCenter()[1] > 30)
+            //cell.GetCenter()[0] > 8 && cell.GetCenter()[1] >= 33.39
+            //cell.getCenter()[1] >= 1.999
            ) {
-            DBGVAR(cell.getCenter());
-            return Type::OUTPUT;
+            return Type::OUTFLOW;
         }
 
         return Type::WALL;
@@ -495,9 +606,6 @@ MultiphaseFlow::Type MultiphaseFlow::TypeOfCell(const MeshType::Cell &cell) {
 
     throw(std::runtime_error ("cell type not recognized " + std::to_string(cell.getIndex())));
 }
-
-*/
-
 
 
 

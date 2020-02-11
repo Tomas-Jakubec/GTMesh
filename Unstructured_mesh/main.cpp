@@ -256,7 +256,6 @@ wError.start();
             }
         }
 wError.lap();
-//DBGVAR_CSV(error);
 
         error *= tau * (1.0 / 3.0);
         if (error < delta) {
@@ -265,8 +264,8 @@ wError.lap();
                 _compData += tau * (1.0 / 6.0) * (((K1.template getDataByDim<MeshDimension>().at(i) + K5.template getDataByDim<MeshDimension>().at(i))) + (4.0 * K4.template getDataByPos<0>().at(i)));
             }
             time += tau;
-            tau *= 1.05;
-            cout << "time: " << time << "\r";
+            tau *= 1.005;
+            //cout << "time: " << time << "\r";
         } else {
             tau *= std::pow(0.2, delta/error) * 0.8;
             run = true;
@@ -280,14 +279,65 @@ wError.lap();
 
 
 
-
-
+MAKE_ATTRIBUTE_TRAIT(CellData, invVolume);
+MAKE_ATTRIBUTE_TRAIT(EdgeData, n,LengthOverDist, Length,LeftCellKoef, RightCellKoef);
+MAKE_ATTRIBUTE_TRAIT(PointData, u_s, u_g, PointType, cellKoef);
 
 void testHeatConduction1() {
 
     MultiphaseFlow mpf;
 
     mpf.setupMeshData("Boiler.vtk");
+
+    FlowData::R_spec = 287;
+    FlowData::T = 300;
+    FlowData::rho_s = 1700;
+
+    mpf.myu = 1e5;
+    mpf.myu_s = 1.5;
+    mpf.d_s = 0.06;
+    mpf.outFlow.setPressure(1e5);
+    //mpf.outFlow.rho_g = 1.3;
+    //mpf.outFlow.eps_g = 1;
+    mpf.outFlow.eps_s = 0;
+    mpf.R_spec = 287;
+    mpf.T = 300;
+    mpf.artifitialDisspation = 1;
+    mpf.phi_s = 1;
+    mpf.rho_s = 1700;
+    mpf.inFlow_eps_g = 1;
+    mpf.inFlow_eps_s = 0;
+    mpf.inFlow_u_g = {0.0,15};
+    mpf.inFlow_u_s = {0, 0};
+
+
+    FlowData ini;
+//    ini.eps_g = 1;
+    ini.eps_s = 0;
+    ini.rho_g = 1.3;
+    ini.setPressure(1e5);
+    ini.p_g = {};
+    //ini.setVelocityGas({0, 0});
+    ini.p_s = {0, 0};
+
+
+    MeshDataContainer<FlowData, 2> compData(mpf.mesh, ini);
+    for (auto& cell : mpf.mesh.getCells()){
+        if(cell.getCenter()[1] > 7 && cell.getCenter()[1] < 9){
+            compData.at(cell).eps_s = 0.1;
+        }
+    }
+    //MeshDataContainer<FlowData, 2> result(compData);
+
+    //mpf.ActualizePointData(compData);
+
+    //mpf.calculateRHS(0.0, compData, result);
+
+    mpf.exportData(0.0, compData);
+    for (double t = 0; t < 1; t += 0.05){
+        RKMSolver(mpf, compData, 1e-4, t, t + 0.05, 1);
+        mpf.exportData(t + 0.05, compData);
+    }
 
 /*
     HeatCunduction<3,double> hcProblem;

@@ -131,11 +131,24 @@ Vertex<Dim, Real> Vertex<Dim, Real>::operator *(const Real& x) const {
     return res;
 }
 
+//multiplying coordinates with real number
+template <unsigned int Dim, typename Real>
+Vertex<Dim, Real> operator *(const Real& x, const Vertex<Dim, Real>& vert) {
+    return vert * x;
+}
+
 
 //division
 template <unsigned int Dim, typename Real>
 Vertex<Dim, Real> Vertex<Dim, Real>::operator /(const Real& x) const {
     return this->operator*(Real(1.0)/x);
+}
+
+
+//multiplying coordinates with real number
+template <unsigned int Dim, typename Real>
+Vertex<Dim, Real> operator /(const Real& x, const Vertex<Dim, Real>& vert) {
+    return vert * (1.0 / x);
 }
 
 
