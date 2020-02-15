@@ -14,53 +14,45 @@ void MultiphaseFlow::calculateRHS(double, MeshDataContainer<MultiphaseFlow::Resu
 
 //#pragma omp parallel
 {
-    for (auto& cell : mesh.getCells()){
+
+    #pragma omp for
+    for (size_t cellIndex = 0; cellIndex < mesh.getCells().size(); cellIndex++){
+        auto& cell = mesh.getCells()[cellIndex];
         FlowData& cellData = compData.at(cell);
         if (cellData.eps_s <= 0.0) {
              cellData.eps_s = 0.0;
              cellData.p_s = {};
          }
     }
-    // first: compute vertexes values
-    ActualizePointData(compData);
+    // first: compute vertices values
+
+    UpdateVertexData(compData);
+
     // second: compute fluxes over edges
-    for (auto& face : mesh.getFaces())
-        DBGTRY(ComputeFlux(face, compData);)
-    //FluxComputationParallel(*this);
-//#pragma omp barrier
-    //FVMethod::CellSourceComputationParallel(*this);
-    for (auto& cell : mesh.getCells()){
-        DBGTRY(ComputeSource(cell, compData, outDeltas);)
+
+    #pragma omp for
+    for (size_t faceIndex = 0; faceIndex < mesh.getFaces().size(); faceIndex++){
+        auto& face = mesh.getFaces()[faceIndex];
+
+        ComputeFlux(face, compData);
+
     }
-//#pragma omp barrier
-    // third: compute values of new time step
-    //FVMethod::TimeStepParallel(*this);
-}
+
+    // third: compute source terms
+
+    #pragma omp for
+    for (size_t cellIndex = 0; cellIndex < mesh.getCells().size(); cellIndex++){
+        auto& cell = mesh.getCells()[cellIndex];
+
+        ComputeSource(cell, compData, outDeltas);
+    }
 
 }
 
-
-/*
-void MultiphaseFlow::ComputeStep()
-{
-    // in single compute step
-    // we have to:
-
-//#pragma omp parallel
-{
-    // first: compute vertexes values
-    ActualizePointData();
-    // second: compute fluxes over edges
-    FluxComputationParallel(*this);
-//#pragma omp barrier
-    FVMethod::CellSourceComputationParallel(*this);
-//#pragma omp barrier
-    // third: compute values of new time step
-    FVMethod::TimeStepParallel(*this);
 }
 
-}
-*/
+
+
 
 
 
@@ -78,7 +70,6 @@ void MultiphaseFlow::ComputeFlux(const MeshType::Face &fcData, const MeshDataCon
 
         // Computation of fluxes of density and momentum of gaseous part
         ComputeFluxGas_inner(leftData, rightData, currEdgeData, fcData);
-
 
         // Compute flux of solid phase
         ComputeFluxSolid_inner(leftData, rightData, currEdgeData, fcData);
@@ -156,7 +147,8 @@ void MultiphaseFlow::ComputeSource(const MeshType::Cell& ccData,
                 mesh,
                 // aplication of sum lambda to all cell faces
                 [&](size_t cellIndex, size_t faceIndex){
-            EdgeData& eData = meshData.getDataByDim<ProblemDimension - 1>().at(faceIndex);
+            const EdgeData& eData = meshData.getDataByDim<ProblemDimension - 1>().at(faceIndex);
+
             if (cellIndex == mesh.getFaces().at(faceIndex).getCellLeftIndex()){
                 cellData.fluxRho_g += eData.fluxRho_g;
                 cellData.fluxRho_s += eData.fluxRho_s;
@@ -171,11 +163,11 @@ void MultiphaseFlow::ComputeSource(const MeshType::Cell& ccData,
         }
     );
 
-
     cellData.fluxP_g *= meshData.at(ccData).invVolume;
     cellData.fluxRho_g *= meshData.at(ccData).invVolume;
     cellData.fluxP_s *= meshData.at(ccData).invVolume;
     cellData.fluxRho_s *= meshData.at(ccData).invVolume;
+
 
 
     Vector<ProblemDimension, double> drag = Beta_s(cellData) * (cellData.getVelocitySolid() - cellData.getVelocityGas());
@@ -211,53 +203,6 @@ void MultiphaseFlow::ComputeSource(const MeshType::Cell& ccData,
 
 
 
-
-// void MultiphaseFlow::ComputeTimeStep(FVMethod::CellComputeData &ccData)
-// {
-//
-//     if (ccData.GetCurCell().GetCellFlag() == Type::WALL)
-//         return;
-//
-//
-//     FlowData& cellData = PrevState.GetDataAt(ccData.GetCurCellIndex());
-//
-//
-//     // solid component
-//     cellData.p_s += (cellData.fluxP_s * TimeStep);
-//
-//     cellData.eps_s += cellData.fluxRho_s * (TimeStep / rho_s);
-//
-//
-//
-// /*
-//     cellData.u_s = cellData.u_s + cellData.fluxP_s *
-//                                          (TimeStep  / reg(rho_s * cellData.eps_s)) ;
-// */
-//     if (cellData.eps_s <= 0.0) {
-//         cellData.eps_s = 0.0;
-//         cellData.p_s = Vector(0.0, 0.0);
-//     }
-//
-//
-//
-//     cellData.u_s = cellData.p_s * (1 / reg(rho_s * cellData.eps_s));
-// /* //I don't thing this cause problem
-//     if (cellData.eps_s > 0.7){
-//         cellData.eps_s = 0.7; // sand packaging limit
-//     }*/
-//     cellData.p_g += (cellData.fluxP_g * TimeStep);
-//
-//     cellData.rho_g += cellData.fluxRho_g * (TimeStep / reg(cellData.eps_g));
-//
-//     cellData.eps_g = 1.0 - cellData.eps_s;
-//
-//     cellData.u_g = cellData.p_g * (1  / reg(cellData.rho_g * cellData.eps_g));
-//
-//     //cellData.T = cellData.T;
-//
-//     cellData.p = cellData.rho_g * R_spec * T;
-//
-// }
 
 
 
@@ -338,6 +283,11 @@ void MultiphaseFlow::setupMeshData(const std::string& fileName){
 
         meshData.at(face).RightCellKoef = (face.getCenter() - rv).normEukleid() / dists.at(face);
 
+        double sum = meshData.at(face).LeftCellKoef + meshData.at(face).RightCellKoef;
+
+        meshData.at(face).LeftCellKoef /= sum;
+
+        meshData.at(face).RightCellKoef /= sum;
     }
 
 
@@ -431,16 +381,18 @@ void MultiphaseFlow::InitializePointData()
 }
 
 
-void MultiphaseFlow::ActualizePointData(const MeshDataContainer<FlowData, MeshType::meshDimension()>& data) {
+void MultiphaseFlow::UpdateVertexData(const MeshDataContainer<FlowData, MeshType::meshDimension()>& data) {
 
-    // Initialize vector with zeros
-    for(size_t i = 0; i < meshData.getDataByDim<0>().size(); i++) {
-        meshData.getDataByDim<0>().at(i).u_g = {};
-        meshData.getDataByDim<0>().at(i).u_s = {};
-    }
+
 
     // can run in parallel without limitations
-    for (const auto& vert : mesh.getVertices()) {
+
+#pragma omp for
+    for (size_t vertIndex = 0; vertIndex < mesh.getVertices().size(); vertIndex++){
+        const auto& vert =  mesh.getVertices()[vertIndex];
+        // initialize the vectors with zeros
+        meshData[vert].u_g = {};
+        meshData[vert].u_s = {};
         for (const auto& cellIndex : vertToCellCon.at(vert)) {
 
             const MeshType::Cell& cell = mesh.getCells().at(cellIndex);

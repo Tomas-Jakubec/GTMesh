@@ -147,7 +147,7 @@ class VTKMeshDataWriter {
         template<typename IndexType, typename Real>
 
         static void write(std::ostream& ost, const DataContainer<T, MeshDimension> &data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer){
-            DBGVAR(IsIndexable<typename DefaultIOTraits<T>::traitsType::template type<Index>>::value);
+            //DBGVAR(IsIndexable<typename DefaultIOTraits<T>::traitsType::template type<Index>>::value);
             writeColumn<T, Index, IndexType, Real>(ost, data, writer);
             ost << std::endl;
             writeCellData<Traits<T, Types...>, Index + 1>::write(ost, data, writer);
@@ -159,7 +159,7 @@ class VTKMeshDataWriter {
     struct writeCellData <Traits<T, Types...>, Index, std::enable_if_t<Index == Traits<T, Types...>::size() - 1>>{
         template< typename IndexType, typename Real>
         static void write(std::ostream& ost, const DataContainer<T, MeshDimension> &data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer){
-            DBGVAR(IsIndexable<typename DefaultIOTraits<T>::traitsType::template type<Index>>::value);
+            //DBGVAR(IsIndexable<typename DefaultIOTraits<T>::traitsType::template type<Index>>::value);
             writeColumn<T, Index, IndexType, Real>(ost, data, writer);
             ost << std::endl;
         }

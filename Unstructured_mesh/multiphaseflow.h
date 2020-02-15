@@ -175,6 +175,8 @@ struct EdgeData {
     double fluxRho_g; //flux of "mass" over cell boundary
 };
 
+MAKE_ATTRIBUTE_TRAIT(EdgeData, fluxRho_g,fluxP_g,RightCellKoef,LeftCellKoef,n,Length,LengthOverDist)
+
 // Enumerator Type for expessing other cell and point position
 enum Type{
     INNER = 1,
@@ -201,6 +203,7 @@ struct PointData
     double cellKoef;
 };
 
+MAKE_ATTRIBUTE_TRAIT(PointData, PointType, cellKoef, u_g, u_s)
 
 struct CellData{
     double invVolume;
@@ -384,7 +387,7 @@ public:
 //    // Computes velocities in the points on the start of the program
     void InitializePointData();
 //
-    void ActualizePointData(const MeshDataContainer<FlowData, MeshType::meshDimension()> &data);
+    void UpdateVertexData(const MeshDataContainer<FlowData, MeshType::meshDimension()> &data);
 //
 //    // Calculates velocities during the computation step for each cell
 //    void CalculateVertexData(Mesh::MeshCell &cell, const NumData<FlowData> &cellData);
@@ -406,7 +409,6 @@ public:
         dataWriter.writeToStream(ofile, compData, writer);
 
         ofile.close();
-        DBGMSG("Data eported");
 
     }
 };
@@ -515,9 +517,13 @@ inline void MultiphaseFlow::ComputeFluxGas_inner(const FlowData &leftData, const
     Vector<ProblemDimension,double> fluxP_g = (-productOf_u_And_n) *
                   (leftData.p_g * edgeData.LeftCellKoef + rightData.p_g * edgeData.RightCellKoef);
 
+
+
+
     // adding the element of pressure gradient
     fluxP_g -= (leftData.getPressure() * edgeData.LeftCellKoef +
                 rightData.getPressure() * edgeData.RightCellKoef) * edgeData.n;
+
 
 
     fluxP_g *= edgeData.Length;
@@ -556,7 +562,7 @@ inline void MultiphaseFlow::ComputeFluxGas_inflow(const FlowData& innerCellData,
     double productOf_u_And_n = (modulatedU * edgeData.n);
 
     /*
-    ** Preparing prtial derivatives wrt
+    ** Preparing partial derivatives wrt
     ** edge orientation
     */
 
@@ -615,7 +621,7 @@ inline void MultiphaseFlow::ComputeFluxGas_outflow(const FlowData& innerCellData
     double eps_g_e = productOf_u_And_n > 0 ? innerCellData.getEps_g() : outFlow.getEps_g();
 
     /*
-    ** Preparing prtial derivatives wrt
+    ** Preparing partial derivatives wrt
     ** edge orientation
     */
 
@@ -792,7 +798,7 @@ inline void MultiphaseFlow::ComputeFluxSolid_inflow(const FlowData& innerCellDat
     double productOf_u_And_n = (modulatedU * edgeData.n);
 
     /*
-    ** Preparing prtial derivatives wrt
+    ** Preparing partial derivatives wrt
     ** edge orientation
     */
 
@@ -852,7 +858,7 @@ inline void MultiphaseFlow::ComputeFluxSolid_outflow(const FlowData& innerCellDa
     double eps_s_e = productOf_u_And_n > 0 ? innerCellData.eps_s : outFlow.eps_s;
 
     /*
-    ** Preparing prtial derivatives wrt
+    ** Preparing partial derivatives wrt
     ** edge orientation
     */
     // computing derivatives of velocity
