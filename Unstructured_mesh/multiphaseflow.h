@@ -19,6 +19,21 @@
 #include <fstream>
 
 /**
+ * @brief reg
+ * regularizes number to aviod zero division.
+ * Simply adds small non-zero constant (1e-7)
+ * @param x
+ * number to be regularized
+ * @return
+ * greatered x
+ */
+static double reg(double x)
+{
+    return x + 1.0e-7;
+}
+
+
+/**
  * @brief The FlowData struct
  * flow computation data
  */
@@ -50,12 +65,12 @@ struct FlowData {
      * velocity of gaseous phase
      */
     Vector<2, double> getVelocityGas() const {
-        return p_g / rho_g;
+        return p_g / reg(rho_g * getEps_g());
     }
 
 
     void setVelocityGas(const Vector<2, double>& u_g){
-        p_g = u_g * rho_g;
+        p_g = u_g * rho_g * getEps_g();
     }
 
     /**
@@ -77,12 +92,12 @@ struct FlowData {
      * velocity of solid component
      */
     Vector<2, double> getVelocitySolid() const {
-        return p_s / rho_s;
+        return p_s / reg(rho_s * eps_s);
     }
 
 
     void setVelocitySolid(const Vector<2, double>& u_s){
-        p_s = u_s * rho_s;
+        p_s = u_s * rho_s * eps_s;
     }
 
     static double rho_s;
@@ -337,16 +352,7 @@ private:
 
     inline void ComputeFluxSolid_wall(const FlowData& innerCellData, EdgeData& edgeData, const MeshType::Face& fcData);
 
-    /**
-     * @brief reg
-     * regularizes number to aviod zero division.
-     * Simply adds small non-zero constant (1e-7)
-     * @param x
-     * number to be regularized
-     * @return
-     * greatered x
-     */
-    inline double reg(double x);
+
 
 private:
 
@@ -915,7 +921,7 @@ inline void MultiphaseFlow::ComputeFluxSolid_wall(const FlowData& innerCellData,
     Vector<ProblemDimension,double> du_s_dn = edgeData.LengthOverDist * (fcData.getCellLeftIndex() < BOUNDARY_INDEX(size_t) ?
                                                                              -1.0 * innerCellData.getVelocitySolid() : innerCellData.getVelocitySolid());  // boundary cond
 
-    Vector<ProblemDimension,double> du_s_dt = Vector<ProblemDimension,double>({0.0, 0.0});
+    Vector<ProblemDimension,double> du_s_dt = {0.0, 0.0};
 
     // transform derivatives to standard base
     Vector<ProblemDimension,double> du_s_dx = du_s_dn * (edgeData.n[0]) - (du_s_dt * edgeData.n[1]);
@@ -939,13 +945,7 @@ inline void MultiphaseFlow::ComputeFluxSolid_wall(const FlowData& innerCellData,
 
 
 
-#ifdef ___
-#endif
 
-inline double MultiphaseFlow::reg(double x)
-{
-    return x + 1.0e-7;
-}
 
 
 
