@@ -41,7 +41,7 @@ public:
      * @brief cellVert<HR>
      * Vertices of all cells in correct order for vtk export.
      */
-    MeshDataContainer<std::vector<IndexType>, 3> cellVert;
+    MeshDataContainer<std::vector<IndexType>, 2> cellVert;
 
     /**
      * @brief totalNumberOfWrittenElements<HR>
@@ -49,9 +49,11 @@ public:
      */
     IndexType totalNumberOfWrittenElements = 0;
 
+
     IndexType getNumberOfCells(){
         return cellVert.template getDataByPos<0>().size();
     }
+
     /**
      * @brief indexCell<HR>
      * This funcion stores indexes of vertices in correct order
