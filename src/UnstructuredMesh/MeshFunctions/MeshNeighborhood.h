@@ -4,7 +4,7 @@
 #include "MeshConnections.h"
 
 template <unsigned int StartDim, unsigned int ConnectingDim, unsigned int ConnectedDim = StartDim, Order order = Order::ORDER_ASCEND>
-class MeshNegborhood{
+class MeshNeighborhood{
     template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
     static MeshDataContainer<std::set<IndexType>, StartDim> neighbors(
                 MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
@@ -36,7 +36,7 @@ class MeshNegborhood{
 
 
 template <unsigned int StartDim, unsigned int ConnectingDim, unsigned int ConnectedDim>
-class MeshNegborhood<StartDim, ConnectingDim, ConnectedDim, Order::ORDER_ORIGINAL>{
+class MeshNeighborhood<StartDim, ConnectingDim, ConnectedDim, Order::ORDER_ORIGINAL>{
     template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
     static MeshDataContainer<std::set<IndexType>, StartDim> neighbors(
                 MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh

@@ -34,6 +34,27 @@ public:
         return ::ComputeFaceNormals<Method>(*this);
     }
 
+    template<unsigned int StartDim, unsigned int TargetDim, typename Functor>
+    void apply(Functor& func) {
+        return MeshApply<StartDim, TargetDim>::apply(*this, func);
+    }
+
+
+    template<unsigned int StartDim, unsigned int TargetDim, typename Functor>
+    void apply(IndexType startElementIndex, Functor& func) {
+        return MeshApply<StartDim, TargetDim>::apply(startElementIndex, *this, func);
+    }
+
+    template<unsigned int StartDim, unsigned int TargetDim, Order ConnectionsOrder = ORDER_ASCEND>
+    MeshDataContainer<std::vector<IndexType>, Dimension-1> connections() {
+        return MeshConnections<StartDim, TargetDim, ConnectionsOrder>::connections(*this);
+    }
+
+    template<unsigned int StartDim, unsigned int ConnectingDim, unsigned int ConnectedDim = StartDim, Order ConnectionsOrder = Order::ORDER_ASCEND>
+    MeshDataContainer<std::vector<IndexType>, Dimension-1> neighborhood() {
+        return MeshNeighborhood<StartDim, ConnectingDim, ConnectedDim, ConnectionsOrder>::neighbors(*this);
+    }
+
 /*
     Real CalculateFaceMeasureOverCellDist(IndexType edgeIndex, MeshDataContainer){
 
