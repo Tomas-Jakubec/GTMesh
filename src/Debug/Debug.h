@@ -8,6 +8,7 @@
 #include "CSVLogger.h"
 #include "JSONLogger.h"
 #include "ConsoleLogger.h"
+#include "../Singleton/Singleton.h"
 #include <stdexcept>
 /*
 ** Macros intended for sending
@@ -15,14 +16,13 @@
 */
 namespace dbg {
     struct DBGStatics {
-        static HtmlLogger HDBGLog;
-        static CSVLogger CSVDBGLog;
-        static JSONLogger JSONDBGLog;
-    };
+        HtmlLogger HDBGLog = HtmlLogger("DBG.html");
 
-    HtmlLogger DBGStatics::HDBGLog("DBG.html");
-    CSVLogger DBGStatics::CSVDBGLog("DBG.csv");
-    JSONLogger DBGStatics::JSONDBGLog("DBG.json");
+        CSVLogger CSVDBGLog = CSVLogger("DBG.csv");
+
+        JSONLogger JSONDBGLog = JSONLogger("DBG.json");
+
+    };
 }
 
 #define STRVAR(var) #var, var
@@ -37,18 +37,18 @@ namespace dbg {
 try{code;} \
 catch(const std::exception& e){ \
 ConsoleLogger<>::writeMessage("!!", __LINE__, __FILE__, std::string("something went wrong in try block: ") + e.what()); \
-abort();}
+exit();}
 
 // Macros using html debug output
-#define DBGVAR_HTML(...) dbg::DBGStatics::HDBGLog.writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
+#define DBGVAR_HTML(...) Singleton<dbg::DBGStatics>::getInstance().HDBGLog.writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
 #define DBGVARCOND_HTML(condition, ...) if(condition) DBGVAR_HTML(__VA_ARGS__)
 
 // Macros using csv debug output
-#define DBGVAR_CSV(...) dbg::DBGStatics::CSVDBGLog.writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
+#define DBGVAR_CSV(...) Singleton<dbg::DBGStatics>::getInstance().CSVDBGLog.writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
 #define DBGVARCOND_CSV(condition, ...) if(condition) DBGVAR_CSV(__VA_ARGS__)
 
 // Macros using json debug output
-#define DBGVAR_JSON(...) dbg::DBGStatics::JSONDBGLog.writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
+#define DBGVAR_JSON(...) Singleton<dbg::DBGStatics>::getInstance().JSONDBGLog.writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
 #define DBGVARCOND_JSON(condition, ...) if(condition) DBGVAR_JSON(__VA_ARGS__)
 
 

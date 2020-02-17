@@ -49,7 +49,9 @@ public:
      */
     IndexType totalNumberOfWrittenElements = 0;
 
-
+    IndexType getNumberOfCells(){
+        return cellVert.template getDataByPos<0>().size();
+    }
     /**
      * @brief indexCell<HR>
      * This funcion stores indexes of vertices in correct order
