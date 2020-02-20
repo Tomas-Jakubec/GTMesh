@@ -381,7 +381,7 @@ void MultiphaseFlow::setupMeshData(const std::string& fileName){
 
 Type MultiphaseFlow::TypeOfCell(const MeshType::Cell &cell) {
     if (cell.getIndex() >= BOUNDARY_INDEX(size_t)){
-
+/*
         if (cell.getCenter()[1] <= 1e-5) {
             return Type::INFLOW;
         }
@@ -393,7 +393,7 @@ Type MultiphaseFlow::TypeOfCell(const MeshType::Cell &cell) {
            ) {
             return Type::OUTFLOW;
         }
-
+*/
         return Type::WALL;
 
     } else {

@@ -221,8 +221,7 @@ void testHeatConduction1() {
     constexpr unsigned int ProblemDim = 3;
     MultiphaseFlow mpf;
 
-    mpf.setupMeshData("Boiler.vtk");
-
+    mpf.setupMeshData("cube_3500_cells.vtk");
     FlowData<ProblemDim> initGlobals;
 
     initGlobals.R_spec = 287;
@@ -269,8 +268,9 @@ void testHeatConduction1() {
         }
     }
 
-
+    DBGVAR_JSON(mpf.mesh.computeElementMeasures().getDataByDim<3>());
     mpf.exportData(0.0, compData);
+    return;
     double exportStep = 1e-1;
     for (double t = 0; t < /*300 * */exportStep; t += exportStep){
 

@@ -54,7 +54,7 @@ class VTKMeshDataWriter {
                 ost << DefaultIOTraits<T>::getTraits().template getValue<Index>(data.at(realIndex))[j] << ' ';
             }
         }
-        while (realIndex < data.size() - 1) {
+        while (realIndex < data.size()) {
             for (unsigned int j = 0; j < DefaultIOTraits<T>::getTraits().template getValue<Index>(data.at(0)).size(); j++) {
                 ost << DefaultIOTraits<T>::getTraits().template getValue<Index>(data.at(realIndex))[j] << ' ';
             }
@@ -85,7 +85,7 @@ class VTKMeshDataWriter {
             localIndex++;
             ost << DefaultIOTraits<T>::getTraits().template getValue<Index>(data.at(realIndex)) << ' ';
         }
-        while (realIndex < data.size() - 1) {
+        while (realIndex < data.size()) {
             ost << DefaultIOTraits<T>::getTraits().template getValue<Index>(data.at(realIndex)) << ' ';
             realIndex++;
         }

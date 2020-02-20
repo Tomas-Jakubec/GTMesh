@@ -302,7 +302,7 @@ struct CellData{
     Vector<Dim, Vector<Dim, double>> grad_u_s;
 };
 
-
+MAKE_ATTRIBUTE_TRAIT(CellData<3>, invVolume);
 
 
 
@@ -518,7 +518,7 @@ public:
 
         std::ofstream ofile(std::string("MultiphaseFlow") + "_" + std::to_string(time) + ".vtk");
         writer.writeHeader(ofile, std::string("MPF") + std::to_string(time));
-        auto polyType = typename std::conditional<ProblemDimension == 2, MeshNativeType<2>::ElementType, MeshNativeType<3>::ElementType>::type(ProblemDimension == 2 ? MeshNativeType<2>::POLYGON : MeshNativeType<3>::POLYHEDRON);
+        auto polyType = typename std::conditional<ProblemDimension == 2, MeshNativeType<2>::ElementType, MeshNativeType<3>::ElementType>::type(ProblemDimension == 2 ? MeshNativeType<2>::POLYGON : MeshNativeType<3>::HEXAHEDRON);
         writer.writeToStream(ofile, mesh, MeshDataContainer<MeshNativeType<ProblemDimension>::ElementType, ProblemDimension>(mesh,  polyType));
 
         VTKMeshDataWriter<ProblemDimension> dataWriter;
