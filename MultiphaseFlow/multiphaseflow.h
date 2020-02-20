@@ -101,6 +101,7 @@ Vector<dim, Real> tensorVectorProduct(const Vector<dim, Vector<dim, Real>> &t1, 
  * @brief The FlowData struct
  * flow compuatation data
  */
+template<unsigned int Dim>
 struct FlowData {
 
 // gasseous part
@@ -128,12 +129,12 @@ struct FlowData {
      *
      * velocity of gaseous phase
      */
-    Vector<2, double> getVelocityGas() const {
+    Vector<Dim, double> getVelocityGas() const {
         return p_g / reg(rho_g * getEps_g());
     }
 
 
-    void setVelocityGas(const Vector<2, double>& u_g){
+    void setVelocityGas(const Vector<Dim, double>& u_g){
         p_g = u_g * rho_g * getEps_g();
     }
 
@@ -142,7 +143,7 @@ struct FlowData {
      *
      * momentum of gaseous phase
      */
-    Vector<2,double> p_g;
+    Vector<Dim,double> p_g;
 
 
 
@@ -152,12 +153,12 @@ struct FlowData {
      *
      * velocity of solid component
      */
-    Vector<2, double> getVelocitySolid() const {
+    Vector<Dim, double> getVelocitySolid() const {
         return p_s / reg(rho_s * eps_s);
     }
 
 
-    void setVelocitySolid(const Vector<2, double>& u_s){
+    void setVelocitySolid(const Vector<Dim, double>& u_s){
         p_s = u_s * rho_s * eps_s;
     }
 
@@ -168,7 +169,7 @@ struct FlowData {
      *
      * momentum of solid phase
      */
-    Vector<2,double> p_s;
+    Vector<Dim,double> p_s;
 
 
     /**
@@ -182,30 +183,50 @@ struct FlowData {
 
 };
 
+template<unsigned int Dim>
+double FlowData<Dim>::rho_s = 0;
+template<unsigned int Dim>
+double FlowData<Dim>::R_spec = 0;
+template<unsigned int Dim>
+double FlowData<Dim>::T = 0;
 
-
-MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(FlowData, rho_g, eps_s, p_g, p_s)
+MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(FlowData<2>, rho_g, eps_s, p_g, p_s)
 
 // TODO only temporary
 //MAKE_ATTRIBUTE_TRAIT_IO(FlowData, rho_g, eps_s, p_g, p_s)
 
 
-MAKE_CUSTOM_ATTRIBUTE_TRAIT(FlowData,
-                           "pressure", std::make_pair(&FlowData::getPressure, &FlowData::setPressure),
-                           "eps_g", std::make_pair(&FlowData::getEps_g, &FlowData::setEps_g),
-                           "rho_g", &FlowData::rho_g,
-                           "eps_s", &FlowData::eps_s,
-                           "velocity_gas", std::make_pair(&FlowData::getVelocityGas, &FlowData::setVelocityGas),
-                           "velocity_solid", std::make_pair(&FlowData::getVelocitySolid, &FlowData::setVelocitySolid)
+MAKE_CUSTOM_ATTRIBUTE_TRAIT(FlowData<2>,
+                           "pressure", std::make_pair(&FlowData<2>::getPressure, &FlowData<2>::setPressure),
+                           "eps_g", std::make_pair(&FlowData<2>::getEps_g, &FlowData<2>::setEps_g),
+                           "rho_g", &FlowData<2>::rho_g,
+                           "eps_s", &FlowData<2>::eps_s,
+                           "velocity_gas", std::make_pair(&FlowData<2>::getVelocityGas, &FlowData<2>::setVelocityGas),
+                           "velocity_solid", std::make_pair(&FlowData<2>::getVelocitySolid, &FlowData<2>::setVelocitySolid)
+                            )
+
+MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(FlowData<3>, rho_g, eps_s, p_g, p_s)
+
+// TODO only temporary
+//MAKE_ATTRIBUTE_TRAIT_IO(FlowData, rho_g, eps_s, p_g, p_s)
+
+
+MAKE_CUSTOM_ATTRIBUTE_TRAIT(FlowData<3>,
+                           "pressure", std::make_pair(&FlowData<3>::getPressure, &FlowData<3>::setPressure),
+                           "eps_g", std::make_pair(&FlowData<3>::getEps_g, &FlowData<3>::setEps_g),
+                           "rho_g", &FlowData<3>::rho_g,
+                           "eps_s", &FlowData<3>::eps_s,
+                           "velocity_gas", std::make_pair(&FlowData<3>::getVelocityGas, &FlowData<3>::setVelocityGas),
+                           "velocity_solid", std::make_pair(&FlowData<3>::getVelocitySolid, &FlowData<3>::setVelocitySolid)
                             )
 
 
 
-
-struct EdgeData {
+template<unsigned int Dim>
+struct FaceData {
     double LengthOverDist;
     double Length;
-    Vector<2,double> n;
+    Vector<Dim, double> n;
 
     // koeficients of konvex combination of cells
     // holds that LeftCellKoef + RightCellKoef = 1
@@ -223,7 +244,7 @@ struct EdgeData {
      *
      * flux of momentum of gaseous phase over the edge
      */
-    Vector<2,double> fluxP_g;
+    Vector<Dim, double> fluxP_g;
 
 
     /**
@@ -231,7 +252,7 @@ struct EdgeData {
      *
      * flux of momentum of solid phase over the edge
      */
-    Vector<2,double> fluxP_s;
+    Vector<Dim, double> fluxP_s;
 
 
     /**
@@ -252,16 +273,16 @@ struct EdgeData {
     /**
      * @brief gradient of velocity of gas
      */
-    Vector<2,Vector<2,double>> grad_u_g;
+    Vector<Dim, Vector<Dim, double>> grad_u_g;
 
     /**
      * @brief gradient of velocity of gas
      */
-    Vector<2,Vector<2,double>> grad_u_s;
+    Vector<Dim, Vector<Dim, double>> grad_u_s;
 };
 
-MAKE_ATTRIBUTE_TRAIT(EdgeData, fluxRho_g,fluxP_g,RightCellKoef,LeftCellKoef,n,Length,LengthOverDist)
-
+MAKE_ATTRIBUTE_TRAIT(FaceData<2>, fluxRho_g,fluxP_g,RightCellKoef,LeftCellKoef,n,Length,LengthOverDist)
+MAKE_ATTRIBUTE_TRAIT(FaceData<3>, fluxRho_g,fluxP_g,RightCellKoef,LeftCellKoef,n,Length,LengthOverDist)
 // Enumerator Type for expessing other cell and point position
 enum Type{
     INNER = 1,
@@ -270,32 +291,20 @@ enum Type{
     OUTFLOW = 8,
 };
 
-// Data mapped to point
-struct PointData
-{
-    // velocity of gas in the particular point
-    Vector<2,double> u_g;
-    /**
-     * @brief u_s
-     * averaged velocity of solid component in vertices
-     */
-    Vector<2,double> u_s;
 
-    // type of the point expessing its position
-    Type PointType;
 
-    // inverted number of neighboring cells
-    double cellKoef;
-};
 
-MAKE_ATTRIBUTE_TRAIT(PointData, PointType, cellKoef, u_g, u_s)
-
+template<unsigned int Dim>
 struct CellData{
     double invVolume;
-    Vector<2,Vector<2,double>> grad_u_g;
+    Vector<Dim, Vector<Dim, double>> grad_u_g;
 
-    Vector<2,Vector<2,double>> grad_u_s;
+    Vector<Dim, Vector<Dim, double>> grad_u_s;
 };
+
+
+
+
 
 class MultiphaseFlow {
 public:
@@ -303,15 +312,18 @@ public:
     ~MultiphaseFlow() = default;
 
 public: // make some types public
-    static constexpr unsigned int ProblemDimension = 2;
+    static constexpr unsigned int ProblemDimension = 3;
     using MeshType = UnstructuredMesh<ProblemDimension,size_t, double>;
-    using ResultType = FlowData;
+    using ResultType = FlowData<ProblemDimension>;
+
+    using Cell = typename MeshType::Cell;
+    using Face = typename MeshType::Face;
 public:
     // Structures containing state data
 
     MeshType mesh;
 
-    MeshDataContainer<std::tuple<CellData,EdgeData,PointData>, 2,1,0> meshData;
+    MeshDataContainer<std::tuple<CellData<ProblemDimension>,FaceData<ProblemDimension>>, ProblemDimension,ProblemDimension - 1> meshData;
 private:
 
     VTKMeshWriter<ProblemDimension> writer;
@@ -357,7 +369,7 @@ public:
     double rho_s;
 
 
-    FlowData outFlow;
+    FlowData<ProblemDimension> outFlow;
 
     Vector<ProblemDimension, double> inFlow_u_s, inFlow_u_g;
     double inFlow_eps_g, inFlow_eps_s;
@@ -379,21 +391,21 @@ private:
      * @param fd
      * @return
      */
-    inline double Beta_s(const FlowData& fd);
+    inline double Beta_s(const FlowData<ProblemDimension>& fd);
 
     /**
      * @brief C_d
      * @param fd
      * @return
      */
-    inline double C_d(const FlowData& fd);
+    inline double C_d(const FlowData<ProblemDimension>& fd);
 
     /**
      * @brief Re_s
      * @param fd
      * @return
      */
-    inline double Re_s(const FlowData& fd);
+    inline double Re_s(const FlowData<ProblemDimension>& fd);
 
     /**
      * @brief ComputeFluxGas_inner
@@ -402,21 +414,21 @@ private:
      * @param edgeData
      * @param fcData
      */
-    inline void ComputeFluxGas_inner(const FlowData& leftData, const FlowData& rightData, EdgeData& edgeData, const MeshType::Face& fcData);
+    inline void ComputeFluxGas_inner(const FlowData<ProblemDimension>& leftData, const FlowData<ProblemDimension>& rightData, FaceData<ProblemDimension>& edgeData, const Face& fcData);
 
-    inline void ComputeFluxGas_inflow(const FlowData& innerCellData, const MeshType::Cell& innerCell,  EdgeData& edgeData, const MeshType::Face& fcData);
+    inline void ComputeFluxGas_inflow(const FlowData<ProblemDimension>& innerCellData, const Cell& innerCell,  FaceData<ProblemDimension>& edgeData, const Face& fcData);
 
-    inline void ComputeFluxGas_outflow(const FlowData& innerCellData, EdgeData& edgeData, const MeshType::Face& fcData);
+    inline void ComputeFluxGas_outflow(const FlowData<ProblemDimension>& innerCellData, FaceData<ProblemDimension>& edgeData, const Face& fcData);
 
-    inline void ComputeFluxGas_wall(const FlowData& innerCellData, EdgeData& edgeData, const MeshType::Face& fcData);
+    inline void ComputeFluxGas_wall(const FlowData<ProblemDimension>& innerCellData, FaceData<ProblemDimension>& edgeData, const Face& fcData);
 
-    inline void ComputeViscousFluxGas_inner(const FlowData& leftData, const FlowData& rightData, EdgeData& edgeData, const MeshType::Face& fcData);
+    inline void ComputeViscousFluxGas_inner(const FlowData<ProblemDimension>& leftData, const FlowData<ProblemDimension>& rightData, FaceData<ProblemDimension>& edgeData, const Face& fcData);
 
-    inline void ComputeViscousFluxGas_inflow(const MeshType::Cell& innerCell,  const MeshType::Face& face);
+    inline void ComputeViscousFluxGas_inflow(const Cell& innerCell,  const Face& face);
 
-    inline void ComputeViscousFluxGas_outflow(const MeshType::Cell& innerCell,  const MeshType::Face& face);
+    inline void ComputeViscousFluxGas_outflow(const Cell& innerCell,  const Face& face);
 
-    inline void ComputeViscousFluxGas_wall(const MeshType::Cell& innerCell,  const MeshType::Face& face);
+    inline void ComputeViscousFluxGas_wall(const Cell& innerCell,  const Face& face);
 
     /**
      * @brief ComputeFluxSolid_inner
@@ -425,21 +437,21 @@ private:
      * @param edgeData
      * @param fcData
      */
-    inline void ComputeFluxSolid_inner(const FlowData &leftData, const FlowData &rightData, EdgeData &edgeData, const MeshType::Face& fcData);
+    inline void ComputeFluxSolid_inner(const FlowData<ProblemDimension> &leftData, const FlowData<ProblemDimension> &rightData, FaceData<ProblemDimension> &edgeData, const Face& fcData);
 
-    inline void ComputeFluxSolid_inflow(const FlowData& innerCellData, const MeshType::Cell& innerCell,  EdgeData& edgeData, const MeshType::Face& fcData);
+    inline void ComputeFluxSolid_inflow(const FlowData<ProblemDimension>& innerCellData, const Cell& innerCell,  FaceData<ProblemDimension>& edgeData, const Face& fcData);
 
-    inline void ComputeFluxSolid_outflow(const FlowData& innerCellData, EdgeData& edgeData, const MeshType::Face& fcData);
+    inline void ComputeFluxSolid_outflow(const FlowData<ProblemDimension>& innerCellData, FaceData<ProblemDimension>& edgeData, const Face& fcData);
 
-    inline void ComputeFluxSolid_wall(const FlowData& innerCellData, EdgeData& edgeData, const MeshType::Face& fcData);
+    inline void ComputeFluxSolid_wall(const FlowData<ProblemDimension>& innerCellData, FaceData<ProblemDimension>& edgeData, const Face& fcData);
 
-    inline void ComputeViscousFluxSolid_inner(const FlowData& leftData, const FlowData& rightData, EdgeData& edgeData, const MeshType::Face& fcData);
+    inline void ComputeViscousFluxSolid_inner(const FlowData<ProblemDimension>& leftData, const FlowData<ProblemDimension>& rightData, FaceData<ProblemDimension>& edgeData, const Face& fcData);
 
-    inline void ComputeViscousFluxSolid_inflow(const MeshType::Cell& innerCell,  const MeshType::Face& face);
+    inline void ComputeViscousFluxSolid_inflow(const Cell& innerCell,  const Face& face);
 
-    inline void ComputeViscousFluxSolid_outflow(const MeshType::Cell& innerCell,  const MeshType::Face& face);
+    inline void ComputeViscousFluxSolid_outflow(const Cell& innerCell,  const Face& face);
 
-    inline void ComputeViscousFluxSolid_wall(const MeshType::Cell& innerCell,  const MeshType::Face& face);
+    inline void ComputeViscousFluxSolid_wall(const Cell& innerCell,  const Face& face);
 
 
 private:
@@ -460,19 +472,19 @@ public:
 
 public:
 
-    void ComputeFlux(const MeshType::Face& fcData,  const MeshDataContainer<ResultType, ProblemDimension>& compData);
+    void ComputeFlux(const Face& fcData,  const MeshDataContainer<ResultType, ProblemDimension>& compData);
 
 
-    void ComputeViscousFlux(const MeshType::Face& fcData,  const MeshDataContainer<ResultType, ProblemDimension>& compData);
+    void ComputeViscousFlux(const Face& fcData,  const MeshDataContainer<ResultType, ProblemDimension>& compData);
 
 
     /**
      * @brief Calculates gradient of velocity using Gauss-Green th. in a cell.
      * @param cell
      */
-    inline void ComupteGradU(const MeshType::Cell& cell);
+    inline void ComupteGradU(const Cell& cell);
 
-    void ComputeSource(const MeshType::Cell& ccData,
+    void ComputeSource(const Cell& ccData,
                        MeshDataContainer<ResultType, ProblemDimension>& compData,
                        MeshDataContainer<MultiphaseFlow::ResultType, MultiphaseFlow::ProblemDimension> &outDeltas);
 
@@ -491,12 +503,11 @@ public:
 //    // Computes velocities in the points on the start of the program
     void InitializePointData();
 //
-    void UpdateVertexData(const MeshDataContainer<FlowData, MeshType::meshDimension()> &data);
 //
 //    // Calculates velocities during the compuatation step for each cell
 //    void CalculateVertexData(Mesh::MeshCell &cell, const NumData<FlowData> &cellData);
 //
-    Type TypeOfCell(const MeshType::Cell& cell);
+    Type TypeOfCell(const Cell& cell);
 
 
 
@@ -507,7 +518,8 @@ public:
 
         std::ofstream ofile(std::string("MultiphaseFlow") + "_" + std::to_string(time) + ".vtk");
         writer.writeHeader(ofile, std::string("MPF") + std::to_string(time));
-        writer.writeToStream(ofile, mesh, MeshDataContainer<MeshNativeType<ProblemDimension>::ElementType, ProblemDimension>(mesh, MeshNativeType<ProblemDimension>::POLYGON));
+        auto polyType = typename std::conditional<ProblemDimension == 2, MeshNativeType<2>::ElementType, MeshNativeType<3>::ElementType>::type(ProblemDimension == 2 ? MeshNativeType<2>::POLYGON : MeshNativeType<3>::POLYHEDRON);
+        writer.writeToStream(ofile, mesh, MeshDataContainer<MeshNativeType<ProblemDimension>::ElementType, ProblemDimension>(mesh,  polyType));
 
         VTKMeshDataWriter<ProblemDimension> dataWriter;
         dataWriter.writeToStream(ofile, compData, writer);
@@ -515,6 +527,7 @@ public:
         ofile.close();
 
     }
+
 };
 
 
@@ -533,7 +546,7 @@ inline double MultiphaseFlow::G(double eps_g)
 
 
 
-inline double MultiphaseFlow::Beta_s(const FlowData &fd)
+inline double MultiphaseFlow::Beta_s(const FlowData<ProblemDimension> &fd)
 {
     if(fd.eps_s > 0.2) {
         double denominator = 1 / (fd.getEps_g() * d_s * phi_s);
@@ -553,7 +566,7 @@ inline double MultiphaseFlow::Beta_s(const FlowData &fd)
 
 
 
-inline double MultiphaseFlow::C_d(const FlowData &fd)
+inline double MultiphaseFlow::C_d(const FlowData<ProblemDimension> &fd)
 {
     double re_s = reg(Re_s(fd));
 
@@ -569,7 +582,7 @@ inline double MultiphaseFlow::C_d(const FlowData &fd)
 
 
 
-inline double MultiphaseFlow::Re_s(const FlowData &fd)
+inline double MultiphaseFlow::Re_s(const FlowData<ProblemDimension> &fd)
 {
     // multiplying by inverted value of myu may make code faster
     return(
@@ -580,7 +593,7 @@ inline double MultiphaseFlow::Re_s(const FlowData &fd)
 
 
 
-inline void MultiphaseFlow::ComputeFluxGas_inner(const FlowData &leftData, const FlowData &rightData, EdgeData &edgeData, const MeshType::Face&)
+inline void MultiphaseFlow::ComputeFluxGas_inner(const FlowData<ProblemDimension> &leftData, const FlowData<ProblemDimension> &rightData, FaceData<ProblemDimension> &edgeData, const Face&)
 {
     /**
      * @brief eps_g_e
@@ -589,22 +602,10 @@ inline void MultiphaseFlow::ComputeFluxGas_inner(const FlowData &leftData, const
     double lEps_g = leftData.getEps_g();
     double rEps_g = rightData.getEps_g();
 
-    //double eps_g_e = (lEps_g * edgeData.LeftCellKoef + rEps_g * edgeData.RightCellKoef);
 
     Vector<ProblemDimension, double> ru_g = rightData.getVelocityGas();
     Vector<ProblemDimension, double> lu_g = leftData.getVelocityGas();
 
-    // computing derivatives of velocity
-    //Vector<ProblemDimension, double> du_g_dn = (ru_g - lu_g) * (edgeData.LengthOverDist);
-    //
-    //Vector<ProblemDimension, double> du_g_dt = (
-    //            meshData.getDataByDim<0>().at(fcData.getVertexBIndex()).u_g -
-    //            meshData.getDataByDim<0>().at(fcData.getVertexAIndex()).u_g);
-
-
-    //transform diferences to standard base
-    //Vector<ProblemDimension, double> du_g_dx = du_g_dn * (edgeData.n[0]) - (du_g_dt * edgeData.n[1]);
-    //Vector<ProblemDimension, double> du_g_dy = du_g_dt * (edgeData.n[0]) + (du_g_dn * edgeData.n[1]);
 
     auto edge_u_g = (lu_g * edgeData.LeftCellKoef) + (ru_g * edgeData.RightCellKoef);
     double productOf_u_And_n = (edge_u_g * edgeData.n);
@@ -640,16 +641,6 @@ inline void MultiphaseFlow::ComputeFluxGas_inner(const FlowData &leftData, const
     // compuatation of grad(u)
     edgeData.grad_u_g = tensorProduct(edge_u_g, edgeData.n) * edgeData.Length;
 
-    //viscose_x_x = (4.0/3) * myu * du_x_dx * edgeData.n[0] * (leftData.eps_g * edgeData.LeftCellKoef + rightData.eps_g * edgeData.RightCellKoef);
-    //viscose_y_y = (4.0/3) * myu * du_y_dy * edgeData.n[1] * (leftData.eps_g * edgeData.LeftCellKoef + rightData.eps_g * edgeData.RightCellKoef);
-    //Vector<ProblemDimension,double> viscose_diag = ((4.0/3) * myu * eps_g_e) * Vector<ProblemDimension,double>{du_g_dx[0] * edgeData.n[0], du_g_dy[1] * edgeData.n[1]};
-    // Diffusion of the velocity
-    // firstly i will consider diffusion only in the direction
-
-    //viscose_x_y = myu * (du_y_dx + du_x_dy) * edgeDat (leftData.eps_g * edgeData.LeftCellKoef + rightData.eps_g * edgeData.RightCellKoef);
-    //viscose_y_x = myu * (du_y_dx + du_x_dy) * edgeData.n[0] * (leftData.eps_g * edgeData.LeftCellKoef + rightData.eps_g * edgeData.RightCellKoef);
-    //Vector<ProblemDimension,double> viscose_side_diag = (myu * eps_g_e *(du_g_dx[1] + du_g_dy[0])) * Vector<ProblemDimension,double>{edgeData.n[1],edgeData.n[0]};
-
     // adding of fluxes to cells
     edgeData.fluxP_g = fluxP_g;
 
@@ -658,7 +649,7 @@ inline void MultiphaseFlow::ComputeFluxGas_inner(const FlowData &leftData, const
 
 }
 
-inline void MultiphaseFlow::ComputeFluxGas_inflow(const FlowData& innerCellData, const MeshType::Cell& innerCell,  EdgeData& edgeData, const MeshType::Face&)
+inline void MultiphaseFlow::ComputeFluxGas_inflow(const FlowData<ProblemDimension>& innerCellData, const Cell& innerCell,  FaceData<ProblemDimension>& edgeData, const Face&)
 {
 
     Vector<ProblemDimension,double> modulatedU = inFlow_u_g;
@@ -667,20 +658,6 @@ inline void MultiphaseFlow::ComputeFluxGas_inflow(const FlowData& innerCellData,
 
     double productOf_u_And_n = (modulatedU * edgeData.n);
 
-    /*
-    ** Preparing partial derivatives wrt
-    ** edge orientation
-    */
-
-    // // computing derivatives of velocity
-    // Vector<ProblemDimension,double> du_g_dn({0.0, 0.0}); // boundary cond
-    // Vector<ProblemDimension,double> du_g_dt = (
-    //             meshData.getDataByDim<0>().at(fcData.getVertexBIndex()).u_g -
-    //             meshData.getDataByDim<0>().at(fcData.getVertexAIndex()).u_g);
-    //
-    // // transform derivatives to standard base
-    // Vector<ProblemDimension,double> du_g_dx = du_g_dn * (edgeData.n[0]) - (du_g_dt * edgeData.n[1]);
-    // Vector<ProblemDimension,double> du_g_dy = du_g_dt * (edgeData.n[0]) + (du_g_dn * edgeData.n[1]);
 
     // flux of density
     double delta_rho = -innerCellData.rho_g * inFlow_eps_g *
@@ -706,43 +683,17 @@ inline void MultiphaseFlow::ComputeFluxGas_inflow(const FlowData& innerCellData,
     // compuatation of grad(u)
     edgeData.grad_u_g = tensorProduct(modulatedU, edgeData.n) * edgeData.Length;
 
-    // Diffusion of the velocity
-    //viscose_x_x = (4.0/3) * myu * du_x_dx  * edgeData.n[0];
-    //viscose_y_y = (4.0/3) * myu * du_y_dy * edgeData.n[1];
-    //Vector<ProblemDimension,double> viscose_diag = ((4.0/3.0) * myu * inFlow_eps_g) * Vector<ProblemDimension,double>{du_g_dx[0] * edgeData.n[0], du_g_dy[1] * edgeData.n[1]};
-
-    // Diffusion of the velocity
-
-    //viscose_y_x = myu * (du_x_dy + du_y_dx) * edgeData.n[0];
-    //viscose_x_y = myu * (du_x_dy + du_y_dx) * edgeData.n[1];
-    //Vector<ProblemDimension,double> viscose_side_diag = (myu * inFlow_eps_g * (du_g_dx[1] + du_g_dy[0])) * Vector<ProblemDimension,double>{edgeData.n[1],edgeData.n[0]};
-
     edgeData.fluxP_g = flux;// + viscose_side_diag + viscose_diag;
 
     edgeData.fluxRho_g = delta_rho;
 
 }
 
-inline void MultiphaseFlow::ComputeFluxGas_outflow(const FlowData& innerCellData, EdgeData& edgeData, const MeshType::Face&)
+inline void MultiphaseFlow::ComputeFluxGas_outflow(const FlowData<ProblemDimension>& innerCellData, FaceData<ProblemDimension>& edgeData, const Face&)
 {
     Vector<ProblemDimension, double> in_u_g = innerCellData.getVelocityGas();
     double productOf_u_And_n = ((in_u_g) * edgeData.n);
     double eps_g_e = productOf_u_And_n > 0 ? innerCellData.getEps_g() : outFlow.getEps_g();
-
-    /*
-    ** Preparing partial derivatives wrt
-    ** edge orientation
-    */
-
-    // // computing derivatives of velocity
-    // Vector<ProblemDimension,double> du_g_dn({0.0, 0.0}); // boundary cond
-    // Vector<ProblemDimension,double> du_g_dt = (
-    //             meshData.getDataByDim<0>().at(fcData.getVertexBIndex()).u_g -
-    //             meshData.getDataByDim<0>().at(fcData.getVertexAIndex()).u_g);
-    //
-    // // transform derivatives to standard base
-    // Vector<ProblemDimension,double> du_g_dx = du_g_dn * (edgeData.n[0]) - (du_g_dt * edgeData.n[1]);
-    // Vector<ProblemDimension,double> du_g_dy = du_g_dt * (edgeData.n[0]) + (du_g_dn * edgeData.n[1]);
 
 
 
@@ -766,25 +717,13 @@ inline void MultiphaseFlow::ComputeFluxGas_outflow(const FlowData& innerCellData
     // compuatation of grad(u)
     edgeData.grad_u_g = tensorProduct(in_u_g, edgeData.n) * edgeData.Length;
 
-    // Diffusion of the velocity
-    //viscose_x_x = (4.0/3) * myu * du_x_dx  * edgeData.n[0];
-    //viscose_y_y = (4.0/3) * myu * du_y_dy * edgeData.n[1];
-    //Vector<ProblemDimension,double> viscose_diag = ((4.0/3.0) * myu * eps_g_e) * Vector<ProblemDimension,double>({du_g_dx[0] * edgeData.n[0], du_g_dy[1] * edgeData.n[1]});
-
-    // Diffusion of the velocity
-
-    //viscose_y_x = myu * (du_x_dy + du_y_dx) * edgeData.n[0];
-    //viscose_x_y = myu * (du_x_dy + du_y_dx) * edgeData.n[1];
-    //Vector<ProblemDimension,double> viscose_side_diag = (myu * eps_g_e * (du_g_dx[1] + du_g_dy[0])) * Vector<ProblemDimension,double>({edgeData.n[1],edgeData.n[0]});
-
-
     edgeData.fluxP_g = flux;// + viscose_side_diag + viscose_diag;
 
     edgeData.fluxRho_g = delta_rho;
 
 }
 
-inline void MultiphaseFlow::ComputeFluxGas_wall(const FlowData& innerCellData, EdgeData& edgeData, const MeshType::Face&)
+inline void MultiphaseFlow::ComputeFluxGas_wall(const FlowData<ProblemDimension>& innerCellData, FaceData<ProblemDimension>& edgeData, const Face&)
 {
 
 
@@ -800,12 +739,6 @@ inline void MultiphaseFlow::ComputeFluxGas_wall(const FlowData& innerCellData, E
 
     //prepare eps_g
 
-
-    // Diffusion of the velocity
-    //Vector<ProblemDimension,double> viscose_diag = ((4.0/3.0) * myu * iEps_g) * Vector<ProblemDimension,double>({du_g_dx[0] * edgeData.n[0], du_g_dy[1] * edgeData.n[1]});
-    //Vector<ProblemDimension,double> viscose_side_diag = (myu * iEps_g * (du_g_dx[1] + du_g_dy[0])) * Vector<ProblemDimension,double>({edgeData.n[1],edgeData.n[0]});
-
-
     // compuatation of grad(u)
     edgeData.grad_u_g = {};
 
@@ -819,7 +752,7 @@ inline void MultiphaseFlow::ComputeFluxGas_wall(const FlowData& innerCellData, E
 
 
 
-void MultiphaseFlow::ComputeViscousFluxGas_inner(const FlowData &leftData, const FlowData &rightData, EdgeData &edgeData, const MeshType::Face &fcData)
+void MultiphaseFlow::ComputeViscousFluxGas_inner(const FlowData<ProblemDimension> &leftData, const FlowData<ProblemDimension> &rightData, FaceData<ProblemDimension> &edgeData, const Face &fcData)
 {
 
     double lEps_g = leftData.getEps_g();
@@ -845,7 +778,7 @@ void MultiphaseFlow::ComputeViscousFluxGas_inner(const FlowData &leftData, const
 
 }
 
-void MultiphaseFlow::ComputeViscousFluxGas_inflow(const MeshType::Cell &innerCell, const MeshType::Face& face)
+void MultiphaseFlow::ComputeViscousFluxGas_inflow(const Cell &innerCell, const Face& face)
 {
 
     double eps_g_e = inFlow_eps_g;
@@ -868,12 +801,12 @@ void MultiphaseFlow::ComputeViscousFluxGas_inflow(const MeshType::Cell &innerCel
 
 }
 
-void MultiphaseFlow::ComputeViscousFluxGas_outflow(const MeshType::Cell& innerCell,  const MeshType::Face& face)
+void MultiphaseFlow::ComputeViscousFluxGas_outflow(const Cell& innerCell,  const Face& face)
 {
     ComputeViscousFluxGas_inflow(innerCell, face);
 }
 
-void MultiphaseFlow::ComputeViscousFluxGas_wall(const MeshType::Cell& innerCell,  const MeshType::Face& face)
+void MultiphaseFlow::ComputeViscousFluxGas_wall(const Cell& innerCell,  const Face& face)
 {
     ComputeViscousFluxGas_inflow(innerCell, face);
 }
@@ -885,7 +818,7 @@ void MultiphaseFlow::ComputeViscousFluxGas_wall(const MeshType::Cell& innerCell,
 
 
 
-inline void MultiphaseFlow::ComputeFluxSolid_inner(const FlowData &leftData, const FlowData &rightData, EdgeData &edgeData, const MeshType::Face&)
+inline void MultiphaseFlow::ComputeFluxSolid_inner(const FlowData<ProblemDimension> &leftData, const FlowData<ProblemDimension> &rightData, FaceData<ProblemDimension> &edgeData, const Face&)
 {
     /**
      * @brief eps_s_e
@@ -896,17 +829,6 @@ inline void MultiphaseFlow::ComputeFluxSolid_inner(const FlowData &leftData, con
 
     Vector<ProblemDimension, double> ru_s = rightData.getVelocitySolid();
     Vector<ProblemDimension, double> lu_s = leftData.getVelocitySolid();
-
-    // Vector<ProblemDimension,double> du_s_dn = (ru_s - lu_s) * edgeData.LengthOverDist;
-    //
-    // Vector<ProblemDimension,double> du_s_dt = (
-    //             meshData.getDataByDim<0>().at(fcData.getVertexBIndex()).u_s -
-    //             meshData.getDataByDim<0>().at(fcData.getVertexAIndex()).u_s);
-    //
-    // //transform diferences to standard base
-    // Vector<ProblemDimension,double> du_s_dx = du_s_dn * (edgeData.n[0]) - (du_s_dt * edgeData.n[1]);
-    //
-    // Vector<ProblemDimension,double> du_s_dy = du_s_dt * (edgeData.n[0]) + (du_s_dn * edgeData.n[1]);
 
     auto edge_u_s = (lu_s * edgeData.LeftCellKoef) + (ru_s * edgeData.RightCellKoef);
 
@@ -930,25 +852,11 @@ inline void MultiphaseFlow::ComputeFluxSolid_inner(const FlowData &leftData, con
     fluxP_s *= edgeData.Length;
 
     // add artifitial dissipation
-    // TODO this is the critical point it is necessary to look into this problem
-    // maybe the artifitial disipation must be raise
     fluxP_s += (edgeData.LengthOverDist * artifitialDisspation ) * (rightData.p_s - leftData.p_s);
 
 
     edgeData.grad_u_s = tensorProduct(edge_u_s, edgeData.n) * edgeData.Length;
 
-    //viscose_x_x = (4.0/3) * myu * du_x_dx * edgeData.n[0] * (leftData.eps_g * edgeData.LeftCellKoef + rightData.eps_g * edgeData.RightCellKoef);
-    //viscose_y_y = (4.0/3) * myu * du_y_dy * edgeData.n[1] * (leftData.eps_g * edgeData.LeftCellKoef + rightData.eps_g * edgeData.RightCellKoef);
-    //Vector<ProblemDimension,double> viscose_diag = ((4.0/3) * myu_s * eps_s_e) * Vector<ProblemDimension,double>(du_s_dx[0] * edgeData.n[0], du_s_dy[1] * edgeData.n[1]);
-    //fluxP_s += ((4.0/3) * myu_s * eps_s_e) * Vector<ProblemDimension,double>{du_s_dx[0] * edgeData.n[0], du_s_dy[1] * edgeData.n[1]};
-
-    //Vector<ProblemDimension,double> viscose_diag = (4.0/3) * myu * du_s_dy * edgeData.n[1] * (leftData.eps_g * edgeData.LeftCellKoef + rightData.eps_g * edgeData.RightCellKoef);
-
-
-    //viscose_x_y = myu * (du_y_dx + du_x_dy) * edgeData.n[1] * (leftData.eps_g * edgeData.LeftCellKoef + rightData.eps_g * edgeData.RightCellKoef);
-    //viscose_y_x = myu * (du_y_dx + du_x_dy) * edgeData.n[0] * (leftData.eps_g * edgeData.LeftCellKoef + rightData.eps_g * edgeData.RightCellKoef);
-    //Vector<ProblemDimension,double> viscose_side_diag = (myu_s * eps_s_e *(du_s_dx[1] + du_s_dy[0])) * Vector<ProblemDimension,double>(edgeData.n[1],edgeData.n[0]);
-    //fluxP_s += (myu_s * eps_s_e *(du_s_dx[1] + du_s_dy[0])) * Vector<ProblemDimension,double>{edgeData.n[1],edgeData.n[0]};
 
     // storing result at the edge
     edgeData.fluxP_s = fluxP_s; // + viscose_diag + viscose_side_diag;
@@ -957,7 +865,7 @@ inline void MultiphaseFlow::ComputeFluxSolid_inner(const FlowData &leftData, con
 }
 
 
-inline void MultiphaseFlow::ComputeFluxSolid_inflow(const FlowData& innerCellData, const MeshType::Cell& innerCell,  EdgeData& edgeData, const MeshType::Face&)
+inline void MultiphaseFlow::ComputeFluxSolid_inflow(const FlowData<ProblemDimension>& innerCellData, const Cell& innerCell,  FaceData<ProblemDimension>& edgeData, const Face&)
 {
     (void)innerCellData;
 
@@ -967,20 +875,6 @@ inline void MultiphaseFlow::ComputeFluxSolid_inflow(const FlowData& innerCellDat
 
     double productOf_u_And_n = (modulatedU * edgeData.n);
 
-    /*
-    ** Preparing partial derivatives wrt
-    ** edge orientation
-    */
-
-    // // computing derivatives of velocity
-    // Vector<ProblemDimension,double> du_s_dn{0.0, 0.0}; // boundary cond
-    // Vector<ProblemDimension,double> du_s_dt = (
-    //             meshData.getDataByDim<0>().at(fcData.getVertexBIndex()).u_s -
-    //             meshData.getDataByDim<0>().at(fcData.getVertexAIndex()).u_s);
-    //
-    // // transform derivatives to standard base
-    // Vector<ProblemDimension,double> du_s_dx = du_s_dn * (edgeData.n[0]) - (du_s_dt * edgeData.n[1]);
-    // Vector<ProblemDimension,double> du_s_dy = du_s_dt * (edgeData.n[0]) + (du_s_dn * edgeData.n[1]);
 
     // flux of density
     double fluxRho_s = -rho_s * inFlow_eps_s *
@@ -1003,16 +897,6 @@ inline void MultiphaseFlow::ComputeFluxSolid_inflow(const FlowData& innerCellDat
 
     edgeData.grad_u_s = tensorProduct(modulatedU, edgeData.n) * edgeData.Length;
 
-    // Diffusion of the velocity
-    //viscose_x_x = (4.0/3) * myu * du_x_dx  * edgeData.n[0];
-    //viscose_y_y = (4.0/3) * myu * du_y_dy * edgeData.n[1];
-    //Vector<ProblemDimension,double> viscose_diag = ((4.0/3.0) * myu_s * inFlow_eps_s) * Vector<ProblemDimension,double>{du_s_dx[0] * edgeData.n[0], du_s_dy[1] * edgeData.n[1]};
-
-    // Diffusion of the velocity
-
-    //viscose_y_x = myu * (du_x_dy + du_y_dx) * edgeData.n[0];
-    //viscose_x_y = myu * (du_x_dy + du_y_dx) * edgeData.n[1];
-    //Vector<ProblemDimension,double> viscose_side_diag = (myu_s * inFlow_eps_s * (du_s_dx[1] + du_s_dy[0])) * Vector<ProblemDimension,double>{edgeData.n[1],edgeData.n[0]};
 
     edgeData.fluxP_s = fluxP_s;// + viscose_side_diag + viscose_diag;
 
@@ -1020,7 +904,7 @@ inline void MultiphaseFlow::ComputeFluxSolid_inflow(const FlowData& innerCellDat
 
 }
 
-inline void MultiphaseFlow::ComputeFluxSolid_outflow(const FlowData& innerCellData, EdgeData& edgeData, const MeshType::Face&)
+inline void MultiphaseFlow::ComputeFluxSolid_outflow(const FlowData<ProblemDimension>& innerCellData, FaceData<ProblemDimension>& edgeData, const Face&)
 {
 
     Vector<ProblemDimension, double> in_u_s = innerCellData.getVelocitySolid();
@@ -1028,19 +912,6 @@ inline void MultiphaseFlow::ComputeFluxSolid_outflow(const FlowData& innerCellDa
     double productOf_u_And_n = ((in_u_s) * edgeData.n);
     double eps_s_e = productOf_u_And_n > 0 ? innerCellData.eps_s : outFlow.eps_s;
 
-    /*
-    ** Preparing partial derivatives wrt
-    ** edge orientation
-    */
-    // computing derivatives of velocity
-    // Vector<ProblemDimension,double> du_s_dn({0.0, 0.0}); // boundary cond
-    // Vector<ProblemDimension,double> du_s_dt = (
-    //             meshData.getDataByDim<0>().at(fcData.getVertexBIndex()).u_s -
-    //             meshData.getDataByDim<0>().at(fcData.getVertexAIndex()).u_s);
-    //
-    // // transform derivatives to standard base
-    // Vector<ProblemDimension,double> du_s_dx = du_s_dn * (edgeData.n[0]) - (du_s_dt * edgeData.n[1]);
-    // Vector<ProblemDimension,double> du_s_dy = du_s_dt * (edgeData.n[0]) + (du_s_dn * edgeData.n[1]);
 
 
 
@@ -1063,16 +934,6 @@ inline void MultiphaseFlow::ComputeFluxSolid_outflow(const FlowData& innerCellDa
 
     edgeData.grad_u_s = tensorProduct(in_u_s, edgeData.n) * edgeData.Length;
 
-    // Diffusion of the velocity
-    //viscose_x_x = (4.0/3) * myu * du_x_dx  * edgeData.n[0];
-    //viscose_y_y = (4.0/3) * myu * du_y_dy * edgeData.n[1];
-    //Vector<ProblemDimension,double> viscose_diag = ((4.0/3.0) * myu_s * eps_s_e) * Vector<ProblemDimension,double>({du_s_dx[0] * edgeData.n[0], du_s_dy[1] * edgeData.n[1]});
-
-    // Diffusion of the velocity
-
-    //viscose_y_x = myu * (du_x_dy + du_y_dx) * edgeData.n[0];
-    //viscose_x_y = myu * (du_x_dy + du_y_dx) * edgeData.n[1];
-    //Vector<ProblemDimension,double> viscose_side_diag = (myu_s * eps_s_e * (du_s_dx[1] + du_s_dy[0])) * Vector<ProblemDimension,double>({edgeData.n[1],edgeData.n[0]});
 
     edgeData.fluxP_s = fluxP_s;// + viscose_side_diag + viscose_diag;
 
@@ -1080,18 +941,8 @@ inline void MultiphaseFlow::ComputeFluxSolid_outflow(const FlowData& innerCellDa
 
 }
 
-inline void MultiphaseFlow::ComputeFluxSolid_wall(const FlowData& innerCellData, EdgeData& edgeData, const MeshType::Face&)
+inline void MultiphaseFlow::ComputeFluxSolid_wall(const FlowData<ProblemDimension>& innerCellData, FaceData<ProblemDimension>& edgeData, const Face&)
 {
-    // computing derivatives of velocity
-    // Vector<ProblemDimension,double> du_s_dn = edgeData.LengthOverDist * (fcData.getCellLeftIndex() < BOUNDARY_INDEX(size_t) ?
-    //                                                                          -1.0 * innerCellData.getVelocitySolid() : innerCellData.getVelocitySolid());  // boundary cond
-
-    // Vector<ProblemDimension,double> du_s_dt = {0.0, 0.0};
-
-    // transform derivatives to standard base
-    //Vector<ProblemDimension,double> du_s_dx = du_s_dn * (edgeData.n[0]) - (du_s_dt * edgeData.n[1]);
-    //Vector<ProblemDimension,double> du_s_dy = du_s_dt * (edgeData.n[0]) + (du_s_dn * edgeData.n[1]);
-
 
 
 
@@ -1099,10 +950,6 @@ inline void MultiphaseFlow::ComputeFluxSolid_wall(const FlowData& innerCellData,
     // is reduced only to pressure gradient
     Vector<ProblemDimension,double> flux = -G(innerCellData.getEps_g()) * innerCellData.eps_s * edgeData.Length * edgeData.n;
 
-
-    // Diffusion of the velocity
-    // Vector<ProblemDimension,double> viscose_diag = ((4.0/3.0) * myu_s * innerCellData.eps_s) * Vector<ProblemDimension,double>({du_s_dx[0] * edgeData.n[0], du_s_dy[1] * edgeData.n[1]});
-    // Vector<ProblemDimension,double> viscose_side_diag = (myu_s * innerCellData.eps_s * (du_s_dx[1] + du_s_dy[0])) * Vector<ProblemDimension,double>({edgeData.n[1],edgeData.n[0]});
 
     // the velocity is 0
      edgeData.grad_u_s = {};// tensorProduct({}, edgeData.n) * edgeData.Length;
@@ -1113,7 +960,7 @@ inline void MultiphaseFlow::ComputeFluxSolid_wall(const FlowData& innerCellData,
 
 
 
-void MultiphaseFlow::ComputeViscousFluxSolid_inner(const FlowData &leftData, const FlowData &rightData, EdgeData &edgeData, const MeshType::Face &fcData)
+void MultiphaseFlow::ComputeViscousFluxSolid_inner(const FlowData<ProblemDimension> &leftData, const FlowData<ProblemDimension> &rightData, FaceData<ProblemDimension> &edgeData, const Face &fcData)
 {
 
     double lEps_s = leftData.eps_s;
@@ -1139,7 +986,7 @@ void MultiphaseFlow::ComputeViscousFluxSolid_inner(const FlowData &leftData, con
 
 }
 
-void MultiphaseFlow::ComputeViscousFluxSolid_inflow(const MeshType::Cell &innerCell, const MeshType::Face& face)
+void MultiphaseFlow::ComputeViscousFluxSolid_inflow(const Cell &innerCell, const Face& face)
 {
 
     double eps_s_e = inFlow_eps_s;
@@ -1162,18 +1009,18 @@ void MultiphaseFlow::ComputeViscousFluxSolid_inflow(const MeshType::Cell &innerC
 
 }
 
-void MultiphaseFlow::ComputeViscousFluxSolid_outflow(const MeshType::Cell& innerCell,  const MeshType::Face& face)
+void MultiphaseFlow::ComputeViscousFluxSolid_outflow(const Cell& innerCell,  const Face& face)
 {
     ComputeViscousFluxSolid_inflow(innerCell, face);
 }
 
-void MultiphaseFlow::ComputeViscousFluxSolid_wall(const MeshType::Cell& innerCell,  const MeshType::Face& face)
+void MultiphaseFlow::ComputeViscousFluxSolid_wall(const Cell& innerCell,  const Face& face)
 {
     ComputeViscousFluxSolid_inflow(innerCell, face);
 }
 
 
-void MultiphaseFlow::ComupteGradU(const MeshType::Cell &cell)
+void MultiphaseFlow::ComupteGradU(const Cell &cell)
 {
     meshData.at(cell).grad_u_g = {};
     meshData.at(cell).grad_u_s = {};
@@ -1182,7 +1029,7 @@ void MultiphaseFlow::ComupteGradU(const MeshType::Cell &cell)
                 cell.getIndex(),
                 mesh,
                 [&](size_t cellIndex, size_t faceIndex){
-            const EdgeData& eData = meshData.getDataByDim<ProblemDimension - 1>().at(faceIndex);
+            const FaceData<ProblemDimension>& eData = meshData.getDataByDim<ProblemDimension - 1>().at(faceIndex);
 
             if (cellIndex == mesh.getFaces().at(faceIndex).getCellLeftIndex()){
                 meshData.at(cell).grad_u_g += eData.grad_u_g;

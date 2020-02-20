@@ -218,14 +218,16 @@ void EulerSolver(
 
 
 void testHeatConduction1() {
-
+    constexpr unsigned int ProblemDim = 3;
     MultiphaseFlow mpf;
 
     mpf.setupMeshData("Boiler.vtk");
 
-    FlowData::R_spec = 287;
-    FlowData::T = 300;
-    FlowData::rho_s = 1700;
+    FlowData<ProblemDim> initGlobals;
+
+    initGlobals.R_spec = 287;
+    initGlobals.T = 300;
+    initGlobals.rho_s = 1700;
 
     mpf.artifitialDisspation = 0.8;
     mpf.R_spec = 287;
@@ -249,7 +251,7 @@ void testHeatConduction1() {
     mpf.inFlow_u_s = {0, 0};
 
 
-    FlowData ini;
+    FlowData<ProblemDim> ini;
 //    ini.eps_g = 1;
     ini.eps_s = 0;
 //    ini.rho_g = 1.3;
@@ -258,7 +260,7 @@ void testHeatConduction1() {
     //ini.setVelocityGas({0, 0});
     ini.p_s = {0, 0};
 
-    MeshDataContainer<FlowData, 2> compData(mpf.mesh, ini);
+    MeshDataContainer<FlowData<ProblemDim>, ProblemDim> compData(mpf.mesh, ini);
 
     for (auto& cell : mpf.mesh.getCells()){
         if(cell.getCenter()[1] > 1.0 && cell.getCenter()[1] < 7.0 &&
