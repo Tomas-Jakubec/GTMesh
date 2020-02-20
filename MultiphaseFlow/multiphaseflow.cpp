@@ -216,44 +216,44 @@ void MultiphaseFlow::ComputeViscousFlux(const MeshType::Face &fcData, const Mesh
 
 
 
-void MultiphaseFlow::ComputeSource(const MeshType::Cell& ccData,
+void MultiphaseFlow::ComputeSource(const MeshType::Cell& cell,
                                    MeshDataContainer<ResultType, ProblemDimension>& compData,
-                                   MeshDataContainer<MultiphaseFlow::ResultType, MultiphaseFlow::ProblemDimension> &outDeltas)
+                                   MeshDataContainer<MultiphaseFlow::ResultType, MultiphaseFlow::ProblemDimension> &result)
 {
-    FlowData& cellData = compData.at(ccData);
+    FlowData& resData = result[cell];
+    FlowData& cellData = compData[cell];
 
 
-
-    cellData.fluxRho_g = 0;
-    cellData.fluxRho_s = 0;
-    cellData.fluxP_g = {};
-    cellData.fluxP_s = {};
+    resData.rho_g = 0;
+    resData.eps_s = 0; // Firstly, the flux of rho_s is calculated. Finally, the eps_s is computed as flux_rho_s / rho_s
+    resData.p_g = {};
+    resData.p_s = {};
 
     MeshApply<ProblemDimension, ProblemDimension - 1>::apply(
-                ccData.getIndex(),
+                cell.getIndex(),
                 mesh,
                 // aplication of sum lambda to all cell faces
                 [&](size_t cellIndex, size_t faceIndex){
             const EdgeData& eData = meshData.getDataByDim<ProblemDimension - 1>().at(faceIndex);
 
             if (cellIndex == mesh.getFaces().at(faceIndex).getCellLeftIndex()){
-                cellData.fluxRho_g += eData.fluxRho_g;
-                cellData.fluxRho_s += eData.fluxRho_s;
-                cellData.fluxP_g += eData.fluxP_g;
-                cellData.fluxP_s += eData.fluxP_s;
+                resData.rho_g += eData.fluxRho_g;
+                resData.eps_s += eData.fluxRho_s;
+                resData.p_g += eData.fluxP_g;
+                resData.p_s += eData.fluxP_s;
             } else {
-                cellData.fluxRho_g -= eData.fluxRho_g;
-                cellData.fluxRho_s -= eData.fluxRho_s;
-                cellData.fluxP_g -= eData.fluxP_g;
-                cellData.fluxP_s -= eData.fluxP_s;
+                resData.rho_g -= eData.fluxRho_g;
+                resData.eps_s -= eData.fluxRho_s;
+                resData.p_g -= eData.fluxP_g;
+                resData.p_s -= eData.fluxP_s;
             }
         }
     );
 
-    cellData.fluxP_g *= meshData.at(ccData).invVolume;
-    cellData.fluxRho_g *= meshData.at(ccData).invVolume;
-    cellData.fluxP_s *= meshData.at(ccData).invVolume;
-    cellData.fluxRho_s *= meshData.at(ccData).invVolume;
+    resData.rho_g *= meshData[cell].invVolume;
+    resData.eps_s *= meshData[cell].invVolume;
+    resData.p_g *= meshData[cell].invVolume;
+    resData.p_s *= meshData[cell].invVolume;
 
 
 
@@ -261,20 +261,16 @@ void MultiphaseFlow::ComputeSource(const MeshType::Cell& ccData,
 
     Vector<ProblemDimension,double> g_acceleration = {0, -9.81};
 
-    cellData.fluxP_g += (cellData.rho_g * g_acceleration + drag);
+    resData.p_g += (cellData.rho_g * g_acceleration + drag);
 
-    cellData.fluxP_s += ((rho_s - cellData.rho_g) * cellData.eps_s * g_acceleration - drag);
+    resData.p_s += ((rho_s - cellData.rho_g) * cellData.eps_s * g_acceleration - drag);
 
     // now prepare the result
-    FlowData& resultData = outDeltas.at(ccData);
+    FlowData& resultData = result.at(cell);
 
-    resultData.p_s = cellData.fluxP_s;
-    resultData.eps_s = cellData.fluxRho_s / rho_s;
+    resultData.eps_s /= rho_s;
 
-
-    resultData.p_g = cellData.fluxP_g;
-
-    resultData.rho_g = cellData.fluxRho_g / reg(cellData.getEps_g());
+    resultData.rho_g /= reg(cellData.getEps_g());
 
 }
 

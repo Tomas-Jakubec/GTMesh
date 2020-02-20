@@ -144,9 +144,6 @@ struct FlowData {
      */
     Vector<2,double> p_g;
 
-    double fluxRho_g; //flux of "mass" over cell boundary
-
-    Vector<2,double> fluxP_g; //flux of momentum over cell boundary
 
 
 // solid part
@@ -182,8 +179,6 @@ struct FlowData {
     double eps_s;
 
 
-    double fluxRho_s;
-    Vector<2,double> fluxP_s;
 
 };
 
