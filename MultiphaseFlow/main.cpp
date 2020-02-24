@@ -221,7 +221,7 @@ void testHeatConduction1() {
     constexpr unsigned int ProblemDim = 3;
     MultiphaseFlow mpf;
 
-    mpf.setupMeshData("cube_3500_cells.vtk");
+    mpf.setupMeshData("cube_64k_cells.vtk");
     FlowData<ProblemDim> initGlobals;
 
     initGlobals.R_spec = 287;
@@ -246,7 +246,7 @@ void testHeatConduction1() {
 
     mpf.inFlow_eps_g = 1;
     mpf.inFlow_eps_s = 0;
-    mpf.inFlow_u_g = {0.0,25};
+    mpf.inFlow_u_g = {0.0,5};
     mpf.inFlow_u_s = {0, 0};
 
 
@@ -262,20 +262,21 @@ void testHeatConduction1() {
     MeshDataContainer<FlowData<ProblemDim>, ProblemDim> compData(mpf.mesh, ini);
 
     for (auto& cell : mpf.mesh.getCells()){
-        if(cell.getCenter()[1] > 1.0 && cell.getCenter()[1] < 7.0 &&
-           cell.getCenter()[0] > 0.0 && cell.getCenter()[0] < 10.0){
+        if(cell.getCenter()[2] > -0.5 && cell.getCenter()[2] < 0.5 &&
+           cell.getCenter()[1] > -0.5 && cell.getCenter()[1] < 0.5 &&
+           cell.getCenter()[0] > -0.5 && cell.getCenter()[0] < 0.5){
             compData.at(cell).eps_s = 0.2;
         }
     }
 
-    DBGVAR_JSON(mpf.mesh.computeElementMeasures().getDataByDim<3>());
+
     mpf.exportData(0.0, compData);
-    return;
+
     double exportStep = 1e-1;
-    for (double t = 0; t < /*300 * */exportStep; t += exportStep){
+    for (double t = 0; t < 10 * exportStep; t += exportStep){
 
 
-        RKMSolver(mpf, compData, 1e-3, t, t + exportStep, 1e-1);
+        RKMSolver(mpf, compData, 1e-3, t, t + exportStep, 1e-2);
 
         //EulerSolver(mpf, compData, 1e-5, t, t + exportStep);
         mpf.exportData((t + exportStep)*1e-2, compData);

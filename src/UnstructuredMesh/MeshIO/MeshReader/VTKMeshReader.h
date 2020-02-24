@@ -191,7 +191,6 @@ public:
     }
 };
 
-
 template<>
 class VTKMeshReader<3> : public MeshReader<3>{
     using reader = MeshReader<3>;
@@ -219,7 +218,7 @@ class VTKMeshReader<3> : public MeshReader<3>{
                     {4,0,5,8},
                     {5,1,6,9},
                     {6,2,7,10},
-                    {7,3,5,11},
+                    {7,3,4,11},
                     {8,9,10,11}
                 }
             }
@@ -375,9 +374,11 @@ public:
                     mesh.getFaces().at(faceIndex).setCellRightIndex(cellIndex);
                 }
 
+                // connecting of faces in cell structure
                 if (prevFaceIndex != INVALID_INDEX(IndexType)) {
                     mesh.getFaces().at(prevFaceIndex).setNextBElem(faceIndex, cellIndex);
                 }
+
                 if (fi == 0) {
                     mesh.getCells().at(cellIndex).setBoundaryElementIndex(faceIndex);
                 }

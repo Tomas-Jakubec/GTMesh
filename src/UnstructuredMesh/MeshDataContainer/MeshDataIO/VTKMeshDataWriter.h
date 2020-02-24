@@ -40,7 +40,9 @@ class VTKMeshDataWriter {
 
         IndexType realIndex = 0;
         IndexType localIndex = 0;
-        for(const std::pair<IndexType, IndexType>& key : writer.backwardCellIndexMapping) {
+        auto keyIt = writer.backwardCellIndexMapping.cbegin();
+        while(keyIt != writer.backwardCellIndexMapping.cend()) {
+            const std::pair<IndexType, IndexType>& key = *keyIt;
             while (localIndex < key.first) {
                     for (unsigned int j = 0; j < DefaultIOTraits<T>::getTraits().template getValue<Index>(data.at(0)).size(); j++) {
                     ost << DefaultIOTraits<T>::getTraits().template getValue<Index>(data.at(realIndex))[j] << ' ';
@@ -53,7 +55,13 @@ class VTKMeshDataWriter {
             for (unsigned int j = 0; j < DefaultIOTraits<T>::getTraits().template getValue<Index>(data.at(0)).size(); j++) {
                 ost << DefaultIOTraits<T>::getTraits().template getValue<Index>(data.at(realIndex))[j] << ' ';
             }
+            ++keyIt;
+            if (keyIt == writer.backwardCellIndexMapping.cend() || realIndex != keyIt->second){
+                realIndex++;
+            }
         }
+
+        // write the rest of not tessellated cells
         while (realIndex < data.size()) {
             for (unsigned int j = 0; j < DefaultIOTraits<T>::getTraits().template getValue<Index>(data.at(0)).size(); j++) {
                 ost << DefaultIOTraits<T>::getTraits().template getValue<Index>(data.at(realIndex))[j] << ' ';
@@ -75,7 +83,10 @@ class VTKMeshDataWriter {
 
         IndexType realIndex = 0;
         IndexType localIndex = 0;
-        for(const std::pair<IndexType, IndexType>& key : writer.backwardCellIndexMapping) {
+
+        auto keyIt = writer.backwardCellIndexMapping.cbegin();
+        while(keyIt != writer.backwardCellIndexMapping.cend()) {
+            const std::pair<IndexType, IndexType>& key = *keyIt;
             while (localIndex < key.first) {
                 ost << DefaultIOTraits<T>::getTraits().template getValue<Index>(data.at(realIndex)) << ' ';
                 realIndex++;
@@ -84,7 +95,12 @@ class VTKMeshDataWriter {
             realIndex = key.second;
             localIndex++;
             ost << DefaultIOTraits<T>::getTraits().template getValue<Index>(data.at(realIndex)) << ' ';
+            ++keyIt;
+            if (keyIt == writer.backwardCellIndexMapping.cend() || realIndex != keyIt->second){
+                realIndex++;
+            }
         }
+
         while (realIndex < data.size()) {
             ost << DefaultIOTraits<T>::getTraits().template getValue<Index>(data.at(realIndex)) << ' ';
             realIndex++;

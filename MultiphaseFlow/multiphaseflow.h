@@ -649,12 +649,12 @@ inline void MultiphaseFlow::ComputeFluxGas_inner(const FlowData<ProblemDimension
 
 }
 
-inline void MultiphaseFlow::ComputeFluxGas_inflow(const FlowData<ProblemDimension>& innerCellData, const Cell& innerCell,  FaceData<ProblemDimension>& edgeData, const Face&)
+inline void MultiphaseFlow::ComputeFluxGas_inflow(const FlowData<ProblemDimension>& innerCellData, const Cell& innerCell,  FaceData<ProblemDimension>& edgeData, const Face& face)
 {
 
     Vector<ProblemDimension,double> modulatedU = inFlow_u_g;
 
-    modulatedU[1] *= FlowModulation(innerCell.getCenter());
+    modulatedU[1] *= FlowModulation(face.getCenter());
 
     double productOf_u_And_n = (modulatedU * edgeData.n);
 
@@ -865,13 +865,13 @@ inline void MultiphaseFlow::ComputeFluxSolid_inner(const FlowData<ProblemDimensi
 }
 
 
-inline void MultiphaseFlow::ComputeFluxSolid_inflow(const FlowData<ProblemDimension>& innerCellData, const Cell& innerCell,  FaceData<ProblemDimension>& edgeData, const Face&)
+inline void MultiphaseFlow::ComputeFluxSolid_inflow(const FlowData<ProblemDimension>& innerCellData, const Cell& innerCell,  FaceData<ProblemDimension>& edgeData, const Face& face)
 {
     (void)innerCellData;
 
     Vector<ProblemDimension,double> modulatedU = inFlow_u_s;
 
-    modulatedU[1] *= FlowModulation(innerCell.getCenter());
+    modulatedU[1] *= FlowModulation(face.getCenter());
 
     double productOf_u_And_n = (modulatedU * edgeData.n);
 
