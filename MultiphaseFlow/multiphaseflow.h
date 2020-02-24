@@ -312,7 +312,7 @@ public:
     ~MultiphaseFlow() = default;
 
 public: // make some types public
-    static constexpr unsigned int ProblemDimension = 3;
+    static constexpr unsigned int ProblemDimension = 2;
     using MeshType = UnstructuredMesh<ProblemDimension,size_t, double>;
     using ResultType = FlowData<ProblemDimension>;
 
@@ -595,44 +595,28 @@ inline double MultiphaseFlow::Re_s(const FlowData<ProblemDimension> &fd)
 
 inline void MultiphaseFlow::ComputeFluxGas_inner(const FlowData<ProblemDimension> &leftData, const FlowData<ProblemDimension> &rightData, FaceData<ProblemDimension> &edgeData, const Face&)
 {
-    /**
-     * @brief eps_g_e
-     * volume fraction aproximated at the edge
-     */
-    double lEps_g = leftData.getEps_g();
-    double rEps_g = rightData.getEps_g();
 
+    auto edge_u_g = (leftData.getVelocityGas() * edgeData.LeftCellKoef) + (rightData.getVelocityGas() * edgeData.RightCellKoef);
+    double product_of_u_and_n = (edge_u_g * edgeData.n);
 
-    Vector<ProblemDimension, double> ru_g = rightData.getVelocityGas();
-    Vector<ProblemDimension, double> lu_g = leftData.getVelocityGas();
+    // prepare upwind values
+    const FlowData<ProblemDimension>& faceVal = product_of_u_and_n > 0 ? leftData : rightData;
 
-
-    auto edge_u_g = (lu_g * edgeData.LeftCellKoef) + (ru_g * edgeData.RightCellKoef);
-    double productOf_u_And_n = (edge_u_g * edgeData.n);
+    // update the velocity at the face/edge
+    //productOf_u_And_n = faceVal.getVelocityGas() * edgeData.n;
 
     // flux of density
-    double delta_rho = -(lEps_g * leftData.rho_g * edgeData.LeftCellKoef +
-                         rEps_g * rightData.rho_g * edgeData.RightCellKoef) *
-                       productOf_u_And_n * edgeData.Length +
-                       (rightData.rho_g * rEps_g - leftData.rho_g * lEps_g) * edgeData.LengthOverDist * artifitialDisspation;
+    double delta_rho = - faceVal.getEps_g() * faceVal.rho_g * product_of_u_and_n * edgeData.Length +
+                       (rightData.rho_g * rightData.getEps_g() - leftData.rho_g * leftData.getEps_g()) * edgeData.LengthOverDist * artifitialDisspation;
 
 
     // computing the flux of momentum
-    Vector<ProblemDimension,double> fluxP_g = (-productOf_u_And_n) *
-                  (leftData.p_g * edgeData.LeftCellKoef + rightData.p_g * edgeData.RightCellKoef);
-
-
-
+    Vector<ProblemDimension,double> fluxP_g = (-product_of_u_and_n) * faceVal.p_g;
 
     // adding the element of pressure gradient
-    fluxP_g -= (leftData.getPressure() * edgeData.LeftCellKoef +
-                rightData.getPressure() * edgeData.RightCellKoef) * edgeData.n;
-
-
-
+    fluxP_g -= (leftData.getPressure() * edgeData.LeftCellKoef + rightData.getPressure() * edgeData.RightCellKoef) * edgeData.n;
+    // multiply by the face/edge measure
     fluxP_g *= edgeData.Length;
-
-
 
     // add artifitial dissipation
     fluxP_g += (edgeData.LengthOverDist * artifitialDisspation * ((rightData.p_g) - (leftData.p_g)));
@@ -649,26 +633,26 @@ inline void MultiphaseFlow::ComputeFluxGas_inner(const FlowData<ProblemDimension
 
 }
 
-inline void MultiphaseFlow::ComputeFluxGas_inflow(const FlowData<ProblemDimension>& innerCellData, const Cell& innerCell,  FaceData<ProblemDimension>& edgeData, const Face& face)
+inline void MultiphaseFlow::ComputeFluxGas_inflow(const FlowData<ProblemDimension>& innerCellData, const Cell& ,  FaceData<ProblemDimension>& edgeData, const Face& face)
 {
 
     Vector<ProblemDimension,double> modulatedU = inFlow_u_g;
 
-    modulatedU[1] *= FlowModulation(face.getCenter());
+    modulatedU *= FlowModulation(face.getCenter());
 
-    double productOf_u_And_n = (modulatedU * edgeData.n);
+    double product_of_u_and_n = (modulatedU * edgeData.n);
 
 
     // flux of density
     double delta_rho = -innerCellData.rho_g * inFlow_eps_g *
-                        productOf_u_And_n * edgeData.Length;
+                        product_of_u_and_n * edgeData.Length;
 
 
 
 
     // computing the flux of momentum
     Vector<ProblemDimension,double> flux = - (innerCellData.rho_g) *
-                    (productOf_u_And_n) * inFlow_eps_g *
+                    (product_of_u_and_n) * inFlow_eps_g *
                     (modulatedU);
 
 
@@ -692,19 +676,19 @@ inline void MultiphaseFlow::ComputeFluxGas_inflow(const FlowData<ProblemDimensio
 inline void MultiphaseFlow::ComputeFluxGas_outflow(const FlowData<ProblemDimension>& innerCellData, FaceData<ProblemDimension>& edgeData, const Face&)
 {
     Vector<ProblemDimension, double> in_u_g = innerCellData.getVelocityGas();
-    double productOf_u_And_n = ((in_u_g) * edgeData.n);
-    double eps_g_e = productOf_u_And_n > 0 ? innerCellData.getEps_g() : outFlow.getEps_g();
+    double product_of_u_and_n = ((in_u_g) * edgeData.n);
+    double eps_g_e = product_of_u_and_n > 0 ? innerCellData.getEps_g() : outFlow.getEps_g();
 
 
 
     // flux of density
     double delta_rho = -outFlow.rho_g * eps_g_e *
-                        productOf_u_And_n * edgeData.Length;
+                        product_of_u_and_n * edgeData.Length;
 
 
     // computing the flux of momentum
     Vector<ProblemDimension,double> flux = - (outFlow.rho_g *
-                    productOf_u_And_n * eps_g_e) *
+                    product_of_u_and_n * eps_g_e) *
                     (in_u_g);
 
 
@@ -820,34 +804,30 @@ void MultiphaseFlow::ComputeViscousFluxGas_wall(const Cell& innerCell,  const Fa
 
 inline void MultiphaseFlow::ComputeFluxSolid_inner(const FlowData<ProblemDimension> &leftData, const FlowData<ProblemDimension> &rightData, FaceData<ProblemDimension> &edgeData, const Face&)
 {
-    /**
-     * @brief eps_s_e
-     * volume fraction aproximated at the edge
-     */
-    double eps_s_e = (leftData.eps_s * edgeData.LeftCellKoef + rightData.eps_s * edgeData.RightCellKoef);
 
-
-    Vector<ProblemDimension, double> ru_s = rightData.getVelocitySolid();
-    Vector<ProblemDimension, double> lu_s = leftData.getVelocitySolid();
-
-    auto edge_u_s = (lu_s * edgeData.LeftCellKoef) + (ru_s * edgeData.RightCellKoef);
+    auto edge_u_s = (leftData.getVelocitySolid() * edgeData.LeftCellKoef) + (rightData.getVelocitySolid() * edgeData.RightCellKoef);
 
     double product_of_u_s_and_n = (edge_u_s * edgeData.n);
 
+    // prepare upwind values at the face/edge
+    const FlowData<ProblemDimension>& faceVal = product_of_u_s_and_n > 0 ? leftData : rightData;
+
+    // update the velocity at the face/edge
+    // product_of_u_s_and_n = faceVal.getVelocityGas() * edgeData.n;
+
 
     // flux of mass
-    double fluxRho_s = (-rho_s * eps_s_e * edgeData.Length * product_of_u_s_and_n  +
+    double fluxRho_s = (-rho_s * faceVal.eps_s * edgeData.Length * product_of_u_s_and_n  +
                        (rightData.eps_s - leftData.eps_s) * rho_s * edgeData.LengthOverDist * artifitialDisspation) ;
 
 
     // computing the flux of momentum
-    Vector<ProblemDimension,double> fluxP_s = -product_of_u_s_and_n *
-                     (leftData.p_s * edgeData.LeftCellKoef + rightData.p_s * edgeData.RightCellKoef);
+    Vector<ProblemDimension,double> fluxP_s = -product_of_u_s_and_n * faceVal.p_s;
 
 
     // adding the element of "pressure" gradient
-    fluxP_s -= G(leftData.getEps_g() * edgeData.LeftCellKoef + rightData.getEps_g() * edgeData.RightCellKoef) * eps_s_e *
-              edgeData.n;
+    fluxP_s -= G(leftData.getEps_g() * edgeData.LeftCellKoef + rightData.getEps_g() * edgeData.RightCellKoef) *
+               (leftData.eps_s * edgeData.LeftCellKoef + rightData.eps_s * edgeData.RightCellKoef)* edgeData.n;
 
     fluxP_s *= edgeData.Length;
 
@@ -865,13 +845,13 @@ inline void MultiphaseFlow::ComputeFluxSolid_inner(const FlowData<ProblemDimensi
 }
 
 
-inline void MultiphaseFlow::ComputeFluxSolid_inflow(const FlowData<ProblemDimension>& innerCellData, const Cell& innerCell,  FaceData<ProblemDimension>& edgeData, const Face& face)
+inline void MultiphaseFlow::ComputeFluxSolid_inflow(const FlowData<ProblemDimension>& innerCellData, const Cell&,  FaceData<ProblemDimension>& edgeData, const Face& face)
 {
     (void)innerCellData;
 
     Vector<ProblemDimension,double> modulatedU = inFlow_u_s;
 
-    modulatedU[1] *= FlowModulation(face.getCenter());
+    modulatedU *= FlowModulation(face.getCenter());
 
     double productOf_u_And_n = (modulatedU * edgeData.n);
 

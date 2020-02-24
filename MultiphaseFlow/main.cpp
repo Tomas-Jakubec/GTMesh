@@ -164,7 +164,7 @@ void RKMSolver(
 
             time += tau;
             tau *= 1.005;
-            cout << "time: " << time << "\r";
+            //cout << "time: " << time << "\r";
             wK1.lap();
 
         } else {
@@ -217,11 +217,11 @@ void EulerSolver(
 
 
 
-void testHeatConduction1() {
-    constexpr unsigned int ProblemDim = 3;
+void MultiphaseFlowCalculation() {
+    constexpr unsigned int ProblemDim = 2;
     MultiphaseFlow mpf;
 
-    mpf.setupMeshData("cube_64k_cells.vtk");
+    mpf.setupMeshData("Boiler.vtk");
     FlowData<ProblemDim> initGlobals;
 
     initGlobals.R_spec = 287;
@@ -246,7 +246,7 @@ void testHeatConduction1() {
 
     mpf.inFlow_eps_g = 1;
     mpf.inFlow_eps_s = 0;
-    mpf.inFlow_u_g = {0.0,5};
+    mpf.inFlow_u_g = {0.0,25};
     mpf.inFlow_u_s = {0, 0};
 
 
@@ -261,6 +261,17 @@ void testHeatConduction1() {
 
     MeshDataContainer<FlowData<ProblemDim>, ProblemDim> compData(mpf.mesh, ini);
 
+
+    for (auto& cell : mpf.mesh.getCells()){
+        if(
+                cell.getCenter()[1] > 1.0 && cell.getCenter()[1] < 7.0 &&
+                cell.getCenter()[0] > 0 && cell.getCenter()[0] < 10
+          ){
+            compData.at(cell).eps_s = 0.2;
+        }
+    }
+
+/*
     for (auto& cell : mpf.mesh.getCells()){
         if(cell.getCenter()[2] > -0.5 && cell.getCenter()[2] < 0.5 &&
            cell.getCenter()[1] > -0.5 && cell.getCenter()[1] < 0.5 &&
@@ -268,12 +279,12 @@ void testHeatConduction1() {
             compData.at(cell).eps_s = 0.2;
         }
     }
-
+*/
 
     mpf.exportData(0.0, compData);
 
     double exportStep = 1e-1;
-    for (double t = 0; t < 10 * exportStep; t += exportStep){
+    for (double t = 0; t < 300 * exportStep; t += exportStep){
 
 
         RKMSolver(mpf, compData, 1e-3, t, t + exportStep, 1e-2);
@@ -296,7 +307,7 @@ void atEnd(){
 int main()
 {
     atexit(atEnd);
-    testHeatConduction1();
+    MultiphaseFlowCalculation();
 
     //testHeatConduction();
     //meshAdmisibility("Poly_2_5_level1.fpma");

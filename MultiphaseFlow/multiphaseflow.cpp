@@ -282,11 +282,11 @@ void MultiphaseFlow::ComputeSource(const MeshType::Cell& cell,
 
 double MultiphaseFlow::FlowModulation(const Vertex<MeshType::meshDimension(), double>& x)
 {
-    double inFlowModulation = sqrt(pow(x[0],2) + pow(x[1],2));
+    double inFlowModulation = x[0];//sqrt(pow(x[0],2) + pow(x[1],2));
 
     //inFlowModulation = (- inFlowModulation * inFlowModulation + inFlowModulation - 0.0099) * 4.164931279;
-    //inFlowModulation = -(inFlowModulation -1.9) * (inFlowModulation - 4.7) * 0.5102;//(-inFlowModulation * inFlowModulation + 6.6 * inFlowModulation - 8.93) * 0.5102;
-    inFlowModulation = (inFlowModulation - 0.3) * (inFlowModulation - 0.3) * (1/0.09);
+    inFlowModulation = -(inFlowModulation -1.9) * (inFlowModulation - 4.7) * 0.5102;//(-inFlowModulation * inFlowModulation + 6.6 * inFlowModulation - 8.93) * 0.5102;
+    //inFlowModulation = (inFlowModulation - 0.3) * (inFlowModulation - 0.3) * (1/0.09);
     return inFlowModulation;
 }
 
@@ -300,7 +300,7 @@ double MultiphaseFlow::FlowModulation(const Vertex<MeshType::meshDimension(), do
  */
 void MultiphaseFlow::setupMeshData(const std::string& fileName){
     VTKMeshReader<MeshType::meshDimension()> reader;
-    std::ifstream file(fileName);
+    std::ifstream file(fileName, std::ios::binary);
 
     reader.loadFromStream(file, mesh);
 
@@ -386,15 +386,17 @@ Type MultiphaseFlow::TypeOfCell(const MeshType::Cell &cell) {
     if (cell.getIndex() >= BOUNDARY_INDEX(size_t)){
 
         if (
-                sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[1],2)) < 0.3 &&
-                cell.getCenter()[2] < 0
+                cell.getCenter()[1] <= 1e-5
+            //    sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[1],2)) < 0.3 &&
+            //    cell.getCenter()[2] < 0
             ) {
             return Type::INFLOW;
         }
 
         if (
-                sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[1],2)) < 0.3 &&
-                cell.getCenter()[2] > 0
+                cell.getCenter()[1] >= 34.349
+            //    sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[1],2)) < 0.3 &&
+            //    cell.getCenter()[2] > 0
             //cell.GetCenter()[0] > 2 && (cell.GetCenter()[1] < 32.0 && cell.GetCenter()[1] > 30)
             //cell.GetCenter()[0] > 8 && cell.GetCenter()[1] >= 33.39
             //cell.getCenter()[1] >= 1.999
