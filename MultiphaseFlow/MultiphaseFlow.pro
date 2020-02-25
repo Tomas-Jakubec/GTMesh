@@ -6,8 +6,7 @@ QMAKE_CXXFLAGS += -fopenmp
 LIBS += -fopenmp
 
 SOURCES += \
-        main.cpp \
-    multiphaseflow.cpp
+        main.cpp
 
 HEADERS += \
     multiphaseflow.h

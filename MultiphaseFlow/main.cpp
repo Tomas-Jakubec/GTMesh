@@ -58,11 +58,7 @@ struct watch{
 MAKE_ATTRIBUTE_TRAIT_IO(watch::stats, avg, dev, lapCnt);
 
 watch
-wK1,
-wK2,
-wK3,
-wK4,
-wError;
+wK1;
 
 template <typename Problem, typename = typename std::enable_if<HasDefaultArithmeticTraits<typename Problem::ResultType>::value>::type>
 void RKMSolver(
@@ -218,17 +214,19 @@ void EulerSolver(
 
 
 void MultiphaseFlowCalculation() {
-    constexpr unsigned int ProblemDim = 2;
-    MultiphaseFlow mpf;
+    constexpr unsigned int ProblemDim = 3;
 
-    mpf.setupMeshData("Boiler.vtk");
-    FlowData<ProblemDim> initGlobals;
+    using MPFType = MultiphaseFlow<ProblemDim>;
 
-    initGlobals.R_spec = 287;
-    initGlobals.T = 300;
-    initGlobals.rho_s = 1700;
+    MPFType mpf;
 
-    mpf.artifitialDisspation = 0.8;
+    // setup constants
+    MPFType::ResultType::R_spec = 287;
+    MPFType::ResultType::T = 300;
+    MPFType::ResultType::rho_s = 1700;
+
+
+    mpf.artifitialDisspation = 0.01;
     mpf.R_spec = 287;
     mpf.myu = 1e-5;
     mpf.rho_s = 1700;
@@ -238,6 +236,7 @@ void MultiphaseFlowCalculation() {
 
     mpf.T = 300;
 
+    mpf.setupMeshData("cube_64k_cells.vtk");
 
 
 
@@ -246,22 +245,20 @@ void MultiphaseFlowCalculation() {
 
     mpf.inFlow_eps_g = 1;
     mpf.inFlow_eps_s = 0;
-    mpf.inFlow_u_g = {0.0,25};
-    mpf.inFlow_u_s = {0, 0};
+    mpf.inFlow_u_g = {};
+    mpf.inFlow_u_g[ProblemDim - 1] = 10;
+    mpf.inFlow_u_s = {};
 
 
     FlowData<ProblemDim> ini;
-//    ini.eps_g = 1;
     ini.eps_s = 0;
-//    ini.rho_g = 1.3;
     ini.setPressure(1e5);
     ini.p_g = {};
-    //ini.setVelocityGas({0, 0});
-    ini.p_s = {0, 0};
+    ini.p_s = {};
 
     MeshDataContainer<FlowData<ProblemDim>, ProblemDim> compData(mpf.mesh, ini);
 
-
+/*
     for (auto& cell : mpf.mesh.getCells()){
         if(
                 cell.getCenter()[1] > 1.0 && cell.getCenter()[1] < 7.0 &&
@@ -270,16 +267,18 @@ void MultiphaseFlowCalculation() {
             compData.at(cell).eps_s = 0.2;
         }
     }
+*/
 
-/*
     for (auto& cell : mpf.mesh.getCells()){
-        if(cell.getCenter()[2] > -0.5 && cell.getCenter()[2] < 0.5 &&
-           cell.getCenter()[1] > -0.5 && cell.getCenter()[1] < 0.5 &&
-           cell.getCenter()[0] > -0.5 && cell.getCenter()[0] < 0.5){
+        if(
+               cell.getCenter()[2] > 0.7 && cell.getCenter()[2] < 1
+//           cell.getCenter()[1] > -0.5 && cell.getCenter()[1] < 0.5 &&
+//           cell.getCenter()[0] > -0.5 && cell.getCenter()[0] < 0.5
+        ) {
             compData.at(cell).eps_s = 0.2;
         }
     }
-*/
+
 
     mpf.exportData(0.0, compData);
 
