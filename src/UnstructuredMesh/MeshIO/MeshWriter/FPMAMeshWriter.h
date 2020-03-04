@@ -99,7 +99,7 @@ class FPMAMeshWriter<3, IndexType, Real> : public MeshWriter<3>{
 DBGMSG("indexing mesh");
         // write cells of the mesh
         // prepare connections
-        auto cellVert = MeshConnections<3,0>::connections(mesh);
+        // auto cellVert = MeshConnections<3,0>::connections(mesh);
 
         for (typename MeshElements<3, IndexType, Real, Reserve...>::Face& face : mesh.getFaces()){
             indexFace(mesh, face, faceVert.at(face));
