@@ -150,7 +150,7 @@ struct _ComputeCenters<2, 3, ComputationMethod::TESSELLATED> {
 
 template <ComputationMethod Method, unsigned int Dimension,typename IndexType, typename Real, unsigned int ...Reserve>
 MakeMeshDataContainer_t<Vertex<Dimension, Real>, make_custom_integer_sequence_t<unsigned int, 1, Dimension>>
-ComputeCenters(const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+computeCenters(const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
 
      MakeMeshDataContainer_t<Vertex<Dimension, Real>, make_custom_integer_sequence_t<unsigned int, 1, Dimension>> centers(mesh);
 

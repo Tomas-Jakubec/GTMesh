@@ -244,19 +244,19 @@ public:
         IndexType startVertex = INVALID_INDEX(IndexType);
         IndexType nextVertex = INVALID_INDEX(IndexType);
         if (faceEdgeOri[face][0] == true && cell.getIndex() == face.getCellLeftIndex()){ // the edge is left to the face
-            startVertex = mesh.getEdges().at(face.getSubelements()[0].index).getVertexBIndex();
-            nextVertex = mesh.getEdges().at(face.getSubelements()[0].index).getVertexAIndex();
+            startVertex = mesh.getEdges().at(face.getSubelements()[0]).getVertexBIndex();
+            nextVertex = mesh.getEdges().at(face.getSubelements()[0]).getVertexAIndex();
         } else {
-            startVertex = mesh.getEdges().at(face.getSubelements()[0].index).getVertexAIndex();
-            nextVertex = mesh.getEdges().at(face.getSubelements()[0].index).getVertexBIndex();
+            startVertex = mesh.getEdges().at(face.getSubelements()[0]).getVertexAIndex();
+            nextVertex = mesh.getEdges().at(face.getSubelements()[0]).getVertexBIndex();
         }
 
         verticesIndexed.push_back(startVertex);
 
-        IndexType lastWrittenEdge = face.getSubelements()[0].index;
+        IndexType lastWrittenEdge = face.getSubelements()[0];
         while (startVertex != nextVertex){
             for (auto& sube : face.getSubelements()) {
-                auto &edge = mesh.getEdges().at(sube.index);
+                auto &edge = mesh.getEdges().at(sube);
 
                 if (edge.getIndex() != lastWrittenEdge) {
                     if (edge.getVertexAIndex() == nextVertex) {
@@ -525,7 +525,7 @@ DBGMSG("indexing mesh");
                     auto& face = mesh.getFaces().at(tmpFace);
 
                     for (auto& sube : face.getSubelements()){
-                        auto& edge = mesh.getEdges().at(sube.index);
+                        auto& edge = mesh.getEdges().at(sube);
                         vertWrit.clear();
                         vertWrit.reserve(4);
                         vertWrit.push_back(edge.getVertexAIndex());

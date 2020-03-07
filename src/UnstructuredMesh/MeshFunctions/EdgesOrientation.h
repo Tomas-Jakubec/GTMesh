@@ -79,7 +79,7 @@ MeshDataContainer<std::vector<bool>, 2> edgesOrientation(MeshElements<3, IndexTy
     for (auto& face : mesh.getFaces()) {
         orientations[face].resize(face.getSubelements().getNumberOfSubElements());
         for (IndexType i = 0; i < face.getSubelements().getNumberOfSubElements(); i++){
-            typename MeshElements<3, IndexType, Real, Reserve...>::Edge& edge = mesh.getEdges().at(face.getSubelements()[i].index);
+            typename MeshElements<3, IndexType, Real, Reserve...>::Edge& edge = mesh.getEdges().at(face.getSubelements()[i]);
 
             orientations[face][i] = edgeIsLeft(mesh, face, edge, normals[face]);
         }

@@ -14,7 +14,7 @@ class UnstructuredMesh : public MeshElements<Dimension, IndexType, Real, Reserve
 public:
     template<ComputationMethod Method = ComputationMethod::DEFAULT>
     void initializeCenters(){
-        auto centers = ComputeCenters<Method>(*this);
+        auto centers = computeCenters<Method>(*this);
 
         for (auto& face : this->getFaces()){
             face.setCenter(centers[face]);
@@ -35,18 +35,18 @@ public:
     }
 
     template<unsigned int StartDim, unsigned int TargetDim, typename Functor>
-    void apply(Functor& func) {
+    void apply(const Functor& func) {
         return MeshApply<StartDim, TargetDim>::apply(*this, func);
     }
 
 
     template<unsigned int StartDim, unsigned int TargetDim, typename Functor>
-    void apply(IndexType startElementIndex, Functor& func) {
+    void apply(IndexType startElementIndex,const Functor& func) {
         return MeshApply<StartDim, TargetDim>::apply(startElementIndex, *this, func);
     }
 
     template<unsigned int StartDim, unsigned int TargetDim, Order ConnectionsOrder = ORDER_ASCEND>
-    MeshDataContainer<std::vector<IndexType>, Dimension-1> connections() {
+    MeshDataContainer<std::vector<IndexType>, StartDim> connections() {
         return MeshConnections<StartDim, TargetDim, ConnectionsOrder>::connections(*this);
     }
 

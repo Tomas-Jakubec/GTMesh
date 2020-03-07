@@ -37,7 +37,7 @@ namespace dbg {
 try{code;} \
 catch(const std::exception& e){ \
 ConsoleLogger<>::writeMessage("!!", __LINE__, __FILE__, std::string("something went wrong in try block: ") + e.what()); \
-exit();}
+exit(1);}
 
 // Macros using html debug output
 #define DBGVAR_HTML(...) Singleton<dbg::DBGStatics>::getInstance().HDBGLog.writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))

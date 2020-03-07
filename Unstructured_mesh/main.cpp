@@ -355,7 +355,7 @@ void testMesh2D() {
 
 
 
-    auto centers = ComputeCenters<DEFAULT>(mesh);
+    auto centers = computeCenters<DEFAULT>(mesh);
 
     auto& faceCent = centers.getDataByDim<1>();
     for(auto& center : faceCent) {
@@ -467,9 +467,9 @@ void testMesh3D() {
     do {
         DBGVAR(tmp_face);
         for (auto& sube : mesh3.getFaces().at(tmp_face).getSubelements()) {
-            DBGVAR(sube.index);
-            if (sube.index != INVALID_INDEX(size_t) ){
-                DBGVAR(sube.index, mesh3.getVertices().at(mesh3.getEdges().at(sube.index).getVertexAIndex()),mesh3.getVertices().at(mesh3.getEdges().at(sube.index).getVertexBIndex()));
+            DBGVAR(sube);
+            if (sube != INVALID_INDEX(size_t) ){
+                DBGVAR(sube, mesh3.getVertices().at(mesh3.getEdges().at(sube).getVertexAIndex()),mesh3.getVertices().at(mesh3.getEdges().at(sube).getVertexBIndex()));
             }
         }
 
@@ -481,7 +481,7 @@ void testMesh3D() {
     DBGMSG("Iterator wrapper test");
     sit3::MeshElementWrap<2> elem(&mesh3, mesh3.getFaces().at(0));
     for(auto i : elem.getSubelements()){
-        DBGVAR(i.index);
+        DBGVAR(i);
     }
 
 
@@ -507,7 +507,7 @@ void testMesh3D() {
 
 
     //_ComputeCenters<1,3, 3,2,1>::compute<size_t, double, 6>(centers, mesh3);
-    auto centers = ComputeCenters<DEFAULT>(mesh3);
+    auto centers = computeCenters<DEFAULT>(mesh3);
 
 
 
@@ -522,7 +522,7 @@ void testMesh3D() {
     }
 
     DBGMSG("centers - tessellated faces");
-    auto centers1 = ComputeCenters<TESSELLATED>(mesh3);
+    auto centers1 = computeCenters<TESSELLATED>(mesh3);
 
     for(auto& face : mesh3.getFaces()) {
         face.setCenter(centers1.template getDataByDim<2>().at(face.getIndex()));
@@ -797,7 +797,7 @@ void test3DMeshDeformedPrisms() {
 
     DBGVAR(mesh3.getSignature());
     //_ComputeCenters<1,3, 3,2,1>::compute<size_t, double, 6>(centers, mesh3);
-    auto centers = ComputeCenters<DEFAULT>(mesh3);
+    auto centers = computeCenters<DEFAULT>(mesh3);
 
     for(auto& face : mesh3.getFaces()) {
         face.setCenter(centers[face]);
@@ -915,7 +915,7 @@ DBGVAR(mesh.getVertices().size(),mesh.getEdges().size(), mesh.getFaces().size(),
     for (auto& face : mesh.getFaces()) {
         DBGVAR(face.getIndex());
         for (auto& sube : face.getSubelements()){
-            DBGVAR(sube.index);
+            DBGVAR(sube);
         }
     }
 
@@ -932,7 +932,7 @@ DBGVAR(mesh.getVertices().size(),mesh.getEdges().size(), mesh.getFaces().size(),
     }
 
     mesh.initializeCenters();
-    DBGVAR(mesh.computeElementMeasures().getDataByDim<3>(),ComputeCenters<DEFAULT>(mesh).getDataByDim<2>(),mesh.computeFaceNormals().getDataByPos<0>());
+    DBGVAR(mesh.computeElementMeasures().getDataByDim<3>(),computeCenters<DEFAULT>(mesh).getDataByDim<2>(),mesh.computeFaceNormals().getDataByPos<0>());
 
 
 
@@ -1012,6 +1012,76 @@ void testFPMA_poly(){
         }
     }
     ofile.close();
+
+}
+
+void MeshExample(){
+    UnstructuredMesh<3,size_t, double, 6> mesh;
+    // load the mesh from fpma file
+    FPMAMeshReader<3> reader;
+    ifstream file("MeshFile.fpma");
+    reader.loadFromStream(file, mesh);
+
+    // export the mesh into VTK file
+    VTKMeshWriter<3, size_t, double> writer;
+    ofstream ofile("Spark_mesh.vtk");
+    writer.writeHeader(ofile, "fpma_output_test");
+    writer.writeToStream(ofile, mesh, MeshDataContainer<MeshNativeType<3>::ElementType, 3>(mesh, MeshNativeType<3>::POLYHEDRON));
+
+    // obtaining the cell with index 0
+    mesh.getElements<3>().at(0);
+    mesh.getCells().at(0);
+
+    // otaining the vertex on index 0
+    mesh.getElements<0>().at(0);
+    mesh.getVertices().at(0);
+
+    // iteration over boundary of cell 0
+    auto& cell_0 = mesh.getCells().at(0);
+    size_t bElemIndex = cell_0.getBoundaryElementIndex();
+    do {
+        // ... do some stuff
+        // get next boundary element index
+        bElemIndex = mesh.getFaces().at(bElemIndex).getNextBElem(cell_0.getIndex());
+    } while (bElemIndex != cell_0.getBoundaryElementIndex());
+
+    // or equivalently
+    mesh.apply<3, 2>(
+                0,
+                [](size_t cellIndex, size_t faceIndex){
+        // ... do some stuff
+    });
+
+
+
+    // moreover it is possible to perform deeper loops
+    // and for all elements
+    mesh.apply<3, 0>(
+                [](size_t cellIndex, size_t faceIndex){
+        // ... do some stuff
+    });
+
+    // connections from vertices to cells
+    auto vertexToCellConnection = mesh.connections<0,3>();
+
+    // obtain respective Lebesgue measure of all elements of the mesh
+    // with dimension greater than 0
+    auto measures = mesh.computeElementMeasures();
+
+    // the length of edge with index 0
+    measures.getDataByDim<1>()[0];
+
+    // the length of edge with index 0
+    measures.getDataByDim<2>()[0];
+
+    // the volume of the cell 0
+    measures[cell_0];
+
+    // obtain vectors perpendiculat ro faces
+    auto normals = mesh.computeFaceNormals();
+
+    // calculate the centers of all elements with dimension greater than 0
+    auto centers = computeCenters<DEFAULT>(mesh);
 
 }
 

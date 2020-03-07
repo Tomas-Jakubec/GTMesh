@@ -61,11 +61,11 @@ struct _ComputeNormals<3, Method>{
 
 
             // select 3 different vertices
-            IndexType vAIndex = mesh.getEdges().at(face.getSubelements()[0].index).getVertexAIndex();
-            IndexType vBIndex = mesh.getEdges().at(face.getSubelements()[0].index).getVertexBIndex();
-            IndexType vCIndex = mesh.getEdges().at(face.getSubelements()[1].index).getVertexAIndex();
+            IndexType vAIndex = mesh.getEdges().at(face.getSubelements()[0]).getVertexAIndex();
+            IndexType vBIndex = mesh.getEdges().at(face.getSubelements()[0]).getVertexBIndex();
+            IndexType vCIndex = mesh.getEdges().at(face.getSubelements()[1]).getVertexAIndex();
             if(vCIndex == vAIndex || vCIndex == vBIndex) {
-                vCIndex = mesh.getEdges().at(face.getSubelements()[1].index).getVertexBIndex();
+                vCIndex = mesh.getEdges().at(face.getSubelements()[1]).getVertexBIndex();
             }
 
             Vertex<3,Real>& a = mesh.getVertices().at(vAIndex);

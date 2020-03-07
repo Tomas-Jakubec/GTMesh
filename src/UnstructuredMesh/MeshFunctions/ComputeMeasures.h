@@ -56,11 +56,11 @@ struct _ComputeMeasures<3, 3, Method>{
 
             do {
                 // select 3 different vertices
-                IndexType vAIndex = mesh.getEdges().at(mesh.getFaces().at(tmpFace).getSubelements()[0].index).getVertexAIndex();
-                IndexType vBIndex = mesh.getEdges().at(mesh.getFaces().at(tmpFace).getSubelements()[0].index).getVertexBIndex();
-                IndexType vCIndex = mesh.getEdges().at(mesh.getFaces().at(tmpFace).getSubelements()[1].index).getVertexAIndex();
+                IndexType vAIndex = mesh.getEdges().at(mesh.getFaces().at(tmpFace).getSubelements()[0]).getVertexAIndex();
+                IndexType vBIndex = mesh.getEdges().at(mesh.getFaces().at(tmpFace).getSubelements()[0]).getVertexBIndex();
+                IndexType vCIndex = mesh.getEdges().at(mesh.getFaces().at(tmpFace).getSubelements()[1]).getVertexAIndex();
                 if(vCIndex == vAIndex || vCIndex == vBIndex) {
-                    vCIndex = mesh.getEdges().at(mesh.getFaces().at(tmpFace).getSubelements()[1].index).getVertexBIndex();
+                    vCIndex = mesh.getEdges().at(mesh.getFaces().at(tmpFace).getSubelements()[1]).getVertexBIndex();
                 }
 
                 Vertex<3,Real>& a = mesh.getVertices().at(vAIndex);
@@ -137,8 +137,8 @@ struct _ComputeMeasures<2, 3, Method>{
             Vertex<3,Real>& faceCenter = face.getCenter();
             for(auto sube : face.getSubelements()){
 
-                Vertex<3,Real>& a = mesh.getVertices().at(mesh.getEdges().at(sube.index).getVertexAIndex());
-                Vertex<3,Real>& b = mesh.getVertices().at(mesh.getEdges().at(sube.index).getVertexBIndex());
+                Vertex<3,Real>& a = mesh.getVertices().at(mesh.getEdges().at(sube).getVertexAIndex());
+                Vertex<3,Real>& b = mesh.getVertices().at(mesh.getEdges().at(sube).getVertexBIndex());
 
                 Real distance = Real();
 
@@ -146,7 +146,7 @@ struct _ComputeMeasures<2, 3, Method>{
 
                 distance = (a-faceCenter+(b-a)*param).normEukleid();
 
-                Real tmp = distance * measures.template getDataByDim<1>().at(sube.index);
+                Real tmp = distance * measures.template getDataByDim<1>().at(sube);
                 measure += tmp * 0.5;
             }
             surfaceMeasures.at(faceIndex) = measure;

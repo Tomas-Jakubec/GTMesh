@@ -58,12 +58,12 @@ public:
 private:
     template <unsigned int ElemDim = Dimension, typename Dummy = void>
     struct _MeshElements : public _MeshElements<ElemDim - 1, Dummy>{
-        std::vector<typename MeshElements<Dimension, IndexType, Real, Reserve...>:: template ElementType<ElemDim>> elements;
+        std::vector<ElementType<ElemDim>> elements;
     };
 
     template <typename Dummy>
     struct _MeshElements<0, Dummy>{
-        std::vector<typename MeshElements<Dimension, IndexType, Real, Reserve...>:: template ElementType<0>> elements;
+        std::vector<ElementType<0>> elements;
     };
 
 
@@ -250,7 +250,7 @@ private:
             size_t elemHash = mesh.getElements<Dim>().size();
             for(auto& element : mesh.getElements<Dim>()) {
                 for (auto& subElement : element.getSubelements()) {
-                    elemHash ^= indexHasher(subElement.index);
+                    elemHash ^= indexHasher(subElement);
                 }
             }
             return elemHash ^ HashOfMeshElements<Dim - 1>::hash(mesh);

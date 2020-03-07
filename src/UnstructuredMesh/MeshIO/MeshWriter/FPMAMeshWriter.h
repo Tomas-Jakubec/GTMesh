@@ -50,25 +50,25 @@ class FPMAMeshWriter<3, IndexType, Real> : public MeshWriter<3>{
                    std::vector<IndexType>& verticesIndexed){
 
         // export the face in "left" direction see VTK export
-        IndexType startVertex = mesh.getEdges().at(face.getSubelements()[0].index).getVertexBIndex();
-        IndexType nextVertex = mesh.getEdges().at(face.getSubelements()[0].index).getVertexAIndex();
+        IndexType startVertex = mesh.getEdges().at(face.getSubelements()[0]).getVertexBIndex();
+        IndexType nextVertex = mesh.getEdges().at(face.getSubelements()[0]).getVertexAIndex();
 
 
         verticesIndexed.push_back(startVertex);
 
-        IndexType lastWrittenEdge = face.getSubelements()[0].index;
+        IndexType lastWrittenEdge = face.getSubelements()[0];
         while (startVertex != nextVertex){
 
             for (auto& sube : face.getSubelements()) {
-                auto &edge = mesh.getEdges().at(sube.index);
+                auto &edge = mesh.getEdges().at(sube);
 
-                if (sube.index != lastWrittenEdge) {
+                if (sube != lastWrittenEdge) {
                     if (edge.getVertexAIndex() == nextVertex) {
-                        lastWrittenEdge = sube.index;
+                        lastWrittenEdge = sube;
                         verticesIndexed.push_back(edge.getVertexAIndex());
                         nextVertex = edge.getVertexBIndex();
                     } else if (edge.getVertexBIndex() == nextVertex) {
-                        lastWrittenEdge = sube.index;
+                        lastWrittenEdge = sube;
                         verticesIndexed.push_back(edge.getVertexBIndex());
                         nextVertex = edge.getVertexAIndex();
                     }

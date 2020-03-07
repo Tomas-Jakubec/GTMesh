@@ -19,7 +19,7 @@ struct MeshRun {
         auto currentElement = mesh.template getElements<CurrentDimension>().at(index);
         for (auto& sube : currentElement.getSubelements())
         MeshRun< CurrentDimension - 1, StartDimension, TargetDimension, MeshDimension, TargetDimension == CurrentDimension - 1, Descend>
-                ::run(mesh, origElementIndex, sube.index, fun);
+                ::run(mesh, origElementIndex, sube, fun);
 
 
     }
