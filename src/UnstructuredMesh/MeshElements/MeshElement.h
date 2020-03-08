@@ -79,9 +79,12 @@ public:
             this->at(numberOfElements) = index;
             numberOfElements++;
         } else {
-            throw(std::runtime_error(//"In face element (" + std::to_string(MeshElementBase<IndexType>::GetIndex()) +
-                                     ") number of edges overgrew the number of reserved indexes (" + std::to_string(Reserve)
-                                     +")."));
+            throw(
+                std::runtime_error(
+                        "number of edges overgrew the number of reserved indexes (" +
+                        std::to_string(Reserve) + ")."
+                        )
+                 );
         }
 
     }
@@ -98,9 +101,11 @@ public:
             this->at(numberOfElements) = {INVALID_INDEX(IndexType), false};
             numberOfElements--;
         } else {
-            throw(std::runtime_error(//"In face element (" + std::to_string(MeshElementBase<IndexType>::GetIndex()) +
-                                     ") removing index " + std::to_string(atIndex)
-                                     +" is greather than number of subelements " + std::to_string(numberOfElements)+ "."));
+            throw(std::runtime_error(
+                        "removing index " + std::to_string(atIndex) +
+                        " is greather than number of subelements " + std::to_string(numberOfElements)+ "."
+                        )
+                 );
         }
     }
 
