@@ -160,7 +160,7 @@ void RKMSolver(
 
             time += tau;
             tau *= 1.005;
-            //cout << "time: " << time << "\r";
+            cout << "time: " << time << "\r";
             wK1.lap();
 
         } else {
@@ -236,7 +236,7 @@ void MultiphaseFlowCalculation() {
 
     mpf.T = 300;
 
-    mpf.setupMeshData("cube_64k_cells.vtk");
+    mpf.setupMeshData("stack.fpma");
 
 
 
@@ -246,7 +246,7 @@ void MultiphaseFlowCalculation() {
     mpf.inFlow_eps_g = 1;
     mpf.inFlow_eps_s = 0;
     mpf.inFlow_u_g = {};
-    mpf.inFlow_u_g[ProblemDim - 1] = 10;
+    mpf.inFlow_u_g[ProblemDim - 1] = 15;
     mpf.inFlow_u_s = {};
 
 
@@ -271,11 +271,11 @@ void MultiphaseFlowCalculation() {
 
     for (auto& cell : mpf.mesh.getCells()){
         if(
-               cell.getCenter()[2] > 0.7 && cell.getCenter()[2] < 1
+               cell.getCenter()[2] > -1.0 && cell.getCenter()[2] < 2.0
 //           cell.getCenter()[1] > -0.5 && cell.getCenter()[1] < 0.5 &&
 //           cell.getCenter()[0] > -0.5 && cell.getCenter()[0] < 0.5
         ) {
-            compData.at(cell).eps_s = 0.2;
+            compData.at(cell).eps_s = 0.5;
         }
     }
 
@@ -283,7 +283,7 @@ void MultiphaseFlowCalculation() {
     mpf.exportData(0.0, compData);
 
     double exportStep = 1e-1;
-    for (double t = 0; t < 300 * exportStep; t += exportStep){
+    for (double t = 0; t < 100*exportStep; t += exportStep){
 
 
         RKMSolver(mpf, compData, 1e-3, t, t + exportStep, 1e-2);

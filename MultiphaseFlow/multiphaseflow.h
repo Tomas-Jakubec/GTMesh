@@ -233,6 +233,13 @@ struct FaceData {
     double LeftCellKoef;
     double RightCellKoef;
 
+    // // koeficients of konvex combination for normals on tessellated mesh
+    // // holds that LeftCellNormal + RightCellNormal = n
+    // Vector<Dim, double> LeftCellNormal;
+    // Vector<Dim, double> RightCellNormal;
+
+
+
 
     /**
      * Next variables are supposed to store fluxes over the edge
@@ -518,8 +525,8 @@ public:
 
 
         std::ofstream ofile(std::string("MultiphaseFlow") + "_" + std::to_string(time) + ".vtk");
-        writer.writeHeader(ofile, std::string("MPF") + std::to_string(time));
-        auto polyType = typename std::conditional<ProblemDimension == 2, MeshNativeType<2>::ElementType, MeshNativeType<3>::ElementType>::type(ProblemDimension == 2 ? MeshNativeType<2>::POLYGON : MeshNativeType<3>::HEXAHEDRON);
+        writer.writeHeader(ofile, std::string("MPF ") + std::to_string(time));
+        auto polyType = typename std::conditional<ProblemDimension == 2, MeshNativeType<2>::ElementType, MeshNativeType<3>::ElementType>::type(ProblemDimension == 2 ? MeshNativeType<2>::POLYGON : MeshNativeType<3>::POLYHEDRON);
         writer.writeToStream(ofile, mesh, MeshDataContainer<typename MeshNativeType<ProblemDimension>::ElementType, ProblemDimension>(mesh,  polyType));
 
         VTKMeshDataWriter<ProblemDimension> dataWriter;
@@ -1361,7 +1368,7 @@ double MultiphaseFlow<Dimension>::FlowModulation(const Vertex<MeshType::meshDime
 
     //inFlowModulation = (- inFlowModulation * inFlowModulation + inFlowModulation - 0.0099) * 4.164931279;
     //inFlowModulation = -(inFlowModulation -1.9) * (inFlowModulation - 4.7) * 0.5102;//(-inFlowModulation * inFlowModulation + 6.6 * inFlowModulation - 8.93) * 0.5102;
-    inFlowModulation = - (inFlowModulation + 0.3) * (inFlowModulation - 0.3) * (1/0.09);
+    inFlowModulation = - (inFlowModulation + 1.25) * (inFlowModulation - 1.25) * (1/1.5625);
     return inFlowModulation;
 }
 
@@ -1375,7 +1382,7 @@ double MultiphaseFlow<Dimension>::FlowModulation(const Vertex<MeshType::meshDime
  */
 template<unsigned int Dimension>
 void MultiphaseFlow<Dimension>::setupMeshData(const std::string& fileName){
-    VTKMeshReader<MeshType::meshDimension()> reader;
+    FPMAMeshReader<MeshType::meshDimension()> reader;
     std::ifstream file(fileName, std::ios::binary);
 
     reader.loadFromStream(file, mesh);
@@ -1383,7 +1390,7 @@ void MultiphaseFlow<Dimension>::setupMeshData(const std::string& fileName){
     DBGVAR(mesh.getCells().size(), mesh.getVertices().size());
 
 
-    mesh.template initializeCenters<>();
+    mesh.template initializeCenters<TESSELLATED>();
 
     mesh.setupBoundaryCells();
 
@@ -1400,7 +1407,7 @@ void MultiphaseFlow<Dimension>::setupMeshData(const std::string& fileName){
     vertToCellCon = MeshConnections<0, MeshType::meshDimension()>::connections(mesh);
 
     // Calculation of mesh properties
-    auto faceNormals = mesh.computeFaceNormals();
+    auto faceNormals = mesh.template computeFaceNormals<TESSELLATED>();
     meshData.allocateData(mesh);
 
     // setting cells volumes
@@ -1430,15 +1437,40 @@ void MultiphaseFlow<Dimension>::setupMeshData(const std::string& fileName){
                     mesh.getBoundaryCells().at(EXTRACTING_INDEX(size_t) & face.getCellRightIndex()).getCenter() :
                     mesh.getCells().at(face.getCellRightIndex()).getCenter();
 
-        meshData.at(face).LeftCellKoef = (face.getCenter() - lv).normEukleid() / dists.at(face);
+        const Vertex<ProblemDimension, double>& faceCenter = face.getCenter();
 
-        meshData.at(face).RightCellKoef = (face.getCenter() - rv).normEukleid() / dists.at(face);
+        double leftCellKoef = 0;
 
-        double sum = meshData.at(face).LeftCellKoef + meshData.at(face).RightCellKoef;
+        MeshApply<2,1>::apply(face.getIndex(), mesh, [&](size_t , size_t edgeIndex){
+            Vertex<3,double>& vertA = mesh.getVertices().at(mesh.getEdges().at(edgeIndex).getVertexAIndex());
+            Vertex<3,double>& vertB = mesh.getVertices().at(mesh.getEdges().at(edgeIndex).getVertexBIndex());
 
-        meshData.at(face).LeftCellKoef /= sum;
+            std::array<Vertex<3,double>, 3> pyramidVec = {faceCenter - vertA, faceCenter - vertB, faceCenter};
+            std::array<double, 3> norms;
 
-        meshData.at(face).RightCellKoef /= sum;
+            grammSchmidt<3, 3, size_t, double>(pyramidVec, norms);
+
+
+            auto tessFaceCenter = (vertA + vertB + faceCenter)*(1.0/3.0);
+
+            auto lck = (tessFaceCenter - lv).normEukleid();
+
+            auto rck = (tessFaceCenter - rv).normEukleid();
+
+            lck /= lck + rck;
+
+            leftCellKoef += lck * (0.5 * norms[0] * norms[1]);
+
+        });
+
+        leftCellKoef /= meshData[face].Length;
+
+        meshData.at(face).LeftCellKoef = leftCellKoef;
+
+        meshData.at(face).RightCellKoef = 1 - leftCellKoef;
+
+
+
     }
 
     for (size_t i = 0; i < mesh.getBoundaryCells().size(); i++) {
@@ -1463,8 +1495,8 @@ Type MultiphaseFlow<Dimension>::TypeOfCell(const typename MeshType::Cell &cell) 
 
         if (
             //    cell.getCenter()[1] <= 1e-5
-                sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[1],2)) < 0.3 &&
-                cell.getCenter()[2] < 0
+                sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[1],2)) < 1.25 &&
+                cell.getCenter()[2] <= -1.249
             ) {
             return Type::INFLOW;
         }
