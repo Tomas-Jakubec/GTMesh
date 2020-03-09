@@ -1,6 +1,6 @@
 #ifndef MESH_ELEMENT_H
 #define MESH_ELEMENT_H
-#include "../UnstructedMeshDefine.h"
+#include "../UnstructuredMeshDefine.h"
 #include "../../NumericStaticArray/Vertex.h"
 #include "CellBoundaryConnection.h"
 #include "ComputationalySignificantElement.h"

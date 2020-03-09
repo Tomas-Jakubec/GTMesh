@@ -47,10 +47,10 @@ HEADERS += \
     ../src/UnstructuredMesh/MeshIO/MeshWriter/FPMAMeshWriter.h \
     ../src/UnstructuredMesh/MeshIO/MeshWriter/MeshWriter.h \
     ../src/UnstructuredMesh/MeshIO/MeshWriter/VTKMeshWriter.h \
-    ../src/UnstructuredMesh/UnstructedMeshDefine.h \
     ../src/UnstructuredMesh/UnstructuredMesh.h \
     ../src/NumericStaticArray/Vector.h \
-    ../src/NumericStaticArray/Vertex.h
+    ../src/NumericStaticArray/Vertex.h \
+    ../src/UnstructuredMesh/UnstructuredMeshDefine.h
 
 DISTFILES += \
     ../src/Debug/README.md \
