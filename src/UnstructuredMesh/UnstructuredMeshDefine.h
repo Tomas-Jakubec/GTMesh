@@ -20,8 +20,14 @@ bool isBoundaryIndex(const IndexType& index){
 
 
 template <typename IndexType>
-IndexType extractBoundaryIndex(const IndexType& index){
+IndexType makeBoundaryIndex(const IndexType& index){
     return (EXTRACTING_INDEX(IndexType) | index);
+}
+
+
+template <typename IndexType>
+IndexType extractBoundaryIndex(const IndexType& index){
+    return (EXTRACTING_INDEX(IndexType) & index);
 }
 
 #endif // UNSTRUCTED_MESH_DEFINE_H

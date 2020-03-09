@@ -172,12 +172,12 @@ public:
 
     void setupBoundaryCells(){
         for (Face& face : getFaces()){
-            if (face.getCellLeftIndex() == INVALID_INDEX(IndexType)){
+            if (isInvalidIndex(face.getCellLeftIndex())){
                 IndexType cellIndex = BoundaryCells.size() | BOUNDARY_INDEX(IndexType);
                 face.setCellLeftIndex(cellIndex);
                 appendBoundaryCell(cellIndex, face.getIndex());
             }
-            if (face.getCellRightIndex() == INVALID_INDEX(IndexType)){
+            if (isInvalidIndex(face.getCellRightIndex())){
                 IndexType cellIndex = BoundaryCells.size() | BOUNDARY_INDEX(IndexType);
                 face.setCellRightIndex(cellIndex);
                 appendBoundaryCell(cellIndex, face.getIndex());
