@@ -185,7 +185,7 @@ private:
                                   const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh) {
 
             parent.template getDataByPos<0>().resize(
-                        mesh.template getElements<std::get<0>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...})>().size());
+                        mesh.template getElements<parent.template dimensionAt<0>()>().size());
 
         }
 
@@ -205,7 +205,7 @@ private:
                                   const DataType& initialValue) {
 
             parent.template getDataByPos<0>().resize(
-                        mesh.template getElements<std::get<0>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...})>().size(),
+                        mesh.template getElements<parent.template dimensionAt<0>()>().size(),
                         initialValue);
 
         }
@@ -392,7 +392,6 @@ public:
 
 
 
-
     /*
      * Data access
      */
@@ -546,7 +545,7 @@ public:
 
     template<unsigned int pos>
     using DataType = typename std::tuple_element<pos,std::tuple<DataTypes...>>::type;
-
+private:
     template<unsigned int Pos, typename Dummy = void>
     struct _DataContainer : _DataContainer<Pos - 1, Dummy>{
         DataContainer<DataType<Pos>, dimensionAt<Pos>()> _data;
@@ -705,15 +704,28 @@ public:
     }
 
     template <unsigned int ElementDim, unsigned int Dimension, typename IndexType, typename Real, unsigned int Reserve>
-    std::tuple_element_t<dimensionIndex<ElementDim>(), std::tuple<DataTypes...>>& at(const MeshElement<Dimension, ElementDim, IndexType, Real, Reserve>& element) {
+    std::tuple_element_t<dimensionIndex<ElementDim>(), std::tuple<DataTypes...>>&
+    at(const MeshElement<Dimension, ElementDim, IndexType, Real, Reserve>& element) {
         return getDataByDim<ElementDim>().at(element.getIndex());
     }
 
     template <unsigned int ElementDim, unsigned int Dimension, typename IndexType, typename Real, unsigned int Reserve>
-    std::tuple_element_t<dimensionIndex<ElementDim>(), std::tuple<DataTypes...>>& operator[](const MeshElement<Dimension, ElementDim, IndexType, Real, Reserve>& element) {
+    const std::tuple_element_t<dimensionIndex<ElementDim>(), std::tuple<DataTypes...>>&
+    at(const MeshElement<Dimension, ElementDim, IndexType, Real, Reserve>& element) const {
+        return getDataByDim<ElementDim>().at(element.getIndex());
+    }
+
+    template <unsigned int ElementDim, unsigned int Dimension, typename IndexType, typename Real, unsigned int Reserve>
+    std::tuple_element_t<dimensionIndex<ElementDim>(), std::tuple<DataTypes...>>&
+    operator[](const MeshElement<Dimension, ElementDim, IndexType, Real, Reserve>& element) {
         return getDataByDim<ElementDim>()[element.getIndex()];
     }
 
+    template <unsigned int ElementDim, unsigned int Dimension, typename IndexType, typename Real, unsigned int Reserve>
+    const std::tuple_element_t<dimensionIndex<ElementDim>(), std::tuple<DataTypes...>>&
+    operator[](const MeshElement<Dimension, ElementDim, IndexType, Real, Reserve>& element) const {
+        return getDataByDim<ElementDim>()[element.getIndex()];
+    }
 
 
     MeshDataContainer() = default;
