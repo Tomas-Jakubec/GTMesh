@@ -9,7 +9,7 @@
 
 
 
-namespace Detail {
+namespace Impl {
 
 
 template <unsigned int dim, unsigned int Dimension, ComputationMethod Method = DEFAULT>
@@ -200,17 +200,17 @@ struct _ComputeMeasures<3, 3, TESSELLATED>{
     }
 };
 
-} // namespace Detail
+} // namespace Impl
 
 
 
 
 
 template <ComputationMethod Method, unsigned int Dimension,typename IndexType, typename Real, unsigned int ...Reserve>
-MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, Dimension>> ComputeMeasures(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, Dimension>> computeMeasures(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
     MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, Dimension>> measures(mesh);
 
-    Detail::_ComputeMeasures<1, Dimension, Method>::compute(measures, mesh);
+    Impl::_ComputeMeasures<1, Dimension, Method>::compute(measures, mesh);
 
     return measures;
 }

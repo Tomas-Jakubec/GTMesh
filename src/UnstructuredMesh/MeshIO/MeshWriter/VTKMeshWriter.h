@@ -368,10 +368,9 @@ private:
         for (IndexType i = 0; i < numVertBaseFace; i++) {
             index = vertWrit[i];
 
-            MeshRun<3,3,1,3,false, true>::run(
+            MeshApply<3,1>::apply(
+                cell.getIndex(),
                 mesh,
-                cell.getIndex(),
-                cell.getIndex(),
                 lambdaProc
             );
         }

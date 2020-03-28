@@ -7,36 +7,37 @@
 #include "../../NumericStaticArray/GrammSchmidt.h"
 #include <array>
 
+namespace Impl {
 
 
-template <unsigned int dim, unsigned int Dimension, ComputationMethod Method = ComputationMethod::DEFAULT>
+
+template <unsigned int CurrentDimension, unsigned int MeshDimension, ComputationMethod Method = ComputationMethod::DEFAULT>
 struct _ComputeCenters {
     template <typename IndexType, typename Real, unsigned int ...Reserve>
     static void compute(
-            MakeMeshDataContainer_t<Vertex<Dimension, Real>, make_custom_integer_sequence_t<unsigned int, 1, Dimension>>& centers,
-            const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+            MakeMeshDataContainer_t<Vertex<MeshDimension, Real>, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>>& centers,
+            const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh) {
 
-        auto& elemCenters = centers.template getDataByDim<dim>();
-        auto& subElemCenters = centers.template getDataByDim<dim - 1>();
+        auto& elemCenters = centers.template getDataByDim<CurrentDimension>();
+        auto& subElemCenters = centers.template getDataByDim<CurrentDimension - 1>();
 
 
-        for (IndexType i = 0; i < mesh.template getElements<dim>().size(); i++) {
+        for (IndexType i = 0; i < mesh.template getElements<CurrentDimension>().size(); i++) {
 
             Real subElemCnt = 0;
-            MeshApply<dim, dim - 1>::apply(
-                        i,
-                        mesh,
-                        [&elemCenters, &subElemCenters, &subElemCnt](IndexType elementIndex, IndexType subelementIndex){
-
-                elemCenters.at(elementIndex) +=  subElemCenters.at(subelementIndex);
-                subElemCnt++;
-            }
+            MeshApply<CurrentDimension, CurrentDimension - 1>::apply(
+                i,
+                mesh,
+                [&elemCenters, &subElemCenters, &subElemCnt](IndexType elementIndex, IndexType subelementIndex){
+                    elemCenters.at(elementIndex) +=  subElemCenters.at(subelementIndex);
+                    subElemCnt++;
+                }
             );
 
             elemCenters.at(i) /= subElemCnt;
         }
 
-        _ComputeCenters<dim + 1, Dimension, Method>::compute(centers, mesh);
+        _ComputeCenters<CurrentDimension + 1, MeshDimension, Method>::compute(centers, mesh);
     }
 };
 
@@ -45,20 +46,20 @@ struct _ComputeCenters {
 
 
 
-template <unsigned int Dimension, ComputationMethod Method>
-struct _ComputeCenters<Dimension, Dimension, Method>{
+template <unsigned int MeshDimension, ComputationMethod Method>
+struct _ComputeCenters<MeshDimension, MeshDimension, Method>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
-    static void compute(MakeMeshDataContainer_t<Vertex<Dimension, Real>, make_custom_integer_sequence_t<unsigned int, 1, Dimension>>& centers,
-                        const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+    static void compute(MakeMeshDataContainer_t<Vertex<MeshDimension, Real>, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>>& centers,
+                        const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh) {
 
-        auto& elemCenters = centers.template getDataByDim<Dimension>();
-        auto& subElemCenters = centers.template getDataByDim<Dimension - 1>();
+        auto& elemCenters = centers.template getDataByDim<MeshDimension>();
+        auto& subElemCenters = centers.template getDataByDim<MeshDimension - 1>();
 
 
-        for (IndexType i = 0; i < mesh.template getElements<Dimension>().size(); i++) {
+        for (IndexType i = 0; i < mesh.template getElements<MeshDimension>().size(); i++) {
 
             Real subElemCnt = 0;
-            MeshApply<Dimension, Dimension - 1>::apply(
+            MeshApply<MeshDimension, MeshDimension - 1>::apply(
                         i,
                         mesh,
                         [&elemCenters, &subElemCenters, &subElemCnt](IndexType elementIndex, IndexType subelementIndex){
@@ -74,23 +75,23 @@ struct _ComputeCenters<Dimension, Dimension, Method>{
 
 };
 
-template <unsigned int Dimension, ComputationMethod Method>
-struct _ComputeCenters<1, Dimension, Method>{
+template <unsigned int MeshDimension, ComputationMethod Method>
+struct _ComputeCenters<1, MeshDimension, Method>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
     static void compute(
-            MakeMeshDataContainer_t<Vertex<Dimension, Real>, make_custom_integer_sequence_t<unsigned int, 1, Dimension>>& centers,
-            const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+            MakeMeshDataContainer_t<Vertex<MeshDimension, Real>, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>>& centers,
+            const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh){
 
-        std::vector<Vertex<Dimension, Real>>& edgeCenters = centers.template getDataByDim<1>();
+        std::vector<Vertex<MeshDimension, Real>>& edgeCenters = centers.template getDataByDim<1>();
 
         for (IndexType edgeIndex = 0; edgeIndex < mesh.template getElements<1>().size(); edgeIndex++) {
-            auto& edge = mesh.getEdges().at(edgeIndex);
+            const auto& edge = mesh.getEdges().at(edgeIndex);
 
             edgeCenters.at(edgeIndex) = (mesh.template getElements<0>().at(edge.getVertexAIndex()) +
                                 mesh.template getElements<0>().at(edge.getVertexBIndex())) * 0.5;
         }
 
-        _ComputeCenters<2, Dimension, Method>::compute(centers, mesh);
+        _ComputeCenters<2, MeshDimension, Method>::compute(centers, mesh);
     }
 };
 
@@ -146,15 +147,20 @@ struct _ComputeCenters<2, 3, ComputationMethod::TESSELLATED> {
     }
 };
 
+} // namespace Impl
 
-
+/**
+ * @brief computeCenters calculates centers of all elements
+ * of higher dimension than 0
+ * @param mesh
+ */
 template <ComputationMethod Method, unsigned int Dimension,typename IndexType, typename Real, unsigned int ...Reserve>
 MakeMeshDataContainer_t<Vertex<Dimension, Real>, make_custom_integer_sequence_t<unsigned int, 1, Dimension>>
 computeCenters(const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
 
-     MakeMeshDataContainer_t<Vertex<Dimension, Real>, make_custom_integer_sequence_t<unsigned int, 1, Dimension>> centers(mesh);
+    MakeMeshDataContainer_t<Vertex<Dimension, Real>, make_custom_integer_sequence_t<unsigned int, 1, Dimension>> centers(mesh);
 
-    _ComputeCenters<1, Dimension, Method>::compute(centers, mesh);
+    Impl::_ComputeCenters<1, Dimension, Method>::compute(centers, mesh);
 
     return centers;
 }

@@ -4,7 +4,7 @@
 #include <type_traits>
 #include "Traits.h"
 
-namespace Detail {
+namespace Impl {
 
 
 
@@ -118,29 +118,29 @@ struct __has_default_arithmetic_traits<
 
 
 template <typename T1>
-struct IsExportable : public Detail::__is_exportable<T1>
+struct IsExportable : public Impl::__is_exportable<T1>
 {};
 
 
 template <typename T1>
-struct IsIterable : public Detail::__is_iterable<T1>
+struct IsIterable : public Impl::__is_iterable<T1>
 {};
 
 template <typename T1>
-struct IsIndexable : public Detail::__is_indexable<T1>
+struct IsIndexable : public Impl::__is_indexable<T1>
 {};
 
 template <typename T1>
-struct IsTNLIndexable : public Detail::__is_tnl_indexable<T1>
+struct IsTNLIndexable : public Impl::__is_tnl_indexable<T1>
 {};
 
 template<typename T>
-struct HasDefaultTraits : public Detail::__has_default_traits<T> {};
+struct HasDefaultTraits : public Impl::__has_default_traits<T> {};
 
 template<typename T>
-struct HasDefaultIOTraits : public Detail::__has_default_io_traits<T> {};
+struct HasDefaultIOTraits : public Impl::__has_default_io_traits<T> {};
 
 template<typename T>
-struct HasDefaultArithmeticTraits : public Detail::__has_default_arithmetic_traits<T> {};
+struct HasDefaultArithmeticTraits : public Impl::__has_default_arithmetic_traits<T> {};
 
 #endif // CUSTOMTRAITS_H

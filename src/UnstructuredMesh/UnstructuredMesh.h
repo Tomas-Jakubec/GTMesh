@@ -4,7 +4,7 @@
 #include "vector"
 #include <type_traits>
 #include "MeshFunctions/MeshFunctions.h"
-#include "MeshFunctions/ComputeCenter.h"
+#include "MeshFunctions/ComputeCenters.h"
 #include "MeshFunctions/ComputeMeasures.h"
 
 
@@ -26,7 +26,7 @@ public:
 
     template<ComputationMethod Method = ComputationMethod::DEFAULT>
     MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, Dimension>> computeElementMeasures() {
-        return ComputeMeasures<Method>(*this);
+        return computeMeasures<Method>(*this);
     }
 
     template<ComputationMethod Method = ComputationMethod::DEFAULT>
@@ -51,8 +51,21 @@ public:
     }
 
     template<unsigned int StartDim, unsigned int ConnectingDim, unsigned int ConnectedDim = StartDim, Order ConnectionsOrder = Order::ORDER_ASCEND>
-    MeshDataContainer<std::vector<IndexType>, Dimension-1> neighborhood() {
+    MeshDataContainer<std::vector<IndexType>, StartDim> neighborhood() {
         return MeshNeighborhood<StartDim, ConnectingDim, ConnectedDim, ConnectionsOrder>::neighbors(*this);
+    }
+
+
+    template<unsigned int StartDim, unsigned int ConnectingDim,  ColoringMethod Method = ColoringMethod::METHOD_GREEDY>
+    typename std::enable_if<Method == METHOD_GREEDY,MeshDataContainer<unsigned int, StartDim>>::type
+    coloring() {
+        return ColorMesh<StartDim, ConnectingDim, Method>::color(*this);
+    }
+
+    template<unsigned int StartDim, unsigned int ConnectingDim,  ColoringMethod Method = ColoringMethod::METHOD_GREEDY>
+    typename std::enable_if<Method == METHOD_RANDOM,MeshDataContainer<unsigned int, StartDim>>::type
+    coloring(unsigned int seed = 1562315) {
+        return ColorMesh<StartDim, ConnectingDim, Method>::color(*this, seed);
     }
 
 /*

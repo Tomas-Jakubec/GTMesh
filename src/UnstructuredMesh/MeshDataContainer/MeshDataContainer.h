@@ -791,23 +791,22 @@ public:
  * struct publishing the type of %MeshDataContainer using
  * tuple and integer sequence
  */
-template<typename... Params>
-struct MakeMeshDataContainer {};
+template<typename DataType, typename Sequence>
+struct MakeMeshDataContainer {
+    static_assert(
+        std::is_class<Sequence>::value && !std::is_class<Sequence>::value,
+        "The Sequence parameter in MakeMeshDataContainer \
+must be a std::integer_sequence<unsigned int, seq...>\
+please notice the type unsigned int"
+        );
+};
 
 template<typename Type, unsigned int... Dimensions>
 struct MakeMeshDataContainer<Type, std::integer_sequence<unsigned int, Dimensions...>>{
     using type = MeshDataContainer<Type, Dimensions...>;
 };
 
-
-template<typename... Types, unsigned int... Dimensions>
-struct MakeMeshDataContainer<std::tuple<Types...>, std::integer_sequence<unsigned int, Dimensions...>>{
-    using type = MeshDataContainer<std::tuple<Types...>, Dimensions...>;
-};
-
-
-template<typename... T>
-using MakeMeshDataContainer_t = typename MakeMeshDataContainer<T...>::type;
-
+template<typename DataType, typename Sequence>
+using MakeMeshDataContainer_t = typename MakeMeshDataContainer<DataType, Sequence>::type;
 
 #endif // MESHDATACONTAINER_H

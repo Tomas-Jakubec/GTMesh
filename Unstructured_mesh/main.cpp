@@ -537,12 +537,12 @@ void testMesh3D() {
     DBGMSG("measure computation");
 
 DBGMSG("tessellated cell volume");
-    auto measures1 = ComputeMeasures<TESSELLATED>(mesh3);
+    auto measures1 = computeMeasures<TESSELLATED>(mesh3);
 
     DBGVAR(measures1.getDataByDim<3>());
 
 
-    auto measures = ComputeMeasures<DEFAULT>(mesh3);
+    auto measures = computeMeasures<DEFAULT>(mesh3);
     for(double edgeM : measures.getDataByDim<1>()) {
         DBGVAR(edgeM);
     }
@@ -577,6 +577,7 @@ DBGMSG("tessellated cell volume");
     MeshApply<2, 3>::apply(mesh3,[](size_t ori, size_t i){
         DBGVAR(ori,i);
     });
+
 
     DBGMSG("3D edge orientation");
     MeshApply<2, 1>::apply(mesh3,[&mesh3](size_t faceIndex, size_t edgeIndex){
@@ -618,17 +619,54 @@ DBGMSG("tessellated cell volume");
         DBGVAR(face.getIndex(), con2[face]);
     }
 
+    DBGMSG("neighbors test");
+    auto nbh = MeshNeighborhood<0,3>::neighbors(mesh3);
+    for (auto& vert : mesh3.getVertices()){
+        DBGVAR(vert.getIndex(), nbh[vert]);
+    }
+
+    MeshDataContainer<std::vector<size_t>,0> nbh2Order(mesh3);
+    for(auto& vert : mesh3.getVertices()){
+        nbh2Order[vert] = nbh[vert];
+        for (auto nvi : nbh[vert]){
+            auto& nVert = mesh3.getVertices()[nvi];
+            std::vector<size_t> res;
+            set_union(nbh2Order[vert].begin(), nbh2Order[vert].end(),
+                      nbh[nVert].begin(), nbh[nVert].end(),
+                      std::inserter(res, res.begin()));
+
+            nbh2Order[vert] = res;
+        }
+
+        nbh2Order[vert].erase(lower_bound(nbh2Order[vert].begin(), nbh2Order[vert].end(), vert.getIndex()));
+
+        DBGVAR(vert.getIndex(),nbh2Order[vert]);
+    }
+
+    DBGMSG("neighborhood");
+    auto nbh2 = mesh3.neighborhood<2,3,2,ORDER_ORIGINAL>();
+    for (auto& face : mesh3.getFaces()){
+        DBGVAR(face.getIndex(), nbh2[face]);
+    }
+
+
+
     DBGMSG("face to vertex colouring");
     auto colours = ColorMesh<2,0>::color(mesh3);
-    for (auto& face : mesh3.getFaces()){
-        DBGVAR(face.getIndex(), colours.at(face));
-    }
+    DBGVAR(colours.getDataByDim<2>());
 
     DBGMSG("vertex to face colouring");
     auto colours1 = ColorMesh<0,2>::color(mesh3);
-    for (auto& vert : mesh3.getVertices()){
-        DBGVAR(vert.getIndex(), colours1.at(vert));
-    }
+    DBGVAR(colours1.getDataByDim<0>());
+
+
+    DBGMSG("face to vertex colouring RANDOM");
+    auto coloursRand = ColorMesh<2,0,METHOD_RANDOM>::color(mesh3);
+    DBGVAR(coloursRand.getDataByDim<2>());
+
+    DBGMSG("vertex to face colouring RANDOM");
+    auto colours1Rand = mesh3.coloring<0,2,METHOD_RANDOM>();//ColorMesh<0,2,METHOD_RANDOM>::color(mesh3);
+    DBGVAR(colours1Rand.getDataByDim<0>());
 
     MeshDataContainer<MeshNativeType<3>::ElementType,3> types(mesh3, MeshNativeType<3>::ElementType::WEDGE);
 
@@ -677,7 +715,7 @@ void testMeshRefine() {
     writer.writeHeader(out3D, "test data");
     writer.writeToStream(out3D, mesh, types);
 
-    auto colours = MeshColoring<3,0>::color(mesh);
+    auto colours = ColorMesh<3,0>::color(mesh);
 
     out3D << "CELL_DATA " << mesh.getCells().size() << endl;
     out3D << "SCALARS cell_wrt_vertex_colour double 1\nLOOKUP_TABLE default" << endl;
@@ -692,7 +730,7 @@ void testMeshRefine() {
     out3D.open("mesh_refine_1.vtk");
     writer1.writeHeader(out3D, "test data");
     writer1.writeToStream(out3D, mesh, types1);
-    auto colours1 = MeshColoring<3,0>::color(mesh);
+    auto colours1 = ColorMesh<3,0>::color(mesh);
 
     MeshDataContainer<colorData, 3> cd(mesh);
     auto normals = mesh.computeFaceNormals();
@@ -741,7 +779,7 @@ void testMeshRefine() {
     writer1.writeHeader(out3D, "test data");
     writer1.writeToStream(out3D, mesh, types2);
 
-    auto colours2 = MeshColoring<3,0>::color(mesh);
+    auto colours2 = ColorMesh<3,0>::color(mesh);
 
     out3D << "CELL_DATA " << writer1.cellVert.getDataByPos<0>().size() << endl;
     out3D << "SCALARS cell_wrt_vertex_colour double 1\nLOOKUP_TABLE default" << endl;
@@ -769,7 +807,7 @@ void testMeshRefine() {
     out3D.open("mesh_refine_3.vtk");
     writer1.writeHeader(out3D, "test data");
     writer1.writeToStream(out3D, mesh, types3);
-    auto colours3 = MeshColoring<3,0>::color(mesh);
+    auto colours3 = ColorMesh<3,0>::color(mesh);
 
     out3D << "CELL_DATA " << writer1.cellVert.getDataByPos<0>().size() << endl;
     out3D << "SCALARS cell_wrt_vertex_colour double 1\nLOOKUP_TABLE default" << endl;
@@ -811,7 +849,7 @@ void test3DMeshDeformedPrisms() {
 
     DBGMSG("measure computation");
 
-    auto measures = ComputeMeasures<DEFAULT>(mesh3);
+    auto measures = computeMeasures<DEFAULT>(mesh3);
     for(double edgeM : measures.getDataByDim<1>()) {
         DBGVAR(edgeM);
     }
@@ -1085,6 +1123,81 @@ void MeshExample(){
 
 }
 
+// function calculating sum of vertex indexes conndected to a cell in 2D
+template<typename IndexType, typename Real, unsigned int ...Reserve>
+MeshDataContainer<IndexType,2>
+countCellsVerticesIndexes(const MeshElements<2, IndexType, Real, Reserve...>& mesh){
+    // prepare container for the result
+    // resize to the mesh dimesnions and initialize with 0
+    MeshDataContainer<IndexType, 2> result(mesh, 0);
+
+    // loop over cell elements
+    for(IndexType cellIndex = 0; cellIndex < mesh.getCells().size(); cellIndex++){
+        // obtain the boundary element index (face=edge)
+        IndexType bElemIndex = mesh.getCells()[cellIndex].getBoundaryElementIndex();
+
+        // repeat until the first approached element is reached
+        do {
+            // because the boundary element is an edge, it has two vertices
+            result.template getDataByDim<2>()[cellIndex] += mesh.getEdges()[bElemIndex].getVertexAIndex();
+            result.template getDataByDim<2>()[cellIndex] += mesh.getEdges()[bElemIndex].getVertexBIndex();
+
+            // move to the next boundary element
+            bElemIndex = mesh.getEdges()[bElemIndex].getNextBElem(cellIndex);
+
+        } while (bElemIndex != mesh.getCells()[cellIndex].getBoundaryElementIndex());
+    }
+    return result;
+}
+
+// function calculating sum of vertex indexes connected to a cell in 3D
+template<typename IndexType, typename Real, unsigned int ...Reserve>
+MeshDataContainer<IndexType,3>
+countCellsVerticesIndexes(const MeshElements<3, IndexType, Real, Reserve...>& mesh){
+    // prepare container for the result
+    // resize to the mesh dimesnions and initialize with 0
+    MeshDataContainer<IndexType, 3> result(mesh, 0);
+
+    // loop over cell elements
+    for(IndexType cellIndex = 0; cellIndex < mesh.getCells().size(); cellIndex++){
+        // obtain the boundary element index (face)
+        IndexType bElemIndex = mesh.getCells()[cellIndex].getBoundaryElementIndex();
+
+        // repeat until the first approached face element is reached
+        do {
+            // loop over the edges of the face
+            for(IndexType edgeIndex : mesh.getFaces()[bElemIndex].getSubelements()){
+                // edge has two vertices
+                result.template getDataByDim<3>()[cellIndex] += mesh.getEdges()[edgeIndex].getVertexAIndex();
+                result.template getDataByDim<3>()[cellIndex] += mesh.getEdges()[edgeIndex].getVertexBIndex();
+            }
+            // move to the next boundary element
+            bElemIndex = mesh.getFaces()[bElemIndex].getNextBElem(cellIndex);
+
+        } while (bElemIndex != mesh.getCells()[cellIndex].getBoundaryElementIndex());
+    }
+    return result;
+}
+
+// function calculating sum of vertex indexes connected to a cell in generic dimension
+template<unsigned int MeshDim, typename IndexType, typename Real, unsigned int ...Reserve>
+MeshDataContainer<IndexType, MeshDim>
+countCellsVerticesIndexesGeneric(const MeshElements<MeshDim, IndexType, Real, Reserve...>& mesh){
+    // prepare container for the result
+    // resize to the mesh dimesnions and initialize with 0
+    MeshDataContainer<IndexType, MeshDim> result(mesh, 0);
+
+    // prepare the function to be applied in the loop
+    auto countLambda = [&result](IndexType cellIndex, IndexType vertIndex){
+        // add the index of vertex at the position
+        result.template getDataByDim<MeshDim>()[cellIndex] += vertIndex;
+    };
+
+    // loop over cells vertices using the MeshApply concept
+    MeshApply<MeshDim, 0>::apply(mesh,countLambda);
+
+    return result;
+}
 
 int main()
 {

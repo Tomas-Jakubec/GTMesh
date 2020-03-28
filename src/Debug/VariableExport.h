@@ -81,11 +81,11 @@ struct VariableExport {
              !HasDefaultTraits<T>::value
          >::type
     {
-        auto it = list.begin();
+        auto it = list.cbegin();
         ost << "[ ";
-        while (it != list.end()){
+        while (it != list.cend()){
             exportVariable(ost, *it);
-            if (++it != list.end()){
+            if (++it != list.cend()){
                 ost << ", ";
             }
         }
