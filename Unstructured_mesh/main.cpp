@@ -355,7 +355,7 @@ void testMesh2D() {
 
 
 
-    auto centers = computeCenters<DEFAULT>(mesh);
+    auto centers = computeCenters<METHOD_DEFAULT>(mesh);
 
     auto& faceCent = centers.getDataByDim<1>();
     for(auto& center : faceCent) {
@@ -383,7 +383,7 @@ void testMesh2D() {
 
     DBGMSG("2D normals test");
 
-    auto normals = ComputeFaceNormals<DEFAULT>(mesh);
+    auto normals = computeFaceNormals<METHOD_DEFAULT>(mesh);
     for(auto& edge : mesh.getEdges()){
         DBGVAR(edge.getIndex(),normals.at(edge));
     }
@@ -412,7 +412,7 @@ void testMesh2DLoadAndWrite(){
 
 
     DBGMSG("mesh apply test");
-    MeshRun<2, 2, 0, 2,false, true>::run(mesh,size_t(4), size_t(4), [](size_t ori, size_t i){
+    Impl::MeshRun<2, 2, 0, 2,false, true>::run(mesh,size_t(4), size_t(4), [](size_t ori, size_t i){
         DBGVAR(ori,i);
     });
 
@@ -507,7 +507,7 @@ void testMesh3D() {
 
 
     //_ComputeCenters<1,3, 3,2,1>::compute<size_t, double, 6>(centers, mesh3);
-    auto centers = computeCenters<DEFAULT>(mesh3);
+    auto centers = computeCenters<METHOD_DEFAULT>(mesh3);
 
 
 
@@ -522,7 +522,7 @@ void testMesh3D() {
     }
 
     DBGMSG("centers - tessellated faces");
-    auto centers1 = computeCenters<TESSELLATED>(mesh3);
+    auto centers1 = computeCenters<METHOD_TESSELLATED>(mesh3);
 
     for(auto& face : mesh3.getFaces()) {
         face.setCenter(centers1.template getDataByDim<2>().at(face.getIndex()));
@@ -537,12 +537,12 @@ void testMesh3D() {
     DBGMSG("measure computation");
 
 DBGMSG("tessellated cell volume");
-    auto measures1 = computeMeasures<TESSELLATED>(mesh3);
+    auto measures1 = computeMeasures<METHOD_TESSELLATED>(mesh3);
 
     DBGVAR(measures1.getDataByDim<3>());
 
 
-    auto measures = computeMeasures<DEFAULT>(mesh3);
+    auto measures = computeMeasures<METHOD_DEFAULT>(mesh3);
     for(double edgeM : measures.getDataByDim<1>()) {
         DBGVAR(edgeM);
     }
@@ -564,7 +564,7 @@ DBGMSG("tessellated cell volume");
 
     DBGMSG("3D normals test");
 
-    auto normalsTess = mesh3.computeFaceNormals<TESSELLATED>();
+    auto normalsTess = mesh3.computeFaceNormals<METHOD_TESSELLATED>();
     for(auto& face : mesh3.getFaces()){
         DBGVAR(face.getIndex(),normalsTess.at(face));
     }
@@ -761,10 +761,13 @@ void testMeshRefine() {
     out3D.close();
 
 
+    auto reader_ptr = mesh.load("mesh_refine_1.vtk");
+    DBGVAR(reader_ptr->getCellTypes().getDataByPos<0>());
     ifstream in3D;
     in3D.open("mesh_refine_1.vtk", std::ios::binary);
     VTKMeshReader<3> reader;
-    reader.loadFromStream(in3D, mesh);
+    //reader.loadFromStream(in3D, mesh);
+
 
     MeshDataContainer<colorData, 3> cd1(mesh);
     VTKMeshDataReader<3, size_t>::readData(in3D, cd1.getDataByPos<0>());
@@ -835,7 +838,7 @@ void test3DMeshDeformedPrisms() {
 
     DBGVAR(mesh3.getSignature());
     //_ComputeCenters<1,3, 3,2,1>::compute<size_t, double, 6>(centers, mesh3);
-    auto centers = computeCenters<DEFAULT>(mesh3);
+    auto centers = computeCenters<METHOD_DEFAULT>(mesh3);
 
     for(auto& face : mesh3.getFaces()) {
         face.setCenter(centers[face]);
@@ -849,7 +852,7 @@ void test3DMeshDeformedPrisms() {
 
     DBGMSG("measure computation");
 
-    auto measures = computeMeasures<DEFAULT>(mesh3);
+    auto measures = computeMeasures<METHOD_DEFAULT>(mesh3);
     for(double edgeM : measures.getDataByDim<1>()) {
         DBGVAR(edgeM);
     }
@@ -970,7 +973,7 @@ DBGVAR(mesh.getVertices().size(),mesh.getEdges().size(), mesh.getFaces().size(),
     }
 
     mesh.initializeCenters();
-    DBGVAR(mesh.computeElementMeasures().getDataByDim<3>(),computeCenters<DEFAULT>(mesh).getDataByDim<2>(),mesh.computeFaceNormals().getDataByPos<0>());
+    DBGVAR(mesh.computeElementMeasures().getDataByDim<3>(),computeCenters<METHOD_DEFAULT>(mesh).getDataByDim<2>(),mesh.computeFaceNormals().getDataByPos<0>());
 
 
 
@@ -1119,7 +1122,7 @@ void MeshExample(){
     auto normals = mesh.computeFaceNormals();
 
     // calculate the centers of all elements with dimension greater than 0
-    auto centers = computeCenters<DEFAULT>(mesh);
+    auto centers = computeCenters<METHOD_DEFAULT>(mesh);
 
 }
 

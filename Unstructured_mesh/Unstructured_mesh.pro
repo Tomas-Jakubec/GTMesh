@@ -14,7 +14,7 @@ HEADERS += \
     ../src/Debug/Debug.h \
     ../src/Debug/HTMLLogger.h \
     ../src/Debug/VariableExport.h \
-    ../src/NumericStaticArray/GrammSchmidt.h \
+    ../src/NumericStaticArray/GramSchmidt.h \
     ../src/NumericStaticArray/InlineArrayOperations.h \
     ../src/Traits/CustomTypeTraits.h \
     ../src/Traits/MemberApproach/MemberApproach.h \

@@ -25,19 +25,19 @@ MeshDataContainer<Real, Dimension-1> ComputeCellsDistance(const MeshElements<Dim
                 face.getCellRightIndex() != INVALID_INDEX(IndexType)){
 
                 distances.at(face) = (mesh.getCells().at(face.getCellLeftIndex()).getCenter() -
-                                      mesh.getCells().at(face.getCellRightIndex()).getCenter()).normEukleid();
+                                      mesh.getCells().at(face.getCellRightIndex()).getCenter()).normEuclid();
 
             } else if(face.getCellLeftIndex() != INVALID_INDEX(IndexType) &&
                       face.getCellRightIndex() == INVALID_INDEX(IndexType)){
 
                 distances.at(face) = (mesh.getCells().at(face.getCellLeftIndex()).getCenter() -
-                                      face.getCenter()).normEukleid();
+                                      face.getCenter()).normEuclid();
 
             } else if(face.getCellLeftIndex() == INVALID_INDEX(IndexType) &&
                       face.getCellRightIndex() != INVALID_INDEX(IndexType)){
 
                 distances.at(face) = (mesh.getCells().at(face.getCellRightIndex()).getCenter() -
-                                      face.getCenter()).normEukleid();
+                                      face.getCenter()).normEuclid();
             }
         }
 
@@ -51,7 +51,7 @@ MeshDataContainer<Real, Dimension-1> ComputeCellsDistance(const MeshElements<Dim
                       mesh.getBoundaryCells().at(face.getCellRightIndex()&EXTRACTING_INDEX(IndexType)):
                       mesh.getCells().at(face.getCellRightIndex());
 
-            distances.at(face) = (cellLeft.getCenter() - cellRight.getCenter()).normEukleid();
+            distances.at(face) = (cellLeft.getCenter() - cellRight.getCenter()).normEuclid();
         }
     }
 

@@ -21,8 +21,8 @@ enum Order{
  * mesh in more generic way.
  */
 enum ComputationMethod {
-    DEFAULT,
-    TESSELLATED
+    METHOD_DEFAULT,
+    METHOD_TESSELLATED
 };
 
 

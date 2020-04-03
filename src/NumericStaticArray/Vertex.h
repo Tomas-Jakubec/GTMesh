@@ -23,8 +23,14 @@ public:
         return Dim;
     }
 
-    Real normEukleid();
+    /**
+     * @brief Calculates the Euclid norm of the Vertex.
+     */
+    Real normEuclid();
 
+    /**
+     * @brief Calculates the sum of squares of the coordinates.
+     */
     inline Real sumOfSquares() {
         return  inlineScalarProduct<Dim, Real>::computation(this->data(), this->data());
     }
@@ -39,8 +45,6 @@ public:
 
     /**
      * @brief Scalar product of two vectors
-     * @param v
-     * @return
      */
     Real operator*(const Vertex<Dim, Real>& v);
 
@@ -78,7 +82,7 @@ Vertex<Dim, Real>& Vertex<Dim, Real>::operator =(const std::initializer_list<Rea
 ** Calculates the Eucleid norm of the point
 */
 template <unsigned int Dim, typename Real>
-Real Vertex<Dim, Real>::normEukleid(){
+Real Vertex<Dim, Real>::normEuclid(){
     return sqrt(sumOfSquares());
 }
 

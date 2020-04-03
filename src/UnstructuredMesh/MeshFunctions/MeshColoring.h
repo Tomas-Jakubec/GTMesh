@@ -13,57 +13,6 @@ namespace Impl {
 
 template<unsigned int ColoredDim, unsigned int ConnectingDim, ColoringMethod Method = METHOD_GREEDY, bool Descend = (ColoredDim > ConnectingDim)>
 struct MeshColoring {
-
-    template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
-    static MeshDataContainer<unsigned int, ColoredDim> color(
-            MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
-            ) {
-        MeshDataContainer<unsigned int, ColoredDim> result(mesh);
-
-        DBGMSG("starting the coloring procedure");
-        unsigned int reserve = 16;
-        MeshDataContainer<std::valarray<bool>, ConnectingDim> attachedColors(mesh, std::valarray<bool>(false, reserve));
-
-
-
-        for (IndexType elementIndex = 0; elementIndex < mesh.template getElements<ColoredDim>().size(); elementIndex++){
-            std::valarray<bool> freeColors(true,reserve);
-            MeshApply<ColoredDim, ConnectingDim>::apply(elementIndex, mesh,
-                 [&freeColors, &attachedColors](IndexType, IndexType element){
-                     DBGTRY(freeColors &= !attachedColors.template getDataByPos<0>().at(element);)
-            });
-
-            // Select the first possible colour
-            unsigned int selectedColor = 0;
-            while (!freeColors[selectedColor]) {
-                selectedColor++;
-                if (selectedColor == freeColors.size()){
-                    reserve *= 2;
-                    DBGVAR(reserve);
-                    for (std::valarray<bool>& attColour : attachedColors.template getDataByPos<0>()){
-                        std::valarray<bool> newAttColour(false, reserve);
-                        for (size_t i = 0; i < attColour.size(); i++){
-                            newAttColour[i] = attColour[i];
-                        }
-                        attColour.swap(newAttColour);
-                    }
-                    break;
-                }
-            }
-            result.template getDataByPos<0>().at(elementIndex) = selectedColor;
-            MeshApply<ColoredDim, ConnectingDim>::apply(elementIndex, mesh,
-                 [selectedColor, &attachedColors](IndexType, IndexType element){
-                     DBGTRY(attachedColors.template getDataByPos<0>().at(element)[selectedColor] = true;)
-            });
-
-        }
-        return result;
-    }
-};
-
-
-template<unsigned int ColoredDim, unsigned int ConnectingDim>
-struct MeshColoring <ColoredDim, ConnectingDim, METHOD_GREEDY, false> {
     template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
     static MeshDataContainer<unsigned int, ColoredDim> color(
             MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
@@ -110,6 +59,57 @@ struct MeshColoring <ColoredDim, ConnectingDim, METHOD_GREEDY, false> {
             for (IndexType element : connections.template getDataByPos<0>().at(elementIndex)){
                 DBGTRY(attachedColors.template getDataByPos<0>().at(element)[selectedColor] = true;)
             }
+        }
+        return result;
+    }
+
+};
+
+
+template<unsigned int ColoredDim, unsigned int ConnectingDim>
+struct MeshColoring <ColoredDim, ConnectingDim, METHOD_GREEDY, true> {
+    template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
+    static MeshDataContainer<unsigned int, ColoredDim> color(
+            MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
+            ) {
+        MeshDataContainer<unsigned int, ColoredDim> result(mesh);
+
+        DBGMSG("starting the coloring procedure");
+        unsigned int reserve = 16;
+        MeshDataContainer<std::valarray<bool>, ConnectingDim> attachedColors(mesh, std::valarray<bool>(false, reserve));
+
+
+
+        for (IndexType elementIndex = 0; elementIndex < mesh.template getElements<ColoredDim>().size(); elementIndex++){
+            std::valarray<bool> freeColors(true,reserve);
+            MeshApply<ColoredDim, ConnectingDim>::apply(elementIndex, mesh,
+                 [&freeColors, &attachedColors](IndexType, IndexType element){
+                     DBGTRY(freeColors &= !attachedColors.template getDataByPos<0>().at(element);)
+            });
+
+            // Select the first possible colour
+            unsigned int selectedColor = 0;
+            while (!freeColors[selectedColor]) {
+                selectedColor++;
+                if (selectedColor == freeColors.size()){
+                    reserve *= 2;
+                    DBGVAR(reserve);
+                    for (std::valarray<bool>& attColour : attachedColors.template getDataByPos<0>()){
+                        std::valarray<bool> newAttColour(false, reserve);
+                        for (size_t i = 0; i < attColour.size(); i++){
+                            newAttColour[i] = attColour[i];
+                        }
+                        attColour.swap(newAttColour);
+                    }
+                    break;
+                }
+            }
+            result.template getDataByPos<0>().at(elementIndex) = selectedColor;
+            MeshApply<ColoredDim, ConnectingDim>::apply(elementIndex, mesh,
+                 [selectedColor, &attachedColors](IndexType, IndexType element){
+                     DBGTRY(attachedColors.template getDataByPos<0>().at(element)[selectedColor] = true;)
+            });
+
         }
         return result;
     }

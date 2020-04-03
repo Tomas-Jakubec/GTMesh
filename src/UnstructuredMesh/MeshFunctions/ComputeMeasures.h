@@ -4,7 +4,7 @@
 #include "MeshFunctionsDefine.h"
 #include "MeshApply.h"
 #include "../MeshDataContainer/MeshDataContainer.h"
-#include "../../NumericStaticArray/GrammSchmidt.h"
+#include "../../NumericStaticArray/GramSchmidt.h"
 #include <array>
 
 
@@ -12,30 +12,29 @@
 namespace Impl {
 
 
-template <unsigned int dim, unsigned int Dimension, ComputationMethod Method = DEFAULT>
+template <unsigned int CurrentDimension, unsigned int MeshDimension, ComputationMethod Method = METHOD_DEFAULT>
 struct _ComputeMeasures{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
-    static void compute(MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, Dimension>>&,MeshElements<Dimension, IndexType, Real, Reserve...>&){
-        static_assert (Dimension <= 3,"The measure computation of mesh of dimension higher than 3 is not implemented yet.");
-        throw std::runtime_error("The measure computation of mesh of dimension higher than 3 is not implemented yet.");
+    static void compute(MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>>&,MeshElements<MeshDimension, IndexType, Real, Reserve...>&){
+        static_assert (MeshDimension <= 3,"The measure computation of mesh of dimension higher than 3 is not implemented yet.");
     }
 };
 
 
-template <unsigned int Dimension, ComputationMethod Method>
-struct _ComputeMeasures<1, Dimension, Method>{
+template <unsigned int MeshDimension, ComputationMethod Method>
+struct _ComputeMeasures<1, MeshDimension, Method>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
-    static void compute(MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, Dimension>>& measures,MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+    static void compute(MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>>& measures,MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh){
 
         auto& edgeLengths = measures.template getDataByDim<1>();
 
         for (IndexType edgeIndex = 0; edgeIndex < mesh.template getElements<1>().size(); edgeIndex++) {
             auto& edge = mesh.getEdges().at(edgeIndex);
             edgeLengths.at(edgeIndex) = (mesh.getVertices().at(edge.getVertexAIndex()) -
-                                               mesh.getVertices().at(edge.getVertexBIndex())).normEukleid();
+                                         mesh.getVertices().at(edge.getVertexBIndex())).normEuclid();
         }
 
-        _ComputeMeasures<2, Dimension>::compute(measures, mesh);
+        _ComputeMeasures<2, MeshDimension>::compute(measures, mesh);
     }
 };
 
@@ -49,39 +48,26 @@ struct _ComputeMeasures<3, 3, Method>{
 
         for (IndexType cellIndex = 0; cellIndex < mesh.getCells().size(); cellIndex++) {
 
-            typename MeshElements<3, IndexType, Real, Reserve...>::template ElementType<3>& cell = mesh.getCells().at(cellIndex);
+            const auto& cell = mesh.getCells().at(cellIndex);
             IndexType tmpFace = cell.getBoundaryElementIndex();
             Real measure = Real();
-            Vertex<3,Real>& cellCenter = cell.getCenter();
+            const Vertex<3,Real>& cellCenter = cell.getCenter();
 
             do {
                 // select 3 different vertices
                 IndexType vAIndex = mesh.getEdges().at(mesh.getFaces().at(tmpFace).getSubelements()[0]).getVertexAIndex();
                 IndexType vBIndex = mesh.getEdges().at(mesh.getFaces().at(tmpFace).getSubelements()[0]).getVertexBIndex();
-                IndexType vCIndex = mesh.getEdges().at(mesh.getFaces().at(tmpFace).getSubelements()[1]).getVertexAIndex();
-                if(vCIndex == vAIndex || vCIndex == vBIndex) {
-                    vCIndex = mesh.getEdges().at(mesh.getFaces().at(tmpFace).getSubelements()[1]).getVertexBIndex();
-                }
 
                 Vertex<3,Real>& a = mesh.getVertices().at(vAIndex);
                 Vertex<3,Real>& b = mesh.getVertices().at(vBIndex);
-                Vertex<3,Real>& c = mesh.getVertices().at(vCIndex);
+                Vertex<3,Real>& c = mesh.getFaces().at(tmpFace).getCenter();
 
-                // preparing quiantities
-                Vertex<3,Real> vAmcC = (a-cellCenter);
-                Vertex<3,Real> vBmA = (b-a);
-                Vertex<3,Real> vCmA = (c-a);
-                Real inv_sqrBmA = 1.0 / vBmA.sumOfSquares();
-                Real inv_sqrCmA = 1.0 / vCmA.sumOfSquares();
+                std::array<Vertex<3,Real>, 3> gsVecs = {b-a, c-a, cellCenter - a};
+                std::array<Real, 3> gsNorms = {};
 
-                Real denominator = 1.0 / (1.0 - (pow(vCmA*vBmA,2) * inv_sqrBmA * inv_sqrCmA));
+                gramSchmidt<3,3,IndexType, Real>(gsVecs, gsNorms);
 
-
-                Real param_t = -denominator * (((vAmcC*vBmA) * inv_sqrBmA) - (inv_sqrBmA*inv_sqrCmA*(vAmcC * vCmA)*(vCmA*vBmA)));
-                //param_t *= inv_sqrBmA;
-                Real param_s = -denominator * (((vAmcC*vCmA) * inv_sqrCmA) - (inv_sqrBmA*inv_sqrCmA*(vAmcC * vBmA)*(vCmA*vBmA)));
-
-                Real distance = (vAmcC + (vBmA * param_t) + (vCmA * param_s)).normEukleid();
+                Real distance = gsNorms[2];
 
                 Real tmp = distance * measures.template getDataByDim<2>().at(tmpFace);
                 measure += tmp / 3.0;
@@ -132,22 +118,20 @@ struct _ComputeMeasures<2, 3, Method>{
 
         for (IndexType faceIndex = 0; faceIndex < mesh.getFaces().size(); faceIndex++) {
 
-            typename MeshElements<3, IndexType, Real, Reserve...>::template ElementType<2>& face = mesh.template getElements<2>().at(faceIndex);
+            const auto& face = mesh.template getElements<2>().at(faceIndex);
             Real measure = Real();
-            Vertex<3,Real>& faceCenter = face.getCenter();
+            const Vertex<3,Real>& faceCenter = face.getCenter();
             for(auto sube : face.getSubelements()){
+                const auto& edge = mesh.getEdges().at(sube);
+                Vertex<3,Real>& a = mesh.getVertices().at(edge.getVertexAIndex());
+                Vertex<3,Real>& b = mesh.getVertices().at(edge.getVertexBIndex());
 
-                Vertex<3,Real>& a = mesh.getVertices().at(mesh.getEdges().at(sube).getVertexAIndex());
-                Vertex<3,Real>& b = mesh.getVertices().at(mesh.getEdges().at(sube).getVertexBIndex());
+                std::array<Vertex<3,Real>, 2> gsVecs = {b - a, faceCenter - a};
+                std::array<Real, 2> gsNorms = {};
 
-                Real distance = Real();
+                gramSchmidt<2,3,IndexType, Real>(gsVecs, gsNorms);
 
-                Real param = -1.0*(((a-faceCenter)*(b-a))/((b-a).sumOfSquares()));
-
-                distance = (a-faceCenter+(b-a)*param).normEukleid();
-
-                Real tmp = distance * measures.template getDataByDim<1>().at(sube);
-                measure += tmp * 0.5;
+                measure += 0.5 * gsNorms[1] * measures.template getDataByDim<1>().at(sube);
             }
             surfaceMeasures.at(faceIndex) = measure;
         }
@@ -163,7 +147,7 @@ struct _ComputeMeasures<2, 3, Method>{
 
 
 template <>
-struct _ComputeMeasures<3, 3, TESSELLATED>{
+struct _ComputeMeasures<3, 3, METHOD_TESSELLATED>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
     static void compute(MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, 3>>& measures,MeshElements<3, IndexType, Real, Reserve...>& mesh){
 
@@ -186,7 +170,7 @@ struct _ComputeMeasures<3, 3, TESSELLATED>{
 
                     std::array<Vertex<3,Real>, 3> pyramidVec = {vertA - faceCenter, vertB - faceCenter, cellCenter - faceCenter};
                     std::array<Real, 3> norms;
-                    grammSchmidt<3, 3, IndexType, Real>(pyramidVec, norms);
+                    gramSchmidt<3, 3, IndexType, Real>(pyramidVec, norms);
 
                     measure += norms.at(0) * norms.at(1) * norms.at(2) * (1.0/6.0);
 
@@ -206,11 +190,11 @@ struct _ComputeMeasures<3, 3, TESSELLATED>{
 
 
 
-template <ComputationMethod Method, unsigned int Dimension,typename IndexType, typename Real, unsigned int ...Reserve>
-MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, Dimension>> computeMeasures(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
-    MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, Dimension>> measures(mesh);
+template <ComputationMethod Method, unsigned int MeshDimension,typename IndexType, typename Real, unsigned int ...Reserve>
+MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>> computeMeasures(MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh){
+    MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>> measures(mesh);
 
-    Impl::_ComputeMeasures<1, Dimension, Method>::compute(measures, mesh);
+    Impl::_ComputeMeasures<1, MeshDimension, Method>::compute(measures, mesh);
 
     return measures;
 }

@@ -4,15 +4,16 @@
 #include "vector"
 #include <type_traits>
 #include "MeshFunctions/MeshFunctions.h"
-#include "MeshFunctions/ComputeCenters.h"
-#include "MeshFunctions/ComputeMeasures.h"
+#include "MeshIO/MeshReader/FPMAMeshReader.h"
+#include "MeshIO/MeshReader/VTKMeshReader.h"
 
 
-template <unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
-class UnstructuredMesh : public MeshElements<Dimension, IndexType, Real, Reserve...>{
+
+template <unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
+class UnstructuredMesh : public MeshElements<MeshDimension, IndexType, Real, Reserve...>{
 
 public:
-    template<ComputationMethod Method = ComputationMethod::DEFAULT>
+    template<ComputationMethod Method = ComputationMethod::METHOD_DEFAULT>
     void initializeCenters(){
         auto centers = computeCenters<Method>(*this);
 
@@ -24,14 +25,14 @@ public:
         }
     }
 
-    template<ComputationMethod Method = ComputationMethod::DEFAULT>
-    MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, Dimension>> computeElementMeasures() {
+    template<ComputationMethod Method = ComputationMethod::METHOD_DEFAULT>
+    MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>> computeElementMeasures() {
         return computeMeasures<Method>(*this);
     }
 
-    template<ComputationMethod Method = ComputationMethod::DEFAULT>
-    MeshDataContainer<Vector<Dimension, Real>, Dimension-1> computeFaceNormals() {
-        return ::ComputeFaceNormals<Method>(*this);
+    template<ComputationMethod Method = ComputationMethod::METHOD_DEFAULT>
+    MeshDataContainer<Vector<MeshDimension, Real>, MeshDimension-1> computeFaceNormals() {
+        return ::computeFaceNormals<Method>(*this);
     }
 
     template<unsigned int StartDim, unsigned int TargetDim, typename Functor>
@@ -76,9 +77,62 @@ public:
 
     }
   */
-public:
-    Real computeCellDist(IndexType cellIndex1, IndexType cellIndex2){
-        return (this->getCells().at(cellIndex1).GetCenter() - this->getCells().at(cellIndex2).GetCenter()).NormEukleid();
+    // do not compile this if it is not used
+    // it may cause problems for higher dimensions
+    template<unsigned int MeshDim = MeshDimension>
+    typename std::enable_if<MeshDim == 3,std::unique_ptr<MeshReader<MeshDimension>>>::type
+    load(const std::string& filePath){
+
+        typedef std::unique_ptr<MeshReader<MeshDimension>> retType;
+        retType reader_ptr;
+
+        std::ifstream file(filePath, std::ios::binary);
+        if (!file.is_open()) {
+            throw std::runtime_error("was not able to open file: \"" + filePath + "\"");
+        }
+
+        if (filePath.find(".vtk") != filePath.npos){
+            DBGMSG("file recognized as VTK");
+            auto reader = new VTKMeshReader<MeshDimension>();
+            reader->loadFromStream(file, *this);
+            reader_ptr = retType(reader);
+        }
+
+        if (filePath.find(".fpma") != filePath.npos){
+            DBGMSG("file recognized as FPMA");
+            auto reader = new FPMAMeshReader<MeshDimension>();
+            reader->loadFromStream(file, *this);
+            reader_ptr = retType(reader);
+        }
+
+        file.close();
+
+        return reader_ptr;
+    }
+
+    // there is only one implemented reader for mesh of dimension 2
+    template<unsigned int MeshDim = MeshDimension>
+    typename std::enable_if<MeshDim == 2,std::unique_ptr<MeshReader<MeshDimension>>>::type
+    load(const std::string& filePath){
+
+        typedef std::unique_ptr<MeshReader<MeshDimension>> retType;
+        retType reader_ptr;
+
+        std::ifstream file(filePath, std::ios::binary);
+        if (!file.is_open()) {
+            throw std::runtime_error("was not able to open file: \"" + filePath + "\"");
+        }
+
+        if (filePath.find(".vtk") != filePath.npos){
+            DBGMSG("file recognized as VTK");
+            auto reader = new VTKMeshReader<MeshDimension>();
+            reader->loadFromStream(file, *this);
+            reader_ptr = retType(reader);
+        }
+
+        file.close();
+
+        return reader_ptr;
     }
 };
 

@@ -13,8 +13,26 @@ template <>
 class FPMAMeshReader<3> : public MeshReader<3> {
 public:
 
+    using reader = MeshReader<3>;
+
+    MeshDataContainer<typename reader::type::ElementType, 3> cellTypes;
 
 
+    FPMAMeshReader() = default;
+    FPMAMeshReader(const FPMAMeshReader<3>& reader) = default;
+    FPMAMeshReader(FPMAMeshReader<3>&& reader) = default;
+
+    virtual ~FPMAMeshReader() = default;
+
+
+    virtual MeshDataContainer<typename reader::type::ElementType, 3> getCellTypes() const {
+        return cellTypes;
+    }
+
+    template<typename IndexType, typename Real, unsigned int ...Reserve>
+    void setupCellTypes(const MeshElements<3, IndexType, Real, Reserve...>& mesh){
+        cellTypes.allocateData(mesh, reader::type::ElementType::POLYHEDRON);
+    }
 
     template<typename IndexType, typename Real, unsigned int ...Reserve>
     void loadVertices(std::istream& ist,MeshElements<3, IndexType, Real, Reserve...>& mesh){
@@ -143,6 +161,8 @@ public:
         loadFaces(ist, mesh);
 
         loadCells(ist, mesh);
+
+        setupCellTypes(mesh);
 
         mesh.updateSignature();
 

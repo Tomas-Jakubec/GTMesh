@@ -4,12 +4,13 @@
 #include "../MeshElements/MeshElements.h"
 #include "../MeshDataContainer/MeshDataContainer.h"
 #include "../../NumericStaticArray/Vector.h"
-#include "../../NumericStaticArray/GrammSchmidt.h"
+#include "../../NumericStaticArray/GramSchmidt.h"
 #include "MeshApply.h"
 #include "MeshFunctionsDefine.h"
 
+namespace Impl {
 
-template <unsigned int Dimension, ComputationMethod Method = DEFAULT>
+template <unsigned int Dimension, ComputationMethod Method = METHOD_DEFAULT>
 struct _ComputeNormals{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
     static void compute(MeshDataContainer<Vector<Dimension, Real>, Dimension-1>&,MeshElements<Dimension, IndexType, Real, Reserve...>&){
@@ -32,7 +33,7 @@ struct _ComputeNormals<2, Method>{
             Vertex<2,Real> dif = b-a;
             normals[face][0] = dif[1];
             normals[face][1] = -dif[0];
-            normals[face] /= dif.normEukleid();
+            normals[face] /= dif.normEuclid();
         }
     }
 };
@@ -87,7 +88,7 @@ struct _ComputeNormals<3, Method>{
             Real param_s = -denominator * (((vAmcC*vCmA) * inv_sqrCmA) - (inv_sqrBmA*inv_sqrCmA*(vAmcC * vBmA)*(vCmA*vBmA)));
 
             Vertex<3, Real> faceNormal = vAmcC + (vBmA * param_t) + (vCmA * param_s);
-            faceNormal /= faceNormal.normEukleid();
+            faceNormal /= faceNormal.normEuclid();
 
             if (!vectorSign) {
                 faceNormal *= -1;
@@ -102,7 +103,7 @@ struct _ComputeNormals<3, Method>{
 
 
 template <>
-struct _ComputeNormals<3, TESSELLATED>{
+struct _ComputeNormals<3, METHOD_TESSELLATED>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
     static void compute(MeshDataContainer<Vector<3, Real>, 2>& normals,MeshElements<3, IndexType, Real, Reserve...>& mesh){
         for (IndexType faceIndex = 0; faceIndex < mesh.getFaces().size(); faceIndex++) {
@@ -132,7 +133,7 @@ struct _ComputeNormals<3, TESSELLATED>{
                 std::array<Vertex<3,Real>, 3> pyramidVec = {faceCenter - vertA, faceCenter - vertB, faceCenter - cellCenter};
                 std::array<Real, 3> norms;
 
-                grammSchmidt<3, 3, IndexType, Real>(pyramidVec, norms);
+                gramSchmidt<3, 3, IndexType, Real>(pyramidVec, norms);
 
                 faceNormal += pyramidVec[2] * 0.5 * norms[0] * norms[1];
 
@@ -152,16 +153,17 @@ struct _ComputeNormals<3, TESSELLATED>{
     }
 };
 
+}
 
 
 
 
 template <ComputationMethod Method, unsigned int Dimension,typename IndexType, typename Real, unsigned int ...Reserve>
-MeshDataContainer<Vector<Dimension, Real>, Dimension-1> ComputeFaceNormals(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+MeshDataContainer<Vector<Dimension, Real>, Dimension-1> computeFaceNormals(MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
 
     MeshDataContainer<Vector<Dimension, Real>, Dimension-1> normals(mesh);
 
-    _ComputeNormals<Dimension, Method>::compute(normals, mesh);
+    Impl::_ComputeNormals<Dimension, Method>::compute(normals, mesh);
 
     return normals;
 }

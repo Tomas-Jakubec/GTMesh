@@ -45,7 +45,9 @@ public:
     template<typename IndexType, typename Real, unsigned int ...Reserve>
     VTKMeshReader(const MeshElements<2, IndexType, Real, Reserve...>&){}
 
-    MeshDataContainer<typename reader::type::ElementType, 2> getCellTypes() {
+    virtual ~VTKMeshReader() = default;
+
+    virtual MeshDataContainer<typename reader::type::ElementType, 2> getCellTypes() const {
         return cellTypes;
     }
 
@@ -274,10 +276,12 @@ class VTKMeshReader<3> : public MeshReader<3>{
 public:
     VTKMeshReader() = default;
 
+    virtual ~VTKMeshReader() = default;
+
     template<typename IndexType, typename Real, unsigned int ...Reserve>
     VTKMeshReader(const MeshElements<3, IndexType, Real, Reserve...>&){}
 
-    MeshDataContainer<typename reader::type::ElementType, 3> getCellTypes() {
+    virtual MeshDataContainer<typename reader::type::ElementType, 3> getCellTypes() const {
         return cellTypes;
     }
 

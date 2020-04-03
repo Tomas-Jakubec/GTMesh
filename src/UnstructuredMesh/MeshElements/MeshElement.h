@@ -113,6 +113,10 @@ public:
         return this->begin() + getNumberOfSubElements();
     }
 
+    typename std::array<IndexType, Reserve>::const_iterator end() const {
+        return this->cbegin() + getNumberOfSubElements();
+    }
+
     typename std::array<IndexType, Reserve>::const_iterator cend() const {
         return this->cbegin() + getNumberOfSubElements();
     }

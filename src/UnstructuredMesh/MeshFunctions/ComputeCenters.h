@@ -4,14 +4,14 @@
 #include "MeshFunctionsDefine.h"
 #include "MeshApply.h"
 #include "../MeshDataContainer/MeshDataContainer.h"
-#include "../../NumericStaticArray/GrammSchmidt.h"
+#include "../../NumericStaticArray/GramSchmidt.h"
 #include <array>
 
 namespace Impl {
 
 
 
-template <unsigned int CurrentDimension, unsigned int MeshDimension, ComputationMethod Method = ComputationMethod::DEFAULT>
+template <unsigned int CurrentDimension, unsigned int MeshDimension, ComputationMethod Method = ComputationMethod::METHOD_DEFAULT>
 struct _ComputeCenters {
     template <typename IndexType, typename Real, unsigned int ...Reserve>
     static void compute(
@@ -103,7 +103,7 @@ struct _ComputeCenters<1, MeshDimension, Method>{
  * specialization of computation of centers for mesh which needs tessellation of faces
  */
 template <>
-struct _ComputeCenters<2, 3, ComputationMethod::TESSELLATED> {
+struct _ComputeCenters<2, 3, ComputationMethod::METHOD_TESSELLATED> {
     template <typename IndexType, typename Real, unsigned int ...Reserve>
     static void compute(
             MakeMeshDataContainer_t<Vertex<3, Real>, make_custom_integer_sequence_t<unsigned int, 1, 3>>& centers,
@@ -132,7 +132,7 @@ struct _ComputeCenters<2, 3, ComputationMethod::TESSELLATED> {
                 IndexType BI = mesh.getEdges().at(edgeIndex).getVertexBIndex();
                 std::array<Vertex<3, Real>, 2> v = {elemCenters.at(faceIndex) - mesh.getVertices().at(AI), elemCenters.at(faceIndex) - mesh.getVertices().at(BI)};
                 std::array<Real, 2> norms;
-                grammSchmidt<2, 3, IndexType, Real>(v, norms);
+                gramSchmidt<2, 3, IndexType, Real>(v, norms);
                 Real surf = norms.at(0) * 0.5 * norms.at(1);
 
                 tempVert += subElemCenters.at(edgeIndex) * (surf * (2.0 / 3.0));
@@ -143,7 +143,7 @@ struct _ComputeCenters<2, 3, ComputationMethod::TESSELLATED> {
             elemCenters.at(i) = (elemCenters.at(i) / 3.0) + (tempVert / surfTotal);
         }
 
-        _ComputeCenters<2 + 1, 3, ComputationMethod::TESSELLATED>::compute(centers, mesh);
+        _ComputeCenters<2 + 1, 3, ComputationMethod::METHOD_TESSELLATED>::compute(centers, mesh);
     }
 };
 
