@@ -1,8 +1,8 @@
 ## Mesh functions ##
 
-The directory MeshFunctions includes headder files implementing several important algorithms to work with an unstructured mesh.
+The directory MeshFunctions includes header files implementing several important algorithms to work with an unstructured mesh.
 
-|headder name|functionality|
+|header name|functionality|
 |------------|-------------|
 |ComputeCenter.h|defines class computing centers of mesh elements|
 

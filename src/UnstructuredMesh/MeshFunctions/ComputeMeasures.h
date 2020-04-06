@@ -62,7 +62,7 @@ struct _ComputeMeasures<3, 3, Method>{
                 Vertex<3,Real>& b = mesh.getVertices().at(vBIndex);
                 Vertex<3,Real>& c = mesh.getFaces().at(tmpFace).getCenter();
 
-                std::array<Vertex<3,Real>, 3> gsVecs = {b-a, c-a, cellCenter - a};
+                std::array<Vertex<3,Real>, 3> gsVecs = {a - b, a - c, a - cellCenter};
                 std::array<Real, 3> gsNorms = {};
 
                 gramSchmidt<3,3,IndexType, Real>(gsVecs, gsNorms);

@@ -94,7 +94,7 @@ Real Vertex<Dim, Real>::normEuclid(){
 */
 //subtracting two points
 template <unsigned int Dim, typename Real>
-Vertex<Dim, Real> Vertex<Dim, Real>::operator -(const Vertex<Dim, Real>& v) const {
+Vertex<Dim, Real> Vertex<Dim, Real>::operator-(const Vertex<Dim, Real>& v) const {
     Vertex<Dim, Real> res;
     inlineSubtraction<Dim, Real>::computation(res.data(), this->data(), v.data());
     return res;
@@ -102,7 +102,7 @@ Vertex<Dim, Real> Vertex<Dim, Real>::operator -(const Vertex<Dim, Real>& v) cons
 
 //addition of two points
 template <unsigned int Dim, typename Real>
-Vertex<Dim, Real> Vertex<Dim, Real>::operator +(const Vertex<Dim, Real>& v) const {
+Vertex<Dim, Real> Vertex<Dim, Real>::operator+(const Vertex<Dim, Real>& v) const {
     Vertex<Dim, Real> res;
     inlineAddition<Dim, Real>::computation(res.data(), this->data(), v.data());
     return res;
@@ -110,7 +110,7 @@ Vertex<Dim, Real> Vertex<Dim, Real>::operator +(const Vertex<Dim, Real>& v) cons
 
 //multiplying coordinates with real number
 template <unsigned int Dim, typename Real>
-Vertex<Dim, Real> Vertex<Dim, Real>::operator *(const Real& x) const {
+Vertex<Dim, Real> Vertex<Dim, Real>::operator*(const Real& x) const {
     Vertex<Dim, Real> res;
     inlineMultiplication<Dim, Real>::computation(res.data(), this->data(), x);
     return res;
@@ -118,21 +118,21 @@ Vertex<Dim, Real> Vertex<Dim, Real>::operator *(const Real& x) const {
 
 //multiplying coordinates with real number
 template <unsigned int Dim, typename Real>
-Vertex<Dim, Real> operator *(const Real& x, const Vertex<Dim, Real>& vert) {
+Vertex<Dim, Real> operator*(const Real& x, const Vertex<Dim, Real>& vert) {
     return vert * x;
 }
 
 
 //division
 template <unsigned int Dim, typename Real>
-Vertex<Dim, Real> Vertex<Dim, Real>::operator /(const Real& x) const {
+Vertex<Dim, Real> Vertex<Dim, Real>::operator/(const Real& x) const {
     return this->operator*(Real(1.0)/x);
 }
 
 
 //division coordinates by a real number
 template <unsigned int Dim, typename Real>
-Vertex<Dim, Real> operator /(const Real& x, const Vertex<Dim, Real>& vert) {
+Vertex<Dim, Real> operator/(const Real& x, const Vertex<Dim, Real>& vert) {
     return vert * (1.0 / x);
 }
 
@@ -154,7 +154,7 @@ Vertex<Dim, Real>& Vertex<Dim, Real>::operator +=(const Vertex<Dim, Real>& v){
 
 // Subtracts value of coordinates of another Point
 template <unsigned int Dim, typename Real>
-Vertex<Dim, Real>& Vertex<Dim, Real>::operator -=(const Vertex<Dim, Real>& v){
+Vertex<Dim, Real>& Vertex<Dim, Real>::operator-=(const Vertex<Dim, Real>& v){
     inlineSubtraction<Dim, Real>::computation(this->data(), v.data());
     return *this;
 }
@@ -162,21 +162,21 @@ Vertex<Dim, Real>& Vertex<Dim, Real>::operator -=(const Vertex<Dim, Real>& v){
 
 // Adds value of coordinates of another Point
 template <unsigned int Dim, typename Real>
-Vertex<Dim, Real>& Vertex<Dim, Real>::operator *=(const Real& x){
+Vertex<Dim, Real>& Vertex<Dim, Real>::operator*=(const Real& x){
     inlineMultiplication<Dim, Real>::computation(this->data(), x);
     return *this;
 }
 
 // Subtracts value of coordinates of another Point
 template <unsigned int Dim, typename Real>
-Vertex<Dim, Real>& Vertex<Dim, Real>::operator /=(const Real& x){
+Vertex<Dim, Real>& Vertex<Dim, Real>::operator/=(const Real& x){
     this->operator*=(Real(1.0)/x);
     return *this;
 }
 
 // Compares two points wether they are the same
 template <unsigned int Dim, typename Real>
-bool Vertex<Dim, Real>::operator ==(const Vertex<Dim, Real>& v) const {
+bool Vertex<Dim, Real>::operator==(const Vertex<Dim, Real>& v) const {
     for(unsigned int i = 0; i < Dim; i++) {
         if(this->operator[](i) != v[i]){
             return false;
@@ -187,7 +187,7 @@ bool Vertex<Dim, Real>::operator ==(const Vertex<Dim, Real>& v) const {
 
 // Compares two points wether they are not the same
 template <unsigned int Dim, typename Real>
-bool Vertex<Dim, Real>::operator !=(const Vertex<Dim, Real>& v) const {
+bool Vertex<Dim, Real>::operator!=(const Vertex<Dim, Real>& v) const {
     return !(*this == v);
 }
 

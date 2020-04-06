@@ -9,8 +9,8 @@ struct MeshNativeType{
 template<>
 struct MeshNativeType<2>{
     enum ElementType{
-        LINE = 200,
-        TRIANGLE,
+        LINE = 100,
+        TRIANGLE = 200,
         QUAD,
         POLYGON
     };

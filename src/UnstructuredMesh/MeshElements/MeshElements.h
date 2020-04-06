@@ -193,43 +193,6 @@ public:
         }
     }
 
-    struct CellSubelementIterator: public std::iterator<std::forward_iterator_tag, IndexType>
-    {
-
-        IndexType actual;
-        IndexType firstBElem;
-        IndexType cellIndex;
-        MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh;
-    public:
-        CellSubelementIterator(IndexType ci, IndexType act, MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh):cellIndex(ci){
-            firstBElem = act;
-            actual = firstBElem;
-            this->parentMesh = parentMesh;
-        }
-        CellSubelementIterator& operator++ () {actual = parentMesh->getFaces().at(actual).getNextBElem(cellIndex) == firstBElem ? INVALID_INDEX(IndexType) : parentMesh->getFaces().at(actual).getNextBElem(cellIndex); return *this;}
-        CellSubelementIterator& operator++ (int) {actual = parentMesh->getFaces().at(actual).getNextBElem(cellIndex) == firstBElem ? INVALID_INDEX(IndexType) : parentMesh->getFaces().at(actual).getNextBElem(cellIndex); return *this;}
-        IndexType operator* (){return actual;}
-        bool operator== (CellSubelementIterator& it) {return actual == it.actual;}
-        bool operator!= (CellSubelementIterator& it) {return actual != it.actual;}
-    };
-
-    class CellSubelements {
-        IndexType cellIndex;
-        MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh;
-    public:
-        CellSubelements(MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh, IndexType cellIndex){
-            this->cellIndex = cellIndex;
-            this->parentMesh = parentMesh;
-        }
-
-        CellSubelementIterator begin() {
-            return CellSubelementIterator(cellIndex, parentMesh->getCells()[cellIndex].getBoundaryElementIndex(), parentMesh);
-        }
-
-        CellSubelementIterator end() {
-            return CellSubelementIterator(cellIndex, INVALID_INDEX(IndexType), parentMesh);
-        }
-    };
 
 
 
@@ -365,6 +328,46 @@ public:
     size_t getSignature() const {
         return meshSignature;
     }
+
+// Wrappers
+public:
+    struct CellSubelementIterator: public std::iterator<std::forward_iterator_tag, IndexType>
+    {
+
+        IndexType actual;
+        IndexType firstBElem;
+        IndexType cellIndex;
+        MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh;
+    public:
+        CellSubelementIterator(IndexType ci, IndexType act, MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh):cellIndex(ci){
+            firstBElem = act;
+            actual = firstBElem;
+            this->parentMesh = parentMesh;
+        }
+        CellSubelementIterator& operator++ () {actual = parentMesh->getFaces().at(actual).getNextBElem(cellIndex) == firstBElem ? INVALID_INDEX(IndexType) : parentMesh->getFaces().at(actual).getNextBElem(cellIndex); return *this;}
+        CellSubelementIterator& operator++ (int) {actual = parentMesh->getFaces().at(actual).getNextBElem(cellIndex) == firstBElem ? INVALID_INDEX(IndexType) : parentMesh->getFaces().at(actual).getNextBElem(cellIndex); return *this;}
+        IndexType operator* (){return actual;}
+        bool operator== (CellSubelementIterator& it) {return actual == it.actual;}
+        bool operator!= (CellSubelementIterator& it) {return actual != it.actual;}
+    };
+
+    class CellSubelements {
+        IndexType cellIndex;
+        MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh;
+    public:
+        CellSubelements(MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh, IndexType cellIndex){
+            this->cellIndex = cellIndex;
+            this->parentMesh = parentMesh;
+        }
+
+        CellSubelementIterator begin() {
+            return CellSubelementIterator(cellIndex, parentMesh->getCells()[cellIndex].getBoundaryElementIndex(), parentMesh);
+        }
+
+        CellSubelementIterator end() {
+            return CellSubelementIterator(cellIndex, INVALID_INDEX(IndexType), parentMesh);
+        }
+    };
 
 public:
     template<unsigned int ElementDim, typename Dummy = void>
