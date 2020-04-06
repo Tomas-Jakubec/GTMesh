@@ -10,7 +10,9 @@ The directory MeshFunctions includes header files implementing several important
 Example how to calculate centers of mesh elements.
 ```c++
 UnstructuredMesh<3, size_t, double> mesh;
-MeshDataContainer<Vertex<3,double>, 1,2,3> centers = ComputeCenters(mesh);
+MeshDataContainer<Vertex<3,double>, 1,2,3> centers = computeCenters(mesh);
+// Or the same result can be obtained this way
+auto centers = mesh.computeCenters;
 ```
 
 </table>
