@@ -5,7 +5,7 @@ struct MeshNativeType{
 
 };
 
-
+//! Element types of GTMesh in 2D mesh
 template<>
 struct MeshNativeType<2>{
     enum ElementType{
@@ -15,7 +15,7 @@ struct MeshNativeType<2>{
         POLYGON
     };
 };
-
+//! Element types of GTMesh in 3D mesh
 template<>
 struct MeshNativeType<3>{
     enum ElementType{

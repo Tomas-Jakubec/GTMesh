@@ -43,12 +43,12 @@ private:
     static constexpr unsigned int dimensionIndex(){
         return DimensionPos<dim, 0, std::get<0>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...})>::res();
     }
-
+public:
     template<unsigned int pos>
     static constexpr unsigned int dimensionAt(){
         return std::get<pos>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...});
     }
-public:
+private:
 
     /**
      * @brief The _DataContainer struct
@@ -67,7 +67,7 @@ public:
     struct _DataContainer<_DataType, 0>{
         DataContainer<_DataType, dimensionAt<0U>()> _data;
     };
-
+public:
     /**
      * Data container type according to pos
      */
@@ -289,7 +289,7 @@ public:
 
     /**
      * @brief <HR>
-     * This constructor resizes the MeshDataContainer according to the mesh.
+     * This constructor resizes the %MeshDataContainer according to the mesh.
      * Moreover, the @a Dimensions and @a DataType can be deduced from
      * the second and the third arguments.
      * @param mesh
@@ -306,7 +306,7 @@ public:
 
     /**
      * @brief <HR>
-     * This constructor resizes the MeshDataContainer according to the mesh.
+     * This constructor resizes the %MeshDataContainer according to the mesh.
      * And initializes the data with an @a initialValue.
      * @param mesh
      * @param initialValue
@@ -322,7 +322,7 @@ public:
 
     /**
      * @brief <HR>
-     * This constructor resizes the MeshDataContainer according to the mesh.
+     * This constructor resizes the %MeshDataContainer according to the mesh.
      * And initializes the data with an @a initialValue.
      * Moreover, the @a Dimensions and @a DataType can be deduced from
      * the second and the third arguments.
@@ -367,7 +367,7 @@ public:
 
 
     /**
-     * @brief Allocates data according to another meshDataContainer.
+     * @brief Allocates data according to another MeshDataContainer.
      * The meshDataContainer mush have @a _Dimensions at least
      * dimensions as @a Dimensions.
      * @param meshDataContainer
@@ -378,7 +378,7 @@ public:
     }
 
     /**
-     * @brief Allocates data according to another meshDataContainer.
+     * @brief Allocates data according to another MeshDataContainer.
      * The meshDataContainer mush have @a _Dimensions at least
      * dimensions as @a Dimensions.
      * @param meshDataContainer
@@ -561,6 +561,7 @@ private:
     /**
      * Data container type according to pos
      */
+public:
     template <unsigned int Pos>
     using DataContainerType = DataContainer<DataType<Pos>, dimensionAt<Pos>()>;
 
@@ -572,7 +573,7 @@ private:
    static constexpr unsigned int size() {
        return sizeof... (Dimensions);
    }
-
+private:
     template<unsigned int pos, typename _DataType, typename... _DataTypes>
     struct Allocator{
         template<unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>

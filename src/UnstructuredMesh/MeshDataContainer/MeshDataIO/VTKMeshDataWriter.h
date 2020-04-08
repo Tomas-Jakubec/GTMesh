@@ -7,7 +7,28 @@
 #include "../../MeshIO/MeshWriter/VTKMeshWriter.h"
 
 #include <ostream>
-
+/**
+ * @brief The VTKMeshDataWriter utilizes the
+ * class Traits to export the given MeshDataContainer
+ * of DataContainer automatically. If the MeshDataContainer
+ * is given, then it is iterated and the function looks
+ * for the exportable data structures with DefaultIOTraits.
+ * @example
+ * struct DataStruct{
+ *    double pressure;
+ *    Vector<double, 3> velocity;
+ * }
+ * MAKE_ATTRIBUTE_TRAIT(DataStruct, pressure, velocity);
+ * // Allocate the data with pressure = 42, velocity = {1,2,3}
+ * MeshDataContainer<DataStruct,3> meshData(mesh, {42, {1,2,3}});
+ * // Mesh export etc.
+ * VTKMeshDataWriter::wrtieToStream(cerr, meshData, meshWriter);
+ * // Writes "CELL_DATA %number_of_cells
+ * // SCALAR presure
+ * // 42 42 ...
+ * // VECTOR velocity
+ * // 1 2 3 1 2 3 ..."
+ */
 template <unsigned int MeshDimension>
 class VTKMeshDataWriter {
 
@@ -171,6 +192,22 @@ class VTKMeshDataWriter {
 
 
 public:
+    /**
+     * @brief Exports the given data in the given DataContainer in VTK format
+     * to the ostream ost. The given data type T must have defined DefaultIOTraits.
+     * To define the traits, one can utilize the macro MAKE_ATTRIBUTE_TRAIT(_IO), @see Traits.
+     * The data are axported with the line CELL_DATA.
+     * @example
+     * struct DataStruct{
+     *    double pressure;
+     *    Vector<double, 3> velocity;
+     * }
+     * MAKE_ATTRIBUTE_TRAIT(DataStruct, pressure, velocity);
+     * // Allocate the data with pressure = 42, velocity = {1,2,3}
+     * MeshDataContainer<DataStruct,3> meshData(mesh, {42, {1,2,3}});
+     * // Mesh export etc.
+     * VTKMeshDataWriter::wrtieToStream(cerr, meshData.getDataByPos<0>(), meshWriter);
+     */
     template<typename T,typename IndexType, typename Real>
     static void writeToStream(std::ostream& ost, DataContainer<T, MeshDimension>& data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer) {
         using type = T;//typename std::remove_reference<decltype(data.template getDataByDim<MeshDimension>())>::type::DataType;

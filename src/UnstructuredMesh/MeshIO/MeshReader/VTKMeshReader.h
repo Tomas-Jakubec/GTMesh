@@ -37,8 +37,6 @@ class VTKMeshReader<2> : public MeshReader<2>{
     // file indexing
     //
 
-    //
-    //MeshDataContainer<IndexType>
 public:
     VTKMeshReader() = default;
 
@@ -52,7 +50,7 @@ public:
     }
 
     template<typename IndexType, typename Real, unsigned int ...Reserve>
-    void loadPoints(std::istream& ist, MeshElements<2, IndexType, Real, Reserve...>& mesh){
+    void loadVertices(std::istream& ist, MeshElements<2, IndexType, Real, Reserve...>& mesh){
         IndexType numPoints;
         ist >> numPoints;
         Real dummy = 0;
@@ -170,7 +168,7 @@ public:
 
         ist >> buf;
         if (buf == "POINTS") {
-            loadPoints(ist, mesh);
+            loadVertices(ist, mesh);
         }
 
         ist >> buf;
@@ -286,7 +284,7 @@ public:
     }
 
     template<typename IndexType, typename Real, unsigned int ...Reserve>
-    void loadPoints(std::istream& ist, MeshElements<3, IndexType, Real, Reserve...>& mesh){
+    void loadVertices(std::istream& ist, MeshElements<3, IndexType, Real, Reserve...>& mesh){
         IndexType numPoints;
         ist >> numPoints;
         mesh.getVertices().resize(numPoints);
@@ -440,7 +438,7 @@ public:
 
         ist >> buf;
         if (buf == "POINTS") {
-            loadPoints(ist, mesh);
+            loadVertices(ist, mesh);
         }
 
         ist >> buf;

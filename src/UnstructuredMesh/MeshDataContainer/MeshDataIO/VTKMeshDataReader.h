@@ -158,11 +158,78 @@ public:
     }
 
     template<typename T>
-    static void readData(std::istream& ist, DataContainer<T, MeshDimension>& data) {
+    static void readFromStream(std::istream& ist, DataContainer<T, MeshDimension>& data) {
 
         std::map<std::string, std::istream::pos_type> dataPositions = indexData(ist);
 
         readCellData<typename DefaultIOTraits<T>::traitsType>::read(ist, data, dataPositions);
+    }
+// Search for importable containers
+private:
+
+    template<unsigned int Index, bool OK, typename T, unsigned int ...Dimensions>
+    static
+    typename std::enable_if<
+        MeshDataContainer<T, Dimensions...>::template dimensionAt<Index>() == MeshDimension &&
+        HasDefaultIOTraits<typename MeshDataContainer<T, Dimensions...>::template DataContainerType<Index>::type>::value &&
+        (Index < sizeof... (Dimensions) - 1)
+    >::type
+    readMDC(std::istream& ist, MeshDataContainer<T, Dimensions...> &data, std::map<std::string, std::istream::pos_type>& dataPositions){
+
+        readCellData<
+                typename DefaultIOTraits<typename MeshDataContainer<T, Dimensions...>::template DataContainerType<Index>::type>::traitsType
+                >::read(ist, data.template getDataByPos<Index>(), dataPositions);
+        readMDC<Index + 1, true, T, Dimensions...>(ist, data, dataPositions);
+
+    }
+
+    template<unsigned int Index, bool OK, typename T, unsigned int ...Dimensions>
+    static
+    typename std::enable_if<
+        (MeshDataContainer<T, Dimensions...>::template dimensionAt<Index>() != MeshDimension ||
+        !HasDefaultIOTraits<typename MeshDataContainer<T, Dimensions...>::template DataContainerType<Index>::type>::value) &&
+        (Index < sizeof... (Dimensions) - 1)
+    >::type
+    readMDC(std::istream& ist, MeshDataContainer<T, Dimensions...> &data, std::map<std::string, std::istream::pos_type>& dataPositions){
+
+        readMDC<Index + 1, OK, T, Dimensions...>(ist, data, dataPositions);
+
+    }
+
+    template<unsigned int Index, bool OK, typename T, unsigned int ...Dimensions>
+    static
+    typename std::enable_if<
+        MeshDataContainer<T, Dimensions...>::template dimensionAt<Index>() == MeshDimension &&
+        HasDefaultIOTraits<typename MeshDataContainer<T, Dimensions...>::template DataContainerType<Index>::type>::value &&
+        (Index == sizeof... (Dimensions) - 1)
+    >::type
+    readMDC(std::istream& ist, MeshDataContainer<T, Dimensions...> &data, std::map<std::string, std::istream::pos_type>& dataPositions){
+
+
+        readCellData<
+                typename DefaultIOTraits<typename MeshDataContainer<T, Dimensions...>::template DataContainerType<Index>::type>::traitsType
+                >::read(ist, data.template getDataByPos<Index>(), dataPositions);
+    }
+
+    template<unsigned int Index, bool OK, typename T, unsigned int ...Dimensions>
+    static
+    typename std::enable_if<
+        (MeshDataContainer<T, Dimensions...>::template dimensionAt<Index>() != MeshDimension ||
+        !HasDefaultIOTraits<typename MeshDataContainer<T, Dimensions...>::template DataContainerType<Index>::type>::value) &&
+        (Index == sizeof... (Dimensions) - 1)
+    >::type
+    readMDC(std::istream& , MeshDataContainer<T, Dimensions...> &, std::map<std::string, std::istream::pos_type>& ){
+
+        static_assert (OK, "The passed MeshDataContainer must have at least one DataContainer mapped to cells and data with DefaultIOTraits defined!");
+
+    }
+public:
+    template<typename T, unsigned int ...Dimensions>
+    static void readFromStream(std::istream& ist, MeshDataContainer<T, Dimensions...>& data) {
+
+        std::map<std::string, std::istream::pos_type> dataPositions = indexData(ist);
+
+        readMDC<0, false>(ist, data, dataPositions);
     }
 };
 

@@ -703,6 +703,22 @@ MAKE_ATTRIBUTE_TRAIT(colorData, firstEdgeNormal, color);
 //MAKE_ATTRIBUTE_TRAIT_IO(colorData, firstEdgeNormal);
 //MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(colorData, color);
 
+struct doubleColorData {
+    unsigned int color;
+
+    unsigned int getColor()const {return color;}
+    void setColor(const unsigned int& c){color = c *2;}
+};
+MAKE_CUSTOM_ATTRIBUTE_TRAIT(doubleColorData, "color", std::make_pair(&doubleColorData::getColor, &doubleColorData::setColor));
+struct doubleEdgeNormalData {
+    Vector<3, double> firstEdgeNormal;
+
+    Vector<3, double> get()const {return firstEdgeNormal;}
+    void set(const Vector<3, double>& c){firstEdgeNormal = c *2;}
+};
+MAKE_CUSTOM_ATTRIBUTE_TRAIT(doubleEdgeNormalData, "firstEdgeNormal", std::make_pair(&doubleEdgeNormalData::get, &doubleEdgeNormalData::set));
+
+
 void testMeshRefine() {
     UnstructuredMesh<3, size_t, double, 6> mesh;
     twoPrisms(mesh);
@@ -770,10 +786,18 @@ void testMeshRefine() {
 
 
     MeshDataContainer<colorData, 3> cd1(mesh);
-    VTKMeshDataReader<3, size_t>::readData(in3D, cd1.getDataByPos<0>());
+    VTKMeshDataReader<3, size_t>::readFromStream(in3D, cd1);
 
     DBGVAR(cd1.getDataByDim<3>());
+
+    MeshDataContainer<std::tuple<doubleColorData, doubleEdgeNormalData>, 3,3> cd2(mesh);
+    VTKMeshDataReader<3, size_t>::readFromStream(in3D, cd2);
+
+    DBGVAR(cd2.getDataByPos<0>(), cd2.getDataByPos<1>());
+
     in3D.close();
+
+
 
     mesh.initializeCenters();
 
