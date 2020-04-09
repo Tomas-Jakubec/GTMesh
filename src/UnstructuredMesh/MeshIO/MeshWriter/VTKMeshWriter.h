@@ -31,7 +31,7 @@ public:
         ost << "# vtk DataFile Version 2.0\n" <<
                dataName << "\nASCII\nDATASET UNSTRUCTURED_GRID" << std::endl;
     }
-
+private:
     /**
      * @brief lastHash<HR>
      * The hash of the last written mesh.
@@ -49,11 +49,11 @@ public:
      */
     IndexType totalNumberOfWrittenElements = 0;
 
-
+public:
     IndexType getNumberOfCells(){
         return cellVert.template getDataByPos<0>().size();
     }
-
+private:
     /**
      * @brief indexCell<HR>
      * This funcion stores indexes of vertices in correct order
@@ -109,16 +109,9 @@ public:
         } while (nextVertex != verticesIndexed.at(0));
 
     }
-
+public:
     template<unsigned int ...Reserve>
     void indexMesh(MeshElements<2, IndexType, Real, Reserve...>& mesh){
-        size_t curHash = writer::computeHash(mesh);
-
-        // if the mesh is the same as it was, return
-        if (lastHash == curHash){
-            return;
-        }
-        lastHash = curHash;
 
         cellVert.template getDataByPos<0>().clear();
 
@@ -144,7 +137,13 @@ public:
                        MeshElements<2, IndexType, Real, Reserve...>& mesh,
                        MeshDataContainer<typename writer::type::ElementType, 2> cellTypes){
 
-        indexMesh(mesh);
+        size_t curHash = writer::computeHash(mesh);
+        // if the mesh is the same as it was, return
+        if (lastHash != curHash){
+            indexMesh(mesh);
+        }
+        lastHash = curHash;
+
         // first write verices
         ost << "POINTS " << mesh.getVertices().size() <<
                " double" << std::endl;
