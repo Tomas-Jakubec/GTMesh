@@ -1,27 +1,31 @@
 #ifndef TRAITS_H
 #define TRAITS_H
-#include "MemberApproach/MemberApproach.h"
+#include "MemberAccess/MemberAccess.h"
 #include <string>
 #include <memory>
 #include <functional>
 
+/**
+ *
+ */
 template<typename Class, typename...RefTypes>
 class Traits {
 public:
     template<unsigned int Index>
     using refType = typename std::tuple_element<Index,std::tuple<RefTypes...>>::type;
 
+    template<unsigned int Index>
+    using memRefType = MemberAccess<refType<Index>>;
+
     template <unsigned int Index>
-    using type = typename MemberReferenceType<refType<Index>>::type;
+    using type = typename MemberAccess<refType<Index>>::typeValue;
 
 private:
-    template<unsigned int Index>
-    using memRefType = MemberReference<Class, type<Index>, refType<Index>>;
 
     template<unsigned int Index = 0, typename Dummy = void>
     struct MemRefs: public MemRefs<Index + 1> {
 
-        const MemberReference<Class, type<Index>, refType<Index>> ref;
+        const MemberAccess<refType<Index>> ref;
         const char* name;
 
         template <typename ... REST>
@@ -30,7 +34,7 @@ private:
 
     template<typename Dummy>
     struct MemRefs<sizeof...(RefTypes) - 1, Dummy>{
-        const MemberReference<Class, type<sizeof...(RefTypes) - 1>, refType<sizeof...(RefTypes) - 1>> ref;
+        const MemberAccess<refType<sizeof...(RefTypes) - 1>> ref;
         const char* name;
 
         MemRefs(const char* n, refType<sizeof...(RefTypes) - 1> r) : ref(r), name(n){}
@@ -48,17 +52,29 @@ public:
 
 
     template<unsigned int Index>
-    MemberReference<Class, type<Index>, refType<Index>>const getReference() const {
+    MemberAccess<refType<Index>>const getReference() const {
         return refs.MemRefs<Index, void>::ref;
     }
 
     template<unsigned int Index>
+    type<Index> getValue(Class* c) const {
+        return getReference<Index>()->getValue(c);
+    }
+
+    template<unsigned int Index>
+    type<Index> getValue(Class& c) const {
+        return getReference<Index>().getValue(c);
+    }
+
+    template<unsigned int Index>
     type<Index> getValue(const Class* c) const {
+        static_assert (HasConstGetAccess<memRefType<Index>>::value, "The current reference to the member does not provide constant approach.");
         return getReference<Index>()->getValue(c);
     }
 
     template<unsigned int Index>
     type<Index> getValue(const Class& c) const {
+        static_assert (HasConstGetAccess<memRefType<Index>>::value, "The current reference to the member does not provide constant approach.");
         return getReference<Index>().getValue(c);
     }
 
@@ -75,13 +91,13 @@ public:
 
     template<unsigned int Index>
     type<Index>& getAttr(Class* c) const {
-        static_assert (IsDirectReference<memRefType<Index>>::value, "The current reference to the member does not provide direct approach.");
+        static_assert (IsDirectAccess<memRefType<Index>>::value, "The current reference to the member does not provide direct approach.");
         return getReference<Index>()->getAttr(c);
     }
 
     template<unsigned int Index>
     type<Index>& getAttr(Class& c) const {
-        static_assert (IsDirectReference<memRefType<Index>>::value, "The current reference to the member does not provide direct approach.");
+        static_assert (IsDirectAccess<memRefType<Index>>::value, "The current reference to the member does not provide direct approach.");
         return getReference<Index>().getAttr(c);
     }
 
@@ -266,7 +282,7 @@ public:
 
 template<typename Class>
 class Traits<Class>{
-    //static_assert (false, "The Traits template must be specialized for given type and must contain Traits references using variadic Traits.");
+
 public:
     static constexpr std::false_type is_specialized{};
 };

@@ -67,7 +67,7 @@ public:
      * second is the reached element index. Note that the connected elements
      * might be visited more than once.
      * @param func the function to be applied
-     * @example mesh.apply([](IndexType oI, IndexType sI)
+     * @example mesh.apply([](IndexType oI, IndexType sI)<br>
      * {std::cout << "origin: " << oI <<" connected: "<< sI;});
      */
     template<unsigned int StartDim, unsigned int TargetDim, typename Functor>
@@ -83,7 +83,7 @@ public:
      * second is the reached/connected element index. Note that the connected
      * elements might be visited more than once.
      * @param func the function to be applied
-     * @example mesh.apply(42, [](IndexType oI, IndexType sI)
+     * @example mesh.apply(42, [](IndexType oI, IndexType sI)<br>
      * {std::cout << "origin: " << oI <<" connected: "<< sI;});
      */
     template<unsigned int StartDim, unsigned int TargetDim, typename Functor>
@@ -205,26 +205,5 @@ public:
         return reader_ptr;
     }
 };
-
-
-
-
-
-
-
-    /**
-      Jak udělat metodu, která by byla schopná prosházet elementy sítě v rozmezí nějakých dimenzí (obarvení grafu) (samostatná specializovaná třída volaná metodou)
-      Jak veřejnit typy přístupné pomocí proměnné (using na typ)
-      Jak zavést některé metody, které budou obecné a nemuset je přepisovat do specializací (asi to tam prostě okopírovat)
-      Jak udělat procházení podelementů šablonově v závislosti na dimenzi elementu (výpočet některých vlastností sítě)
-      Jak například vyrobit pomocné datové struktury jako centra elementů (asi šablonovým děděním)
-        (mohl bych navrhnout třídu, která by vytvářela na míru vektory dlouhé jako dané vektory meshelement)
-
-
-      Jak dobře koncipovat metody (počítání objemu...), zmínit i wrappery
-
-      */
-
-
 
 #endif // UNSTRUCTUREDMESH_H
