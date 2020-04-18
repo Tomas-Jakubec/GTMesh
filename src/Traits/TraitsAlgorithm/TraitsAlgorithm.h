@@ -19,50 +19,20 @@
 template<template<typename, typename> class Operator>
 struct TraitsBinaryExpressionProcesor {
 
-/*
-    template<typename TraitT, unsigned int Index = 0>
-    inline static
-    typename std::enable_if<(Index < DefaultArithmeticTraits<TraitT>::size() - 1)>::type
-    evaluate(TraitT& op1, const TraitT& op2){
-        Operator<
-                typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>,
-                typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>
-                >::evaluate(
-            DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getAttr(op1),
-            DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getValue(op2)
-        );
-        TraitsBinaryExpressionProcesor<Operator>::evaluate<TraitT, Index + 1>(op1, op2);
 
-    }
-
-    template<typename TraitT, unsigned int Index = 0>
-    inline static
-    typename std::enable_if<(Index == DefaultArithmeticTraits<TraitT>::size() - 1)>::type
-    evaluate(TraitT& op1,  const TraitT& op2){
-
-        Operator<
-                typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>,
-                typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>
-                >::evaluate(
-            DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getAttr(op1),
-            DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getValue(op2)
-        );
-
-    }
-*/
 
     template<typename TraitT, unsigned int Index = 0>
     inline static
     typename std::enable_if<(Index < DefaultArithmeticTraits<TraitT>::size() - 1)>::type
     evaluate(TraitT& res, const TraitT& op1, const TraitT& op2){
 
-        DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getAttr(res) =
+        DefaultArithmeticTraits<TraitT>::getTraits().template getAttr<Index>(res) =
                 Operator<
                         typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>,
                         typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>
                         >::evaluate(
-                    DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getValue(op1),
-                    DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getValue(op2)
+                    DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index>(op1),
+                    DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index>(op2)
                 );
         TraitsBinaryExpressionProcesor<Operator>::evaluate<TraitT, Index + 1>(res, op1, op2);
 
@@ -73,52 +43,24 @@ struct TraitsBinaryExpressionProcesor {
     typename std::enable_if<(Index == DefaultArithmeticTraits<TraitT>::size() - 1)>::type
     evaluate(TraitT&res, const TraitT& op1,  const TraitT& op2){
 
-        DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getAttr(res) =
+        DefaultArithmeticTraits<TraitT>::getTraits().template getAttr<Index>(res) =
                 Operator<
                         typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>,
                         typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>
                         >::evaluate(
-                    DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getValue(op1),
-                    DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getValue(op2)
+                    DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index>(op1),
+                    DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index>(op2)
                 );
 
     }
-/*
-    template<typename TraitT, typename Real, unsigned int Index = 0>
-    inline static
-    typename std::enable_if<(Index < DefaultArithmeticTraits<TraitT>::size() - 1)>::type
-    evaluate(TraitT& op1, const Real& op2){
-        Operator<
-                typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>,
-                Real
-                >::evaluate(
-            DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getAttr(op1),
-            op2
-        );
-        TraitsBinaryExpressionProcesor<Operator>::evaluate<TraitT, Real, Index + 1>(op1, op2);
 
-    }
-
-    template<typename TraitT, typename Real, unsigned int Index = 0>
-    inline static
-    typename std::enable_if<(Index == DefaultArithmeticTraits<TraitT>::size() - 1)>::type
-    evaluate(TraitT& op1, const Real& op2){
-        Operator<
-                typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>,
-                Real
-                >::evaluate(
-            DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getAttr(op1),
-            op2
-        );
-    }
-*/
 
     template<typename TraitT, typename Real, unsigned int Index = 0>
     inline static
     typename std::enable_if<(Index < DefaultArithmeticTraits<TraitT>::size() - 1)>::type
     evaluate(TraitT& res, const TraitT& op1, const Real& op2){
 
-        DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getAttr(res) =
+        DefaultArithmeticTraits<TraitT>::getTraits().template getAttr<Index>(res) =
                 Operator<
                         typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>,
                         Real
@@ -135,12 +77,12 @@ struct TraitsBinaryExpressionProcesor {
     typename std::enable_if<(Index == DefaultArithmeticTraits<TraitT>::size() - 1)>::type
     evaluate(TraitT&res, const TraitT& op1,  const Real& op2){
 
-        DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getAttr(res) =
+        DefaultArithmeticTraits<TraitT>::getTraits().template getAttr<Index>(res) =
                 Operator<
                         typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>,
                         Real
                         >::evaluate(
-                    DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getValue(op1),
+                    DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index>(op1),
                     op2
                 );
 
@@ -163,11 +105,11 @@ struct TraitsUnaryExpressionProcesor {
     typename std::enable_if<(Index < DefaultArithmeticTraits<TraitT>::size() - 1)>::type
     evaluate(TraitT& res, const TraitT& op1){
 
-        DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getAttr(res) =
+        DefaultArithmeticTraits<TraitT>::getTraits().template getAttr<Index>(res) =
                 Operator<
                         typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>
                         >::evaluate(
-                    DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getValue(op1)
+                    DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index>(op1)
                 );
         TraitsUnaryExpressionProcesor<Operator>::evaluate<TraitT, Index + 1>(res, op1);
 
@@ -178,11 +120,11 @@ struct TraitsUnaryExpressionProcesor {
     typename std::enable_if<(Index == DefaultArithmeticTraits<TraitT>::size() - 1)>::type
     evaluate(TraitT& res, const TraitT& op1){
 
-        DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getAttr(res) =
+        DefaultArithmeticTraits<TraitT>::getTraits().template getAttr<Index>(res) =
                 Operator<
                         typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>
                         >::evaluate(
-                    DefaultArithmeticTraits<TraitT>::getTraits().template getReference<Index>().getValue(op1)
+                    DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index>(op1)
                 );
     }
 };

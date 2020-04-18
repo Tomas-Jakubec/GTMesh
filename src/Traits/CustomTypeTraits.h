@@ -9,39 +9,33 @@ namespace Impl {
 
 
 template <typename T1, typename T2 = void>
-struct __is_exportable : public std::integral_constant<bool, false> {
+struct __is_exportable : public std::false_type {
 
 };
 
 template <typename T1>
 struct __is_exportable<T1, typename std::enable_if<std::is_class<
         typename std::remove_reference<decltype(std::cerr << std::declval<const T1&>())>::type
-        >::value>::type> : public std::integral_constant<bool, true> {
+        >::value>::type> : public std::true_type {};
 
-};
+
 
 
 
 
 
 template <typename T1, typename T2 = void>
-struct __is_iterable : public std::integral_constant<bool, false> {
-
-};
+struct __is_iterable : public std::false_type {};
 
 template <typename T1>
 struct __is_iterable<T1, typename std::enable_if<!std::is_same<
         decltype(std::declval<const T1&>().begin()),
         void
-     >::value>::type> : public std::integral_constant<bool, true> {
-
-};
+     >::value>::type> : public std::true_type {};
 
 
 template <typename T1, typename T2 = void>
-struct __is_indexable : public std::integral_constant<bool, false> {
-
-};
+struct __is_indexable : public std::false_type {};
 
 template <typename T1>
 struct __is_indexable<T1, typename std::enable_if<
@@ -51,15 +45,11 @@ struct __is_indexable<T1, typename std::enable_if<
             !std::is_same<
                 decltype (std::declval<const T1&>().size()), void
             >::value
-    >::type> : public std::integral_constant<bool, true> {
-
-};
+    >::type> : public std::true_type {};
 
 
 template <typename T1, typename T2 = void>
-struct __is_tnl_indexable : public std::integral_constant<bool, false> {
-
-};
+struct __is_tnl_indexable : public std::false_type {};
 
 template <typename T1>
 struct __is_tnl_indexable<T1, typename std::enable_if<
@@ -69,52 +59,50 @@ struct __is_tnl_indexable<T1, typename std::enable_if<
             !std::is_same<
                 decltype (std::declval<const T1&>().getSize()), void
             >::value
-    >::type> : public std::integral_constant<bool, true> {
-
-};
+    >::type> : public std::true_type {};
 
 
 template <typename T1, typename VOID = void>
-struct __has_default_traits : public std::integral_constant<bool, false> {};
+struct __has_default_traits : public std::false_type {};
 
 
 template <typename T1>
 struct __has_default_traits<
         T1,
         typename std::enable_if<
-            Traits<T1>::is_specialized
+            noexcept(Traits<T1>::getTraits)
         >::type
-        > : public std::integral_constant<bool, true> {};
+        > : public std::true_type {};
 
 
 
 template <typename T1, typename VOID = void>
-struct __has_default_io_traits : public std::integral_constant<bool, false> {};
+struct __has_default_io_traits : public std::false_type {};
 
 
 template <typename T1>
 struct __has_default_io_traits<
         T1,
         typename std::enable_if<
-            DefaultIOTraits<T1>::is_specialized
+            noexcept(DefaultIOTraits<T1>::getTraits)
         >::type
-        > : public std::integral_constant<bool, true> {};
+        > : public std::true_type {};
 
 
 
 template <typename T1, typename VOID = void>
-struct __has_default_arithmetic_traits : public std::integral_constant<bool, false> {};
+struct __has_default_arithmetic_traits : public std::false_type {};
 
 
 template <typename T1>
 struct __has_default_arithmetic_traits<
         T1,
         typename std::enable_if<
-            DefaultArithmeticTraits<T1>::is_specialized
+            noexcept(DefaultArithmeticTraits<T1>::getTraits)
         >::type
-        > : public std::integral_constant<bool, true> {};
+        > : public std::true_type {};
 
-}
+} // Impl namespace
 
 
 template <typename T1>

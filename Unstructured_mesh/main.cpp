@@ -12,7 +12,7 @@
 #include "../src/UnstructuredMesh/MeshIO/MeshReader/FPMAMeshReader.h"
 #include "../src/UnstructuredMesh/MeshIO/MeshWriter/FPMAMeshWriter.h"
 
-#include "../src/Traits/MemberApproach/MemberAccess.h"
+#include "../src/Traits/MemberAccess/MemberAccess.h"
 #include <fstream>
 #include <list>
 using namespace std;
@@ -709,14 +709,14 @@ struct doubleColorData {
     unsigned int getColor()const {return color;}
     void setColor(const unsigned int& c){color = c *2;}
 };
-MAKE_CUSTOM_ATTRIBUTE_TRAIT(doubleColorData, "color", std::make_pair(&doubleColorData::getColor, &doubleColorData::setColor));
+MAKE_CUSTOM_TRAIT(doubleColorData, "color", std::make_pair(&doubleColorData::getColor, &doubleColorData::setColor));
 struct doubleEdgeNormalData {
     Vector<3, double> firstEdgeNormal;
 
     Vector<3, double> get()const {return firstEdgeNormal;}
     void set(const Vector<3, double>& c){firstEdgeNormal = c *2;}
 };
-MAKE_CUSTOM_ATTRIBUTE_TRAIT(doubleEdgeNormalData, "firstEdgeNormal", std::make_pair(&doubleEdgeNormalData::get, &doubleEdgeNormalData::set));
+MAKE_CUSTOM_TRAIT(doubleEdgeNormalData, "firstEdgeNormal", std::make_pair(&doubleEdgeNormalData::get, &doubleEdgeNormalData::set));
 
 
 void testMeshRefine() {

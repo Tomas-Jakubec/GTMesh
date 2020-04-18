@@ -283,7 +283,7 @@ const Traits<tempData>::ttype Traits<tempData>::tr("density", &tempData::density
 //MAKE_NAMED_ATTRIBUTE_TRAIT(tempData, "density", density, "velocity", velocity);
 //MAKE_ATTRIBUTE_TRAIT(tempData, density, velocity);
 
-MAKE_CUSTOM_ATTRIBUTE_TRAIT(tempData, "density", &tempData::density, "momentum", std::make_pair(&tempData::getMomentum, &tempData::setMomentum))
+MAKE_CUSTOM_TRAIT(tempData, "density", &tempData::density, "momentum", std::make_pair(&tempData::getMomentum, &tempData::setMomentum))
 MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(tempData, density, velocity);
 
 struct ExportTest {
@@ -338,7 +338,7 @@ const Traits<tempData>::ttype Traits<tempData>::tr("density", &tempData::density
 //MAKE_NAMED_ATTRIBUTE_TRAIT(tempData, "density", density, "velocity", velocity);
 //MAKE_ATTRIBUTE_TRAIT(tempData, density, velocity);
 
-MAKE_CUSTOM_ATTRIBUTE_TRAIT(testData, "density", &tempData::density, "momentum", std::make_pair(&tempData::getMomentum, &tempData::setMomentum))
+MAKE_CUSTOM_TRAIT(testData, "density", &tempData::density, "momentum", std::make_pair(&tempData::getMomentum, &tempData::setMomentum))
 MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(testData, density, velocity);
 
 void testMemberRef(){
@@ -354,7 +354,7 @@ void testMemberRef(){
     Traits<tempData>::getTraits().getReference<1>().setValue(&d, {42.15,84.30,42.15});
 
     DBGVAR(Traits<tempData>::getTraits().getName<0>(),(Traits<tempData>::getTraits().getReference<0>().getValue(&d)), Traits<tempData>::getTraits().getName<1>(), d.velocity);
-    DBGVAR(Traits<tempData>::is_specialized,HasDefaultTraits<tempData>::value, d);
+    DBGVAR(HasDefaultTraits<tempData>::value, d);
 
     Traits<tempData, decltype(&tempData::getData)> trait("density", &tempData::getData);
 
@@ -2380,7 +2380,7 @@ const int& getData2(const testTuple& s){return s.attr2;}
 const std::string& getData3(const testTuple& s){return s.attr3;}
 
 
-MAKE_CUSTOM_ATTRIBUTE_TRAIT_IO(
+MAKE_CUSTOM_TRAIT_IO(
         testTuple,
         "1", std::make_pair(static_cast<const double&(*)(const testTuple&)>(getData1), static_cast<double&(*)(testTuple&)>(getData1)),
         "2", std::make_pair(static_cast<const int&(*)(const testTuple&)>(getData2), static_cast<int&(*)(testTuple&)>(getData2)),
@@ -2389,16 +2389,108 @@ MAKE_CUSTOM_ATTRIBUTE_TRAIT_IO(
 
 using double_tuple = std::tuple<double>;
 
-MAKE_CUSTOM_ATTRIBUTE_TRAIT(
-        double_tuple,
-        "double attr", std::make_pair(static_cast<const double&(*)(const std::tuple<double>&)>(std::get<0>), static_cast<double&(*)(std::tuple<double>&)>(std::get<0>))
+MAKE_CUSTOM_TRAIT(
+        std::tuple<double>,
+        "double attr",
+        std::make_pair(static_cast<const double&(*)(const std::tuple<double>&)>(std::get<0>),
+                       static_cast<double&(*)(std::tuple<double>&)>(std::get<0>))
         );
+
+// std::tuple<double, >
+MemberAccess ma(
+    std::make_pair(static_cast<const std::tuple_element_t<0, std::tuple<double>>&(*)(const std::tuple<double>&)>(std::get<0>),
+                   static_cast<std::tuple_element_t<0, std::tuple<double>>&(*)(std::tuple<double>&)>(std::get<0>))
+);
 
 template <typename ...T>
 class Traits<std::tuple<T...>>{
+public:
     static constexpr std::true_type is_specialized{};
-    using traitsType = ::Traits<std::tuple<T...>, T...>;
+    using traitsType = ::Traits<std::tuple<T...>>;
+    static const traitsType getTraits() {return traitsType();}
+    static constexpr unsigned int size() {return sizeof... (T);}
+private:
+    template<unsigned int Index = 0, typename = void>
+    struct nameContainer : nameContainer<Index + 1>{
+        char name[5] = {};
+        nameContainer() {
+            sprintf(name, "%d", Index);
+        }
+    };
+
+
+    template<typename Dummy>
+    struct nameContainer<sizeof... (T), Dummy>{
+        char name[5] = {};
+        nameContainer() {
+            sprintf(name, "%d", int(sizeof... (T)));
+        }
+    };
+public:
+    nameContainer<> names;
+    template <unsigned int Index>
+    std::tuple_element_t<Index, std::tuple<T...>>& getAttr(std::tuple<T...>& t) const {
+        return get<Index>(t);
+    }
+
+    template <unsigned int Index>
+    std::tuple_element_t<Index, std::tuple<T...>> getValue(const std::tuple<T...>& t) const {
+        return get<Index>(t);
+    }
+
+
+    template <unsigned int Index>
+    std::tuple_element_t<Index, std::tuple<T...>>& setValue(
+            std::tuple<T...>& t,
+            const std::tuple_element_t<Index, std::tuple<T...>>& val) const {
+        return get<Index>(t) = val;
+    }
+
+    template <unsigned int Index>
+    const char* getName() const {
+        return names.nameContainer<Index, void>::name;
+    }
+
 };
+
+template <typename ...T>
+class DefaultArithmeticTraits<std::tuple<T...>>{
+public:
+    static constexpr std::true_type is_specialized{};
+    using traitsType = ::DefaultArithmeticTraits<std::tuple<T...>>;
+    static const traitsType getTraits() {return traitsType();}
+    static constexpr unsigned int size() {return sizeof... (T);}
+
+    template<unsigned int Index>
+    using type = typename std::tuple_element<Index, std::tuple<T...>>::type;
+private:
+
+public:
+    template <unsigned int Index>
+    std::tuple_element_t<Index, std::tuple<T...>>& getAttr(std::tuple<T...>& t) const {
+        return get<Index>(t);
+    }
+
+    template <unsigned int Index>
+    std::tuple_element_t<Index, std::tuple<T...>> getValue(const std::tuple<T...>& t) const {
+        return get<Index>(t);
+    }
+
+
+    template <unsigned int Index>
+    std::tuple_element_t<Index, std::tuple<T...>>& setValue(
+            std::tuple<T...>& t,
+            const std::tuple_element_t<Index, std::tuple<T...>>& val) const {
+        return get<Index>(t) = val;
+    }
+
+    template <unsigned int Index>
+    const char* getName() const {
+        return "";
+    }
+
+};
+
 
 void testTraitsTuple(){
     testTuple tt;
@@ -2411,7 +2503,28 @@ void testTraitsTuple(){
     auto foo = static_cast<double&(*)(std::tuple<double>&)>(std::get<0>);
     DBGVAR(foo(t), t);
     DBGVAR_JSON(t,t,t,t);
+
+    std::tuple<double, char, string> ttt = {1, 42, "a"}, ttt1 = {2,45, "b"};
+    get<0>(ttt)=42;
+    DBGVAR(ttt, ttt+ttt1);
     DBGCHECK;
+}
+
+
+namespace ns {
+    struct A {
+        char ch;
+        std::string s;
+    };
+}
+MAKE_ATTRIBUTE_TRAIT(ns::A, ch, s);
+
+void namespaceTraits(){
+    ns::A a;
+    a.s = "ahoj";
+    a.ch = 'U';
+    DBGVAR(a);
+
 }
 
 /*
@@ -2451,7 +2564,7 @@ int main()
 {
     //testDebug();
     //testOperator();
-    testMemberRef();
+    //testMemberRef();
     //testConstrucorOrder();
     //testFunction();
     //testCalcCent();
@@ -2464,9 +2577,10 @@ int main()
     //testJson();
     //testTestTraits();
     //testTraitsAlgorithms();
-    testNumericTraitsPerformance();
-    //testTraitsTuple();
+    //testNumericTraitsPerformance();
+    testTraitsTuple();
     //testFactorial();
+    namespaceTraits();
     return 0;
 }
 
