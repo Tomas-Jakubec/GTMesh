@@ -355,8 +355,7 @@ public: \
     using traitsType = ::Traits<Class, FOR_EACH_2ARGS(IMPL_MEMREF_TYPE_CUSTOM, __VA_ARGS__)>; \
     static const traitsType getTraits() {return traitsType(__VA_ARGS__);} \
     static constexpr unsigned int size() {return traitsType::size();}\
-};
-
+}
 
 
 #define MAKE_CUSTOM_TRAIT(Class,...) IMPL_MAKE_CUSTOM_TRAIT(Traits, Class, __VA_ARGS__) // defining specialization for Traits

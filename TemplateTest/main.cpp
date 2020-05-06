@@ -69,7 +69,7 @@ void testDebug() {
         {"treti", 3}
     };
     ConsoleLogger<>::writeVar(__LINE__, __FILE__, "r", r, "i", i, "c", c, "list", list, "vec", vec, "b", b, "map", m);
-    ConsoleLogger<>::writeVar(__LINE__, __FILE__,"---", {5,4,3,2});
+    //ConsoleLogger<>::writeVar(__LINE__, __FILE__,"---", {5,4,3,2});
     DBGVAR(r, i, c, list, vec, b, m);
 
     Vertex<7, double> vert;
@@ -92,6 +92,15 @@ void testDebug() {
     DBGVAR_HTML(r, i, c, list, vec, b, m);
 
     DBGVAR_HTML(r+1, i+1, char(c+1), list, vec[0], b, m["prvni"]);
+
+
+    DBGVAR_JSON(b, vec);
+
+    DBGVAR_JSON(!b, vec[0]);
+
+    DBGVAR_JSON(r, i, c, list, vec, b, m);
+
+    DBGVAR_JSON(r+1, i+1, char(c+1), list, vec[0], b, m["prvni"]);
 }
 
 
@@ -283,18 +292,32 @@ const Traits<tempData>::ttype Traits<tempData>::tr("density", &tempData::density
 //MAKE_NAMED_ATTRIBUTE_TRAIT(tempData, "density", density, "velocity", velocity);
 //MAKE_ATTRIBUTE_TRAIT(tempData, density, velocity);
 
-MAKE_CUSTOM_TRAIT(tempData, "density", &tempData::density, "momentum", std::make_pair(&tempData::getMomentum, &tempData::setMomentum))
+MAKE_CUSTOM_TRAIT(tempData, "density", &tempData::density, "momentum", std::make_pair(&tempData::getMomentum, &tempData::setMomentum));
+/*
+template<>
+class Traits<tempData>{
+public:
+    using traitsType = ::Traits<Class, double tempData::*, decltype(std::make_pair(&tempData::getMomentum, &tempData::setMomentum))>;
+    static const traitsType getTraits() {return traitsType( "density", &tempData::density, "momentum", std::make_pair(&tempData::getMomentum, &tempData::setMomentum));}
+    static constexpr unsigned int size() {return traitsType::size();}
+};
+*/
+static Traits<tempData, double tempData::*, decltype(std::make_pair(&tempData::getMomentum, &tempData::setMomentum))> tempDataTrait("density",  &tempData::density,"momentum",  std::make_pair(&tempData::getMomentum, &tempData::setMomentum));
+
 MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(tempData, density, velocity);
 
 struct ExportTest {
     int attrInt = 1;
     double attrDouble = 42.15;
+    float attrFloat = 15.8;
+    long double attrLongDouble = 15.8e300;
     char attrChar = 42;
+    size_t attrULL = 465135168421684684;
     std::string attrStr = "Ahojky";
     std::vector<std::string> attrVec = {"tohle", "je", "nejlepsi", "debugovaci", "system"};
     tempData attrTempData{42.15, {1,2,1}};
 };
-MAKE_ATTRIBUTE_TRAIT(ExportTest, attrInt, attrDouble, attrChar, attrStr, attrTempData, attrVec);
+MAKE_ATTRIBUTE_TRAIT(ExportTest, attrInt, attrDouble, attrFloat, attrLongDouble, attrChar, attrULL, attrStr, attrTempData, attrVec);
 MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(ExportTest, attrInt, attrDouble, attrTempData);
 
 
@@ -338,7 +361,7 @@ const Traits<tempData>::ttype Traits<tempData>::tr("density", &tempData::density
 //MAKE_NAMED_ATTRIBUTE_TRAIT(tempData, "density", density, "velocity", velocity);
 //MAKE_ATTRIBUTE_TRAIT(tempData, density, velocity);
 
-MAKE_CUSTOM_TRAIT(testData, "density", &tempData::density, "momentum", std::make_pair(&tempData::getMomentum, &tempData::setMomentum))
+MAKE_CUSTOM_TRAIT(testData, "density", &tempData::density, "momentum", std::make_pair(&tempData::getMomentum, &tempData::setMomentum));
 MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(testData, density, velocity);
 
 void testMemberRef(){
@@ -362,6 +385,8 @@ void testMemberRef(){
     DBGVAR((std::is_same<r::typeValue, double>::value));
     ExportTest e;
     DBGVAR(e, ClassC<>());
+    auto list = {e,e,e};
+    DBGVAR_STDIO(e, 42.15, list, short(5));
 }
 
 
@@ -2502,7 +2527,7 @@ void testTraitsTuple(){
     get<0>(t) = 2.5;
     auto foo = static_cast<double&(*)(std::tuple<double>&)>(std::get<0>);
     DBGVAR(foo(t), t);
-    DBGVAR_JSON(t,t,t,t);
+    DBGVAR_JSON(t,t,t,t, ExportTest());
 
     std::tuple<double, char, string> ttt = {1, 42, "a"}, ttt1 = {2,45, "b"};
     get<0>(ttt)=42;
@@ -2512,17 +2537,38 @@ void testTraitsTuple(){
 
 
 namespace ns {
-    struct A {
-        char ch;
-        std::string s;
-    };
+template <unsigned int Dim>
+struct A {
+    char ch;
+    std::string s;
+    Vector<Dim, double> v;
+};
 }
-MAKE_ATTRIBUTE_TRAIT(ns::A, ch, s);
+MAKE_ATTRIBUTE_TRAIT(ns::A<1>, ch, s);
+
+#define IMPL_MAKE_CUSTOM_TRAIT_Template(TraitName,Class, argType, argName,...) \
+template<argType argName> \
+class TraitName<Class<argName>>{ \
+public: \
+    using traitsType = ::Traits<Class<argName>, FOR_EACH_2ARGS(IMPL_MEMREF_TYPE_CUSTOM, __VA_ARGS__)>; \
+    static const traitsType getTraits() {return traitsType(__VA_ARGS__);} \
+    static constexpr unsigned int size() {return traitsType::size();}\
+};
+
+#define MAKE_CUSTOM_TRAIT_Template_IO(Class, argType, argName,...) IMPL_MAKE_CUSTOM_TRAIT_Template(DefaultIOTraits, Class, argType, argName, __VA_ARGS__) // defining specialization for DefaultIOTraits
+
+#define MAKE_NAMED_ATTRIBUTE_TRAIT_Template_IO(Class, argType, argName, ...) MAKE_CUSTOM_TRAIT_Template_IO(Class, argType, argName, FOR_EACH_3ARGS_1STAT(IMPL_NAME_AND_REF, Class<argName>, __VA_ARGS__))
+
+#define MAKE_ATTRIBUTE_TRAIT_Template_IO(Class, argType, argName, ...) MAKE_NAMED_ATTRIBUTE_TRAIT_Template_IO(Class, argType, argName, FOR_EACH(IMPL_NAME_ATT, __VA_ARGS__))
+
+
+MAKE_ATTRIBUTE_TRAIT_Template_IO(ns::A, unsigned int, Dim, ch, v);
 
 void namespaceTraits(){
-    ns::A a;
+    ns::A<3> a;
     a.s = "ahoj";
     a.ch = 'U';
+    a.v = {};
     DBGVAR(a);
 
 }
@@ -2560,6 +2606,8 @@ void testFactorial() {
     DBGVAR(Impl::factorial<5>());
 }
 
+
+
 int main()
 {
     //testDebug();
@@ -2578,9 +2626,10 @@ int main()
     //testTestTraits();
     //testTraitsAlgorithms();
     //testNumericTraitsPerformance();
-    testTraitsTuple();
+    //testTraitsTuple();
     //testFactorial();
-    namespaceTraits();
+    //namespaceTraits();
+
     return 0;
 }
 

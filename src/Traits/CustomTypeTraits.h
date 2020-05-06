@@ -28,10 +28,16 @@ template <typename T1, typename T2 = void>
 struct __is_iterable : public std::false_type {};
 
 template <typename T1>
-struct __is_iterable<T1, typename std::enable_if<!std::is_same<
-        decltype(std::declval<const T1&>().begin()),
-        void
-     >::value>::type> : public std::true_type {};
+struct __is_iterable<T1, typename std::enable_if<
+            !std::is_same<
+                decltype (std::declval<const T1&>().begin()),
+                void
+            >::value &&
+            !std::is_same<
+                decltype (std::declval<const T1&>().end()),
+                void
+            >::value
+        >::type> : public std::true_type {};
 
 
 template <typename T1, typename T2 = void>
@@ -40,10 +46,12 @@ struct __is_indexable : public std::false_type {};
 template <typename T1>
 struct __is_indexable<T1, typename std::enable_if<
             !std::is_same<
-                decltype (std::declval<const T1&>()[0]), void
+                decltype (std::declval<const T1&>()[0]),
+                void
             >::value &&
             !std::is_same<
-                decltype (std::declval<const T1&>().size()), void
+                decltype (std::declval<const T1&>().size()),
+                void
             >::value
     >::type> : public std::true_type {};
 

@@ -67,8 +67,14 @@ public:
      * second is the reached element index. Note that the connected elements
      * might be visited more than once.
      * @param func the function to be applied
-     * @example mesh.apply([](IndexType oI, IndexType sI)<br>
-     * {std::cout << "origin: " << oI <<" connected: "<< sI;});
+     * @example
+     * @code
+     * mesh.apply(
+     *      [](IndexType oI, IndexType sI){
+     *          std::cout << "origin: " << oI <<" connected: "<< sI;
+     *      }
+     * );
+     * @endcode
      */
     template<unsigned int StartDim, unsigned int TargetDim, typename Functor>
     void apply(const Functor& func) {
@@ -83,8 +89,15 @@ public:
      * second is the reached/connected element index. Note that the connected
      * elements might be visited more than once.
      * @param func the function to be applied
-     * @example mesh.apply(42, [](IndexType oI, IndexType sI)<br>
-     * {std::cout << "origin: " << oI <<" connected: "<< sI;});
+     * @example
+     * @code
+     * mesh.apply(
+     *      42,
+     *      [](IndexType oI, IndexType sI){
+     *          std::cout << "origin: " << oI <<" connected: "<< sI;
+     *      }
+     * );
+     * @endcode
      */
     template<unsigned int StartDim, unsigned int TargetDim, typename Functor>
     void apply(IndexType startElementIndex,const Functor& func) {
@@ -119,7 +132,7 @@ public:
     template<unsigned int StartDim, unsigned int ConnectingDim,  ColoringMethod Method = ColoringMethod::METHOD_GREEDY>
     typename std::enable_if<Method == METHOD_GREEDY,MeshDataContainer<unsigned int, StartDim>>::type
     coloring() {
-        return ColorMesh<StartDim, ConnectingDim, Method>::color(*this);
+        return MeshColoring<StartDim, ConnectingDim, Method>::color(*this);
     }
 
     /**
@@ -131,7 +144,7 @@ public:
     template<unsigned int StartDim, unsigned int ConnectingDim,  ColoringMethod Method = ColoringMethod::METHOD_GREEDY>
     typename std::enable_if<Method == METHOD_RANDOM,MeshDataContainer<unsigned int, StartDim>>::type
     coloring(unsigned int seed = 1562315) {
-        return ColorMesh<StartDim, ConnectingDim, Method>::color(*this, seed);
+        return MeshColoring<StartDim, ConnectingDim, Method>::color(*this, seed);
     }
 
 /*

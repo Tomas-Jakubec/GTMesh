@@ -14,6 +14,7 @@
  * is given, then it is iterated and the function looks
  * for the exportable data structures with DefaultIOTraits.
  * @example
+ * @code
  * struct DataStruct{
  *    double pressure;
  *    Vector<double, 3> velocity;
@@ -28,6 +29,7 @@
  * // 42 42 ...
  * // VECTOR velocity
  * // 1 2 3 1 2 3 ..."
+ * @endcode
  */
 template <unsigned int MeshDimension>
 class VTKMeshDataWriter {
@@ -212,6 +214,7 @@ public:
      * To define the traits, one can utilize the macro MAKE_ATTRIBUTE_TRAIT(_IO), @see Traits.
      * The data are axported with the line CELL_DATA.
      * @example
+     * @code
      * struct DataStruct{
      *    double pressure;
      *    Vector<double, 3> velocity;
@@ -221,6 +224,7 @@ public:
      * MeshDataContainer<DataStruct,3> meshData(mesh, {42, {1,2,3}});
      * // Mesh export etc.
      * VTKMeshDataWriter::wrtieToStream(cerr, meshData.getDataByPos<0>(), meshWriter);
+     * @endcode
      */
     template<typename T,typename IndexType, typename Real>
     static void writeToStream(std::ostream& ost, DataContainer<T, MeshDimension>& data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer) {

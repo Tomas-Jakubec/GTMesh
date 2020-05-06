@@ -12,7 +12,7 @@ namespace Impl {
 
 
 template<unsigned int ColoredDim, unsigned int ConnectingDim, ColoringMethod Method = METHOD_GREEDY, bool Descend = (ColoredDim > ConnectingDim)>
-struct MeshColoring {
+struct _MeshColoring {
     template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
     static MeshDataContainer<unsigned int, ColoredDim> color(
             MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
@@ -67,7 +67,7 @@ struct MeshColoring {
 
 
 template<unsigned int ColoredDim, unsigned int ConnectingDim>
-struct MeshColoring <ColoredDim, ConnectingDim, METHOD_GREEDY, true> {
+struct _MeshColoring <ColoredDim, ConnectingDim, METHOD_GREEDY, true> {
     template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
     static MeshDataContainer<unsigned int, ColoredDim> color(
             MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
@@ -117,14 +117,14 @@ struct MeshColoring <ColoredDim, ConnectingDim, METHOD_GREEDY, true> {
 
 
 template<unsigned int ColoredDim, unsigned int ConnectingDim, bool Descend>
-struct MeshColoring <ColoredDim, ConnectingDim, METHOD_RANDOM, Descend> {
+struct _MeshColoring <ColoredDim, ConnectingDim, METHOD_RANDOM, Descend> {
     template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
     static MeshDataContainer<unsigned int, ColoredDim> color(
             MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh,
             unsigned int seed = 1562315
             ) {
         // calculating the reserve
-        auto result = MeshColoring<ColoredDim, ConnectingDim, METHOD_GREEDY>::color(mesh);
+        auto result = _MeshColoring<ColoredDim, ConnectingDim, METHOD_GREEDY>::color(mesh);
 
         // get maximal color index
         auto max = std::max_element(result.template getDataByPos<0>().begin(), result.template getDataByPos<0>().end());
@@ -191,26 +191,26 @@ struct MeshColoring <ColoredDim, ConnectingDim, METHOD_RANDOM, Descend> {
 }
 
 template <unsigned int ColoredDim, unsigned int ConnectingDim, ColoringMethod Method = METHOD_GREEDY>
-struct ColorMesh{
+struct MeshColoring{
 
 template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
 static MeshDataContainer<unsigned int, ColoredDim> color(
             MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
         ){
-    return Impl::MeshColoring<ColoredDim, ConnectingDim, Method>::color(mesh);
+    return Impl::_MeshColoring<ColoredDim, ConnectingDim, Method>::color(mesh);
 }
 };
 
 
 template <unsigned int ColoredDim, unsigned int ConnectingDim>
-struct ColorMesh<ColoredDim, ConnectingDim, METHOD_RANDOM>{
+struct MeshColoring<ColoredDim, ConnectingDim, METHOD_RANDOM>{
 
 template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
 static MeshDataContainer<unsigned int, ColoredDim> color(
             MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh,
             unsigned int seed = 1562315
         ){
-    return Impl::MeshColoring<ColoredDim, ConnectingDim, METHOD_RANDOM>::color(mesh, seed);
+    return Impl::_MeshColoring<ColoredDim, ConnectingDim, METHOD_RANDOM>::color(mesh, seed);
 }
 };
 

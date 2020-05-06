@@ -517,7 +517,12 @@ public:
  * a data type for each dimension separately. The data types are
  * given by a tuple.
  *
- * @example MeshDataContainer<std::tuple<int, double>, 3,2> data;
+ * @example
+ * @code
+ *
+ * MeshDataContainer<std::tuple<int, double>, 3,2> data;
+ *
+ * @endcode
  */
 template <typename ...DataTypes, unsigned int ...Dimensions>
 struct MeshDataContainer<std::tuple<DataTypes...>, Dimensions...>{

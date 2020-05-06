@@ -11,7 +11,7 @@
 #include "../src/UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataReader.h"
 #include "../src/UnstructuredMesh/MeshIO/MeshReader/FPMAMeshReader.h"
 #include "../src/UnstructuredMesh/MeshIO/MeshWriter/FPMAMeshWriter.h"
-
+#include "../src/Traits/TraitsAlgorithm/TraitsAlgorithm.h"
 #include "../src/Traits/MemberAccess/MemberAccess.h"
 #include <fstream>
 #include <list>
@@ -652,16 +652,16 @@ DBGMSG("tessellated cell volume");
 
 
     DBGMSG("face to vertex colouring");
-    auto colours = ColorMesh<2,0>::color(mesh3);
+    auto colours = MeshColoring<2,0>::color(mesh3);
     DBGVAR(colours.getDataByDim<2>());
 
     DBGMSG("vertex to face colouring");
-    auto colours1 = ColorMesh<0,2>::color(mesh3);
+    auto colours1 = MeshColoring<0,2>::color(mesh3);
     DBGVAR(colours1.getDataByDim<0>());
 
 
     DBGMSG("face to vertex colouring RANDOM");
-    auto coloursRand = ColorMesh<2,0,METHOD_RANDOM>::color(mesh3);
+    auto coloursRand = MeshColoring<2,0,METHOD_RANDOM>::color(mesh3);
     DBGVAR(coloursRand.getDataByDim<2>());
 
     DBGMSG("vertex to face colouring RANDOM");
@@ -731,7 +731,7 @@ void testMeshRefine() {
     writer.writeHeader(out3D, "test data");
     writer.writeToStream(out3D, mesh, types);
 
-    auto colours = ColorMesh<3,0>::color(mesh);
+    auto colours = MeshColoring<3,0>::color(mesh);
 
     out3D << "CELL_DATA " << mesh.getCells().size() << endl;
     out3D << "SCALARS cell_wrt_vertex_colour double 1\nLOOKUP_TABLE default" << endl;
@@ -746,7 +746,7 @@ void testMeshRefine() {
     out3D.open("mesh_refine_1.vtk");
     writer1.writeHeader(out3D, "test data");
     writer1.writeToStream(out3D, mesh, types1);
-    auto colours1 = ColorMesh<3,0>::color(mesh);
+    auto colours1 = MeshColoring<3,0>::color(mesh);
 
     MeshDataContainer<colorData, 3> cd(mesh);
     auto normals = mesh.computeFaceNormals();
@@ -759,7 +759,9 @@ void testMeshRefine() {
 
     VTKMeshDataWriter<3> dataWriter;
 
+    cd.getDataByPos<0>()[0] = cd.getDataByPos<0>()[0] + cd.getDataByPos<0>()[1];
     dataWriter.writeToStream(out3D, cd, writer1);
+
 
     //out3D << "CELL_DATA " << writer1.cellVert.getDataByPos<0>().size() << endl;
     out3D << "SCALARS cell_wrt_vertex_colour double 1\nLOOKUP_TABLE default" << endl;
@@ -806,7 +808,7 @@ void testMeshRefine() {
     writer1.writeHeader(out3D, "test data");
     writer1.writeToStream(out3D, mesh, types2);
 
-    auto colours2 = ColorMesh<3,0>::color(mesh);
+    auto colours2 = MeshColoring<3,0>::color(mesh);
 
     out3D << "CELL_DATA " << writer1.cellVert.getDataByPos<0>().size() << endl;
     out3D << "SCALARS cell_wrt_vertex_colour double 1\nLOOKUP_TABLE default" << endl;
@@ -834,7 +836,7 @@ void testMeshRefine() {
     out3D.open("mesh_refine_3.vtk");
     writer1.writeHeader(out3D, "test data");
     writer1.writeToStream(out3D, mesh, types3);
-    auto colours3 = ColorMesh<3,0>::color(mesh);
+    auto colours3 = MeshColoring<3,0>::color(mesh);
 
     out3D << "CELL_DATA " << writer1.cellVert.getDataByPos<0>().size() << endl;
     out3D << "SCALARS cell_wrt_vertex_colour double 1\nLOOKUP_TABLE default" << endl;
