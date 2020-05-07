@@ -815,7 +815,7 @@ abs(const T& array) noexcept {
 
 
 
-template<typename Trait, typename Void = void>
+template<typename Trait, typename Operation, typename = void>
 class TraitCommonType
 {
 public:
@@ -837,45 +837,127 @@ public:
     using type = typename DefaultArithmeticTraits<Trait>::template type<0>;
 };*/
 
-template<typename Trait>
-class TraitCommonType<Trait,
+template<typename Trait, typename Operation>
+class TraitCommonType<Trait, Operation,
         typename std::enable_if<HasDefaultArithmeticTraits<Trait>::value /*&&(DefaultArithmeticTraits<Trait>::traitType::size() > 1)*/>::type
 >
 {
-    using traitType = DefaultArithmeticTraits<Trait>;
+    using traitType = typename DefaultArithmeticTraits<Trait>::traitsType;
 
 
     template<unsigned int Index = 0, typename Void = void, typename Dummy = void>
     struct declComonType{
         static_assert (sizeof (Void) != 0, "Tudy vlastne chci projit");
-        using type = typename std::common_type<typename declComonType<Index + 1>::type, typename traitType::template type<Index>>::type;
+        using type = typename std::common_type<typename declComonType<Index + 1>::type, decltype (Operation(std::declval<typename traitType::template type<Index>>()))>::type;
     };
-    /*template<unsigned int Index, typename Dummy>
+
+    template<unsigned int Index, typename Dummy>
     struct declComonType<Index,
-            typename std::enable_if<HasDefaultArithmeticTraits<typename traitType::template type<Index>>::value>::type,
-            Dummy>{
-        using type = typename std::common_type<typename TraitCommonType<typename traitType::template type<Index>>::type, typename declComonType<Index + 1>::type>::type;
-    };*/
-    template<typename Dummy>
-    struct declComonType<traitType::traitType::size() - 1,
-            typename std::enable_if<!HasDefaultArithmeticTraits<typename traitType::template type<traitType::traitType::size() - 1>>::value>::type
+            typename std::enable_if<Index == traitType::size() - 1>::type
             , Dummy>{
 
         static_assert (sizeof(Dummy) != 0, "Tudy vlastne chci projit");
-        using type = typename traitType::template type<traitType::traitType::size() - 1>;
+        using type = decltype (Operation(std::declval<typename traitType::template type<Index>>()));
     };
-/*
-    template<typename Dummy>
-    struct declComonType<traitType::traitType::size() - 1,
-            typename std::enable_if<HasDefaultArithmeticTraits<typename traitType::template type<traitType::traitType::size() - 1>>::value>::type,
-            Dummy>{
-        using type = typename TraitCommonType<typename traitType::template type<traitType::traitType::size() - 1>>::type;
-    };
-*/
+
 public:
     using type = typename declComonType<>::type;
 };
 
+
+template<template<typename, typename> class Operator>
+struct TraitsAggregationProcesor {
+
+
+
+    template<typename TraitT, unsigned int Index = 0, bool applyOperation = Index == DefaultArithmeticTraits<TraitT>::size() - 1>
+    inline static
+    typename std::enable_if<!applyOperation>::type
+    evaluate(TraitT& res, const TraitT& op1, const TraitT& op2){
+
+        evaluate<TraitT, Index, true>(res, op1, op2);
+        evaluate<TraitT, Index + 1>(res, op1, op2);
+
+    }
+
+
+    template<typename TraitT, unsigned int Index = 0, bool applyOperation = Index == DefaultArithmeticTraits<TraitT>::size() - 1>
+    inline static
+    typename std::enable_if<applyOperation>::type
+    evaluate(TraitT&res, const TraitT& op1,  const TraitT& op2){
+
+        DefaultArithmeticTraits<TraitT>::getTraits().template getAttr<Index>(res) =
+                Operator<
+                    typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>,
+                    typename DefaultArithmeticTraits<TraitT>::traitsType::template type<Index>
+                >::evaluate(
+                    DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index>(op1),
+                    DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index>(op2)
+                );
+
+    }
+
+
+    template<typename TraitT, unsigned int Index = DefaultArithmeticTraits<TraitT>::size() - 1>
+    inline static
+    typename std::enable_if<
+        Index == 0 ,
+        double //typename TraitCommonType<TraitT>::type
+    >::type
+    evaluate(const TraitT& op1){
+        return evaluate(DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index>(op1));
+    }
+
+    template<typename TraitT, unsigned int Index = DefaultArithmeticTraits<TraitT>::size() - 1>
+    inline static
+    typename std::enable_if<
+        (Index > 0) && (Index <= DefaultArithmeticTraits<TraitT>::size() - 1) ,
+        double
+    >::type
+    evaluate(const TraitT& op1){
+
+        return Operator<
+                decltype(evaluate(DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index - 1>(op1))),
+                decltype(evaluate(DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index>(op1)))
+                >::evaluate(
+                    (evaluate(DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index - 1>(op1))),
+                    (evaluate(DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index>(op1)))
+                );
+
+    }
+
+    template <typename T>
+    inline static
+    typename std::enable_if<
+        !std::is_class<T>::value,
+        T
+    >::type
+    evaluate(const T& arg) noexcept {
+
+        return  arg;
+    }
+
+    template <typename T>
+    inline static
+    typename std::enable_if<
+        IsIndexable<T>::value,
+        double
+    >::type
+    evaluate(const T& array) noexcept {
+
+        if (array.size() > 0){
+            double res = evaluate(array[0]);
+            for (decltype (array.size()) index = 1; index < array.size(); index++){
+                res = Operator<double, double>::evaluate(res, evaluate(array[index]));
+            }
+
+            return  res;
+        }
+        return 0;
+    }
+
+
+};
 
 
 

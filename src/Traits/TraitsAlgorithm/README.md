@@ -30,7 +30,7 @@ int main() {
 ```
 
 Output of the example code
-```bash
+```
 == main.cpp << 17 >> [[ d1+d2 ]] ==> { "double attribute" : 26.5, "int attribute" : 90 }
 == main.cpp << 17 >> [[ d1 * 2 ]] ==> { "double attribute" : 25, "int attribute" : 136 }
 == main.cpp << 17 >> [[ max(d1) ]] ==> 68

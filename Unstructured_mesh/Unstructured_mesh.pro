@@ -53,6 +53,7 @@ HEADERS += \
     ../src/UnstructuredMesh/UnstructuredMeshDefine.h
 
 DISTFILES += \
+    ../README.md \
     ../src/Debug/README.md \
     ../src/Traits/TraitsAlgorithm/README.md \
     ../src/UnstructuredMesh/MeshFunctions/README.md

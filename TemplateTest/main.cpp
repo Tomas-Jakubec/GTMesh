@@ -438,6 +438,12 @@ public:
 
 MAKE_ATTRIBUTE_TRAIT(ns::TraitedClass, d1, d2, ts);
 
+
+template <typename T>
+auto sum(const T& val){
+    return TraitsAggregationProcesor<BinaryPlus>::evaluate(val);
+}
+
 void testTraitsAlgorithms() {
     ExportTest e1, e2;
     ExportTest res = e1 + e2;
@@ -452,7 +458,8 @@ void testTraitsAlgorithms() {
            max(abs(-(ns + 4 * ns2))),
            log(ns), exp(log(ns)),
            pow(sqrt(ns), 2),
-           abs(pow(e1,2))
+           abs(pow(e1,2)),
+           sqrt(sum(pow(e1, 2)))
            );
 
     DBGVAR(abs(ns::TraitedClass()));
@@ -2624,7 +2631,7 @@ int main()
     //testPrivateTrait();
     //testJson();
     //testTestTraits();
-    //testTraitsAlgorithms();
+    testTraitsAlgorithms();
     //testNumericTraitsPerformance();
     //testTraitsTuple();
     //testFactorial();
