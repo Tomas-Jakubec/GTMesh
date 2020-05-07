@@ -6,9 +6,12 @@ One can include all the functions by including the MeshFunctions.h.
 ### Functions working with the mesh topology:
 |class|static member function|functionality|
 |----|----|----|
-|MeshApply|apply|applies a given function to all connected elements of dimension one to elements of dimension two, where the dimensions
-are set as template parameters|
+|MeshApply|apply|applies a given function to all connected elements of dimension one to elements of dimension two, where the dimensions are set as template parameters|
 |MeshColoring|color|generates a proper coloring of the mesh elements of dimension one connected by adjacency with elements of dimension two|
+|MeshConnections|connections|generates a MeshDataContainer containing the indexes of elements connected to another elements|
+|MeshNeighborhood|neighbors|determines the neighborhood of elements based on 3 dimensions (start, connecting, target)|
+
+
 
 ### List of functions calculating properties of mesh elements:
 |Function name|functionality|

@@ -1,5 +1,5 @@
 # GTMesh
-_____
+
 The GTMesh is a C++ library utilizing modern C++ paradigms as template metaprogramming
 and type traits. The aim of GTMesh is to provide an implementation working with an unstructured mesh
 of any dimension and topology. Furthermore, the library provides additional tools developed

@@ -1,5 +1,5 @@
 ## TraitsAlhorithm
------
+
 The TraitsAlhorithm is an extension of Traits. It provides automatically generated
 operators and other mathematic operations,
 (e.g. addition, subtraction, multiplication, maximum) for the classes with DefaultArithmeticTraits defined.
