@@ -909,6 +909,7 @@ void testMeshDataContainer() {
     UnstructuredMesh<3, size_t, double, 6> mesh3;
     twoDeformedPrisms(mesh3);
 
+    constexpr std::integer_sequence<unsigned int, 2> _1;
 
     MeshDataContainer<std::tuple<int, double, char, double>, 3,2,0> container(mesh3);
 
@@ -917,7 +918,7 @@ void testMeshDataContainer() {
     MeshDataContainer<double, 1,1> contAlloc;
     contAlloc.allocateData(cont, 42.2);
 
-    DBGVAR(cont.getDataByDim<1>(), contAlloc.getDataByDim<1>());
+    DBGVAR(cont.getDataByDim<1>(), contAlloc.getDataByDim<1>(), cont[_1]);
 
 
     for(auto& c : container.getDataByDim<0>()) {
@@ -1236,7 +1237,7 @@ int main()
     testMesh3D();
     //test3DMeshDeformedPrisms();
     testMeshRefine();
-    //testMeshDataContainer();
+    testMeshDataContainer();
     //UnstructuredMesh<5, size_t, double, 6,5,4> m;
     //m.ComputeElementMeasures();
     //test3DMeshLoad();

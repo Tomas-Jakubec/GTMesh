@@ -142,8 +142,8 @@ public:
     }
 
 
-    template<typename VAR_NAME, typename VAR, typename ... REST>
-    void writeVar(int line, const char* cppFile, VAR_NAME name, VAR value, REST ... rest){
+    template< typename VAR, typename ... REST >
+    void writeVar(int line, const char* cppFile, const char* name, const VAR& value,const REST& ... rest){
         writeVar(line, doubleBackSlash(cppFile), name, value,  rest...);
     }
 
