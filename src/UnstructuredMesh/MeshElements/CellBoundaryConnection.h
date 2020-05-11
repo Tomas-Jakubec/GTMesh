@@ -1,44 +1,46 @@
 #ifndef CELLBOUNDARYCONNECTION_H
 #define CELLBOUNDARYCONNECTION_H
-#include "../UnstructedMeshDefine.h"
+#include "../UnstructuredMeshDefine.h"
 #include "CellConnection.h"
+#include <stdexcept>
+#include <sstream>
 
-template<typename indexType>
-class CellBoundaryConnection : public CellConnection<indexType> {
+template<typename IndexType>
+class CellBoundaryConnection : public CellConnection<IndexType> {
     /**
      * @brief nextBElemWRTCL
      *
      * Index of the next boundary element with respect to the left cell
      */
-    indexType nextBElemWRTCL;
+    IndexType nextBElemWRTCL;
     /**
      * @brief nextBElemWRTCR
      *
      * Index of the next boundary element with respect to right cell
      */
-    indexType nextBElemWRTCR;
+    IndexType nextBElemWRTCR;
 public:
-    CellBoundaryConnection(indexType cellLeft = INVALID_INDEX(indexType),
-                           indexType cellRight = INVALID_INDEX(indexType),
-                           indexType nextLeft = INVALID_INDEX(indexType),
-                           indexType nextRight = INVALID_INDEX(indexType));
+    CellBoundaryConnection(IndexType cellLeft = INVALID_INDEX(IndexType),
+                           IndexType cellRight = INVALID_INDEX(IndexType),
+                           IndexType nextLeft = INVALID_INDEX(IndexType),
+                           IndexType nextRight = INVALID_INDEX(IndexType));
     /*
     ** Set atribute methods
     */
-    void setNextBElemWRTCR(indexType nextIndex);
+    void setNextBElemWRTCR(IndexType nextIndex);
 
-    void setNextBElemWRTCL(indexType nextIndex);
+    void setNextBElemWRTCL(IndexType nextIndex);
 
-    bool setNextBElem(indexType nextBElemIndex, indexType cellIndex);
+    bool setNextBElem(IndexType nextBElemIndex, IndexType cellIndex);
 
-    indexType getNextBElemWRTCL() const;
+    IndexType getNextBElemWRTCL() const;
 
-    indexType getNextBElemWRTCR() const;
+    IndexType getNextBElemWRTCR() const;
 
-    indexType getNextBElem(indexType cellIndex) const;
+    IndexType getNextBElem(IndexType cellIndex) const;
 
     // Returns the other Cell than sent by parameter
-    indexType getOtherCellIndex(indexType cellIndex) const;
+    IndexType getOtherCellIndex(IndexType cellIndex) const;
 
 
 };
@@ -47,40 +49,40 @@ public:
  * Implementation of methods
  */
 
-template<typename indexType>
-CellBoundaryConnection<indexType>::CellBoundaryConnection(indexType cellLeft, indexType cellRight, indexType nextLeft, indexType nextRight)
-    : CellConnection<indexType> (cellLeft, cellRight) {
+template<typename IndexType>
+CellBoundaryConnection<IndexType>::CellBoundaryConnection(IndexType cellLeft, IndexType cellRight, IndexType nextLeft, IndexType nextRight)
+    : CellConnection<IndexType> (cellLeft, cellRight) {
     nextBElemWRTCL = nextLeft;
     nextBElemWRTCR = nextRight;
 }
 
-template<typename indexType>
-void CellBoundaryConnection<indexType>::setNextBElemWRTCR(indexType nextIndex){
+template<typename IndexType>
+void CellBoundaryConnection<IndexType>::setNextBElemWRTCR(IndexType nextIndex){
     nextBElemWRTCR = nextIndex;
 }
 
-template<typename indexType>
-void CellBoundaryConnection<indexType>::setNextBElemWRTCL(indexType nextIndex){
+template<typename IndexType>
+void CellBoundaryConnection<IndexType>::setNextBElemWRTCL(IndexType nextIndex){
     nextBElemWRTCL = nextIndex;
 }
 
-template<typename indexType>
-bool CellBoundaryConnection<indexType>::setNextBElem(indexType nextBElemIndex, indexType cellIndex){
+template<typename IndexType>
+bool CellBoundaryConnection<IndexType>::setNextBElem(IndexType nextBElemIndex, IndexType cellIndex){
 
     // CellIndex is invalid then false returned
-    if (cellIndex == INVALID_INDEX(indexType)){
+    if (cellIndex == INVALID_INDEX(IndexType)){
         return false;
     }
     // first test wether cell index eaqules left or right
     // then is posible to set up invalid indexes
-    if (CellConnection<indexType>::getCellLeftIndex() == cellIndex) {
+    if (CellConnection<IndexType>::getCellLeftIndex() == cellIndex) {
 
         setNextBElemWRTCL(nextBElemIndex);
         return true;
 
     }
 
-    if (CellConnection<indexType>::getCellRightIndex() == cellIndex){
+    if (CellConnection<IndexType>::getCellRightIndex() == cellIndex){
 
         setNextBElemWRTCR(nextBElemIndex);
         return true;
@@ -90,15 +92,15 @@ bool CellBoundaryConnection<indexType>::setNextBElem(indexType nextBElemIndex, i
 
     // Attribute CellRightIndex is invalid then
     // CellRightIndex is set as cellIndex
-    if (CellConnection<indexType>::getCellLeftIndex() == INVALID_INDEX(indexType)){
+    if (CellConnection<IndexType>::getCellLeftIndex() == INVALID_INDEX(IndexType)){
 
-        CellConnection<indexType>::setCellLeftIndex(cellIndex);
+        CellConnection<IndexType>::setCellLeftIndex(cellIndex);
 
     }
 
     // Parameter cellIndex is equal to CellRightIndex
     // then nextEdgeWRTCL is set as nextEdgeIndex, ret true
-    if (cellIndex == CellConnection<indexType>::getCellLeftIndex()) {
+    if (cellIndex == CellConnection<IndexType>::getCellLeftIndex()) {
 
         setNextBElemWRTCL(nextBElemIndex);
 
@@ -109,13 +111,13 @@ bool CellBoundaryConnection<indexType>::setNextBElem(indexType nextBElemIndex, i
         // Attribute CellRightIndex is invalid
         // but CellLeftIndex is already filled
         // then set CellLeftIndex as cellIndex
-        if(CellConnection<indexType>::getCellRightIndex() == INVALID_INDEX(indexType)){
-            CellConnection<indexType>::setCellRightIndex(cellIndex);
+        if(CellConnection<IndexType>::getCellRightIndex() == INVALID_INDEX(IndexType)){
+            CellConnection<IndexType>::setCellRightIndex(cellIndex);
         }
 
         // Parameter cellIndex is equal to CellLeftIndex then
         // set NextEdgeWRTCR as nextEdgeIndex, ret true
-        if (cellIndex == CellConnection<indexType>::getCellRightIndex()){
+        if (cellIndex == CellConnection<IndexType>::getCellRightIndex()){
 
             setNextBElemWRTCR(nextBElemIndex);
 
@@ -136,46 +138,68 @@ bool CellBoundaryConnection<indexType>::setNextBElem(indexType nextBElemIndex, i
     }
 }
 
-template<typename indexType>
-indexType CellBoundaryConnection<indexType>::getNextBElemWRTCL() const {
+template<typename IndexType>
+IndexType CellBoundaryConnection<IndexType>::getNextBElemWRTCL() const {
     return nextBElemWRTCL;
 }
 
-template<typename indexType>
-indexType CellBoundaryConnection<indexType>::getNextBElemWRTCR() const {
+template<typename IndexType>
+IndexType CellBoundaryConnection<IndexType>::getNextBElemWRTCR() const {
     return nextBElemWRTCR;
 }
 
-template<typename indexType>
-indexType CellBoundaryConnection<indexType>::getNextBElem(indexType cellIndex) const{
-    // If cell is nullptr then ret nullptr
-    if (cellIndex == INVALID_INDEX(indexType)) {
-        return INVALID_INDEX(indexType);
+template<typename IndexType>
+IndexType CellBoundaryConnection<IndexType>::getNextBElem(IndexType cellIndex) const{
+
+    // If cell is invalied then
+    if (cellIndex == INVALID_INDEX(IndexType)) {
+        throw std::runtime_error("Invalid index given to the getNextBElem");
     }
 
-
     // If the cell is equal the Cell1 then return the NextBElemWRTCR
-    if(cellIndex == CellConnection<indexType>::getCellRightIndex()){
+    if(cellIndex == this->getCellRightIndex()){
         return getNextBElemWRTCR();
 
-        // If the cell is equal the Cell2 then return the NextBElemWRTCL
-    } else if (cellIndex == CellConnection<indexType>::getCellLeftIndex()){
+    // If the cell is equal the Cell2 then return the NextBElemWRTCL
+    } else if (cellIndex == this->getCellLeftIndex()){
         return getNextBElemWRTCL();
 
-        // If the cell is not equal left cell neither cell right then return invalid index
+    // If the cell is not equal left cell neither cell right then return invalid index
     } else {
-        return INVALID_INDEX(indexType);
+        std::stringstream error;
+        error << "Neither of cell indexes (" << this->getCellLeftIndex() << ","
+              << this->getCellRightIndex() << ") matches the given one ("
+              << cellIndex << ")";
+
+        throw std::runtime_error(error.str());
     }
 }
 
-template<typename indexType>
-indexType CellBoundaryConnection<indexType>::getOtherCellIndex(indexType cellIndex) const{
-    if (cellIndex == CellConnection<indexType>::getCellLeftIndex()) {
-        return CellConnection<indexType>::getCellRightIndex();
-    } else if (cellIndex == CellConnection<indexType>::getCellRightIndex()){
-        return CellConnection<indexType>::getCellLeftIndex();
+template<typename IndexType>
+IndexType CellBoundaryConnection<IndexType>::getOtherCellIndex(IndexType cellIndex) const{
+
+    // If cell is invalied then
+    if (cellIndex == INVALID_INDEX(IndexType)) {
+        throw std::runtime_error("Invalid index given to the getOtherCellIndex");
     }
-    return INVALID_INDEX(indexType);
+
+    // If the cell is equal the Cell1 then return the NextBElemWRTCR
+    if(cellIndex == this->getCellRightIndex()){
+        return CellConnection<IndexType>::getCellRightIndex();
+
+    // If the cell is equal the Cell2 then return the NextBElemWRTCL
+    } else if (cellIndex == this->getCellLeftIndex()){
+        return CellConnection<IndexType>::getCellLeftIndex();
+
+    // If the cell is not equal left cell neither cell right then return invalid index
+    } else {
+        std::stringstream error;
+        error << "Neither of cell indexes (" << this->getCellLeftIndex() << ","
+              << this->getCellRightIndex() << ") matches the given one ("
+              << cellIndex << ")";
+
+        throw std::runtime_error(error.str());
+    }
 }
 
 

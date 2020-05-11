@@ -3,7 +3,9 @@
 #include "../MeshNativeType.h"
 #include "../../../NumericStaticArray/Vertex.h"
 #include "../../MeshElements/MeshElements.h"
-
+/**
+ * The base class of MeshWriters.
+ */
 template<unsigned int MeshDimension>
 class MeshWriter{
 

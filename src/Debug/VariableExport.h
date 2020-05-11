@@ -31,7 +31,7 @@ struct VariableExport {
             !std::is_same<T, std::string>::value &&
             !std::is_same<T, const char*>::value &&
             !std::is_same<T, char*>::value &&
-            !std::is_same<T, const char>::value &&
+            !std::is_same<T, char>::value &&
             !HasDefaultIOTraits<T>::value
          >::type
     {
@@ -45,19 +45,14 @@ struct VariableExport {
         ost << (b == true ? "true" : "false");
     }
 
-    static void exportVariable(std::ostream& ost, const std::string& str)
-    {
-        ost << '"' << str << '"';
-    }
-
-
-    static void exportVariable(std::ostream& ost, const char* str)
-    {
-        ost << '"' << str << '"';
-    }
-
-
-    static void exportVariable(std::ostream& ost, const char str)
+    template<typename T>
+    static auto exportVariable(std::ostream& ost, const T& str)
+    -> typename std::enable_if<
+            std::is_same<T, std::string>::value ||
+            std::is_same<T, const char*>::value ||
+            std::is_same<T, char*>::value ||
+            std::is_same<T, char>::value
+        >::type
     {
         ost << '"' << str << '"';
     }
@@ -78,14 +73,14 @@ struct VariableExport {
       -> typename std::enable_if<
               IsIterable<T>::value &&
              !IsExportable<T>::value &&
-             !HasDefaultTraits<T>::value
+             !HasDefaultIOTraits<T>::value
          >::type
     {
-        auto it = list.begin();
+        auto it = list.cbegin();
         ost << "[ ";
-        while (it != list.end()){
+        while (it != list.cend()){
             exportVariable(ost, *it);
-            if (++it != list.end()){
+            if (++it != list.cend()){
                 ost << ", ";
             }
         }
@@ -100,7 +95,7 @@ struct VariableExport {
               IsIndexable<T>::value &&
              !IsIterable<T>::value &&
              !IsExportable<T>::value &&
-             !HasDefaultTraits<T>::value
+             !HasDefaultIOTraits<T>::value
          >::type
     {
         ost << "[ ";
@@ -121,7 +116,7 @@ struct VariableExport {
              !IsIndexable<T>::value &&
              !IsIterable<T>::value &&
              !IsExportable<T>::value &&
-             !HasDefaultTraits<T>::value
+             !HasDefaultIOTraits<T>::value
          >::type
     {
         ost << "[ ";
@@ -151,41 +146,21 @@ struct VariableExport {
     }
 
 
-    template<typename T,unsigned int Index = 0, typename Void = void>
+    template<typename T, unsigned int Index = 0, bool = Index == DefaultIOTraits<T>::size() - 1>
     struct PrintClass{
         static void print(std::ostream& ost, const T &traitedClass){
-            ost << '"' << Traits<T>::tr.template getName<Index>() << "\" : ";
-            VariableExport::exportVariable(ost, Traits<T>::tr.template getValue<Index>(traitedClass));
+            PrintClass<T, Index, true>::print(ost, traitedClass);
             ost << ", ";
             PrintClass<T, Index + 1>::print(ost, traitedClass);
 
         }
     };
 
-    template<typename T,unsigned int Index, typename... Types>
-    struct PrintClass <Traits<T, Types...>, Index, typename std::enable_if<Index < Traits<T, Types...>::size() - 1>::type>{
-        static void print(std::ostream& ost, const T &traitedClass, const Traits<T, Types...>& trait = DefaultIOTraits<T>::getTraits()){
-            ost << '"' << trait.template getName<Index>() << "\" : ";
-            VariableExport::exportVariable(ost, trait.template getValue<Index>(traitedClass));
-            ost << ", ";
-            PrintClass<Traits<T, Types...>, Index + 1>::print(ost, traitedClass);
-
-        }
-    };
-
-    template<typename T,unsigned int Index, typename ... Types>
-    struct PrintClass <Traits<T, Types...>, Index, typename std::enable_if<Index == Traits<T, Types...>::size() - 1>::type>{
-        static void print(std::ostream& ost, const T &traitedClass, const Traits<T, Types...>& trait = DefaultIOTraits<T>::getTraits()){
-            ost << '"' << trait.template getName<Traits<T, Types...>::size() - 1>() << "\" : ";
-            VariableExport::exportVariable(ost, trait.template getValue<Traits<T, Types...>::size() - 1>(traitedClass));
-        }
-    };
-
     template<typename T, unsigned int Index>
-    struct PrintClass<T, Index, typename std::enable_if<Index == Traits<T>::traitsType::size() - 1>::type>{
+    struct PrintClass<T, Index, true>{
         static void print(std::ostream& ost, const T &traitedClass){
-            ost << '"' << Traits<T>::tr.template getName<Traits<T>::traitsType::size() - 1>() << "\" : ";
-            VariableExport::exportVariable(ost, Traits<T>::tr.template getValue<Traits<T>::tr.size() - 1>(traitedClass));
+            ost << '"' << DefaultIOTraits<T>::getTraits().template getName<Index>() << "\" : ";
+            VariableExport::exportVariable(ost, DefaultIOTraits<T>::getTraits().template getValue<Index>(traitedClass));
         }
     };
 
@@ -197,7 +172,7 @@ struct VariableExport {
          >::type
     {
         ost << "{ ";
-        PrintClass<typename DefaultIOTraits<T>::traitsType>::print(ost, traitedClass);
+        PrintClass<T>::print(ost, traitedClass);
         ost << " }";
     }
 
@@ -209,63 +184,80 @@ template <>
 struct VariableExport<VARIABLE_EXPORT_METHOD::stdio> {
 
 
-    static std::string exportVariable(...)
+    static void exportVariable(...)
     {
-        return "\"variable is not exportable\"";
+        printf("\"variable is not exportable\"");
+    }
+
+    static void exportVariable(const double& d)
+    {
+        printf("%g", d);
+    }
+
+    static void exportVariable(const long double& d)
+    {
+        printf("%Lg", d);
+    }
+
+    static void exportVariable(const int& d)
+    {
+        printf("%d", d);
     }
 
 
-    template<typename T>
-    static auto exportVariable(const T& b)
-      -> typename std::enable_if<
-             IsExportable<T>::value &&
-            !std::is_same<T, bool>::value &&
-            !std::is_same<T, std::string>::value &&
-            !std::is_same<T, const char*>::value &&
-            !std::is_same<T, char*>::value &&
-            !std::is_same<T, const char>::value,
-            std::string
-         >::type
+    static void exportVariable(const short& d)
     {
-        std::stringstream ss;
-        ss << b;
-        return ss.str();
+        printf("%hd", d);
+    }
+
+    static void exportVariable(const unsigned int& d)
+    {
+        printf("%ud", d);
     }
 
 
-
-    static std::string exportVariable(const bool& b)
+    static void exportVariable(const long long& d)
     {
-        return (b == true ? "true" : "false");
+        printf("%lld", d);
     }
 
-    static std::string exportVariable(const std::string& str)
+    static void exportVariable(const unsigned long long& d)
     {
-        return '"' + str + '"';
-    }
-
-
-    static std::string exportVariable(const char* str)
-    {
-        return std::string("\"") + str + '"';
+        printf("%llu", d);
     }
 
 
-    static std::string exportVariable(const char str)
+    static void exportVariable(const bool& b)
     {
-        return std::string("\"") + str + '"';
+        printf("%s", (b == true ? "true" : "false"));
+    }
+
+    static void exportVariable(const std::string& str)
+    {
+        printf("\"%s\"", str.c_str());
+    }
+
+
+    static void exportVariable(const char* str)
+    {
+        printf("\"%s\"", str);
+    }
+
+
+    static void exportVariable(const char str)
+    {
+        printf("\"%c\"", str);
     }
 
 
     template<typename T1, typename T2>
     static auto exportVariable(const std::pair<T1,T2>& b) -> void
     {
-        std::string res;
-        res += "{ ";
-        res += exportVariable(b.first);
-        res += ": ";
-        res += exportVariable(b.second);
-        res += "}";
+        printf("{ ");
+        exportVariable(b.first);
+        printf(": ");
+        exportVariable(b.second);
+        printf("}");
     }
 
     template<typename T>
@@ -273,20 +265,18 @@ struct VariableExport<VARIABLE_EXPORT_METHOD::stdio> {
       -> typename std::enable_if<
               IsIterable<T>::value &&
              !IsExportable<T>::value &&
-             !HasDefaultTraits<T>::value,
-             std::string
+             !HasDefaultIOTraits<T>::value
          >::type
     {
-        std::string res;
         auto it = list.begin();
-        res += "[ ";
+        printf("[ ");
         while (it != list.end()){
             exportVariable(*it);
             if (++it != list.end()){
-                res += ", ";
+                printf(", ");
             }
         }
-        res += " ]";
+        printf(" ]");
     }
 
 
@@ -297,20 +287,17 @@ struct VariableExport<VARIABLE_EXPORT_METHOD::stdio> {
               IsIndexable<T>::value &&
              !IsIterable<T>::value &&
              !IsExportable<T>::value &&
-             !HasDefaultTraits<T>::value,
-             std::string
+             !HasDefaultIOTraits<T>::value
          >::type
     {
-        std::string res;
-        res += "[ ";
+        printf("[ ");
         for (decltype (list.size())i = 0; i < list.size(); i++){
             exportVariable(ost, list[i]);
             if (i < list.size() - 1){
-                res += ", ";
+                printf(", ");
             }
         }
-        res += " ]";
-        return res;
+        printf(" ]");
     }
 
 
@@ -321,98 +308,65 @@ struct VariableExport<VARIABLE_EXPORT_METHOD::stdio> {
              !IsIndexable<T>::value &&
              !IsIterable<T>::value &&
              !IsExportable<T>::value &&
-             !HasDefaultTraits<T>::value,
-             std::string
+             !HasDefaultIOTraits<T>::value
          >::type
     {
-        std::string res;
-        res += "[ ";
+        printf("[ ");
         for (decltype (list.size())i = 0; i < list.size(); i++){
             exportVariable(ost, list[i]);
             if (i <  list.getSize() - 1){
-                res += ", ";
+                printf(", ");
             }
         }
-        res += " ]";
-        return res;
+        printf(" ]");
     }
 
 
 
     template<typename T>
-    static std::string exportVariable(std::ostream& ost, const std::initializer_list<T> &list)
+    static void exportVariable(std::ostream& ost, const std::initializer_list<T> &list)
     {
-        std::string res;
         static auto it = list.begin();
-        res += "[ ";
+        printf("[ ");
         while (it != list.end()){
             exportVariable(ost, *it);
             if (++it != list.end()){
-                res += ", ";
+                printf(", ");
             }
         }
-        res += " ]";
-        return res;
+        printf(" ]");
     }
 
 
-    template<typename T,unsigned int Index = 0, typename Void = void>
+    template<typename T, unsigned int Index = 0, bool = Index == DefaultIOTraits<T>::size() - 1>
     struct PrintClass{
-        static std::string print(const T &traitedClass){
-            std::string res;
-            res += '"' + Traits<T>::traitsType::template getName<Index>() + "\" : ";
-            VariableExport::exportVariable(Traits<T>::traitsType::template getReference<Index>()->getValue(traitedClass));
-            res += ", ";
-            res += PrintClass<T, Index + 1>::print( traitedClass);
-            return res;
-        }
-    };
+        static void print(const T &traitedClass){
+            PrintClass<T, Index, true>::print(traitedClass);
+            printf(", ");
+            PrintClass<T, Index + 1>::print(traitedClass);
 
-    template<typename T,unsigned int Index, typename... Types>
-    struct PrintClass <Traits<T, Types...>, Index, typename std::enable_if<Index < Traits<T, Types...>::size() - 1>::type>{
-        static std::string print(const T &traitedClass){
-            std::string res;
-            res += '"' + Traits<T, Types...>::template getName<Index>() + "\" : ";
-            VariableExport::exportVariable(Traits<T, Types...>::template getReference<Index>()->getValue(traitedClass));
-            res += ", ";
-            res += PrintClass<Traits<T, Types...>, Index + 1>::print(traitedClass);
-            return res;
-        }
-    };
-
-    template<typename T,unsigned int Index, typename ... Types>
-    struct PrintClass <Traits<T, Types...>, Index, typename std::enable_if<Index == Traits<T, Types...>::size() - 1>::type>{
-        static std::string print(const T &traitedClass){
-            std::string res;
-            res += '"' + Traits<T, Types...>::template getName<Traits<T, Types...>::size() - 1>() + "\" : ";
-            res += VariableExport::exportVariable(Traits<T, Types...>::template getReference<Traits<T, Types...>::size() - 1>()->getValue(traitedClass));
-            return res;
         }
     };
 
     template<typename T, unsigned int Index>
-    struct PrintClass<T, Index, typename std::enable_if<Index == Traits<T>::traitsType::size() - 1>::type>{
-        static std::string print(const T &traitedClass){
-            std::string res;
-            res += '"' + Traits<T>::traitsType::template getName<Traits<T>::traitsType::size() - 1>() + "\" : ";
-            VariableExport::exportVariable(Traits<T>::traitsType::template getReference<Traits<T>::traitsType::size() - 1>()->getValue(traitedClass));
-            return res;
+    struct PrintClass<T, Index, true>{
+        static void print(const T &traitedClass){
+            printf("\"%s\" : ", DefaultIOTraits<T>::getTraits().template getName<Index>());
+            VariableExport::exportVariable(DefaultIOTraits<T>::getTraits().template getValue<Index>(traitedClass));
         }
     };
+
 
 
     template<typename T>
     static auto exportVariable(const T &traitedClass)
       -> typename std::enable_if<
-             HasDefaultIOTraits<T>::value,
-             std::string
+             HasDefaultIOTraits<T>::value
          >::type
     {
-        std::string res;
-        res += "{ ";
-        res += PrintClass<typename DefaultIOTraits<T>::traitsType>::print(traitedClass);
-        res += " }";
-        return res;
+        printf("{ ");
+        PrintClass<T>::print(traitedClass);
+        printf(" }");
     }
 
 

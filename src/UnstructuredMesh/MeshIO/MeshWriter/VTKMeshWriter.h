@@ -31,7 +31,7 @@ public:
         ost << "# vtk DataFile Version 2.0\n" <<
                dataName << "\nASCII\nDATASET UNSTRUCTURED_GRID" << std::endl;
     }
-
+private:
     /**
      * @brief lastHash<HR>
      * The hash of the last written mesh.
@@ -49,11 +49,11 @@ public:
      */
     IndexType totalNumberOfWrittenElements = 0;
 
-
+public:
     IndexType getNumberOfCells(){
         return cellVert.template getDataByPos<0>().size();
     }
-
+private:
     /**
      * @brief indexCell<HR>
      * This funcion stores indexes of vertices in correct order
@@ -109,16 +109,9 @@ public:
         } while (nextVertex != verticesIndexed.at(0));
 
     }
-
+public:
     template<unsigned int ...Reserve>
     void indexMesh(MeshElements<2, IndexType, Real, Reserve...>& mesh){
-        size_t curHash = writer::computeHash(mesh);
-
-        // if the mesh is the same as it was, return
-        if (lastHash == curHash){
-            return;
-        }
-        lastHash = curHash;
 
         cellVert.template getDataByPos<0>().clear();
 
@@ -144,7 +137,13 @@ public:
                        MeshElements<2, IndexType, Real, Reserve...>& mesh,
                        MeshDataContainer<typename writer::type::ElementType, 2> cellTypes){
 
-        indexMesh(mesh);
+        size_t curHash = writer::computeHash(mesh);
+        // if the mesh is the same as it was, return
+        if (lastHash != curHash){
+            indexMesh(mesh);
+        }
+        lastHash = curHash;
+
         // first write verices
         ost << "POINTS " << mesh.getVertices().size() <<
                " double" << std::endl;
@@ -244,19 +243,19 @@ public:
         IndexType startVertex = INVALID_INDEX(IndexType);
         IndexType nextVertex = INVALID_INDEX(IndexType);
         if (faceEdgeOri[face][0] == true && cell.getIndex() == face.getCellLeftIndex()){ // the edge is left to the face
-            startVertex = mesh.getEdges().at(face.getSubelements()[0].index).getVertexBIndex();
-            nextVertex = mesh.getEdges().at(face.getSubelements()[0].index).getVertexAIndex();
+            startVertex = mesh.getEdges().at(face.getSubelements()[0]).getVertexBIndex();
+            nextVertex = mesh.getEdges().at(face.getSubelements()[0]).getVertexAIndex();
         } else {
-            startVertex = mesh.getEdges().at(face.getSubelements()[0].index).getVertexAIndex();
-            nextVertex = mesh.getEdges().at(face.getSubelements()[0].index).getVertexBIndex();
+            startVertex = mesh.getEdges().at(face.getSubelements()[0]).getVertexAIndex();
+            nextVertex = mesh.getEdges().at(face.getSubelements()[0]).getVertexBIndex();
         }
 
         verticesIndexed.push_back(startVertex);
 
-        IndexType lastWrittenEdge = face.getSubelements()[0].index;
+        IndexType lastWrittenEdge = face.getSubelements()[0];
         while (startVertex != nextVertex){
             for (auto& sube : face.getSubelements()) {
-                auto &edge = mesh.getEdges().at(sube.index);
+                auto &edge = mesh.getEdges().at(sube);
 
                 if (edge.getIndex() != lastWrittenEdge) {
                     if (edge.getVertexAIndex() == nextVertex) {
@@ -368,10 +367,9 @@ private:
         for (IndexType i = 0; i < numVertBaseFace; i++) {
             index = vertWrit[i];
 
-            MeshRun<3,3,1,3,false, true>::run(
+            MeshApply<3,1>::apply(
+                cell.getIndex(),
                 mesh,
-                cell.getIndex(),
-                cell.getIndex(),
                 lambdaProc
             );
         }
@@ -525,7 +523,7 @@ DBGMSG("indexing mesh");
                     auto& face = mesh.getFaces().at(tmpFace);
 
                     for (auto& sube : face.getSubelements()){
-                        auto& edge = mesh.getEdges().at(sube.index);
+                        auto& edge = mesh.getEdges().at(sube);
                         vertWrit.clear();
                         vertWrit.reserve(4);
                         vertWrit.push_back(edge.getVertexAIndex());

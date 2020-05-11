@@ -5,17 +5,17 @@ struct MeshNativeType{
 
 };
 
-
+//! Element types of GTMesh in 2D mesh
 template<>
 struct MeshNativeType<2>{
     enum ElementType{
-        LINE = 200,
-        TRIANGLE,
+        LINE = 100,
+        TRIANGLE = 200,
         QUAD,
         POLYGON
     };
 };
-
+//! Element types of GTMesh in 3D mesh
 template<>
 struct MeshNativeType<3>{
     enum ElementType{

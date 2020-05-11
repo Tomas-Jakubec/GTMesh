@@ -3,21 +3,19 @@
 
 /*
  * Macros FOR_EACH are supposed to repeat
- * any other mocro for each argument passed as
+ * any other macro for each argument passed as
  * variadic parameters.
 */
 
 
 
-#define FOR_EACH_NARG(...) FOR_EACH_NARG_(__VA_ARGS__, FOR_EACH_RSEQ_N())
-#define FOR_EACH_NARG_(...) FOR_EACH_ARG_N(__VA_ARGS__)
+#define FOR_EACH_RSEQ_N 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 09, 08, 07, 06, 05, 04, 03, 02, 01, 00
 #define FOR_EACH_ARG_N(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, N, ...) N
-#define FOR_EACH_RSEQ_N() 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 09, 08, 07, 06, 05, 04, 03, 02, 01, 00
+#define FOR_EACH_NARG_(...) FOR_EACH_ARG_N(__VA_ARGS__)
+#define FOR_EACH_NARG(...) FOR_EACH_NARG_(__VA_ARGS__, FOR_EACH_RSEQ_N)
 
 
-#define CONCATENATE(arg1, arg2)   CONCATENATE1(arg1, arg2)
-#define CONCATENATE1(arg1, arg2)  CONCATENATE2(arg1, arg2)
-#define CONCATENATE2(arg1, arg2)  arg1##arg2
+#define CONCATENATE(arg1, arg2) arg1##arg2
 
 #define FOR_EACH_00(what, ...)
 #define FOR_EACH_01(what, x, ...)   what(x)
@@ -92,7 +90,6 @@
 #define FOR_EACH_EVEN_(N, what, ...) CONCATENATE(FOR_EACH_EVEN_, N)(what, __VA_ARGS__)
 #define FOR_EACH_EVEN(what, ...) FOR_EACH_EVEN_(FOR_EACH_NARG(__VA_ARGS__), what, __VA_ARGS__)
 
-#define DUMMY
 #define FOR_EACH_ODD(what, ...) FOR_EACH_EVEN_(FOR_EACH_NARG( , __VA_ARGS__), what, , __VA_ARGS__)
 
 

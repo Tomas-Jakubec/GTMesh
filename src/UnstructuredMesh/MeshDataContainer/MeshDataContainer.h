@@ -43,12 +43,12 @@ private:
     static constexpr unsigned int dimensionIndex(){
         return DimensionPos<dim, 0, std::get<0>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...})>::res();
     }
-
+public:
     template<unsigned int pos>
     static constexpr unsigned int dimensionAt(){
         return std::get<pos>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...});
     }
-public:
+private:
 
     /**
      * @brief The _DataContainer struct
@@ -67,7 +67,7 @@ public:
     struct _DataContainer<_DataType, 0>{
         DataContainer<_DataType, dimensionAt<0U>()> _data;
     };
-
+public:
     /**
      * Data container type according to pos
      */
@@ -75,8 +75,7 @@ public:
     using DataContainerType = DataContainer<DataType, dimensionAt<Pos>()>;
 
     /**
-     * @brief size<HR>
-     * Returns the number of vectors contained in the MeshDataContainer.
+     * @brief Returns the number of vectors contained in the MeshDataContainer.
     * @return
     */
    static constexpr unsigned int size() {
@@ -91,8 +90,7 @@ private:
     struct Allocator{
 
         /**
-         * @brief <HR>
-         * Resizes vector on positions according to the respective dimension
+         * @brief Resizes vector on positions according to the respective dimension
          * of mesh and initializes with defaul value if possible.
          * @param parent
          * @param mesh
@@ -108,8 +106,7 @@ private:
 
 
         /**
-         * @brief <HR>
-         * Resizes vector on positions according to the respective dimension
+         * @brief Resizes vector on positions according to the respective dimension
          * of mesh and initializes with @a initialValue.
          * @param parent
          * @param mesh
@@ -127,7 +124,7 @@ private:
 
 
         /**
-         * @brief <HR>Allocates memory according to another MashDataContainer which must
+         * @brief Allocates memory according to another MashDataContainer which must
          * have data allocated to the @a Dimensions. The data is initialized by
          * default value if possible.
          * @param parent
@@ -145,8 +142,7 @@ private:
 
 
         /**
-         * @brief <HR>
-         * Rllocates memory according to another %MashDataContainer which must
+         * @brief Allocates memory according to another %MashDataContainer which must
          * have data allocated to the @a Dimensions. The data is initialized by
          * @a initialValue.
          * @param parent
@@ -173,8 +169,7 @@ private:
     struct Allocator<0, dummy>{
 
         /**
-         * @brief <HR>
-         * Resizes vector on positions according to the respective dimension
+         * @brief Resizes vector on positions according to the respective dimension
          * of mesh and initializes with defaul value if possible.
          * Terminal step for @a pos = 0.
          * @param parent
@@ -185,14 +180,13 @@ private:
                                   const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh) {
 
             parent.template getDataByPos<0>().resize(
-                        mesh.template getElements<std::get<0>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...})>().size());
+                        mesh.template getElements<parent.template dimensionAt<0>()>().size());
 
         }
 
 
         /**
-         * @brief <HR>
-         * Resizes vector on positions according to the respective dimension
+         * @brief Resizes vector on positions according to the respective dimension
          * of mesh and initializes with @a initialValue.
          * Terminal step for @a pos = 0.
          * @param parent
@@ -205,7 +199,7 @@ private:
                                   const DataType& initialValue) {
 
             parent.template getDataByPos<0>().resize(
-                        mesh.template getElements<std::get<0>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...})>().size(),
+                        mesh.template getElements<parent.template dimensionAt<0>()>().size(),
                         initialValue);
 
         }
@@ -213,7 +207,7 @@ private:
 
 
         /**
-         * @brief <HR>Allocates memory according to another MashDataContainer which must
+         * @brief Allocates memory according to another MashDataContainer which must
          * have data allocated to the @a Dimensions. The data is initialized by
          * default value if possible.
          * @param parent
@@ -229,8 +223,7 @@ private:
 
 
         /**
-         * @brief <HR>
-         * Rllocates memory according to another %MashDataContainer which must
+         * @brief Allocates memory according to another %MashDataContainer which must
          * have data allocated to the @a Dimensions. The data is initialized by
          * @a initialValue.
          * @param parent
@@ -251,8 +244,7 @@ private:
 
 
     /**
-     * @brief data
-     * A structure containing vectors of specified type
+     * @brief A structure containing vectors of specified type
      * alocated respectively to the mesh elements.
      */
     _DataContainer<DataType, sizeof... (Dimensions) - 1> data;
@@ -275,9 +267,7 @@ public:
 
 
     /**
-     * @brief <HR>
-     * This constructor resizes the MeshDataContainer according to the mesh.
-     * @param mesh
+     * @brief Resizes the MeshDataContainer according to the mesh.
      */
     template <unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
     MeshDataContainer(const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
@@ -288,11 +278,9 @@ public:
 
 
     /**
-     * @brief <HR>
-     * This constructor resizes the MeshDataContainer according to the mesh.
+     * @brief Resizes the %MeshDataContainer according to the mesh.
      * Moreover, the @a Dimensions and @a DataType can be deduced from
      * the second and the third arguments.
-     * @param mesh
      */
     template <unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
     MeshDataContainer(const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh,
@@ -306,7 +294,7 @@ public:
 
     /**
      * @brief <HR>
-     * This constructor resizes the MeshDataContainer according to the mesh.
+     * This constructor resizes the %MeshDataContainer according to the mesh.
      * And initializes the data with an @a initialValue.
      * @param mesh
      * @param initialValue
@@ -322,7 +310,7 @@ public:
 
     /**
      * @brief <HR>
-     * This constructor resizes the MeshDataContainer according to the mesh.
+     * This constructor resizes the %MeshDataContainer according to the mesh.
      * And initializes the data with an @a initialValue.
      * Moreover, the @a Dimensions and @a DataType can be deduced from
      * the second and the third arguments.
@@ -367,7 +355,7 @@ public:
 
 
     /**
-     * @brief Allocates data according to another meshDataContainer.
+     * @brief Allocates data according to another MeshDataContainer.
      * The meshDataContainer mush have @a _Dimensions at least
      * dimensions as @a Dimensions.
      * @param meshDataContainer
@@ -378,7 +366,7 @@ public:
     }
 
     /**
-     * @brief Allocates data according to another meshDataContainer.
+     * @brief Allocates data according to another MeshDataContainer.
      * The meshDataContainer mush have @a _Dimensions at least
      * dimensions as @a Dimensions.
      * @param meshDataContainer
@@ -392,13 +380,12 @@ public:
 
 
 
-
     /*
      * Data access
      */
 
     /**
-     * @brief getDataByDim Returns first found data allocated to the given dimension.
+     * @brief Returns first data array allocated to the given dimension.
      * @return
      */
     template<unsigned int dim>
@@ -407,7 +394,7 @@ public:
     }
 
     /**
-     * @brief getDataByDim
+     * @brief Returns first data array allocated to the given dimension.
      * @return
      */
     template<unsigned int dim>
@@ -436,7 +423,7 @@ public:
 
 
     /**
-     * @brief at <HR>Returns an element of the array allocated to the dimension
+     * @brief Returns an element of the array allocated to the dimension
      * of the passed @a element.
      * @throws out of range
      * @param element A MeshElement of given ElementDimension to select the appropriate data.
@@ -448,9 +435,9 @@ public:
     }
 
     /**
-     * @brief at
-     * @param element
-     * @return
+     * @brief Returns an element of the array allocated to the dimension
+     * of the passed @a element.
+     * @param element Element of a mesh the data are mapped to
      */
     template <unsigned int ElementDim, unsigned int Dimension, typename IndexType, typename Real, unsigned int Reserve>
     const DataType& at(const MeshElement<Dimension, ElementDim, IndexType, Real, Reserve>& element) const {
@@ -458,10 +445,39 @@ public:
     }
 
     /**
-     * @brief operator [] <HR>Returns an element of the array allocated to the dimension
+     * @brief Returns the array allocated to position given
+     * by the passed integer sequence.
+     * @example Example of approaching the arrays by operator[] accepting an integer_sequence
+     * @code
+     * MeshDataContainer<int, 1,2,3> continer(mesh);
+     * constexpr std::integer_sequence< unsigned int, 2 > thirdArray;
+     * container[thirdArray][0]; // the first element of the second array
+     * @endcode
+     */
+    template <unsigned int Pos>
+    DataContainer<DataType, dimensionAt<Pos>()>& operator[](std::integer_sequence<unsigned int, Pos>) {
+        return getDataByPos<Pos>();
+    }
+
+    /**
+     * @brief Returns the array allocated to position given
+     * by the passed integer sequence.
+     * @example Example of approaching the arrays by operator[] accepting an integer_sequence
+     * @code
+     * MeshDataContainer<int, 1,2,3> continer(mesh);
+     * constexpr std::integer_sequence< unsigned int, 2 > thirdArray;
+     * container[thirdArray][0]; // the first element of the second array
+     * @endcode
+     */
+    template <unsigned int Pos>
+    const DataContainer<DataType, dimensionAt<Pos>()>& operator[](std::integer_sequence<unsigned int, Pos>) const {
+        return getDataByPos<Pos>();
+    }
+
+    /**
+     * @brief Returns an element of the array allocated to the dimension
      * of the passed @a element.
-     * @param element
-     * @return
+     * @param element Element of a mesh the data are mapped to
      */
     template <unsigned int ElementDim, unsigned int Dimension, typename IndexType, typename Real, unsigned int Reserve>
     DataType& operator[](const MeshElement<Dimension, ElementDim, IndexType, Real, Reserve>& element) {
@@ -469,9 +485,9 @@ public:
     }
 
     /**
-     * @brief operator []
-     * @param element
-     * @return
+     * @brief Returns an element of the array allocated to the dimension
+     * of the passed @a element.
+     * @param element Element of a mesh the data are mapped to
      */
     template <unsigned int ElementDim, unsigned int Dimension, typename IndexType, typename Real, unsigned int Reserve>
     const DataType& operator[](const MeshElement<Dimension, ElementDim, IndexType, Real, Reserve>& element) const {
@@ -486,7 +502,7 @@ public:
 
 
     /**
-     * @brief operator =
+     * @brief
      * deep copy operator =
      * @param rhs
      * @return this
@@ -497,13 +513,13 @@ public:
     }
 
     /**
-     * @brief operator =
+     * @brief
      * move operator =
      * @param rhs
      * @return this
      */
     MeshDataContainer<DataType, Dimensions...>& operator=(MeshDataContainer<DataType, Dimensions...>&& rhs) {
-        this->data = rhs.data;
+        this->data = std::move(rhs.data);
         return *this;
     }
 };
@@ -518,7 +534,13 @@ public:
  * a data type for each dimension separately. The data types are
  * given by a tuple.
  *
- * @example MeshDataContainer<std::tuple<int, double>, 3,2> data;
+ * @example Definition of MeshDataContainer mapping different types to different dimensions
+ * of the mesh.
+ * @code
+ *
+ * MeshDataContainer<std::tuple<int, double>, 3,2> data;
+ *
+ * @endcode
  */
 template <typename ...DataTypes, unsigned int ...Dimensions>
 struct MeshDataContainer<std::tuple<DataTypes...>, Dimensions...>{
@@ -546,7 +568,7 @@ public:
 
     template<unsigned int pos>
     using DataType = typename std::tuple_element<pos,std::tuple<DataTypes...>>::type;
-
+private:
     template<unsigned int Pos, typename Dummy = void>
     struct _DataContainer : _DataContainer<Pos - 1, Dummy>{
         DataContainer<DataType<Pos>, dimensionAt<Pos>()> _data;
@@ -562,6 +584,7 @@ public:
     /**
      * Data container type according to pos
      */
+public:
     template <unsigned int Pos>
     using DataContainerType = DataContainer<DataType<Pos>, dimensionAt<Pos>()>;
 
@@ -573,7 +596,7 @@ public:
    static constexpr unsigned int size() {
        return sizeof... (Dimensions);
    }
-
+private:
     template<unsigned int pos, typename _DataType, typename... _DataTypes>
     struct Allocator{
         template<unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
@@ -705,15 +728,60 @@ public:
     }
 
     template <unsigned int ElementDim, unsigned int Dimension, typename IndexType, typename Real, unsigned int Reserve>
-    std::tuple_element_t<dimensionIndex<ElementDim>(), std::tuple<DataTypes...>>& at(const MeshElement<Dimension, ElementDim, IndexType, Real, Reserve>& element) {
+    std::tuple_element_t<dimensionIndex<ElementDim>(), std::tuple<DataTypes...>>&
+    at(const MeshElement<Dimension, ElementDim, IndexType, Real, Reserve>& element) {
         return getDataByDim<ElementDim>().at(element.getIndex());
     }
 
     template <unsigned int ElementDim, unsigned int Dimension, typename IndexType, typename Real, unsigned int Reserve>
-    std::tuple_element_t<dimensionIndex<ElementDim>(), std::tuple<DataTypes...>>& operator[](const MeshElement<Dimension, ElementDim, IndexType, Real, Reserve>& element) {
+    const std::tuple_element_t<dimensionIndex<ElementDim>(), std::tuple<DataTypes...>>&
+    at(const MeshElement<Dimension, ElementDim, IndexType, Real, Reserve>& element) const {
+        return getDataByDim<ElementDim>().at(element.getIndex());
+    }
+
+    /**
+     * @brief Returns the array allocated to position given
+     * by the passed integer sequence.
+     * @example Example of approaching the arrays by operator[] accepting an integer_sequence
+     * @code
+     * MeshDataContainer<int, 1,2,3> continer(mesh);
+     * constexpr std::integer_sequence< unsigned int, 2 > thirdArray;
+     * container[thirdArray][0]; // the first element of the second array
+     * @endcode
+     */
+    template <unsigned int Pos>
+    DataContainer<std::tuple_element_t<dimensionIndex<Pos>(), std::tuple<DataTypes...>>, Pos>&
+    operator[](std::integer_sequence<unsigned int, Pos>) {
+        return getDataByPos<Pos>();
+    }
+
+    /**
+     * @brief Returns the array allocated to position given
+     * by the passed integer sequence.
+     * @example Example of approaching the arrays by operator[] accepting an integer_sequence
+     * @code
+     * MeshDataContainer<int, 1,2,3> continer(mesh);
+     * constexpr std::integer_sequence< unsigned int, 2 > thirdArray;
+     * container[thirdArray][0]; // the first element of the second array
+     * @endcode
+     */
+    template <unsigned int Pos>
+    const DataContainer<std::tuple_element_t<dimensionIndex<Pos>(), std::tuple<DataTypes...>>, Pos>&
+    operator[](std::integer_sequence<unsigned int, Pos>) const {
+        return getDataByPos<Pos>();
+    }
+
+    template <unsigned int ElementDim, unsigned int Dimension, typename IndexType, typename Real, unsigned int Reserve>
+    std::tuple_element_t<dimensionIndex<ElementDim>(), std::tuple<DataTypes...>>&
+    operator[](const MeshElement<Dimension, ElementDim, IndexType, Real, Reserve>& element) {
         return getDataByDim<ElementDim>()[element.getIndex()];
     }
 
+    template <unsigned int ElementDim, unsigned int Dimension, typename IndexType, typename Real, unsigned int Reserve>
+    const std::tuple_element_t<dimensionIndex<ElementDim>(), std::tuple<DataTypes...>>&
+    operator[](const MeshElement<Dimension, ElementDim, IndexType, Real, Reserve>& element) const {
+        return getDataByDim<ElementDim>()[element.getIndex()];
+    }
 
 
     MeshDataContainer() = default;
@@ -765,7 +833,7 @@ public:
     }
 
     MeshDataContainer<std::tuple<DataTypes...>, Dimensions...>& operator=(MeshDataContainer<std::tuple<DataTypes...>, Dimensions...>&& rhs) {
-        this->data = rhs.data;
+        this->data = std::move(rhs.data);
         return *this;
     }
 
@@ -779,23 +847,22 @@ public:
  * struct publishing the type of %MeshDataContainer using
  * tuple and integer sequence
  */
-template<typename... Params>
-struct MakeMeshDataContainer {};
+template<typename DataType, typename Sequence>
+struct MakeMeshDataContainer {
+    static_assert(
+        std::is_class<Sequence>::value && !std::is_class<Sequence>::value,
+        "The Sequence parameter in MakeMeshDataContainer \
+must be a std::integer_sequence<unsigned int, seq...>\
+please notice the type unsigned int"
+        );
+};
 
 template<typename Type, unsigned int... Dimensions>
 struct MakeMeshDataContainer<Type, std::integer_sequence<unsigned int, Dimensions...>>{
     using type = MeshDataContainer<Type, Dimensions...>;
 };
 
-
-template<typename... Types, unsigned int... Dimensions>
-struct MakeMeshDataContainer<std::tuple<Types...>, std::integer_sequence<unsigned int, Dimensions...>>{
-    using type = MeshDataContainer<std::tuple<Types...>, Dimensions...>;
-};
-
-
-template<typename... T>
-using MakeMeshDataContainer_t = typename MakeMeshDataContainer<T...>::type;
-
+template<typename DataType, typename Sequence>
+using MakeMeshDataContainer_t = typename MakeMeshDataContainer<DataType, Sequence>::type;
 
 #endif // MESHDATACONTAINER_H

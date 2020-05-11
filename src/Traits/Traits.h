@@ -1,27 +1,31 @@
 #ifndef TRAITS_H
 #define TRAITS_H
-#include "MemberApproach/MemberApproach.h"
+#include "MemberAccess/MemberAccess.h"
 #include <string>
 #include <memory>
 #include <functional>
 
+/**
+ *
+ */
 template<typename Class, typename...RefTypes>
 class Traits {
 public:
     template<unsigned int Index>
     using refType = typename std::tuple_element<Index,std::tuple<RefTypes...>>::type;
 
+    template<unsigned int Index>
+    using memRefType = MemberAccess<refType<Index>>;
+
     template <unsigned int Index>
-    using type = typename MemberReferenceType<refType<Index>>::type;
+    using type = typename MemberAccess<refType<Index>>::typeValue;
 
 private:
-    template<unsigned int Index>
-    using memRefType = MemberReference<Class, type<Index>, refType<Index>>;
 
-    template<unsigned int Index = 0, typename Dummy = void>
+    template<unsigned int Index = 0, typename = void>
     struct MemRefs: public MemRefs<Index + 1> {
 
-        const MemberReference<Class, type<Index>, refType<Index>> ref;
+        const MemberAccess<refType<Index>> ref;
         const char* name;
 
         template <typename ... REST>
@@ -30,16 +34,25 @@ private:
 
     template<typename Dummy>
     struct MemRefs<sizeof...(RefTypes) - 1, Dummy>{
-        const MemberReference<Class, type<sizeof...(RefTypes) - 1>, refType<sizeof...(RefTypes) - 1>> ref;
+        const MemberAccess<refType<sizeof...(RefTypes) - 1>> ref;
         const char* name;
 
         MemRefs(const char* n, refType<sizeof...(RefTypes) - 1> r) : ref(r), name(n){}
     };
 
+    /**
+     * @brief Container matching MemberAccess and a name.
+     */
     const MemRefs<0, void> refs;
 
 public:
-
+    /**
+     * The constructor of Traits initializes the names
+     * and references in the refs container.
+     * @param refsAndNames a parameter pack of names and references
+     */
+    template<typename...Refs>
+    Traits(Refs... refsAndNames) : refs(refsAndNames...){}
 
 
     static constexpr unsigned int size(){
@@ -48,17 +61,29 @@ public:
 
 
     template<unsigned int Index>
-    MemberReference<Class, type<Index>, refType<Index>>const getReference() const {
+    const MemberAccess<refType<Index>> getReference() const {
         return refs.MemRefs<Index, void>::ref;
     }
 
     template<unsigned int Index>
+    type<Index> getValue(Class* c) const {
+        return getReference<Index>().getValue(c);
+    }
+
+    template<unsigned int Index>
+    type<Index> getValue(Class& c) const {
+        return getReference<Index>().getValue(c);
+    }
+
+    template<unsigned int Index>
     type<Index> getValue(const Class* c) const {
-        return getReference<Index>()->getValue(c);
+        static_assert (HasConstGetAccess<memRefType<Index>>::value, "The current reference to the member does not provide constant approach.");
+        return getReference<Index>().getValue(c);
     }
 
     template<unsigned int Index>
     type<Index> getValue(const Class& c) const {
+        static_assert (HasConstGetAccess<memRefType<Index>>::value, "The current reference to the member does not provide constant approach.");
         return getReference<Index>().getValue(c);
     }
 
@@ -75,13 +100,13 @@ public:
 
     template<unsigned int Index>
     type<Index>& getAttr(Class* c) const {
-        static_assert (IsDirectReference<memRefType<Index>>::value, "The current reference to the member does not provide direct approach.");
-        return getReference<Index>()->getAttr(c);
+        static_assert (IsDirectAccess<memRefType<Index>>::value, "The current reference to the member does not provide direct approach.");
+        return getReference<Index>().getAttr(c);
     }
 
     template<unsigned int Index>
     type<Index>& getAttr(Class& c) const {
-        static_assert (IsDirectReference<memRefType<Index>>::value, "The current reference to the member does not provide direct approach.");
+        static_assert (IsDirectAccess<memRefType<Index>>::value, "The current reference to the member does not provide direct approach.");
         return getReference<Index>().getAttr(c);
     }
 
@@ -92,8 +117,6 @@ public:
     }
 
 
-    template<typename...Refs>
-    Traits(Refs... refsAndNames) : refs(refsAndNames...){}
 private:
 
     template<unsigned int Index = 0, typename Dummy = void>
@@ -261,17 +284,8 @@ public:
 
 
 
-
-
-
 template<typename Class>
-class Traits<Class>{
-    //static_assert (false, "The Traits template must be specialized for given type and must contain Traits references using variadic Traits.");
-public:
-    static constexpr std::false_type is_specialized{};
-};
-
-
+class Traits<Class>{};
 
 
 template<typename Class>
@@ -334,35 +348,33 @@ auto& get(ArythmeticTraitT* arg){
 #define IMPL_NAME_AND_REF(Class, name, member) name, &Class::member
 #define IMPL_NAME_ATT(attribute) #attribute, attribute
 
-#define IMPL_MAKE_CUSTOM_ATTRIBUTE_TRAIT(TraitName,Class,...) \
+#define IMPL_MAKE_CUSTOM_TRAIT(TraitName,Class,...) \
 template<> \
 class TraitName<Class>{ \
 public: \
-    static constexpr std::true_type is_specialized{}; \
     using traitsType = ::Traits<Class, FOR_EACH_2ARGS(IMPL_MEMREF_TYPE_CUSTOM, __VA_ARGS__)>; \
     static const traitsType getTraits() {return traitsType(__VA_ARGS__);} \
     static constexpr unsigned int size() {return traitsType::size();}\
-};
+}
 
 
+#define MAKE_CUSTOM_TRAIT(Class,...) IMPL_MAKE_CUSTOM_TRAIT(Traits, Class, __VA_ARGS__) // defining specialization for Traits
 
-#define MAKE_CUSTOM_ATTRIBUTE_TRAIT(Class,...) IMPL_MAKE_CUSTOM_ATTRIBUTE_TRAIT(Traits, Class, __VA_ARGS__) // defining specialization for Traits
-
-#define MAKE_NAMED_ATTRIBUTE_TRAIT(Class, ...) MAKE_CUSTOM_ATTRIBUTE_TRAIT(Class, FOR_EACH_3ARGS_1STAT(IMPL_NAME_AND_REF, Class, __VA_ARGS__))
+#define MAKE_NAMED_ATTRIBUTE_TRAIT(Class, ...) MAKE_CUSTOM_TRAIT(Class, FOR_EACH_3ARGS_1STAT(IMPL_NAME_AND_REF, Class, __VA_ARGS__))
 
 #define MAKE_ATTRIBUTE_TRAIT(Class, ...) MAKE_NAMED_ATTRIBUTE_TRAIT(Class, FOR_EACH(IMPL_NAME_ATT, __VA_ARGS__))
 
 
-#define MAKE_CUSTOM_ATTRIBUTE_TRAIT_IO(Class,...) IMPL_MAKE_CUSTOM_ATTRIBUTE_TRAIT(DefaultIOTraits, Class,__VA_ARGS__) // defining specialization for DefaultIOTraits
+#define MAKE_CUSTOM_TRAIT_IO(Class,...) IMPL_MAKE_CUSTOM_TRAIT(DefaultIOTraits, Class,__VA_ARGS__) // defining specialization for DefaultIOTraits
 
-#define MAKE_NAMED_ATTRIBUTE_TRAIT_IO(Class, ...) MAKE_CUSTOM_ATTRIBUTE_TRAIT_IO(Class, FOR_EACH_3ARGS_1STAT(IMPL_NAME_AND_REF, Class, __VA_ARGS__))
+#define MAKE_NAMED_ATTRIBUTE_TRAIT_IO(Class, ...) MAKE_CUSTOM_TRAIT_IO(Class, FOR_EACH_3ARGS_1STAT(IMPL_NAME_AND_REF, Class, __VA_ARGS__))
 
 #define MAKE_ATTRIBUTE_TRAIT_IO(Class, ...) MAKE_NAMED_ATTRIBUTE_TRAIT_IO(Class, FOR_EACH(IMPL_NAME_ATT, __VA_ARGS__))
 
 
-#define MAKE_CUSTOM_ATTRIBUTE_TRAIT_ARITHMETIC(Class,...) IMPL_MAKE_CUSTOM_ATTRIBUTE_TRAIT(DefaultArithmeticTraits, Class,__VA_ARGS__) // defining specialization for Traits
+#define MAKE_CUSTOM_TRAIT_ARITHMETIC(Class,...) IMPL_MAKE_CUSTOM_TRAIT(DefaultArithmeticTraits, Class,__VA_ARGS__) // defining specialization for DefaultArithmeticTraits
 
-#define MAKE_NAMED_ATTRIBUTE_TRAIT_ARITHMETIC(Class, ...) MAKE_CUSTOM_ATTRIBUTE_TRAIT_ARITHMETIC(Class, FOR_EACH_3ARGS_1STAT(IMPL_NAME_AND_REF, Class, __VA_ARGS__))
+#define MAKE_NAMED_ATTRIBUTE_TRAIT_ARITHMETIC(Class, ...) MAKE_CUSTOM_TRAIT_ARITHMETIC(Class, FOR_EACH_3ARGS_1STAT(IMPL_NAME_AND_REF, Class, __VA_ARGS__))
 
 #define MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(Class, ...) MAKE_NAMED_ATTRIBUTE_TRAIT_ARITHMETIC(Class, FOR_EACH(IMPL_NAME_ATT, __VA_ARGS__))
 

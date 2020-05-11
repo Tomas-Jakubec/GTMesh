@@ -1,6 +1,6 @@
 #ifndef MESH_ELEMENT_H
 #define MESH_ELEMENT_H
-#include "../UnstructedMeshDefine.h"
+#include "../UnstructuredMeshDefine.h"
 #include "../../NumericStaticArray/Vertex.h"
 #include "CellBoundaryConnection.h"
 #include "ComputationalySignificantElement.h"
@@ -54,14 +54,11 @@ public:
 };
 
 
-template <typename IndexType>
-struct Subelement{
-    IndexType index = INVALID_INDEX(IndexType);
-};
+
 
 
 template <typename IndexType, unsigned int Reserve>
-class SubelementContainer : public std::array<Subelement<IndexType>, Reserve>{
+class SubelementContainer : public std::array<IndexType, Reserve>{
     unsigned int numberOfElements = 0;
 
 public:
@@ -79,12 +76,15 @@ public:
 
     void addSubelement(IndexType index) {
         if (numberOfElements < Reserve){
-            this->at(numberOfElements).index = index;
+            this->at(numberOfElements) = index;
             numberOfElements++;
         } else {
-            throw(std::runtime_error(//"In face element (" + std::to_string(MeshElementBase<IndexType>::GetIndex()) +
-                                     ") number of edges overgrew the number of reserved indexes (" + std::to_string(Reserve)
-                                     +")."));
+            throw(
+                std::runtime_error(
+                        "number of edges overgrew the number of reserved indexes (" +
+                        std::to_string(Reserve) + ")."
+                        )
+                 );
         }
 
     }
@@ -101,31 +101,37 @@ public:
             this->at(numberOfElements) = {INVALID_INDEX(IndexType), false};
             numberOfElements--;
         } else {
-            throw(std::runtime_error(//"In face element (" + std::to_string(MeshElementBase<IndexType>::GetIndex()) +
-                                     ") removing index " + std::to_string(atIndex)
-                                     +" is greather than number of subelements " + std::to_string(numberOfElements)+ "."));
+            throw(std::runtime_error(
+                        "removing index " + std::to_string(atIndex) +
+                        " is greather than number of subelements " + std::to_string(numberOfElements)+ "."
+                        )
+                 );
         }
     }
 
-    typename std::array<Subelement<IndexType>, Reserve>::iterator end() {
+    typename std::array<IndexType, Reserve>::iterator end() {
         return this->begin() + getNumberOfSubElements();
     }
 
-    typename std::array<Subelement<IndexType>, Reserve>::const_iterator cend() const {
+    typename std::array<IndexType, Reserve>::const_iterator end() const {
+        return this->cbegin() + getNumberOfSubElements();
+    }
+
+    typename std::array<IndexType, Reserve>::const_iterator cend() const {
         return this->cbegin() + getNumberOfSubElements();
     }
 };
 
 
 template<typename IndexType>
-class SubelementContainer<IndexType, 0> : public std::vector<Subelement<IndexType>> {
+class SubelementContainer<IndexType, 0> : public std::vector<IndexType> {
 public:
-    IndexType getNumberOfSubElements() {
+    IndexType getNumberOfSubElements() const {
         return this->size();
     }
 
     void addSubelement(IndexType index) {
-        this->push_back(Subelement<IndexType>{index});
+        this->push_back(IndexType{index});
     }
 
     void removeSubelement(unsigned char atIndex){

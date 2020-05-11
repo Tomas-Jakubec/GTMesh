@@ -3,7 +3,7 @@
 #include "../src/Traits/TraitsAlgorithm/TraitsAlgorithm.h"
 //#include "../src/Traits/Traits.h"
 #include "../src/UnstructuredMesh/UnstructuredMesh.h"
-#include "../src/Traits/MemberApproach/MemberApproach.h"
+#include "../src/Traits/MemberAccess/MemberAccess.h"
 #include "../src/Singleton/Singleton.h"
 #include <chrono>
 #include <functional>
@@ -69,11 +69,11 @@ void testDebug() {
         {"treti", 3}
     };
     ConsoleLogger<>::writeVar(__LINE__, __FILE__, "r", r, "i", i, "c", c, "list", list, "vec", vec, "b", b, "map", m);
-    ConsoleLogger<>::writeVar(__LINE__, __FILE__,"---", {5,4,3,2});
+    //ConsoleLogger<>::writeVar(__LINE__, __FILE__,"---", {5,4,3,2});
     DBGVAR(r, i, c, list, vec, b, m);
 
     Vertex<7, double> vert;
-    DBGVAR(vert, vert.getCoordinates());
+    DBGVAR(vert, vert);
 
     DBGVAR((IsExportable<decltype(vec)>::value));
 
@@ -85,13 +85,22 @@ void testDebug() {
 
     DBGVAR(IsIndexable<decltype(vert)>::value);
 
-    Subelement<size_t> s({1});
+
     auto v = {1,2,3};
-    DBGVAR(s, v);
+    DBGVAR(v);
 
     DBGVAR_HTML(r, i, c, list, vec, b, m);
 
     DBGVAR_HTML(r+1, i+1, char(c+1), list, vec[0], b, m["prvni"]);
+
+
+    DBGVAR_JSON(b, vec);
+
+    DBGVAR_JSON(!b, vec[0]);
+
+    DBGVAR_JSON(r, i, c, list, vec, b, m);
+
+    DBGVAR_JSON(r+1, i+1, char(c+1), list, vec[0], b, m["prvni"]);
 }
 
 
@@ -283,18 +292,32 @@ const Traits<tempData>::ttype Traits<tempData>::tr("density", &tempData::density
 //MAKE_NAMED_ATTRIBUTE_TRAIT(tempData, "density", density, "velocity", velocity);
 //MAKE_ATTRIBUTE_TRAIT(tempData, density, velocity);
 
-MAKE_CUSTOM_ATTRIBUTE_TRAIT(tempData, "density", &tempData::density, "momentum", std::make_pair(&tempData::getMomentum, &tempData::setMomentum))
+MAKE_CUSTOM_TRAIT(tempData, "density", &tempData::density, "momentum", std::make_pair(&tempData::getMomentum, &tempData::setMomentum));
+/*
+template<>
+class Traits<tempData>{
+public:
+    using traitsType = ::Traits<Class, double tempData::*, decltype(std::make_pair(&tempData::getMomentum, &tempData::setMomentum))>;
+    static const traitsType getTraits() {return traitsType( "density", &tempData::density, "momentum", std::make_pair(&tempData::getMomentum, &tempData::setMomentum));}
+    static constexpr unsigned int size() {return traitsType::size();}
+};
+*/
+static Traits<tempData, double tempData::*, decltype(std::make_pair(&tempData::getMomentum, &tempData::setMomentum))> tempDataTrait("density",  &tempData::density,"momentum",  std::make_pair(&tempData::getMomentum, &tempData::setMomentum));
+
 MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(tempData, density, velocity);
 
 struct ExportTest {
     int attrInt = 1;
     double attrDouble = 42.15;
+    float attrFloat = 15.8;
+    long double attrLongDouble = 15.8e300;
     char attrChar = 42;
+    size_t attrULL = 465135168421684684;
     std::string attrStr = "Ahojky";
     std::vector<std::string> attrVec = {"tohle", "je", "nejlepsi", "debugovaci", "system"};
     tempData attrTempData{42.15, {1,2,1}};
 };
-MAKE_ATTRIBUTE_TRAIT(ExportTest, attrInt, attrDouble, attrChar, attrStr, attrTempData, attrVec);
+MAKE_ATTRIBUTE_TRAIT(ExportTest, attrInt, attrDouble, attrFloat, attrLongDouble, attrChar, attrULL, attrStr, attrTempData, attrVec);
 MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(ExportTest, attrInt, attrDouble, attrTempData);
 
 
@@ -304,6 +327,43 @@ struct dataStruct {
     double dD;
 
 }; MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(dataStruct, iD, dD);
+
+struct testData {
+    double density;
+
+    Vector<3,double> velocity;
+
+    double& getData(){
+        return density;
+    }
+
+    Vector<3,double> getMomentum()const{
+        return velocity*density;
+    }
+
+    void setMomentum(const Vector<3,double>& val){
+        velocity = val / density;
+    }
+
+};
+
+/*
+template<>
+class Traits<tempData>{
+public:
+    using ttype = Traits<tempData, double, Vector<3,double>>;
+    const static ttype tr;
+};
+const Traits<tempData>::ttype Traits<tempData>::tr("density", &tempData::density, "momentum"s, std::make_pair(&tempData::getMomentum, &tempData::setMomentum));
+*/
+
+
+//MAKE_NAMED_ATTRIBUTE_TRAIT(tempData, "density", density, "velocity", velocity);
+//MAKE_ATTRIBUTE_TRAIT(tempData, density, velocity);
+
+MAKE_CUSTOM_TRAIT(testData, "density", &tempData::density, "momentum", std::make_pair(&tempData::getMomentum, &tempData::setMomentum));
+MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(testData, density, velocity);
+
 void testMemberRef(){
 
 
@@ -317,10 +377,16 @@ void testMemberRef(){
     Traits<tempData>::getTraits().getReference<1>().setValue(&d, {42.15,84.30,42.15});
 
     DBGVAR(Traits<tempData>::getTraits().getName<0>(),(Traits<tempData>::getTraits().getReference<0>().getValue(&d)), Traits<tempData>::getTraits().getName<1>(), d.velocity);
-    DBGVAR(Traits<tempData>::is_specialized,HasDefaultTraits<tempData>::value, d);
+    DBGVAR(HasDefaultTraits<tempData>::value, d);
 
+    Traits<tempData, decltype(&tempData::getData)> trait("density", &tempData::getData);
+
+    using r = MemberAccess<decltype(&tempData::density)>;
+    DBGVAR((std::is_same<r::typeValue, double>::value));
     ExportTest e;
     DBGVAR(e, ClassC<>());
+    auto list = {e,e,e};
+    DBGVAR_STDIO(e, 42.15, list, short(5));
 }
 
 
@@ -372,6 +438,12 @@ public:
 
 MAKE_ATTRIBUTE_TRAIT(ns::TraitedClass, d1, d2, ts);
 
+
+template <typename T>
+auto sum(const T& val){
+    return TraitsAggregationProcesor<BinaryPlus>::evaluate(val);
+}
+
 void testTraitsAlgorithms() {
     ExportTest e1, e2;
     ExportTest res = e1 + e2;
@@ -386,7 +458,8 @@ void testTraitsAlgorithms() {
            max(abs(-(ns + 4 * ns2))),
            log(ns), exp(log(ns)),
            pow(sqrt(ns), 2),
-           abs(pow(e1,2))
+           abs(pow(e1,2)),
+           sqrt(sum(pow(e1, 2)))
            );
 
     DBGVAR(abs(ns::TraitedClass()));
@@ -405,15 +478,15 @@ void testTraitsAlgorithms() {
 
 
 template <unsigned int Index>
-const MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<Index>, DefaultArithmeticTraits<tempData>::traitsType::refType<Index>>
+const MemberAccess<DefaultArithmeticTraits<tempData>::traitsType::refType<Index>>
 getReference() {
     if constexpr (Index == 0){
-        MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<0>, DefaultArithmeticTraits<tempData>::traitsType::refType<0>>
+        MemberAccess<DefaultArithmeticTraits<tempData>::traitsType::refType<0>>
                 mr1(&tempData::density);
         return mr1;
     }
     else{
-        MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<1>, DefaultArithmeticTraits<tempData>::traitsType::refType<1>>
+        MemberAccess<DefaultArithmeticTraits<tempData>::traitsType::refType<1>>
                 mr2(&tempData::velocity);
         return mr2;
     }
@@ -430,7 +503,7 @@ struct References {
     template<unsigned int Index = 0, typename Dummy = void>
     struct MemRefs: public MemRefs<Index + 1> {
 
-        const MemberReference<tempData, type<Index>, refType<Index>> ref;
+        const MemberAccess<refType<Index>> ref;
         const char* name;
 
 
@@ -440,7 +513,7 @@ struct References {
 
     template<typename Dummy>
     struct MemRefs<1, Dummy>{
-        const MemberReference<tempData, type<1>, refType<1>> ref;
+        const MemberAccess<refType<1>> ref;
         const char* name;
 
         MemRefs(const char* n, refType<1> r) : ref(r), name(n){}
@@ -451,7 +524,7 @@ struct References {
     References() : refs("",&tempData::density,"", &tempData::velocity){}
 
     template <unsigned int Index>
-    const MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<Index>, DefaultArithmeticTraits<tempData>::traitsType::refType<Index>>
+    const MemberAccess<DefaultArithmeticTraits<tempData>::traitsType::refType<Index>>
     getReference() {
         return refs.MemRefs<Index,void>::ref;
     }
@@ -471,20 +544,20 @@ struct traitPublisher {
     }
 
     static const
-        MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<0>, DefaultArithmeticTraits<tempData>::traitsType::refType<0>>
+        MemberAccess<DefaultArithmeticTraits<tempData>::traitsType::refType<0>>
                 mr1;
     static const
-        MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<1>, DefaultArithmeticTraits<tempData>::traitsType::refType<1>>
+        MemberAccess<DefaultArithmeticTraits<tempData>::traitsType::refType<1>>
                 mr2;
 };
 const
 Traits<tempData, typename DefaultArithmeticTraits<tempData>::traitsType::refType<0>,
 typename DefaultArithmeticTraits<tempData>::traitsType::refType<1>> traitPublisher::trait("1",&tempData::density,"2",&tempData::velocity);
 const
-        MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<0>, DefaultArithmeticTraits<tempData>::traitsType::refType<0>>
+        MemberAccess<DefaultArithmeticTraits<tempData>::traitsType::refType<0>>
                 traitPublisher::mr1(&tempData::density);
 const
-    MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<1>, DefaultArithmeticTraits<tempData>::traitsType::refType<1>>
+    MemberAccess<DefaultArithmeticTraits<tempData>::traitsType::refType<1>>
             traitPublisher::mr2(&tempData::velocity);
 
 
@@ -688,9 +761,9 @@ void testNumericTraitsPerformance() {
     deviation = 0;
     duration = 0;
 
-    MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<0>, DefaultArithmeticTraits<tempData>::traitsType::refType<0>>
+    MemberAccess<DefaultArithmeticTraits<tempData>::traitsType::refType<0>>
             mr1(&tempData::density);
-    MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<1>, DefaultArithmeticTraits<tempData>::traitsType::refType<1>>
+    MemberAccess<DefaultArithmeticTraits<tempData>::traitsType::refType<1>>
             mr2(&tempData::velocity);
 
 
@@ -759,9 +832,9 @@ void testNumericTraitsPerformance() {
 
     References rr;
 
-    const MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<0>, DefaultArithmeticTraits<tempData>::traitsType::refType<0>>&
+    const MemberAccess<DefaultArithmeticTraits<tempData>::traitsType::refType<0>>&
             rmr1 = rr.getReference<0>();//DefaultArithmeticTraits<tempData>::tr.getReference<0>();
-    const MemberReference<tempData, DefaultArithmeticTraits<tempData>::traitsType::type<1>, DefaultArithmeticTraits<tempData>::traitsType::refType<1>>&
+    const MemberAccess<DefaultArithmeticTraits<tempData>::traitsType::refType<1>>&
             rmr2 = rr.getReference<1>();//DefaultArithmeticTraits<tempData>::tr.getReference<1>();
 
 
@@ -1379,14 +1452,14 @@ class Func {
 public:
 
     template <typename U = T,  typename refType>
-    auto operator()(unsigned int index, const MemberReference<Class, T, refType>&, const std::string& name)
+    auto operator()(unsigned int index, const MemberAccess<refType>&, const std::string& name)
     -> typename std::enable_if<!(HasDefaultTraits<U>::value)>::type
     {
         DBGVAR(Singleton<Depth>::getInstance().value,index, name);
     }
 
     template <typename U = T, typename refType>
-    auto operator()(unsigned int index, const MemberReference<Class, T, refType>&, const std::string& name)
+    auto operator()(unsigned int index, const MemberAccess<refType>&, const std::string& name)
     -> typename std::enable_if<HasDefaultTraits<U>::value>::type
     {
         DBGVAR(Singleton<Depth>::getInstance().value,index, name);
@@ -1447,7 +1520,7 @@ struct B {
    static constexpr R2 set = Mem2;
 
 
-   static typename MemberReferenceType<std::pair<R1,R2>>::type getValue(typename MemberReferenceType<std::pair<R1,R2>>::typeClass& foo) {
+   static typename MemberAccess<std::pair<R1,R2>>::typeValue getValue(typename MemberAccess<std::pair<R1,R2>>::typeClass& foo) {
        return (foo.*(get))();
    }
 };
@@ -1457,7 +1530,7 @@ template<typename Ref, Ref Mem>
 struct B<Ref,Ref, Mem, Mem> {
    static constexpr Ref mp = Mem;
 
-   inline static typename MemberReferenceType<Ref>::type& getValue(typename MemberReferenceType<Ref>::typeClass& foo) {
+   inline static typename MemberAccess<Ref>::typeValue& getValue(typename MemberAccess<Ref>::typeClass& foo) {
        return foo.*mp;
    }
 };
@@ -1721,12 +1794,12 @@ public:
     using refType = typename std::tuple_element<Index,std::tuple<RefTypes...>>::type;
 
     template <unsigned int Index>
-    using type = typename MemberReferenceType<refType<Index>>::type;
+    using type = typename MemberAccess<refType<Index>>::typeValue;
 private:
     template<unsigned int Index = 0, typename Dummy = void>
     struct MemRefs: public MemRefs<Index + 1> {
 
-        const MemberReference<Class, type<Index>, refType<Index>> ref;
+        const MemberAccess<refType<Index>> ref;
         std::string name;
 
         template <typename ... REST>
@@ -1735,7 +1808,7 @@ private:
 
     template<typename Dummy>
     struct MemRefs<sizeof...(RefTypes) - 1, Dummy>{
-        const MemberReference<Class, type<sizeof...(RefTypes) - 1>, refType<sizeof...(RefTypes) - 1>> ref;
+        const MemberAccess<refType<sizeof...(RefTypes) - 1>> ref;
         std::string name;
 
         MemRefs(std::string n, refType<sizeof...(RefTypes) - 1> r) : ref(r), name(n){}
@@ -1775,7 +1848,7 @@ public:
 
 
     template<unsigned int Index>
-    const MemberReference<Class, type<Index>, refType<Index>>& getReference(){
+    const MemberAccess<refType<Index>>& getReference(){
         return refs.MemRefs<Index, void>::ref;
     }
 
@@ -1967,7 +2040,7 @@ void testTraitPerformance() {
     duration = 0;
 
     DBGMSG("member reference virtual");
-    MemberReference<ExportTest, double, decltype (&ExportTest::attrDouble)> MR1(&ExportTest::attrDouble);
+    MemberAccess<decltype (&ExportTest::attrDouble)> MR1(&ExportTest::attrDouble);
     start = clock.now();
     res = 0;
     for(int rep = 0; rep < maxRep; rep++){
@@ -2054,7 +2127,7 @@ void testFunction() {
 
 
 
-template <unsigned int dim, unsigned int Dim, ComputationMethod Method = DEFAULT>
+template <unsigned int dim, unsigned int Dim, ComputationMethod Method = METHOD_DEFAULT>
 struct calcCent{
     static void run() {DBGMSG("running default", dim);calcCent<dim + 1, Dim, Method>::run();}
 };
@@ -2075,14 +2148,14 @@ struct calcCent<1, Dim, Method>{
 };
 
 template <>
-struct calcCent<2, 3, TESSELLATED>{
-    static void run() {DBGMSG("running MESH_TESSELLATED");calcCent<3, 3, TESSELLATED>::run();}
+struct calcCent<2, 3, METHOD_TESSELLATED>{
+    static void run() {DBGMSG("running MESH_TESSELLATED");calcCent<3, 3, METHOD_TESSELLATED>::run();}
 };
 
 
 void testCalcCent() {
     calcCent<0,3>::run();
-    calcCent<0,3, TESSELLATED>::run();
+    calcCent<0,3, METHOD_TESSELLATED>::run();
 }
 
 
@@ -2339,25 +2412,117 @@ const int& getData2(const testTuple& s){return s.attr2;}
 const std::string& getData3(const testTuple& s){return s.attr3;}
 
 
-MAKE_CUSTOM_ATTRIBUTE_TRAIT_IO(
+MAKE_CUSTOM_TRAIT_IO(
         testTuple,
-        "1", std::make_pair(static_cast<double&(*)(testTuple&)>(getData1), static_cast<const double&(*)(const testTuple&)>(getData1)),
-        "2", std::make_pair(static_cast<int&(*)(testTuple&)>(getData2), static_cast<const int&(*)(const testTuple&)>(getData2)),
-        "3", std::make_pair(static_cast<std::string&(*)(testTuple&)>(getData3), static_cast<const std::string&(*)(const testTuple&)>(getData3))
+        "1", std::make_pair(static_cast<const double&(*)(const testTuple&)>(getData1), static_cast<double&(*)(testTuple&)>(getData1)),
+        "2", std::make_pair(static_cast<const int&(*)(const testTuple&)>(getData2), static_cast<int&(*)(testTuple&)>(getData2)),
+        "3", std::make_pair(static_cast<const std::string&(*)(const testTuple&)>(getData3), static_cast<std::string&(*)(testTuple&)>(getData3))
         );
 
 using double_tuple = std::tuple<double>;
 
-MAKE_CUSTOM_ATTRIBUTE_TRAIT(
-        double_tuple,
-        "double attr", std::make_pair(static_cast<double&(*)(std::tuple<double>&)>(std::get<0>), static_cast<const double&(*)(const std::tuple<double>&)>(std::get<0>))
+MAKE_CUSTOM_TRAIT(
+        std::tuple<double>,
+        "double attr",
+        std::make_pair(static_cast<const double&(*)(const std::tuple<double>&)>(std::get<0>),
+                       static_cast<double&(*)(std::tuple<double>&)>(std::get<0>))
         );
+
+// std::tuple<double, >
+MemberAccess ma(
+    std::make_pair(static_cast<const std::tuple_element_t<0, std::tuple<double>>&(*)(const std::tuple<double>&)>(std::get<0>),
+                   static_cast<std::tuple_element_t<0, std::tuple<double>>&(*)(std::tuple<double>&)>(std::get<0>))
+);
 
 template <typename ...T>
 class Traits<std::tuple<T...>>{
+public:
     static constexpr std::true_type is_specialized{};
-    using traitsType = ::Traits<std::tuple<T...>, T...>;
+    using traitsType = ::Traits<std::tuple<T...>>;
+    static const traitsType getTraits() {return traitsType();}
+    static constexpr unsigned int size() {return sizeof... (T);}
+private:
+    template<unsigned int Index = 0, typename = void>
+    struct nameContainer : nameContainer<Index + 1>{
+        char name[5] = {};
+        nameContainer() {
+            sprintf(name, "%d", Index);
+        }
+    };
+
+
+    template<typename Dummy>
+    struct nameContainer<sizeof... (T), Dummy>{
+        char name[5] = {};
+        nameContainer() {
+            sprintf(name, "%d", int(sizeof... (T)));
+        }
+    };
+public:
+    nameContainer<> names;
+    template <unsigned int Index>
+    std::tuple_element_t<Index, std::tuple<T...>>& getAttr(std::tuple<T...>& t) const {
+        return get<Index>(t);
+    }
+
+    template <unsigned int Index>
+    std::tuple_element_t<Index, std::tuple<T...>> getValue(const std::tuple<T...>& t) const {
+        return get<Index>(t);
+    }
+
+
+    template <unsigned int Index>
+    std::tuple_element_t<Index, std::tuple<T...>>& setValue(
+            std::tuple<T...>& t,
+            const std::tuple_element_t<Index, std::tuple<T...>>& val) const {
+        return get<Index>(t) = val;
+    }
+
+    template <unsigned int Index>
+    const char* getName() const {
+        return names.nameContainer<Index, void>::name;
+    }
+
 };
+
+template <typename ...T>
+class DefaultArithmeticTraits<std::tuple<T...>>{
+public:
+    static constexpr std::true_type is_specialized{};
+    using traitsType = ::DefaultArithmeticTraits<std::tuple<T...>>;
+    static const traitsType getTraits() {return traitsType();}
+    static constexpr unsigned int size() {return sizeof... (T);}
+
+    template<unsigned int Index>
+    using type = typename std::tuple_element<Index, std::tuple<T...>>::type;
+private:
+
+public:
+    template <unsigned int Index>
+    std::tuple_element_t<Index, std::tuple<T...>>& getAttr(std::tuple<T...>& t) const {
+        return get<Index>(t);
+    }
+
+    template <unsigned int Index>
+    std::tuple_element_t<Index, std::tuple<T...>> getValue(const std::tuple<T...>& t) const {
+        return get<Index>(t);
+    }
+
+
+    template <unsigned int Index>
+    std::tuple_element_t<Index, std::tuple<T...>>& setValue(
+            std::tuple<T...>& t,
+            const std::tuple_element_t<Index, std::tuple<T...>>& val) const {
+        return get<Index>(t) = val;
+    }
+
+    template <unsigned int Index>
+    const char* getName() const {
+        return "";
+    }
+
+};
+
 
 void testTraitsTuple(){
     testTuple tt;
@@ -2369,8 +2534,50 @@ void testTraitsTuple(){
     get<0>(t) = 2.5;
     auto foo = static_cast<double&(*)(std::tuple<double>&)>(std::get<0>);
     DBGVAR(foo(t), t);
-    DBGVAR_JSON(t,t,t,t);
+    DBGVAR_JSON(t,t,t,t, ExportTest());
+
+    std::tuple<double, char, string> ttt = {1, 42, "a"}, ttt1 = {2,45, "b"};
+    get<0>(ttt)=42;
+    DBGVAR(ttt, ttt+ttt1);
     DBGCHECK;
+}
+
+
+namespace ns {
+template <unsigned int Dim>
+struct A {
+    char ch;
+    std::string s;
+    Vector<Dim, double> v;
+};
+}
+MAKE_ATTRIBUTE_TRAIT(ns::A<1>, ch, s);
+
+#define IMPL_MAKE_CUSTOM_TRAIT_Template(TraitName,Class, argType, argName,...) \
+template<argType argName> \
+class TraitName<Class<argName>>{ \
+public: \
+    using traitsType = ::Traits<Class<argName>, FOR_EACH_2ARGS(IMPL_MEMREF_TYPE_CUSTOM, __VA_ARGS__)>; \
+    static const traitsType getTraits() {return traitsType(__VA_ARGS__);} \
+    static constexpr unsigned int size() {return traitsType::size();}\
+};
+
+#define MAKE_CUSTOM_TRAIT_Template_IO(Class, argType, argName,...) IMPL_MAKE_CUSTOM_TRAIT_Template(DefaultIOTraits, Class, argType, argName, __VA_ARGS__) // defining specialization for DefaultIOTraits
+
+#define MAKE_NAMED_ATTRIBUTE_TRAIT_Template_IO(Class, argType, argName, ...) MAKE_CUSTOM_TRAIT_Template_IO(Class, argType, argName, FOR_EACH_3ARGS_1STAT(IMPL_NAME_AND_REF, Class<argName>, __VA_ARGS__))
+
+#define MAKE_ATTRIBUTE_TRAIT_Template_IO(Class, argType, argName, ...) MAKE_NAMED_ATTRIBUTE_TRAIT_Template_IO(Class, argType, argName, FOR_EACH(IMPL_NAME_ATT, __VA_ARGS__))
+
+
+MAKE_ATTRIBUTE_TRAIT_Template_IO(ns::A, unsigned int, Dim, ch, v);
+
+void namespaceTraits(){
+    ns::A<3> a;
+    a.s = "ahoj";
+    a.ch = 'U';
+    a.v = {};
+    DBGVAR(a);
+
 }
 
 /*
@@ -2406,6 +2613,8 @@ void testFactorial() {
     DBGVAR(Impl::factorial<5>());
 }
 
+
+
 int main()
 {
     //testDebug();
@@ -2422,10 +2631,12 @@ int main()
     //testPrivateTrait();
     //testJson();
     //testTestTraits();
-    //testTraitsAlgorithms();
+    testTraitsAlgorithms();
     //testNumericTraitsPerformance();
-    testTraitsTuple();
+    //testTraitsTuple();
     //testFactorial();
+    //namespaceTraits();
+
     return 0;
 }
 

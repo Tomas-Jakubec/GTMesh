@@ -10,6 +10,9 @@
 #include <map>
 #include <algorithm>
 
+/**
+ *
+ */
 template<unsigned int MeshDimension>
 class VTKMeshReader : public MeshReader<MeshDimension>{
 public:
@@ -20,7 +23,9 @@ public:
 };
 
 
-
+/**
+ *
+ */
 template<>
 class VTKMeshReader<2> : public MeshReader<2>{
     using reader = MeshReader<2>;
@@ -37,20 +42,20 @@ class VTKMeshReader<2> : public MeshReader<2>{
     // file indexing
     //
 
-    //
-    //MeshDataContainer<IndexType>
 public:
     VTKMeshReader() = default;
 
     template<typename IndexType, typename Real, unsigned int ...Reserve>
     VTKMeshReader(const MeshElements<2, IndexType, Real, Reserve...>&){}
 
-    MeshDataContainer<typename reader::type::ElementType, 2> getCellTypes() {
+    virtual ~VTKMeshReader() = default;
+
+    virtual MeshDataContainer<typename reader::type::ElementType, 2> getCellTypes() const {
         return cellTypes;
     }
 
     template<typename IndexType, typename Real, unsigned int ...Reserve>
-    void loadPoints(std::istream& ist, MeshElements<2, IndexType, Real, Reserve...>& mesh){
+    void loadVertices(std::istream& ist, MeshElements<2, IndexType, Real, Reserve...>& mesh){
         IndexType numPoints;
         ist >> numPoints;
         Real dummy = 0;
@@ -168,7 +173,7 @@ public:
 
         ist >> buf;
         if (buf == "POINTS") {
-            loadPoints(ist, mesh);
+            loadVertices(ist, mesh);
         }
 
         ist >> buf;
@@ -191,6 +196,9 @@ public:
     }
 };
 
+/**
+ *
+ */
 template<>
 class VTKMeshReader<3> : public MeshReader<3>{
     using reader = MeshReader<3>;
@@ -201,7 +209,14 @@ class VTKMeshReader<3> : public MeshReader<3>{
         {13, reader::type::ElementType::WEDGE},
         {14, reader::type::ElementType::PYRAMID},
     };
-    std::map<int, std::pair<std::vector<std::array<int,2>>, std::vector<std::vector<int>>>> TypeEdgesFaces{
+    const std::map<
+        const int,
+        const std::pair<
+            const std::vector<std::array<int,2>>,
+            const std::vector<std::vector<int>
+            >
+        >
+    > TypeEdgesFaces{
         {4, {// tetrahedron
                 {// edges (first)
                     {0,1},{1,2},{2,0},{0,3},{1,3},{2,3}
@@ -273,15 +288,17 @@ class VTKMeshReader<3> : public MeshReader<3>{
 public:
     VTKMeshReader() = default;
 
+    virtual ~VTKMeshReader() = default;
+
     template<typename IndexType, typename Real, unsigned int ...Reserve>
     VTKMeshReader(const MeshElements<3, IndexType, Real, Reserve...>&){}
 
-    MeshDataContainer<typename reader::type::ElementType, 3> getCellTypes() {
+    virtual MeshDataContainer<typename reader::type::ElementType, 3> getCellTypes() const {
         return cellTypes;
     }
 
     template<typename IndexType, typename Real, unsigned int ...Reserve>
-    void loadPoints(std::istream& ist, MeshElements<3, IndexType, Real, Reserve...>& mesh){
+    void loadVertices(std::istream& ist, MeshElements<3, IndexType, Real, Reserve...>& mesh){
         IndexType numPoints;
         ist >> numPoints;
         mesh.getVertices().resize(numPoints);
@@ -317,12 +334,12 @@ public:
 
             // construct an element
             // obtain constructing order of edges and faces
-            std::vector<std::array<int,2>>& edgeOrder = TypeEdgesFaces.at(numVert).first;
-            std::vector<std::vector<int>>& faceOrder = TypeEdgesFaces.at(numVert).second;
+            const std::vector<std::array<int,2>>& edgeOrder = TypeEdgesFaces.at(numVert).first;
+            const std::vector<std::vector<int>>& faceOrder = TypeEdgesFaces.at(numVert).second;
 
             std::vector<IndexType> edgeIndexes;
             // construct edges first
-            for (std::array<int, 2>& e : edgeOrder) {
+            for (const std::array<int, 2>& e : edgeOrder) {
 
                 IndexType iA = vertices.at(e[0]), iB = vertices.at(e[1]);
                 std::string edgeKey = iA < iB ? std::to_string(iA) +";"+ std::to_string(iB) : std::to_string(iB) +";"+ std::to_string(iA);
@@ -345,10 +362,10 @@ public:
             IndexType prevFaceIndex = INVALID_INDEX(IndexType);
             for (IndexType fi = 0; fi < faceOrder.size(); fi++) {
 
-                std::vector<int>& f = faceOrder.at(fi);
+                const std::vector<int>& f = faceOrder.at(fi);
 
                 std::vector<IndexType> faceEdges;
-                for (int& index : f) {
+                for (const int& index : f) {
                     faceEdges.push_back(edgeIndexes.at(index));
                 }
                 std::sort(faceEdges.begin(), faceEdges.end());
@@ -364,7 +381,7 @@ public:
                 if (faceIt == faces.end()) {
                     faceIndex = mesh.getFaces().size();
                     mesh.getFaces().push_back({});
-                    for (int& index : f) {
+                    for (const int& index : f) {
                         mesh.getFaces().at(faceIndex).getSubelements().addSubelement(edgeIndexes.at(index));
                     }
                     mesh.getFaces().at(faceIndex).setCellLeftIndex(cellIndex);
@@ -437,7 +454,7 @@ public:
 
         ist >> buf;
         if (buf == "POINTS") {
-            loadPoints(ist, mesh);
+            loadVertices(ist, mesh);
         }
 
         ist >> buf;

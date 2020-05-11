@@ -58,12 +58,12 @@ public:
 private:
     template <unsigned int ElemDim = Dimension, typename Dummy = void>
     struct _MeshElements : public _MeshElements<ElemDim - 1, Dummy>{
-        std::vector<typename MeshElements<Dimension, IndexType, Real, Reserve...>:: template ElementType<ElemDim>> elements;
+        std::vector<ElementType<ElemDim>> elements;
     };
 
     template <typename Dummy>
     struct _MeshElements<0, Dummy>{
-        std::vector<typename MeshElements<Dimension, IndexType, Real, Reserve...>:: template ElementType<0>> elements;
+        std::vector<ElementType<0>> elements;
     };
 
 
@@ -172,12 +172,12 @@ public:
 
     void setupBoundaryCells(){
         for (Face& face : getFaces()){
-            if (face.getCellLeftIndex() == INVALID_INDEX(IndexType)){
+            if (isInvalidIndex(face.getCellLeftIndex())){
                 IndexType cellIndex = BoundaryCells.size() | BOUNDARY_INDEX(IndexType);
                 face.setCellLeftIndex(cellIndex);
                 appendBoundaryCell(cellIndex, face.getIndex());
             }
-            if (face.getCellRightIndex() == INVALID_INDEX(IndexType)){
+            if (isInvalidIndex(face.getCellRightIndex())){
                 IndexType cellIndex = BoundaryCells.size() | BOUNDARY_INDEX(IndexType);
                 face.setCellRightIndex(cellIndex);
                 appendBoundaryCell(cellIndex, face.getIndex());
@@ -193,43 +193,6 @@ public:
         }
     }
 
-    struct CellSubelementIterator: public std::iterator<std::forward_iterator_tag, IndexType>
-    {
-
-        IndexType actual;
-        IndexType firstBElem;
-        IndexType cellIndex;
-        MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh;
-    public:
-        CellSubelementIterator(IndexType ci, IndexType act, MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh):cellIndex(ci){
-            firstBElem = act;
-            actual = firstBElem;
-            this->parentMesh = parentMesh;
-        }
-        CellSubelementIterator& operator++ () {actual = parentMesh->getFaces().at(actual).getNextBElem(cellIndex) == firstBElem ? INVALID_INDEX(IndexType) : parentMesh->getFaces().at(actual).getNextBElem(cellIndex); return *this;}
-        CellSubelementIterator& operator++ (int) {actual = parentMesh->getFaces().at(actual).getNextBElem(cellIndex) == firstBElem ? INVALID_INDEX(IndexType) : parentMesh->getFaces().at(actual).getNextBElem(cellIndex); return *this;}
-        IndexType operator* (){return actual;}
-        bool operator== (CellSubelementIterator& it) {return actual == it.actual;}
-        bool operator!= (CellSubelementIterator& it) {return actual != it.actual;}
-    };
-
-    class CellSubelements {
-        IndexType cellIndex;
-        MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh;
-    public:
-        CellSubelements(MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh, IndexType cellIndex){
-            this->cellIndex = cellIndex;
-            this->parentMesh = parentMesh;
-        }
-
-        CellSubelementIterator begin() {
-            return CellSubelementIterator(cellIndex, parentMesh->getCells()[cellIndex].getBoundaryElementIndex(), parentMesh);
-        }
-
-        CellSubelementIterator end() {
-            return CellSubelementIterator(cellIndex, INVALID_INDEX(IndexType), parentMesh);
-        }
-    };
 
 
 
@@ -250,7 +213,7 @@ private:
             size_t elemHash = mesh.getElements<Dim>().size();
             for(auto& element : mesh.getElements<Dim>()) {
                 for (auto& subElement : element.getSubelements()) {
-                    elemHash ^= indexHasher(subElement.index);
+                    elemHash ^= indexHasher(subElement);
                 }
             }
             return elemHash ^ HashOfMeshElements<Dim - 1>::hash(mesh);
@@ -365,6 +328,46 @@ public:
     size_t getSignature() const {
         return meshSignature;
     }
+
+// Wrappers
+public:
+    struct CellSubelementIterator: public std::iterator<std::forward_iterator_tag, IndexType>
+    {
+
+        IndexType actual;
+        IndexType firstBElem;
+        IndexType cellIndex;
+        MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh;
+    public:
+        CellSubelementIterator(IndexType ci, IndexType act, MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh):cellIndex(ci){
+            firstBElem = act;
+            actual = firstBElem;
+            this->parentMesh = parentMesh;
+        }
+        CellSubelementIterator& operator++ () {actual = parentMesh->getFaces().at(actual).getNextBElem(cellIndex) == firstBElem ? INVALID_INDEX(IndexType) : parentMesh->getFaces().at(actual).getNextBElem(cellIndex); return *this;}
+        CellSubelementIterator& operator++ (int) {actual = parentMesh->getFaces().at(actual).getNextBElem(cellIndex) == firstBElem ? INVALID_INDEX(IndexType) : parentMesh->getFaces().at(actual).getNextBElem(cellIndex); return *this;}
+        IndexType operator* (){return actual;}
+        bool operator== (CellSubelementIterator& it) {return actual == it.actual;}
+        bool operator!= (CellSubelementIterator& it) {return actual != it.actual;}
+    };
+
+    class CellSubelements {
+        IndexType cellIndex;
+        MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh;
+    public:
+        CellSubelements(MeshElements<Dimension, IndexType, Real, Reserve...>* parentMesh, IndexType cellIndex){
+            this->cellIndex = cellIndex;
+            this->parentMesh = parentMesh;
+        }
+
+        CellSubelementIterator begin() {
+            return CellSubelementIterator(cellIndex, parentMesh->getCells()[cellIndex].getBoundaryElementIndex(), parentMesh);
+        }
+
+        CellSubelementIterator end() {
+            return CellSubelementIterator(cellIndex, INVALID_INDEX(IndexType), parentMesh);
+        }
+    };
 
 public:
     template<unsigned int ElementDim, typename Dummy = void>

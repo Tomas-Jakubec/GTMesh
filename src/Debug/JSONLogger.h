@@ -84,7 +84,7 @@ public:
             firstWrite = false;
         }
 
-        (*logFile) << "\t{\n\t\t\"expr\" : \""<< name <<
+        (*logFile) << "\t{\n\t\t\"expr\" : \""<< escapeQuotationMarks( name ) <<
                       "\",\n\t\t\"data\"";
         VariableExport<>::exportVariable(*logFile, value);
         (*logFile) << "\n}";
@@ -95,7 +95,7 @@ public:
 
 
     template<typename VAR, typename ... REST>
-    void writeVar(int line, std::string& cppFile, const char* name, const VAR& value, const REST& ... rest){
+    void writeVar(int line, const std::string& cppFile, const char* name, const VAR& value, const REST& ... rest){
 
         // create file if not logFile is nullptr
         if (!logFile) create(logFileName.c_str());
@@ -108,7 +108,7 @@ public:
                       "\n\t\t\"gInd\" : " << groupIndex << "," <<
                       "\n\t\t\"file\" : \"" << cppFile << "\"," <<
                       "\n\t\t\"line\" : " << line << "," <<
-                      "\n\t\t\"expr\" : \""<< name << "\"," <<
+                      "\n\t\t\"expr\" : \""<< escapeQuotationMarks( name ) << "\"," <<
                       "\n\t\t\"data\" : ";
         VariableExport<>::exportVariable(*logFile, value);
         (*logFile) << "\n\t}";
@@ -119,7 +119,7 @@ public:
 
 
     template<typename VAR>
-    void writeVar(int line, std::string& cppFile, const char* name, const VAR& value){
+    void writeVar(int line, const std::string& cppFile, const char* name, const VAR& value){
 
         // create file if not logFile is nullptr
         if (!logFile) create(logFileName.c_str());
@@ -132,7 +132,7 @@ public:
                       "\n\t\t\"gInd\" : " << groupIndex << "," <<
                       "\n\t\t\"file\" : \"" << cppFile << "\"," <<
                       "\n\t\t\"line\" : " << line << "," <<
-                      "\n\t\t\"expr\" : \""<< name << "\"," <<
+                      "\n\t\t\"expr\" : \""<< escapeQuotationMarks( name ) << "\"," <<
                       "\n\t\t\"data\" : ";
         VariableExport<>::exportVariable(*logFile, value);
 
@@ -142,36 +142,29 @@ public:
     }
 
 
-    template<typename VAR_NAME, typename VAR, typename ... REST>
-    void writeVar(int line, const char* cppFile, VAR_NAME name, VAR value, REST ... rest){
-
-        std::string file;
-        int i = 0;
-        while(cppFile[i] != '\0'){
-            if (cppFile[i] == '\\'){
-                file += "\\\\";
-            } else {
-                file += cppFile[i];
-            }
-            i++;
-        }
-        writeVar(line, file, name, value,  rest...);
+    template< typename VAR, typename ... REST >
+    void writeVar(int line, const char* cppFile, const char* name, const VAR& value,const REST& ... rest){
+        writeVar(line, doubleBackSlash(cppFile), name, value,  rest...);
     }
 
 
-    template<typename VAR_NAME, typename VAR>
-    void writeVar(int line, const char* cppFile, VAR_NAME name, VAR value){
-        std::string file;
-        int i = 0;
-        while(cppFile[i] != '\0'){
-            if (cppFile[i] == '\\'){
-                file += "\\\\";
-            } else {
-                file += cppFile[i];
-            }
-            i++;
+
+    std::string doubleBackSlash(const char * str){
+        std::string res = str;
+        size_t pos = 0;
+        while((pos = res.find("\\", pos + 2)) != res.npos){
+            res.replace(pos, 1, "\\\\");
         }
-        writeVar(line, file, name, value);
+        return res;
+    }
+
+    std::string escapeQuotationMarks(const char * str){
+        std::string res = str;
+        size_t pos = 0;
+        while((pos = res.find("\"", pos + 2)) != res.npos){
+            res.replace(pos, 1, "\\\"");
+        }
+        return res;
     }
 
 };

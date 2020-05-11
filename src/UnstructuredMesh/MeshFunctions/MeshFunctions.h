@@ -2,7 +2,7 @@
 #define MESH_FUNCTIONS_H
 #include "MeshApply.h"
 #include "CellsDistance.h"
-#include "ComputeCenter.h"
+#include "ComputeCenters.h"
 #include "ComputeMeasures.h"
 #include "ComputeNormals.h"
 #include "EdgesOrientation.h"
