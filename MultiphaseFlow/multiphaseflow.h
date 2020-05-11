@@ -190,35 +190,35 @@ double FlowData<Dim>::R_spec = 0;
 template<unsigned int Dim>
 double FlowData<Dim>::T = 0;
 
-MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(FlowData<2>, rho_g, eps_s, p_g, p_s)
+MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(FlowData<2>, rho_g, eps_s, p_g, p_s);
 
 // TODO only temporary
 //MAKE_ATTRIBUTE_TRAIT_IO(FlowData, rho_g, eps_s, p_g, p_s)
 
 
-MAKE_CUSTOM_ATTRIBUTE_TRAIT(FlowData<2>,
+MAKE_CUSTOM_TRAIT(FlowData<2>,
                            "pressure", std::make_pair(&FlowData<2>::getPressure, &FlowData<2>::setPressure),
                            "eps_g", std::make_pair(&FlowData<2>::getEps_g, &FlowData<2>::setEps_g),
                            "rho_g", &FlowData<2>::rho_g,
                            "eps_s", &FlowData<2>::eps_s,
                            "velocity_gas", std::make_pair(&FlowData<2>::getVelocityGas, &FlowData<2>::setVelocityGas),
                            "velocity_solid", std::make_pair(&FlowData<2>::getVelocitySolid, &FlowData<2>::setVelocitySolid)
-                            )
+                            );
 
-MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(FlowData<3>, rho_g, eps_s, p_g, p_s)
+MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(FlowData<3>, rho_g, eps_s, p_g, p_s);
 
 // TODO only temporary
 //MAKE_ATTRIBUTE_TRAIT_IO(FlowData, rho_g, eps_s, p_g, p_s)
 
 
-MAKE_CUSTOM_ATTRIBUTE_TRAIT(FlowData<3>,
+MAKE_CUSTOM_TRAIT(FlowData<3>,
                            "pressure", std::make_pair(&FlowData<3>::getPressure, &FlowData<3>::setPressure),
                            "eps_g", std::make_pair(&FlowData<3>::getEps_g, &FlowData<3>::setEps_g),
                            "rho_g", &FlowData<3>::rho_g,
                            "eps_s", &FlowData<3>::eps_s,
                            "velocity_gas", std::make_pair(&FlowData<3>::getVelocityGas, &FlowData<3>::setVelocityGas),
                            "velocity_solid", std::make_pair(&FlowData<3>::getVelocitySolid, &FlowData<3>::setVelocitySolid)
-                            )
+                            );
 
 
 
@@ -288,8 +288,8 @@ struct FaceData {
     Vector<Dim, Vector<Dim, double>> grad_u_s;
 };
 
-MAKE_ATTRIBUTE_TRAIT(FaceData<2>, fluxRho_g,fluxP_g,RightCellKoef,LeftCellKoef,n,Length,LengthOverDist)
-MAKE_ATTRIBUTE_TRAIT(FaceData<3>, fluxRho_g,fluxP_g,RightCellKoef,LeftCellKoef,n,Length,LengthOverDist)
+MAKE_ATTRIBUTE_TRAIT(FaceData<2>, fluxRho_g,fluxP_g,RightCellKoef,LeftCellKoef,n,Length,LengthOverDist);
+MAKE_ATTRIBUTE_TRAIT(FaceData<3>, fluxRho_g,fluxP_g,RightCellKoef,LeftCellKoef,n,Length,LengthOverDist);
 // Enumerator Type for expessing other cell and point position
 enum Type{
     INNER = 1,
@@ -561,11 +561,11 @@ inline double MultiphaseFlow<Dimension>::Beta_s(const FlowData<ProblemDimension>
         double denominator = 1 / (fd.getEps_g() * d_s * phi_s);
         return (
                     150 * (std::pow(fd.eps_s, 2.0) * myu) * std::pow(denominator, 2.0) +
-                    1.75 * (fd.getVelocityGas() - fd.getVelocitySolid()).normEukleid() * fd.rho_g * fd.eps_s * denominator
+                    1.75 * (fd.getVelocityGas() - fd.getVelocitySolid()).normEuclid() * fd.rho_g * fd.eps_s * denominator
                 );
     } else {
         return (
-                    (4.0/3.0) * C_d(fd) * (fd.getVelocityGas() - fd.getVelocitySolid()).normEukleid() * fd.rho_g * fd.eps_s / (d_s * phi_s)
+                    (4.0/3.0) * C_d(fd) * (fd.getVelocityGas() - fd.getVelocitySolid()).normEuclid() * fd.rho_g * fd.eps_s / (d_s * phi_s)
                );
     }
 }
@@ -595,7 +595,7 @@ inline double MultiphaseFlow<Dimension>::Re_s(const FlowData<ProblemDimension> &
 {
     // multiplying by inverted value of myu may make code faster
     return(
-            (fd.getVelocityGas() - fd.getVelocitySolid()).normEukleid() * d_s * fd.rho_g * fd.getEps_g() /  myu
+            (fd.getVelocityGas() - fd.getVelocitySolid()).normEuclid() * d_s * fd.rho_g * fd.getEps_g() /  myu
           );
 }
 
@@ -1390,7 +1390,7 @@ void MultiphaseFlow<Dimension>::setupMeshData(const std::string& fileName){
     DBGVAR(mesh.getCells().size(), mesh.getVertices().size());
 
 
-    mesh.template initializeCenters<TESSELLATED>();
+    mesh.template initializeCenters<METHOD_TESSELLATED>();
 
     mesh.setupBoundaryCells();
 
@@ -1399,7 +1399,7 @@ void MultiphaseFlow<Dimension>::setupMeshData(const std::string& fileName){
     mesh.setupBoundaryCellsCenters();
 
 
-    auto measures = mesh.template computeElementMeasures<TESSELLATED>();
+    auto measures = mesh.template computeElementMeasures<METHOD_TESSELLATED>();
 
 
     auto dists = ComputeCellsDistance(mesh);
@@ -1407,7 +1407,7 @@ void MultiphaseFlow<Dimension>::setupMeshData(const std::string& fileName){
     vertToCellCon = MeshConnections<0, MeshType::meshDimension()>::connections(mesh);
 
     // Calculation of mesh properties
-    auto faceNormals = mesh.template computeFaceNormals<TESSELLATED>();
+    auto faceNormals = mesh.template computeFaceNormals<METHOD_TESSELLATED>();
     meshData.allocateData(mesh);
 
     // setting cells volumes
@@ -1448,14 +1448,14 @@ void MultiphaseFlow<Dimension>::setupMeshData(const std::string& fileName){
             std::array<Vertex<3,double>, 3> pyramidVec = {faceCenter - vertA, faceCenter - vertB, faceCenter};
             std::array<double, 3> norms;
 
-            grammSchmidt<3, 3, size_t, double>(pyramidVec, norms);
+            gramSchmidt<3, 3, size_t, double>(pyramidVec, norms);
 
 
             auto tessFaceCenter = (vertA + vertB + faceCenter)*(1.0/3.0);
 
-            auto lck = (tessFaceCenter - lv).normEukleid();
+            auto lck = (tessFaceCenter - lv).normEuclid();
 
-            auto rck = (tessFaceCenter - rv).normEukleid();
+            auto rck = (tessFaceCenter - rv).normEuclid();
 
             lck /= lck + rck;
 
