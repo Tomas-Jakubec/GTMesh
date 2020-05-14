@@ -86,13 +86,15 @@ void RKMSolver(
 
     DBGMSG("RKM_start", run);
 
-    while (run) {
+    while (true) {
 #pragma omp single
         {
             wK1.start();
             if (time + tau > finalT) {
                 tau = finalT - time;
                 run = false;
+            } else {
+                run = true;
             }
         }
 #pragma omp parallel
@@ -160,16 +162,16 @@ void RKMSolver(
 
             time += tau;
             tau *= 1.005;
+            if (!run) {
+                break;
+            }
             cout << "time: " << time << "\r";
-            wK1.lap();
 
-        } else {
-
-            wK1.lap();
-            tau *= std::pow(0.2, delta/error) * 0.8;
-            run = true;
 
         }
+
+        wK1.lap();
+        tau *= std::pow(0.2, delta/error) * 0.8;
 
     }
 
@@ -215,8 +217,8 @@ void EulerSolver(
 
 void MultiphaseFlowCalculation() {
     constexpr unsigned int ProblemDim = 3;
-
-    using MPFType = MultiphaseFlow<ProblemDim>;
+    constexpr unsigned int Reserve = 10;
+    using MPFType = MultiphaseFlow<ProblemDim, Reserve>;
 
     MPFType mpf;
 
