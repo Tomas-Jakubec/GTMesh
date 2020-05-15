@@ -1325,7 +1325,7 @@ void MultiphaseFlow< Dimension, Reserve... >::ComputeSource(const Cell& cell,
 
     Vector<ProblemDimension,double> g_acceleration = {};
 
-    g_acceleration[g_acceleration.size() - 1] = -9.81;
+    g_acceleration[ProblemDimension - 2] = -9.81;
 
     resData.p_g += (cellData.getRho_g() * g_acceleration + drag);
 
@@ -1351,8 +1351,9 @@ double MultiphaseFlow< Dimension, Reserve... >::FlowModulation(const Vertex<Mesh
     //double inFlowModulation = sqrt(pow(x[0],2) + pow(x[1],2));
 
     //inFlowModulation = (- inFlowModulation * inFlowModulation + inFlowModulation - 0.0099) * 4.164931279;
-    inFlowModulation = -(inFlowModulation -1.9) * (inFlowModulation - 4.7) * 0.5102;//(-inFlowModulation * inFlowModulation + 6.6 * inFlowModulation - 8.93) * 0.5102;
+    //inFlowModulation = -(inFlowModulation -1.9) * (inFlowModulation - 4.7) * 0.5102;//(-inFlowModulation * inFlowModulation + 6.6 * inFlowModulation - 8.93) * 0.5102;
     //inFlowModulation = - (inFlowModulation + 1.25) * (inFlowModulation - 1.25) * (1/1.5625);
+    inFlowModulation = - (inFlowModulation + 0.05) * (inFlowModulation - 0.05) * 400;
     return inFlowModulation;
 }
 
@@ -1558,15 +1559,19 @@ Type MultiphaseFlow< Dimension, Reserve... >::TypeOfCell(const typename MeshType
     if (cell.getIndex() >= BOUNDARY_INDEX(size_t)){
 
         if (
-                cell.getCenter()[1] <= 1e-5
+            //    cell.getCenter()[1] <= 1e-5
             //    sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[1],2)) < 1.25 &&
             //    cell.getCenter()[2] <= -1.249
+                sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[2],2)) < 0.05 &&
+                cell.getCenter()[1] < 1e-5
             ) {
             return Type::INFLOW;
         }
 
         if (
-                cell.getCenter()[1] >= 34.349
+            //    cell.getCenter()[1] >= 34.349
+                sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[2],2)) < 0.075 &&
+                cell.getCenter()[1] > 2.099
             //    sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[1],2)) < 1.0 &&
             //    cell.getCenter()[2] > 0
             //cell.GetCenter()[0] > 2 && (cell.GetCenter()[1] < 32.0 && cell.GetCenter()[1] > 30)
