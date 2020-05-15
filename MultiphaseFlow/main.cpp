@@ -227,16 +227,16 @@ void MultiphaseFlowCalculation() {
 
     // setup constants
     MPFType::ResultType::R_spec = 287;
-    MPFType::ResultType::T = 300;
-    MPFType::ResultType::rho_s = 1700;
+    MPFType::ResultType::T = 1000;
+    MPFType::ResultType::rho_s = 2655;
 
 
     mpf.artifitialDisspation = 0.1;
     mpf.R_spec = 287;
-    mpf.myu = 1e-5;
+    mpf.myu = 4.1923e-5;
     mpf.rho_s = 1700;
     mpf.myu_s = 0.5;//1.5;
-    mpf.d_s = 0.002;//0.06;
+    mpf.d_s = 0.00078;//0.06;
     mpf.phi_s = 1;
 
     mpf.T = 300;
@@ -257,7 +257,7 @@ void MultiphaseFlowCalculation() {
 
     FlowData<ProblemDim> ini;
     ini.eps_s = 0;
-    ini.setPressure(1e5);
+    ini.setRho_g(0.3564);
     ini.p_g = {};
     ini.p_s = {};
 
