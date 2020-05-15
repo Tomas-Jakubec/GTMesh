@@ -87,7 +87,7 @@ void RKMSolver(
     DBGMSG("RKM_start", run);
 
     while (true) {
-#pragma omp single
+        #pragma omp single
         {
             wK1.start();
             if (time + tau > finalT) {
@@ -97,7 +97,8 @@ void RKMSolver(
                 run = true;
             }
         }
-#pragma omp parallel
+        DBGVARCOND(tau == 0, tau);
+        #pragma omp parallel
         {
         problem.calculateRHS(time, compData, K1);
 
@@ -136,8 +137,8 @@ void RKMSolver(
         }// end of parallel section
 
         double error = 0.0;
-
-#pragma omp parallel
+DBGVARCOND(tau == 0, tau);
+        #pragma omp parallel
         #pragma omp for reduction(max : error)
         for (size_t i = 0; i < K4.template getDataByPos<0>().size(); i++){
             double tmpE = max(abs(0.2 * K1.template getDataByPos<0>().at(i) - 0.9 * K3.template getDataByPos<0>().at(i) +
@@ -151,7 +152,7 @@ void RKMSolver(
 
 
         error *= tau * (1.0 / 3.0);
-
+DBGVARCOND(tau == 0, tau);
         if (error < delta) {
             #pragma omp parallel
             #pragma omp for
@@ -161,18 +162,20 @@ void RKMSolver(
             }
 
             time += tau;
-            tau *= 1.005;
+
             if (!run) {
                 break;
             }
-            cout << "time: " << time << "\r";
+            //if (error == 0.0) continue;
+            //cout << "time: " << time << "\r";
 
 
         }
 
         wK1.lap();
-        tau *= std::pow(0.2, delta/error) * 0.8;
-
+        tau *= std::pow(delta/error, 0.2) * 0.8;
+        DBGVARCOND(tau == 0, tau);
+        //if (tau == 0 ) break;
     }
 
     DBGMSG("compuatation done");
@@ -216,7 +219,7 @@ void EulerSolver(
 
 
 void MultiphaseFlowCalculation() {
-    constexpr unsigned int ProblemDim = 3;
+    constexpr unsigned int ProblemDim = 2;
     constexpr unsigned int Reserve = 10;
     using MPFType = MultiphaseFlow<ProblemDim, Reserve>;
 
@@ -238,17 +241,17 @@ void MultiphaseFlowCalculation() {
 
     mpf.T = 300;
 
-    mpf.setupMeshData("stack.fpma");
+    mpf.setupMeshData("Boiler2D.vtk");
 
 
 
-    mpf.outFlow.setPressure(1e5);
     mpf.outFlow.eps_s = 0;
+    mpf.outFlow.setPressure(1e5);
 
     mpf.inFlow_eps_g = 1;
     mpf.inFlow_eps_s = 0;
     mpf.inFlow_u_g = {};
-    mpf.inFlow_u_g[ProblemDim - 1] = 15;
+    mpf.inFlow_u_g[ProblemDim - 1] = 25;
     mpf.inFlow_u_s = {};
 
 
@@ -266,11 +269,12 @@ void MultiphaseFlowCalculation() {
                 cell.getCenter()[1] > 1.0 && cell.getCenter()[1] < 7.0 &&
                 cell.getCenter()[0] > 0 && cell.getCenter()[0] < 10
           ){
-            compData.at(cell).eps_s = 0.2;
+            compData.at(cell).eps_s = 0.5;
+            compData.at(cell).setPressure(1e5);
         }
     }
 */
-
+/*
     for (auto& cell : mpf.mesh.getCells()){
         if(
                cell.getCenter()[2] > -1.0 && cell.getCenter()[2] < 2.0
@@ -280,15 +284,15 @@ void MultiphaseFlowCalculation() {
             compData.at(cell).eps_s = 0.5;
         }
     }
-
+*/
 
     mpf.exportData(0.0, compData);
 
     double exportStep = 1e-1;
-    for (double t = 0; t < 100*exportStep; t += exportStep){
+    for (double t = 0; t < 100 * exportStep; t += exportStep){
 
 
-        RKMSolver(mpf, compData, 1e-3, t, t + exportStep, 1e-2);
+        RKMSolver(mpf, compData, 1e-3, t, t + exportStep, 0.01);
 
         //EulerSolver(mpf, compData, 1e-5, t, t + exportStep);
         mpf.exportData((t + exportStep)*1e-2, compData);

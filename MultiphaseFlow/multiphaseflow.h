@@ -104,17 +104,39 @@ Vector<dim, Real> tensorVectorProduct(const Vector<dim, Vector<dim, Real>> &t1, 
 template<unsigned int Dim>
 struct FlowData {
 
-// gasseous part
-    // pressure is dependent on the R_spec and T and rho_g
-    //double p;
-    double getPressure() const {return rho_g * R_spec * T;}
-    void setPressure(const double& pressure){rho_g = pressure / ( R_spec * T );}
 
     static double R_spec;
     static double T;
+    static double rho_s;
 
-    double rho_g;
 
+    // ** Primary quantities **
+    /**
+     * @brief Density of the gaseous part
+     */
+    double rho_g_x_eps_g;
+    /**
+     * @brief p_g
+     *
+     * momentum of gaseous phase
+     */
+    Vector<Dim,double> p_g;
+
+    /**
+     * @brief p_s
+     *
+     * momentum of solid phase
+     */
+    Vector<Dim,double> p_s;
+
+    /**
+     * @brief eps_g
+     * volume fraction of solid part of the flow
+     * holds \epsilon_{s} + \epsilon_{g} = 1
+     */
+    double eps_s;
+
+    // ** Dependent quantities **
     /**
      * @brief eps_g
      * volume fraction of gaseous part of the flow
@@ -125,26 +147,34 @@ struct FlowData {
     void setEps_g(const double& eps_g){eps_s = 1.0 - eps_g;}
 
     /**
+     * @brief
+     * density of the gaseous phase
+     */
+    //double eps_g;
+    double getRho_g() const {return rho_g_x_eps_g / reg(getEps_g());}
+    void setRho_g(const double& rho_g){rho_g_x_eps_g = getEps_g() * rho_g;}
+
+
+    /**
      * @brief u_g
      *
      * velocity of gaseous phase
      */
     Vector<Dim, double> getVelocityGas() const {
-        return p_g / reg(rho_g * getEps_g());
+        return p_g / reg(rho_g_x_eps_g);
     }
 
 
     void setVelocityGas(const Vector<Dim, double>& u_g){
-        p_g = u_g * rho_g * getEps_g();
+        p_g = u_g * rho_g_x_eps_g;
     }
 
-    /**
-     * @brief p_g
-     *
-     * momentum of gaseous phase
-     */
-    Vector<Dim,double> p_g;
 
+    // gasseous part
+    // pressure is dependent on the R_spec and T and rho_g
+    //double p;
+    double getPressure() const { return getRho_g() * R_spec * T; }
+    void setPressure(const double& pressure){ setRho_g( pressure / ( R_spec * T ) ); }
 
 
 // solid part
@@ -156,28 +186,9 @@ struct FlowData {
     Vector<Dim, double> getVelocitySolid() const {
         return p_s / reg(rho_s * eps_s);
     }
-
-
     void setVelocitySolid(const Vector<Dim, double>& u_s){
         p_s = u_s * rho_s * eps_s;
     }
-
-    static double rho_s;
-
-    /**
-     * @brief p_s
-     *
-     * momentum of solid phase
-     */
-    Vector<Dim,double> p_s;
-
-
-    /**
-     * @brief eps_g
-     * volume fraction of solid part of the flow
-     * holds \epsilon_{s} + \epsilon_{g} = 1
-     */
-    double eps_s;
 
 
 
@@ -190,30 +201,30 @@ double FlowData<Dim>::R_spec = 0;
 template<unsigned int Dim>
 double FlowData<Dim>::T = 0;
 
-MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(FlowData<2>, rho_g, eps_s, p_g, p_s);
+MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(FlowData<2>, rho_g_x_eps_g, eps_s, p_g, p_s);
 
 // TODO only temporary
 //MAKE_ATTRIBUTE_TRAIT_IO(FlowData, rho_g, eps_s, p_g, p_s)
 
 
 MAKE_CUSTOM_TRAIT( FlowData<2>,
-                   "pressure", std::make_pair(&FlowData<2>::getPressure, &FlowData<2>::setPressure),
                    "eps_g", std::make_pair(&FlowData<2>::getEps_g, &FlowData<2>::setEps_g),
-                   "rho_g", &FlowData<2>::rho_g,
+                   "pressure", std::make_pair(&FlowData<2>::getPressure, &FlowData<2>::setPressure),
+                   "rho_g", std::make_pair(&FlowData<2>::getRho_g, &FlowData<2>::setRho_g),
                    "eps_s", &FlowData<2>::eps_s,
                    "velocity_gas", std::make_pair(&FlowData<2>::getVelocityGas, &FlowData<2>::setVelocityGas),
                    "velocity_solid", std::make_pair(&FlowData<2>::getVelocitySolid, &FlowData<2>::setVelocitySolid) );
 
-MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(FlowData<3>, rho_g, eps_s, p_g, p_s);
+MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(FlowData<3>, rho_g_x_eps_g, eps_s, p_g, p_s);
 
 // TODO only temporary
 //MAKE_ATTRIBUTE_TRAIT_IO(FlowData, rho_g, eps_s, p_g, p_s)
 
 
 MAKE_CUSTOM_TRAIT( FlowData<3>,
-                   "pressure", std::make_pair(&FlowData<3>::getPressure, &FlowData<3>::setPressure),
                    "eps_g", std::make_pair(&FlowData<3>::getEps_g, &FlowData<3>::setEps_g),
-                   "rho_g", &FlowData<3>::rho_g,
+                   "pressure", std::make_pair(&FlowData<3>::getPressure, &FlowData<3>::setPressure),
+                   "rho_g", std::make_pair(&FlowData<3>::getRho_g, &FlowData<3>::setRho_g),
                    "eps_s", &FlowData<3>::eps_s,
                    "velocity_gas", std::make_pair(&FlowData<3>::getVelocityGas, &FlowData<3>::setVelocityGas),
                    "velocity_solid", std::make_pair(&FlowData<3>::getVelocitySolid, &FlowData<3>::setVelocitySolid) );
@@ -536,11 +547,11 @@ inline double MultiphaseFlow< Dimension, Reserve... >::Beta_s(const FlowData<Pro
         double denominator = 1 / (fd.getEps_g() * d_s * phi_s);
         return (
                     150 * (std::pow(fd.eps_s, 2.0) * myu) * std::pow(denominator, 2.0) +
-                    1.75 * (fd.getVelocityGas() - fd.getVelocitySolid()).normEuclid() * fd.rho_g * fd.eps_s * denominator
+                    1.75 * (fd.getVelocityGas() - fd.getVelocitySolid()).normEuclid() * fd.getRho_g() * fd.eps_s * denominator
                 );
     } else {
         return (
-                    (4.0/3.0) * C_d(fd) * (fd.getVelocityGas() - fd.getVelocitySolid()).normEuclid() * fd.rho_g * fd.eps_s / (d_s * phi_s)
+                    (4.0/3.0) * C_d(fd) * (fd.getVelocityGas() - fd.getVelocitySolid()).normEuclid() * fd.getRho_g() * fd.eps_s / (d_s * phi_s)
                );
     }
 }
@@ -570,7 +581,7 @@ inline double MultiphaseFlow< Dimension, Reserve... >::Re_s(const FlowData<Probl
 {
     // multiplying by inverted value of myu may make code faster
     return(
-            (fd.getVelocityGas() - fd.getVelocitySolid()).normEuclid() * d_s * fd.rho_g * fd.getEps_g() /  myu
+            (fd.getVelocityGas() - fd.getVelocitySolid()).normEuclid() * d_s * fd.rho_g_x_eps_g /  myu
           );
 }
 
@@ -590,8 +601,8 @@ inline void MultiphaseFlow< Dimension, Reserve... >::ComputeFluxGas_inner(const 
     //productOf_u_And_n = faceVal.getVelocityGas() * edgeData.n;
 
     // flux of density
-    double delta_rho = - faceVal.getEps_g() * faceVal.rho_g * product_of_u_and_n * edgeData.Measure +
-                       (rightData.rho_g * rightData.getEps_g() - leftData.rho_g * leftData.getEps_g()) * edgeData.MeasureOverDist * artifitialDisspation;
+    double delta_rho = - faceVal.rho_g_x_eps_g * product_of_u_and_n * edgeData.Measure +
+                       (rightData.rho_g_x_eps_g - leftData.rho_g_x_eps_g) * edgeData.MeasureOverDist * artifitialDisspation;
 
 
     // computing the flux of momentum
@@ -630,14 +641,14 @@ inline void MultiphaseFlow< Dimension, Reserve... >::ComputeFluxGas_inflow(const
 
 
     // flux of density
-    double delta_rho = -innerCellData.rho_g * inFlow_eps_g *
+    double delta_rho = -innerCellData.getRho_g() * inFlow_eps_g *
                         product_of_u_and_n * edgeData.Measure;
 
 
 
 
     // computing the flux of momentum
-    Vector<ProblemDimension,double> flux = - (innerCellData.rho_g) *
+    Vector<ProblemDimension,double> flux = - (innerCellData.getRho_g()) *
                     (product_of_u_and_n) * inFlow_eps_g *
                     (modulatedU);
 
@@ -671,12 +682,12 @@ inline void MultiphaseFlow< Dimension, Reserve... >::ComputeFluxGas_outflow(cons
 
 
     // flux of density
-    double delta_rho = -outFlow.rho_g * eps_g_e *
+    double delta_rho = -outFlow.getRho_g() * eps_g_e *
                         product_of_u_and_n * edgeData.Measure;
 
 
     // computing the flux of momentum
-    Vector<ProblemDimension,double> flux = - (outFlow.rho_g *
+    Vector<ProblemDimension,double> flux = - (outFlow.getRho_g() *
                     product_of_u_and_n * eps_g_e) *
                     (in_u_g);
 
@@ -1277,7 +1288,7 @@ void MultiphaseFlow< Dimension, Reserve... >::ComputeSource(const Cell& cell,
     FlowData<ProblemDimension>& cellData = compData[cell];
 
 
-    resData.rho_g = 0;
+    resData.rho_g_x_eps_g = 0;
     resData.eps_s = 0; // Firstly, the flux of rho_s is calculated. Finally, the eps_s is computed as flux_rho_s / rho_s
     resData.p_g = {};
     resData.p_s = {};
@@ -1290,23 +1301,23 @@ void MultiphaseFlow< Dimension, Reserve... >::ComputeSource(const Cell& cell,
             const FaceData<ProblemDimension>& eData = meshData.template getDataByDim<ProblemDimension - 1>().at(faceIndex);
 
             if (cellIndex == mesh.getFaces().at(faceIndex).getCellLeftIndex()){
-                resData.rho_g += eData.fluxRho_g;
-                resData.eps_s += eData.fluxRho_s;
-                resData.p_g += eData.fluxP_g;
-                resData.p_s += eData.fluxP_s;
+                resData.rho_g_x_eps_g += eData.fluxRho_g;
+                resData.eps_s         += eData.fluxRho_s;
+                resData.p_g           += eData.fluxP_g;
+                resData.p_s           += eData.fluxP_s;
             } else {
-                resData.rho_g -= eData.fluxRho_g;
-                resData.eps_s -= eData.fluxRho_s;
-                resData.p_g -= eData.fluxP_g;
-                resData.p_s -= eData.fluxP_s;
+                resData.rho_g_x_eps_g -= eData.fluxRho_g;
+                resData.eps_s         -= eData.fluxRho_s;
+                resData.p_g           -= eData.fluxP_g;
+                resData.p_s           -= eData.fluxP_s;
             }
         }
     );
 
-    resData.rho_g *= meshData[cell].invVolume;
-    resData.eps_s *= meshData[cell].invVolume;
-    resData.p_g *= meshData[cell].invVolume;
-    resData.p_s *= meshData[cell].invVolume;
+    resData.rho_g_x_eps_g *= meshData[cell].invVolume;
+    resData.eps_s         *= meshData[cell].invVolume;
+    resData.p_g           *= meshData[cell].invVolume;
+    resData.p_s           *= meshData[cell].invVolume;
 
 
 
@@ -1316,16 +1327,14 @@ void MultiphaseFlow< Dimension, Reserve... >::ComputeSource(const Cell& cell,
 
     g_acceleration[g_acceleration.size() - 1] = -9.81;
 
-    resData.p_g += (cellData.rho_g * g_acceleration + drag);
+    resData.p_g += (cellData.getRho_g() * g_acceleration + drag);
 
-    resData.p_s += ((rho_s - cellData.rho_g) * cellData.eps_s * g_acceleration - drag);
+    resData.p_s += ((rho_s - cellData.getRho_g()) * cellData.eps_s * g_acceleration - drag);
 
     // now prepare the result
     FlowData<ProblemDimension>& resultData = result.at(cell);
 
     resultData.eps_s /= rho_s;
-
-    resultData.rho_g /= reg(cellData.getEps_g());
 
 }
 
@@ -1338,12 +1347,12 @@ void MultiphaseFlow< Dimension, Reserve... >::ComputeSource(const Cell& cell,
 template<unsigned int Dimension, unsigned int ... Reserve>
 double MultiphaseFlow< Dimension, Reserve... >::FlowModulation(const Vertex<MeshType::meshDimension(), double>& x)
 {
-    //double inFlowModulation = x[0];
-    double inFlowModulation = sqrt(pow(x[0],2) + pow(x[1],2));
+    double inFlowModulation = x[0];
+    //double inFlowModulation = sqrt(pow(x[0],2) + pow(x[1],2));
 
     //inFlowModulation = (- inFlowModulation * inFlowModulation + inFlowModulation - 0.0099) * 4.164931279;
-    //inFlowModulation = -(inFlowModulation -1.9) * (inFlowModulation - 4.7) * 0.5102;//(-inFlowModulation * inFlowModulation + 6.6 * inFlowModulation - 8.93) * 0.5102;
-    inFlowModulation = - (inFlowModulation + 1.25) * (inFlowModulation - 1.25) * (1/1.5625);
+    inFlowModulation = -(inFlowModulation -1.9) * (inFlowModulation - 4.7) * 0.5102;//(-inFlowModulation * inFlowModulation + 6.6 * inFlowModulation - 8.93) * 0.5102;
+    //inFlowModulation = - (inFlowModulation + 1.25) * (inFlowModulation - 1.25) * (1/1.5625);
     return inFlowModulation;
 }
 
@@ -1471,7 +1480,7 @@ MultiphaseFlow< Dimension, Reserve... >::setupMeshData(const std::string& fileNa
 
     DBGVAR(mesh.getCells().size(), mesh.getVertices().size());
 
-    mesh.template initializeCenters<>();
+    mesh.initializeCenters();
 
     mesh.setupBoundaryCells();
 
@@ -1549,17 +1558,17 @@ Type MultiphaseFlow< Dimension, Reserve... >::TypeOfCell(const typename MeshType
     if (cell.getIndex() >= BOUNDARY_INDEX(size_t)){
 
         if (
-            //    cell.getCenter()[1] <= 1e-5
-                sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[1],2)) < 1.25 &&
-                cell.getCenter()[2] <= -1.249
+                cell.getCenter()[1] <= 1e-5
+            //    sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[1],2)) < 1.25 &&
+            //    cell.getCenter()[2] <= -1.249
             ) {
             return Type::INFLOW;
         }
 
         if (
-            //    cell.getCenter()[1] >= 34.349
-                sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[1],2)) < 1.0 &&
-                cell.getCenter()[2] > 0
+                cell.getCenter()[1] >= 34.349
+            //    sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[1],2)) < 1.0 &&
+            //    cell.getCenter()[2] > 0
             //cell.GetCenter()[0] > 2 && (cell.GetCenter()[1] < 32.0 && cell.GetCenter()[1] > 30)
             //cell.GetCenter()[0] > 8 && cell.GetCenter()[1] >= 33.39
             //cell.getCenter()[1] >= 1.999
