@@ -175,32 +175,6 @@ IndexType CellBoundaryConnection<IndexType>::getNextBElem(IndexType cellIndex) c
     }
 }
 
-template<typename IndexType>
-IndexType CellBoundaryConnection<IndexType>::getOtherCellIndex(IndexType cellIndex) const{
-
-    // If cell is invalied then
-    if (cellIndex == INVALID_INDEX(IndexType)) {
-        throw std::runtime_error("Invalid index given to the getOtherCellIndex");
-    }
-
-    // If the cell is equal the Cell1 then return the NextBElemWRTCR
-    if(cellIndex == this->getCellRightIndex()){
-        return CellConnection<IndexType>::getCellRightIndex();
-
-    // If the cell is equal the Cell2 then return the NextBElemWRTCL
-    } else if (cellIndex == this->getCellLeftIndex()){
-        return CellConnection<IndexType>::getCellLeftIndex();
-
-    // If the cell is not equal left cell neither cell right then return invalid index
-    } else {
-        std::stringstream error;
-        error << "Neither of cell indexes (" << this->getCellLeftIndex() << ","
-              << this->getCellRightIndex() << ") matches the given one ("
-              << cellIndex << ")";
-
-        throw std::runtime_error(error.str());
-    }
-}
 
 
 

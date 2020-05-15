@@ -1,55 +1,56 @@
 #ifndef CELLCONNECTION_H
 #define CELLCONNECTION_H
 #include "../UnstructuredMeshDefine.h"
-
+#include <sstream>
+#include <stdexcept>
 
 /**
  * @brief The CellConnection class
 */
-template<typename indexType>
+template<typename IndexType>
 class CellConnection {
     // Indexes to two cells which neighbours
     // with this edge
-    indexType cellRightIndex, cellLeftIndex;
+    IndexType cellRightIndex, cellLeftIndex;
     public:
     /**
      * @brief CellConnection
      * @param cellRight
      * @param cellLeft
      */
-    CellConnection(indexType cellLeft = INVALID_INDEX(indexType),
-                   indexType cellRight = INVALID_INDEX(indexType));
+    CellConnection( IndexType cellLeft = INVALID_INDEX(IndexType),
+                    IndexType cellRight = INVALID_INDEX(IndexType) );
 
     /**
      * @brief setCellRightIndex
      * @param cellIndex
      */
-    void setCellRightIndex(indexType cellIndex);
+    void setCellRightIndex( IndexType cellIndex );
 
     /**
      * @brief SetCellLeftIndex
      * @param cellIndex
      */
-    void setCellLeftIndex(indexType cellIndex);
+    void setCellLeftIndex( IndexType cellIndex );
 
     /**
      * @brief SetCellIndex
      * @param cellIndex
      * @return
      */
-    bool setCellIndex(indexType cellIndex);
+    bool setCellIndex( IndexType cellIndex );
 
     /**
      * @brief GetCellRightIndex
      * @return
      */
-    indexType getCellRightIndex() const;
+    IndexType getCellRightIndex() const;
 
     /**
      * @brief GetCellLeftIndex
      * @return
      */
-    indexType getCellLeftIndex() const;
+    IndexType getCellLeftIndex() const;
 
     // Returns the other Cell than sent by parameter
     /**
@@ -57,7 +58,7 @@ class CellConnection {
      * @param cellIndex
      * @return
      */
-    indexType getOtherCellIndex(indexType cellIndex) const;
+    IndexType getOtherCellIndex( IndexType cellIndex ) const;
 
 
     /**
@@ -83,32 +84,32 @@ class CellConnection {
  *
 */
 
-template<typename indexType>
-CellConnection<indexType>::CellConnection(indexType cellLeft, indexType cellRight){
+template<typename IndexType>
+CellConnection<IndexType>::CellConnection(IndexType cellLeft, IndexType cellRight){
     cellRightIndex = cellRight;
     cellLeftIndex = cellLeft;
 }
 
-template<typename indexType>
-void CellConnection<indexType>::setCellRightIndex(indexType cellIndex){
+template<typename IndexType>
+void CellConnection<IndexType>::setCellRightIndex(IndexType cellIndex){
     cellRightIndex = cellIndex;
 }
 
-template<typename indexType>
-void CellConnection<indexType>::setCellLeftIndex(indexType cellIndex){
+template<typename IndexType>
+void CellConnection<IndexType>::setCellLeftIndex(IndexType cellIndex){
     cellLeftIndex = cellIndex;
 }
 
-template<typename indexType>
-bool CellConnection<indexType>::setCellIndex(indexType cellIndex){
+template<typename IndexType>
+bool CellConnection<IndexType>::setCellIndex(IndexType cellIndex){
     // If the parameter cell is nullptr then ret false
-    if (cellIndex == INVALID_INDEX(indexType)){
+    if (cellIndex == INVALID_INDEX(IndexType)){
         return false;
     }
 
     // If the CellLeftIndex is lower than 0
     // then set CellLeftIndex as cellIndex, ret true
-    if (getCellLeftIndex() == INVALID_INDEX(indexType)) {
+    if (getCellLeftIndex() == INVALID_INDEX(IndexType)) {
 
         setCellLeftIndex(cellIndex);
 
@@ -116,7 +117,7 @@ bool CellConnection<indexType>::setCellIndex(indexType cellIndex){
         // If the CellRightIndex is valid
         // and CellLeftIndex is not
         // then set CellRightIndex as cellIndex
-    } else if (getCellRightIndex() == INVALID_INDEX(indexType)) {
+    } else if (getCellRightIndex() == INVALID_INDEX(IndexType)) {
 
         setCellRightIndex(cellIndex);
 
@@ -132,36 +133,52 @@ bool CellConnection<indexType>::setCellIndex(indexType cellIndex){
 
 }
 
-template<typename indexType>
-indexType CellConnection<indexType>::getCellRightIndex() const {
+template<typename IndexType>
+IndexType CellConnection<IndexType>::getCellRightIndex() const {
     return cellRightIndex;
 }
 
-template<typename indexType>
-indexType CellConnection<indexType>::getCellLeftIndex() const {
+template<typename IndexType>
+IndexType CellConnection<IndexType>::getCellLeftIndex() const {
     return cellLeftIndex;
 }
 
-template<typename indexType>
-indexType CellConnection<indexType>::getOtherCellIndex(indexType cellIndex) const{
-    if (cellIndex == getCellLeftIndex()) {
-        return getCellRightIndex();
-    } else if (cellIndex == getCellRightIndex()){
-        return getCellLeftIndex();
+template<typename IndexType>
+IndexType CellConnection<IndexType>::getOtherCellIndex(IndexType cellIndex) const{
+    // If cell is invalied then
+    if (cellIndex == INVALID_INDEX(IndexType)) {
+        throw std::runtime_error("Invalid index given to the getOtherCellIndex");
     }
-    return INVALID_INDEX(indexType);
+
+    // If the cell is equal the Cell1 then return the NextBElemWRTCR
+    if(cellIndex == this->getCellRightIndex()){
+        return getCellLeftIndex();
+
+    // If the cell is equal the Cell2 then return the NextBElemWRTCL
+    } else if (cellIndex == this->getCellLeftIndex()){
+        return getCellRightIndex();
+
+    // If the cell is not equal left cell neither cell right then return invalid index
+    } else {
+        std::stringstream error;
+        error << "Neither of cell indexes (" << this->getCellLeftIndex() << ","
+              << this->getCellRightIndex() << ") matches the given one ("
+              << cellIndex << ")";
+
+        throw std::runtime_error(error.str());
+    }
 }
 
-template<typename indexType>
-bool CellConnection<indexType>::cellsOK() const {
-    return getCellRightIndex() != INVALID_INDEX(indexType) && getCellLeftIndex() != INVALID_INDEX(indexType);
+template<typename IndexType>
+bool CellConnection<IndexType>::cellsOK() const {
+    return getCellRightIndex() != INVALID_INDEX(IndexType) && getCellLeftIndex() != INVALID_INDEX(IndexType);
 }
 
-template<typename indexType>
-void CellConnection<indexType>::swapCellsLR() {
+template<typename IndexType>
+void CellConnection<IndexType>::swapCellsLR() {
 
 
-    indexType cellLeftIndex = getCellRightIndex();
+    IndexType cellLeftIndex = getCellRightIndex();
     setCellRightIndex(getCellLeftIndex());
     setCellLeftIndex(cellLeftIndex);
 

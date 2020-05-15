@@ -42,18 +42,18 @@ public:
      * @param fileName
      */
     void create(const char* fileName){
-        if (logFile){
+        if ( logFile ){
             logFile->close();
             delete logFile;
         }
-        logFile = new std::ofstream(fileName);
+        logFile = new std::ofstream( fileName );
 
 
         writeHeadder();
     }
 
     void destroy(){
-        if(logFile){
+        if( logFile ){
             logFile->close();
             delete logFile;
         }
@@ -65,7 +65,7 @@ public:
     void writeVar(VAR_NAME name, VAR value, REST ... rest){
 
         // create file if not logFile is nullptr
-        if (!logFile) create(logFileName.c_str());
+        if ( !logFile ) create(logFileName.c_str());
 
         (*logFile) << name << ", " << value;
         logFile->flush();
@@ -91,14 +91,14 @@ public:
         if (!logFile) create(logFileName.c_str());
 
         (*logFile)  <<  groupIndex << ';' << line << ";\"" << cppFile << "\";\"" << name << "\";";
-        VariableExport<>::exportVariable(*logFile,value);
+        VariableExport<>::exportVariable( *logFile, value );
         (*logFile) << "\n";
         writeVar(line, cppFile, rest...);
     }
 
 
     template<typename VAR_NAME, typename VAR>
-    void writeVar(int line, std::string& cppFile, VAR_NAME name, VAR value){
+    void writeVar( int line, std::string& cppFile, VAR_NAME name, VAR value){
 
         // create file if not logFile is nullptr
         if (!logFile) create(logFileName.c_str());
