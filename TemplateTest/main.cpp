@@ -2613,6 +2613,56 @@ void testFactorial() {
     DBGVAR(Impl::factorial<5>());
 }
 
+template < unsigned int Index,
+           unsigned int ... I,
+           typename T,
+           typename = std::enable_if_t<HasDefaultTraits<T>::value>,
+           typename = std::enable_if_t<(sizeof... (I)>0)> >
+auto& Get(T& val){
+    return Get<I...>(Traits<T>::getTraits().template getAttr<Index>(val));
+}
+
+template <unsigned int Index, typename T, typename = std::enable_if_t<HasDefaultTraits<T>::value>>
+auto& Get(T& val){
+    return Traits<T>::getTraits().template getAttr<Index>(val);
+}
+
+template < unsigned int Index,
+           unsigned int ... I,
+           typename T,
+           typename = std::enable_if_t<HasDefaultTraits<T>::value>,
+           typename = std::enable_if_t<(sizeof... (I)>0)> >
+auto& Get(T* val){
+    return Get<I...>(Traits<T>::getTraits().template getAttr<Index>(val));
+}
+
+template <unsigned int Index, typename T, typename = std::enable_if_t<HasDefaultTraits<T>::value>>
+auto& Get(T* val){
+    return Traits<T>::getTraits().template getAttr<Index>(val);
+}
+
+void testGet(){
+
+    ns::TraitedClass* data = new ns::TraitedClass;
+    Get<2,0>(data) = {};
+    DBGVAR(*data);
+}
+
+
+template <int Index, class Functor>
+void TApply(Functor fun){
+    fun(Index);
+}
+template <int Index, int ...I, class Functor, typename = std::enable_if_t<(sizeof... (I)>0)>>
+void TApply(Functor fun){
+    fun(Index);
+    TApply<I...>(fun);
+}
+
+
+void testTApply(){
+    TApply<0,1,2>([](int Index){DBGVAR(Index);});
+}
 
 
 int main()
@@ -2631,12 +2681,13 @@ int main()
     //testPrivateTrait();
     //testJson();
     //testTestTraits();
-    testTraitsAlgorithms();
+    //testTraitsAlgorithms();
     //testNumericTraitsPerformance();
     //testTraitsTuple();
     //testFactorial();
     //namespaceTraits();
-
+    //testGet();
+    testTApply();
     return 0;
 }
 

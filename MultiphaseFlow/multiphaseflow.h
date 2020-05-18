@@ -150,7 +150,6 @@ struct FlowData {
      * @brief
      * density of the gaseous phase
      */
-    //double eps_g;
     double getRho_g() const {return rho_g_x_eps_g / reg(getEps_g());}
     void setRho_g(const double& rho_g){rho_g_x_eps_g = getEps_g() * rho_g;}
 
@@ -163,8 +162,6 @@ struct FlowData {
     Vector<Dim, double> getVelocityGas() const {
         return p_g / reg(rho_g_x_eps_g);
     }
-
-
     void setVelocityGas(const Vector<Dim, double>& u_g){
         p_g = u_g * rho_g_x_eps_g;
     }
