@@ -216,12 +216,234 @@ void EulerSolver(
     DBGMSG("compuatation done");
 }
 
+enum BOUNDARY_SETUP{
+    BOUNDARY_SETUP_BOILER2D,
+    BOUNDARY_SETUP_BOILER3D,
+    BOUNDARY_SETUP_CUBE,
+    BOUNDARY_SETUP_STACK
+};
 
+template <BOUNDARY_SETUP>
+struct BoundaryCondition {
+
+    template<unsigned int MeshDim>
+    static double
+    inFlowModulation(const Vertex<MeshDim, double>& x)
+    {
+
+        //double inFlowModulation = x[0];
+        double inFlowModulation = sqrt(pow(x[0],2) + pow(x[2],2));
+
+        //inFlowModulation = (- inFlowModulation * inFlowModulation + inFlowModulation - 0.0099) * 4.164931279;
+        //inFlowModulation = -(inFlowModulation -1.9) * (inFlowModulation - 4.7) * 0.5102;//(-inFlowModulation * inFlowModulation + 6.6 * inFlowModulation - 8.93) * 0.5102;
+        //inFlowModulation = - (inFlowModulation + 1.25) * (inFlowModulation - 1.25) * (1/1.5625);
+        inFlowModulation = - (inFlowModulation + 0.05) * (inFlowModulation - 0.05) * 400;
+        return inFlowModulation;
+    }
+
+    template<typename Cell>
+    static Type
+    TypeOfCell(const Cell &cell) {
+        if (cell.getIndex() >= BOUNDARY_INDEX(size_t)){
+
+            if (
+                //    cell.getCenter()[1] <= 1e-5
+                //    sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[1],2)) < 1.25 &&
+                //    cell.getCenter()[2] <= -1.249
+                    sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[2],2)) < 0.05 &&
+                    cell.getCenter()[1] < 1e-5
+                ) {
+                return Type::INFLOW;
+            }
+
+            if (
+                //    cell.getCenter()[1] >= 34.349
+                    sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[2],2)) < 0.075 &&
+                    cell.getCenter()[1] > 2.099
+                //    sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[1],2)) < 1.0 &&
+                //    cell.getCenter()[2] > 0
+                //cell.GetCenter()[0] > 2 && (cell.GetCenter()[1] < 32.0 && cell.GetCenter()[1] > 30)
+                //cell.GetCenter()[0] > 8 && cell.GetCenter()[1] >= 33.39
+                //cell.getCenter()[1] >= 1.999
+               ) {
+                return Type::OUTFLOW;
+            }
+
+            return Type::WALL;
+
+        } else {
+
+            return Type(cell.getFlag());
+
+        }
+
+
+        throw(std::runtime_error ("cell type not recognized " + std::to_string(cell.getIndex())));
+    }
+};
+
+template <>
+template<unsigned int MeshDim>
+double
+BoundaryCondition<BOUNDARY_SETUP::BOUNDARY_SETUP_BOILER3D>::
+inFlowModulation(const Vertex<MeshDim, double>& x)
+{
+
+    //double inFlowModulation = x[0];
+    double inFlowModulation = sqrt(pow(x[0],2) + pow(x[2],2));
+
+    //inFlowModulation = (- inFlowModulation * inFlowModulation + inFlowModulation - 0.0099) * 4.164931279;
+    //inFlowModulation = -(inFlowModulation -1.9) * (inFlowModulation - 4.7) * 0.5102;//(-inFlowModulation * inFlowModulation + 6.6 * inFlowModulation - 8.93) * 0.5102;
+    //inFlowModulation = - (inFlowModulation + 1.25) * (inFlowModulation - 1.25) * (1/1.5625);
+    inFlowModulation = - (inFlowModulation + 0.05) * (inFlowModulation - 0.05) * 400;
+    return inFlowModulation;
+}
+
+template <>
+template<typename Cell>
+Type
+BoundaryCondition<BOUNDARY_SETUP::BOUNDARY_SETUP_BOILER3D>::
+TypeOfCell(const Cell &cell) {
+    if (cell.getIndex() >= BOUNDARY_INDEX(size_t)){
+
+        if (
+            //    cell.getCenter()[1] <= 1e-5
+            //    sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[1],2)) < 1.25 &&
+            //    cell.getCenter()[2] <= -1.249
+                sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[2],2)) < 0.05 &&
+                cell.getCenter()[1] < 1e-5
+            ) {
+            return Type::INFLOW;
+        }
+
+        if (
+            //    cell.getCenter()[1] >= 34.349
+                sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[2],2)) < 0.075 &&
+                cell.getCenter()[1] > 2.099
+            //    sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[1],2)) < 1.0 &&
+            //    cell.getCenter()[2] > 0
+            //cell.GetCenter()[0] > 2 && (cell.GetCenter()[1] < 32.0 && cell.GetCenter()[1] > 30)
+            //cell.GetCenter()[0] > 8 && cell.GetCenter()[1] >= 33.39
+            //cell.getCenter()[1] >= 1.999
+           ) {
+            return Type::OUTFLOW;
+        }
+
+        return Type::WALL;
+
+    } else {
+
+        return Type(cell.getFlag());
+
+    }
+    throw(std::runtime_error ("cell type not recognized " + std::to_string(cell.getIndex())));
+}
+
+template <>
+template<unsigned int MeshDim>
+double
+BoundaryCondition<BOUNDARY_SETUP::BOUNDARY_SETUP_STACK>::
+inFlowModulation(const Vertex<MeshDim, double>& x)
+{
+
+    //double inFlowModulation = x[0];
+    double inFlowModulation = sqrt(pow(x[0],2) + pow(x[2],2));
+
+    //inFlowModulation = (- inFlowModulation * inFlowModulation + inFlowModulation - 0.0099) * 4.164931279;
+    //inFlowModulation = -(inFlowModulation -1.9) * (inFlowModulation - 4.7) * 0.5102;//(-inFlowModulation * inFlowModulation + 6.6 * inFlowModulation - 8.93) * 0.5102;
+    inFlowModulation = - (inFlowModulation + 1.25) * (inFlowModulation - 1.25) * (1/1.5625);
+    //inFlowModulation = - (inFlowModulation + 0.05) * (inFlowModulation - 0.05) * 400;
+    return inFlowModulation;
+}
+
+
+template <>
+template<typename Cell>
+Type
+BoundaryCondition<BOUNDARY_SETUP::BOUNDARY_SETUP_STACK>::
+TypeOfCell(const Cell &cell) {
+    if (cell.getIndex() >= BOUNDARY_INDEX(size_t)){
+
+        if (
+            //    cell.getCenter()[1] <= 1e-5
+                sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[1],2)) < 1.25 &&
+                cell.getCenter()[2] <= -1.249
+
+            ) {
+            return Type::INFLOW;
+        }
+
+        if (
+            //    cell.getCenter()[1] >= 34.349
+                sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[1],2)) < 1.0 &&
+                cell.getCenter()[2] > 0
+            //cell.GetCenter()[0] > 2 && (cell.GetCenter()[1] < 32.0 && cell.GetCenter()[1] > 30)
+            //cell.GetCenter()[0] > 8 && cell.GetCenter()[1] >= 33.39
+            //cell.getCenter()[1] >= 1.999
+           ) {
+            return Type::OUTFLOW;
+        }
+
+        return Type::WALL;
+
+    } else {
+
+        return Type(cell.getFlag());
+
+    }
+    throw(std::runtime_error ("cell type not recognized " + std::to_string(cell.getIndex())));
+}
+
+template <>
+template<unsigned int MeshDim>
+double
+BoundaryCondition<BOUNDARY_SETUP::BOUNDARY_SETUP_BOILER2D>::
+inFlowModulation(const Vertex<MeshDim, double>& x)
+{
+
+    double inFlowModulation = x[0];
+    //double inFlowModulation = sqrt(pow(x[0],2) + pow(x[2],2));
+
+    //inFlowModulation = (- inFlowModulation * inFlowModulation + inFlowModulation - 0.0099) * 4.164931279;
+    inFlowModulation = -(inFlowModulation -1.9) * (inFlowModulation - 4.7) * 0.5102;//(-inFlowModulation * inFlowModulation + 6.6 * inFlowModulation - 8.93) * 0.5102;
+    //inFlowModulation = - (inFlowModulation + 1.25) * (inFlowModulation - 1.25) * (1/1.5625);
+    //inFlowModulation = - (inFlowModulation + 0.05) * (inFlowModulation - 0.05) * 400;
+    return inFlowModulation;
+}
+
+template <>
+template<typename Cell>
+Type
+BoundaryCondition<BOUNDARY_SETUP::BOUNDARY_SETUP_BOILER2D>::
+TypeOfCell(const Cell &cell) {
+    if (cell.getIndex() >= BOUNDARY_INDEX(size_t)){
+
+        if (
+                cell.getCenter()[1] <= 1e-5
+            ) {
+            return Type::INFLOW;
+        }
+
+        if (
+                cell.getCenter()[1] >= 34.349
+           ) {
+            return Type::OUTFLOW;
+        }
+
+        return Type::WALL;
+
+    } else {
+
+        return Type(cell.getFlag());
+
+    }
+    throw(std::runtime_error ("cell type not recognized " + std::to_string(cell.getIndex())));
+}
 
 void MultiphaseFlowCalculation() {
     constexpr unsigned int ProblemDim = 3;
     constexpr unsigned int Reserve = 4;
-    using MPFType = MultiphaseFlow<ProblemDim, Reserve>;
+    using MPFType = MultiphaseFlow<ProblemDim, BoundaryCondition<BOUNDARY_SETUP::BOUNDARY_SETUP_BOILER3D>, Reserve>;
 
     MPFType mpf;
 
@@ -231,15 +453,15 @@ void MultiphaseFlowCalculation() {
     MPFType::ResultType::rho_s = 2655;
 
 
-    mpf.artifitialDisspation = 0.1;
+    mpf.artifitialDisspation = 0.3;
     mpf.R_spec = 287;
     mpf.myu = 4.1923e-5;
-    mpf.rho_s = 1700;
+    mpf.rho_s = 2655;
     mpf.myu_s = 0.5;//1.5;
-    mpf.d_s = 0.00078;//0.06;
+    mpf.d_s = 0.00078;
     mpf.phi_s = 1;
 
-    mpf.T = 300;
+    mpf.T = 1000;
 
     mpf.setupMeshData("boiler.vtk");
 
@@ -251,30 +473,33 @@ void MultiphaseFlowCalculation() {
     mpf.inFlow_eps_g = 1;
     mpf.inFlow_eps_s = 0;
     mpf.inFlow_u_g = {};
-    mpf.inFlow_u_g[ProblemDim - 2] = 3;
+    mpf.inFlow_u_g[ProblemDim - 2] = 5;
     mpf.inFlow_u_s = {};
 
 
     FlowData<ProblemDim> ini;
     ini.eps_s = 0;
-    ini.setRho_g(0.3564);
+    ini.setPressure(1e5);
+    //ini.setRho_g(0.3564);
     ini.p_g = {};
     ini.p_s = {};
 
+    JSONLogger jsl("setup.json");
+    jsl.writeVar("MultuphaseFlow setup", mpf);
+    return;
     MeshDataContainer<FlowData<ProblemDim>, ProblemDim> compData(mpf.mesh, ini);
 
-/*
+
     for (auto& cell : mpf.mesh.getCells()){
         if(
-                cell.getCenter()[1] > 1.0 && cell.getCenter()[1] < 7.0 &&
-                cell.getCenter()[0] > 0 && cell.getCenter()[0] < 10
+                cell.getCenter()[1] > 0.3 && cell.getCenter()[1] < 1.0
           ){
             compData.at(cell).eps_s = 0.2;
             compData.at(cell).setPressure(1e5);
         }
     }
-*/
 
+/*
     for (auto& cell : mpf.mesh.getCells()){
         if(
                 cell.getCenter()[1] < 1 && cell.getCenter()[1] > 0.05
@@ -286,18 +511,18 @@ void MultiphaseFlowCalculation() {
             compData[cell].setPressure(1e5);
         }
     }
-
+*/
 
     mpf.exportData(0.0, compData);
-
-    double exportStep = 1e-2;
-    for (double t = 0; t < 50 * exportStep; t += exportStep){
+    Singleton<int>::getInstance() = 0;
+    double exportStep = 1e-1;
+    for (double t = 0; t < 300 * exportStep; t += exportStep){
 
 
         RKMSolver(mpf, compData, 1e-3, t, t + exportStep, 1e-4);
 
         //EulerSolver(mpf, compData, 1e-5, t, t + exportStep);
-        mpf.exportData((t + exportStep)*1e-2, compData);
+        mpf.exportData((t + exportStep), compData, 1.0/exportStep);
 
         DBGVAR(t + exportStep, wK1.getResult());
     }

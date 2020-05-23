@@ -318,7 +318,14 @@ struct CellData{
 MAKE_ATTRIBUTE_TRAIT(CellData<3>, invVolume);
 
 
+
+
+
+/**
+ * @brief Calculates the problem of two-phase flow.
+ */
 template< unsigned int Dimension,
+          typename BoundaryCond,
           unsigned int ... Reserve >
 class MultiphaseFlow {
 public:
@@ -517,18 +524,23 @@ public:
 
 
     void exportData( double time,
-                     MeshDataContainer<ResultType, ProblemDimension>& compData );
+                     MeshDataContainer<ResultType, ProblemDimension>& compData,
+                     double timeModifier = 1e2);
 
 };
 
+MAKE_ATTRIBUTE_TEMPLATE_TRAIT(PASS(MultiphaseFlow<Dim, BC, Res...>),
+                              PASS(unsigned int Dim, typename BC, unsigned int... Res),
+                              myu, myu_s, R_spec, T, artifitialDisspation, d_s, phi_s, rho_s,
+                              outFlow, inFlow_u_s, inFlow_u_g, inFlow_eps_s, inFlow_eps_g);
 
 
 /*
  * Definition of inlined functions
  *
 */
-template<unsigned int Dimension, unsigned int ... Reserve>
-inline double MultiphaseFlow< Dimension, Reserve... >::G(double eps_g)
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+inline double MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::G(double eps_g)
 {
     return (std::pow(10, -8.76 * eps_g + 5.43));
 }
@@ -537,8 +549,8 @@ inline double MultiphaseFlow< Dimension, Reserve... >::G(double eps_g)
 
 
 
-template<unsigned int Dimension, unsigned int ... Reserve>
-inline double MultiphaseFlow< Dimension, Reserve... >::Beta_s(const FlowData<ProblemDimension> &fd)
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+inline double MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::Beta_s(const FlowData<ProblemDimension> &fd)
 {
     if(fd.eps_s > 0.2) {
         double denominator = 1 / (fd.getEps_g() * d_s * phi_s);
@@ -557,8 +569,8 @@ inline double MultiphaseFlow< Dimension, Reserve... >::Beta_s(const FlowData<Pro
 
 
 
-template<unsigned int Dimension, unsigned int ... Reserve>
-inline double MultiphaseFlow< Dimension, Reserve... >::C_d(const FlowData<ProblemDimension> &fd)
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+inline double MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::C_d(const FlowData<ProblemDimension> &fd)
 {
     double re_s = reg(Re_s(fd));
 
@@ -573,8 +585,8 @@ inline double MultiphaseFlow< Dimension, Reserve... >::C_d(const FlowData<Proble
 
 
 
-template<unsigned int Dimension, unsigned int ... Reserve>
-inline double MultiphaseFlow< Dimension, Reserve... >::Re_s(const FlowData<ProblemDimension> &fd)
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+inline double MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::Re_s(const FlowData<ProblemDimension> &fd)
 {
     // multiplying by inverted value of myu may make code faster
     return(
@@ -584,8 +596,8 @@ inline double MultiphaseFlow< Dimension, Reserve... >::Re_s(const FlowData<Probl
 
 
 
-template<unsigned int Dimension, unsigned int ... Reserve>
-inline void MultiphaseFlow< Dimension, Reserve... >::ComputeFluxGas_inner(const FlowData<ProblemDimension> &leftData, const FlowData<ProblemDimension> &rightData, FaceData<ProblemDimension> &edgeData, const Face&)
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+inline void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFluxGas_inner(const FlowData<ProblemDimension> &leftData, const FlowData<ProblemDimension> &rightData, FaceData<ProblemDimension> &edgeData, const Face&)
 {
 
     auto edge_u_g = (leftData.getVelocityGas() * edgeData.LeftCellKoef) + (rightData.getVelocityGas() * edgeData.RightCellKoef);
@@ -595,7 +607,7 @@ inline void MultiphaseFlow< Dimension, Reserve... >::ComputeFluxGas_inner(const 
     const FlowData<ProblemDimension>& faceVal = product_of_u_and_n > 0 ? leftData : rightData;
 
     // update the velocity at the face/edge
-    //productOf_u_And_n = faceVal.getVelocityGas() * edgeData.n;
+    //product_of_u_and_n = faceVal.getVelocityGas() * edgeData.n;
 
     // flux of density
     double delta_rho = - faceVal.rho_g_x_eps_g * product_of_u_and_n * edgeData.Measure +
@@ -606,7 +618,9 @@ inline void MultiphaseFlow< Dimension, Reserve... >::ComputeFluxGas_inner(const 
     Vector<ProblemDimension,double> fluxP_g = (-product_of_u_and_n) * faceVal.p_g;
 
     // adding the element of pressure gradient
-    fluxP_g -= (leftData.getPressure() * edgeData.LeftCellKoef + rightData.getPressure() * edgeData.RightCellKoef) * edgeData.n;
+    fluxP_g -= (leftData.getPressure() * edgeData.LeftCellKoef + rightData.getPressure() * edgeData.RightCellKoef) *
+               (leftData.getEps_g() * edgeData.LeftCellKoef + rightData.getEps_g() * edgeData.RightCellKoef) * edgeData.n;
+
     // multiply by the face/edge measure
     fluxP_g *= edgeData.Measure;
 
@@ -626,8 +640,8 @@ inline void MultiphaseFlow< Dimension, Reserve... >::ComputeFluxGas_inner(const 
 }
 
 
-template<unsigned int Dimension, unsigned int ... Reserve>
-inline void MultiphaseFlow< Dimension, Reserve... >::ComputeFluxGas_inflow(const FlowData<ProblemDimension>& innerCellData, const Cell& ,  FaceData<ProblemDimension>& edgeData, const Face& face)
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+inline void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFluxGas_inflow(const FlowData<ProblemDimension>& innerCellData, const Cell& ,  FaceData<ProblemDimension>& edgeData, const Face& face)
 {
 
     Vector<ProblemDimension,double> modulatedU = inFlow_u_g;
@@ -669,8 +683,8 @@ inline void MultiphaseFlow< Dimension, Reserve... >::ComputeFluxGas_inflow(const
 
 
 
-template<unsigned int Dimension, unsigned int ... Reserve>
-inline void MultiphaseFlow< Dimension, Reserve... >::ComputeFluxGas_outflow(const FlowData<ProblemDimension>& innerCellData, FaceData<ProblemDimension>& edgeData, const Face&)
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+inline void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFluxGas_outflow(const FlowData<ProblemDimension>& innerCellData, FaceData<ProblemDimension>& edgeData, const Face&)
 {
     Vector<ProblemDimension, double> in_u_g = innerCellData.getVelocityGas();
     double product_of_u_and_n = ((in_u_g) * edgeData.n);
@@ -705,8 +719,8 @@ inline void MultiphaseFlow< Dimension, Reserve... >::ComputeFluxGas_outflow(cons
 }
 
 
-template<unsigned int Dimension, unsigned int ... Reserve>
-inline void MultiphaseFlow< Dimension, Reserve... >::ComputeFluxGas_wall(const FlowData<ProblemDimension>& innerCellData, FaceData<ProblemDimension>& edgeData, const Face&)
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+inline void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFluxGas_wall(const FlowData<ProblemDimension>& innerCellData, FaceData<ProblemDimension>& edgeData, const Face&)
 {
 
 
@@ -734,8 +748,8 @@ inline void MultiphaseFlow< Dimension, Reserve... >::ComputeFluxGas_wall(const F
 
 
 
-template<unsigned int Dimension, unsigned int ... Reserve>
-void MultiphaseFlow< Dimension, Reserve... >::ComputeViscousFluxGas_inner(const FlowData<ProblemDimension> &leftData, const FlowData<ProblemDimension> &rightData, FaceData<ProblemDimension> &edgeData, const Face &fcData)
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeViscousFluxGas_inner(const FlowData<ProblemDimension> &leftData, const FlowData<ProblemDimension> &rightData, FaceData<ProblemDimension> &edgeData, const Face &fcData)
 {
 
     double lEps_g = leftData.getEps_g();
@@ -769,8 +783,8 @@ void MultiphaseFlow< Dimension, Reserve... >::ComputeViscousFluxGas_inner(const 
 }
 
 
-template<unsigned int Dimension, unsigned int ... Reserve>
-void MultiphaseFlow< Dimension, Reserve... >::ComputeViscousFluxGas_inflow(const Cell &innerCell, const Face& face)
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeViscousFluxGas_inflow(const Cell &innerCell, const Face& face)
 {
 
     double eps_g_e = inFlow_eps_g;
@@ -800,14 +814,14 @@ void MultiphaseFlow< Dimension, Reserve... >::ComputeViscousFluxGas_inflow(const
 
 }
 
-template<unsigned int Dimension, unsigned int ... Reserve>
-void MultiphaseFlow< Dimension, Reserve... >::ComputeViscousFluxGas_outflow(const Cell& innerCell,  const Face& face)
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeViscousFluxGas_outflow(const Cell& innerCell,  const Face& face)
 {
     ComputeViscousFluxGas_inflow(innerCell, face);
 }
 
-template<unsigned int Dimension, unsigned int ... Reserve>
-void MultiphaseFlow< Dimension, Reserve... >::ComputeViscousFluxGas_wall(const Cell& innerCell,  const Face& face)
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeViscousFluxGas_wall(const Cell& innerCell,  const Face& face)
 {
     ComputeViscousFluxGas_inflow(innerCell, face);
 }
@@ -818,8 +832,8 @@ void MultiphaseFlow< Dimension, Reserve... >::ComputeViscousFluxGas_wall(const C
 
 
 
-template<unsigned int Dimension, unsigned int ... Reserve>
-inline void MultiphaseFlow< Dimension, Reserve... >::ComputeFluxSolid_inner(const FlowData<ProblemDimension> &leftData, const FlowData<ProblemDimension> &rightData, FaceData<ProblemDimension> &edgeData, const Face&)
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+inline void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFluxSolid_inner(const FlowData<ProblemDimension> &leftData, const FlowData<ProblemDimension> &rightData, FaceData<ProblemDimension> &edgeData, const Face&)
 {
 
     auto edge_u_s = (leftData.getVelocitySolid() * edgeData.LeftCellKoef) + (rightData.getVelocitySolid() * edgeData.RightCellKoef);
@@ -828,10 +842,6 @@ inline void MultiphaseFlow< Dimension, Reserve... >::ComputeFluxSolid_inner(cons
 
     // prepare upwind values at the face/edge
     const FlowData<ProblemDimension>& faceVal = product_of_u_s_and_n > 0 ? leftData : rightData;
-
-    // update the velocity at the face/edge
-    // product_of_u_s_and_n = faceVal.getVelocityGas() * edgeData.n;
-
 
     // flux of mass
     double fluxRho_s = (-rho_s * faceVal.eps_s * edgeData.Measure * product_of_u_s_and_n  +
@@ -843,8 +853,13 @@ inline void MultiphaseFlow< Dimension, Reserve... >::ComputeFluxSolid_inner(cons
 
 
     // adding the element of "pressure" gradient
+    // The gaseous pressure does not bring better results.
+    //fluxP_s -= (leftData.getPressure() * edgeData.LeftCellKoef + rightData.getPressure() * edgeData.RightCellKoef) *
+    //               (leftData.eps_s * edgeData.LeftCellKoef + rightData.eps_s * edgeData.RightCellKoef) * edgeData.n;
+
     fluxP_s -= G(leftData.getEps_g() * edgeData.LeftCellKoef + rightData.getEps_g() * edgeData.RightCellKoef) *
-               (leftData.eps_s * edgeData.LeftCellKoef + rightData.eps_s * edgeData.RightCellKoef)* edgeData.n;
+               ((leftData.eps_s * edgeData.LeftCellKoef) + (rightData.eps_s * edgeData.RightCellKoef))* edgeData.n;
+
 
     fluxP_s *= edgeData.Measure;
 
@@ -856,13 +871,13 @@ inline void MultiphaseFlow< Dimension, Reserve... >::ComputeFluxSolid_inner(cons
 
 
     // storing result at the edge
-    edgeData.fluxP_s = fluxP_s; // + viscose_diag + viscose_side_diag;
+    edgeData.fluxP_s = fluxP_s;
 
     edgeData.fluxRho_s = fluxRho_s;
 }
 
-template<unsigned int Dimension, unsigned int ... Reserve>
-inline void MultiphaseFlow< Dimension, Reserve... >::ComputeFluxSolid_inflow(const FlowData<ProblemDimension>& innerCellData, const Cell&,  FaceData<ProblemDimension>& edgeData, const Face& face)
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+inline void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFluxSolid_inflow(const FlowData<ProblemDimension>& innerCellData, const Cell&,  FaceData<ProblemDimension>& edgeData, const Face& face)
 {
     (void)innerCellData;
 
@@ -902,8 +917,8 @@ inline void MultiphaseFlow< Dimension, Reserve... >::ComputeFluxSolid_inflow(con
 }
 
 
-template<unsigned int Dimension, unsigned int ... Reserve>
-inline void MultiphaseFlow< Dimension, Reserve... >::ComputeFluxSolid_outflow(const FlowData<ProblemDimension>& innerCellData, FaceData<ProblemDimension>& edgeData, const Face&)
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+inline void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFluxSolid_outflow(const FlowData<ProblemDimension>& innerCellData, FaceData<ProblemDimension>& edgeData, const Face&)
 {
 
     Vector<ProblemDimension, double> in_u_s = innerCellData.getVelocitySolid();
@@ -941,8 +956,8 @@ inline void MultiphaseFlow< Dimension, Reserve... >::ComputeFluxSolid_outflow(co
 }
 
 
-template<unsigned int Dimension, unsigned int ... Reserve>
-inline void MultiphaseFlow< Dimension, Reserve... >::ComputeFluxSolid_wall(const FlowData<ProblemDimension>& innerCellData, FaceData<ProblemDimension>& edgeData, const Face&)
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+inline void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFluxSolid_wall(const FlowData<ProblemDimension>& innerCellData, FaceData<ProblemDimension>& edgeData, const Face&)
 {
 
 
@@ -960,8 +975,8 @@ inline void MultiphaseFlow< Dimension, Reserve... >::ComputeFluxSolid_wall(const
 }
 
 
-template<unsigned int Dimension, unsigned int ... Reserve>
-void MultiphaseFlow< Dimension, Reserve... >::ComputeViscousFluxSolid_inner(const FlowData<ProblemDimension> &leftData, const FlowData<ProblemDimension> &rightData, FaceData<ProblemDimension> &edgeData, const Face &fcData)
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeViscousFluxSolid_inner(const FlowData<ProblemDimension> &leftData, const FlowData<ProblemDimension> &rightData, FaceData<ProblemDimension> &edgeData, const Face &fcData)
 {
 
     double lEps_s = leftData.eps_s;
@@ -994,8 +1009,8 @@ void MultiphaseFlow< Dimension, Reserve... >::ComputeViscousFluxSolid_inner(cons
 }
 
 
-template<unsigned int Dimension, unsigned int ... Reserve>
-void MultiphaseFlow< Dimension, Reserve... >::ComputeViscousFluxSolid_inflow(const Cell &innerCell, const Face& face)
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeViscousFluxSolid_inflow(const Cell &innerCell, const Face& face)
 {
 
     double eps_s_e = inFlow_eps_s;
@@ -1025,21 +1040,21 @@ void MultiphaseFlow< Dimension, Reserve... >::ComputeViscousFluxSolid_inflow(con
 }
 
 
-template<unsigned int Dimension, unsigned int ... Reserve>
-void MultiphaseFlow< Dimension, Reserve... >::ComputeViscousFluxSolid_outflow(const Cell& innerCell,  const Face& face)
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeViscousFluxSolid_outflow(const Cell& innerCell,  const Face& face)
 {
     ComputeViscousFluxSolid_inflow(innerCell, face);
 }
 
 
-template<unsigned int Dimension, unsigned int ... Reserve>
-void MultiphaseFlow< Dimension, Reserve... >::ComputeViscousFluxSolid_wall(const Cell& innerCell,  const Face& face)
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeViscousFluxSolid_wall(const Cell& innerCell,  const Face& face)
 {
     ComputeViscousFluxSolid_inflow(innerCell, face);
 }
 
-template<unsigned int Dimension, unsigned int ... Reserve>
-void MultiphaseFlow< Dimension, Reserve... >::ComupteGradU(const Cell &cell)
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComupteGradU(const Cell &cell)
 {
     meshData.at(cell).grad_u_g = {};
     meshData.at(cell).grad_u_s = {};
@@ -1069,8 +1084,8 @@ void MultiphaseFlow< Dimension, Reserve... >::ComupteGradU(const Cell &cell)
 // in order to make dimension as template parameter
 
 
-template<unsigned int Dimension, unsigned int ... Reserve>
-void MultiphaseFlow< Dimension, Reserve... >::calculateRHS(double, MeshDataContainer<MultiphaseFlow< Dimension, Reserve... >::ResultType, MultiphaseFlow< Dimension, Reserve... >::ProblemDimension> &compData, MeshDataContainer<MultiphaseFlow< Dimension, Reserve... >::ResultType, MultiphaseFlow< Dimension, Reserve... >::ProblemDimension> &outDeltas)
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::calculateRHS(double, MeshDataContainer<MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ResultType, MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ProblemDimension> &compData, MeshDataContainer<MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ResultType, MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ProblemDimension> &outDeltas)
 {
     // in single compute step
     // we have to:
@@ -1137,8 +1152,8 @@ void MultiphaseFlow< Dimension, Reserve... >::calculateRHS(double, MeshDataConta
 
 
 
-template<unsigned int Dimension, unsigned int ... Reserve>
-void MultiphaseFlow< Dimension, Reserve... >::ComputeFlux(const Face &fcData, const MeshDataContainer<ResultType, ProblemDimension>& compData)
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFlux(const Face &fcData, const MeshDataContainer<ResultType, ProblemDimension>& compData)
 {
     // first compute all variables interpolated
     // in the center of the edge
@@ -1206,8 +1221,8 @@ void MultiphaseFlow< Dimension, Reserve... >::ComputeFlux(const Face &fcData, co
 }
 
 
-template<unsigned int Dimension, unsigned int ... Reserve>
-void MultiphaseFlow< Dimension, Reserve... >::ComputeViscousFlux(const Face &fcData, const MeshDataContainer<ResultType, ProblemDimension> &compData)
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeViscousFlux(const Face &fcData, const MeshDataContainer<ResultType, ProblemDimension> &compData)
 {
     // first compute all variables interpolated
     // in the center of the edge
@@ -1276,8 +1291,8 @@ void MultiphaseFlow< Dimension, Reserve... >::ComputeViscousFlux(const Face &fcD
 
 
 
-template<unsigned int Dimension, unsigned int ... Reserve>
-void MultiphaseFlow< Dimension, Reserve... >::ComputeSource(const Cell& cell,
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeSource(const Cell& cell,
                                    MeshDataContainer<ResultType, ProblemDimension>& compData,
                                    MeshDataContainer<ResultType, ProblemDimension> &result)
 {
@@ -1328,10 +1343,8 @@ void MultiphaseFlow< Dimension, Reserve... >::ComputeSource(const Cell& cell,
 
     resData.p_s += ((rho_s - cellData.getRho_g()) * cellData.eps_s * g_acceleration - drag);
 
-    // now prepare the result
-    FlowData<ProblemDimension>& resultData = result.at(cell);
 
-    resultData.eps_s /= rho_s;
+    resData.eps_s /= rho_s;
 
 }
 
@@ -1341,17 +1354,10 @@ void MultiphaseFlow< Dimension, Reserve... >::ComputeSource(const Cell& cell,
 
 
 
-template<unsigned int Dimension, unsigned int ... Reserve>
-double MultiphaseFlow< Dimension, Reserve... >::FlowModulation(const Vertex<MeshType::meshDimension(), double>& x)
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+double MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::FlowModulation(const Vertex<MeshType::meshDimension(), double>& x)
 {
-    double inFlowModulation = x[0];
-    //double inFlowModulation = sqrt(pow(x[0],2) + pow(x[1],2));
-
-    //inFlowModulation = (- inFlowModulation * inFlowModulation + inFlowModulation - 0.0099) * 4.164931279;
-    //inFlowModulation = -(inFlowModulation -1.9) * (inFlowModulation - 4.7) * 0.5102;//(-inFlowModulation * inFlowModulation + 6.6 * inFlowModulation - 8.93) * 0.5102;
-    //inFlowModulation = - (inFlowModulation + 1.25) * (inFlowModulation - 1.25) * (1/1.5625);
-    inFlowModulation = - (inFlowModulation + 0.05) * (inFlowModulation - 0.05) * 400;
-    return inFlowModulation;
+    return BoundaryCond::inFlowModulation(x);
 }
 
 
@@ -1362,10 +1368,10 @@ double MultiphaseFlow< Dimension, Reserve... >::FlowModulation(const Vertex<Mesh
  * @brief MultiphaseFlow::SetData
  * @param initialValue
  */
-template<unsigned int Dimension, unsigned int ... Reserve>
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
 template<unsigned int _Dimension>
 typename std::enable_if<_Dimension == 3>::type
-MultiphaseFlow< Dimension, Reserve... >::setupMeshData(const std::string& fileName){
+MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::setupMeshData(const std::string& fileName){
 
     reader = mesh.load(fileName);
 
@@ -1469,10 +1475,10 @@ MultiphaseFlow< Dimension, Reserve... >::setupMeshData(const std::string& fileNa
  * @brief MultiphaseFlow::SetData
  * @param initialValue
  */
-template<unsigned int Dimension, unsigned int ... Reserve>
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
 template<unsigned int _Dimension>
 typename std::enable_if<_Dimension == 2>::type
-MultiphaseFlow< Dimension, Reserve... >::setupMeshData(const std::string& fileName){
+MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::setupMeshData(const std::string& fileName){
 
     reader = mesh.load(fileName);
 
@@ -1551,50 +1557,20 @@ MultiphaseFlow< Dimension, Reserve... >::setupMeshData(const std::string& fileNa
 
 
 
-template<unsigned int Dimension, unsigned int ... Reserve>
-Type MultiphaseFlow< Dimension, Reserve... >::TypeOfCell(const typename MeshType::Cell &cell) {
-    if (cell.getIndex() >= BOUNDARY_INDEX(size_t)){
-
-        if (
-            //    cell.getCenter()[1] <= 1e-5
-            //    sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[1],2)) < 1.25 &&
-            //    cell.getCenter()[2] <= -1.249
-                sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[2],2)) < 0.05 &&
-                cell.getCenter()[1] < 1e-5
-            ) {
-            return Type::INFLOW;
-        }
-
-        if (
-            //    cell.getCenter()[1] >= 34.349
-                sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[2],2)) < 0.075 &&
-                cell.getCenter()[1] > 2.099
-            //    sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[1],2)) < 1.0 &&
-            //    cell.getCenter()[2] > 0
-            //cell.GetCenter()[0] > 2 && (cell.GetCenter()[1] < 32.0 && cell.GetCenter()[1] > 30)
-            //cell.GetCenter()[0] > 8 && cell.GetCenter()[1] >= 33.39
-            //cell.getCenter()[1] >= 1.999
-           ) {
-            return Type::OUTFLOW;
-        }
-
-        return Type::WALL;
-
-    } else {
-
-        return Type(cell.getFlag());
-
-    }
-
-
-    throw(std::runtime_error ("cell type not recognized " + std::to_string(cell.getIndex())));
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+Type MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::TypeOfCell(const typename MeshType::Cell &cell) {
+    return BoundaryCond::TypeOfCell(cell);
 }
 
-template <unsigned int Dimension, unsigned int ... Reserve>
-void MultiphaseFlow< Dimension, Reserve... >::exportData( double time,
-                                            MeshDataContainer<ResultType, ProblemDimension>& compData)  {
+template <unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::exportData( double time,
+                                                          MeshDataContainer<ResultType, ProblemDimension>& compData,
+                                                          double timeModifier)  {
 
-    std::ofstream ofile(std::string("MultiphaseFlow") + "_" + std::to_string(time) + ".vtk");
+    char timeStr[20];
+    sprintf(timeStr, "%04ld", lround(time*timeModifier));
+
+    std::ofstream ofile(std::string("MultiphaseFlow") + "_" + timeStr + ".vtk");
     writer.writeHeader(ofile, std::string("MPF ") + std::to_string(time));
     writer.writeToStream(ofile, mesh, reader->getCellTypes());
 
