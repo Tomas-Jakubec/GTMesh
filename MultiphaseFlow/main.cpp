@@ -443,6 +443,7 @@ TypeOfCell(const Cell &cell) {
 void MultiphaseFlowCalculation() {
     constexpr unsigned int ProblemDim = 3;
     constexpr unsigned int Reserve = 4;
+    string meshName = "boiler.vtk";
     using MPFType = MultiphaseFlow<ProblemDim, BoundaryCondition<BOUNDARY_SETUP::BOUNDARY_SETUP_BOILER3D>, Reserve>;
 
     MPFType mpf;
@@ -454,16 +455,16 @@ void MultiphaseFlowCalculation() {
 
 
     mpf.artifitialDisspation = 0.3;
-    mpf.R_spec = 287;
+    mpf.R_spec = MPFType::ResultType::R_spec;
     mpf.myu = 4.1923e-5;
-    mpf.rho_s = 2655;
+    mpf.rho_s = MPFType::ResultType::rho_s;
     mpf.myu_s = 0.5;//1.5;
     mpf.d_s = 0.00078;
     mpf.phi_s = 1;
 
-    mpf.T = 1000;
+    mpf.T = MPFType::ResultType::T;
 
-    mpf.setupMeshData("boiler.vtk");
+    mpf.setupMeshData(meshName);
 
 
 
@@ -485,11 +486,16 @@ void MultiphaseFlowCalculation() {
     ini.p_s = {};
 
     JSONLogger jsl("setup.json");
-    jsl.writeVar("MultuphaseFlow setup", mpf);
-    return;
+    jsl.writeVar("MultiphaseFlow setup", mpf);
+    jsl.writeVar("mesh name", meshName);
+    jsl.writeVar("MPFType::ResultType::R_spec", MPFType::ResultType::R_spec);
+    jsl.writeVar("MPFType::ResultType::T", MPFType::ResultType::T);
+    jsl.writeVar("MPFType::ResultType::rho_s", MPFType::ResultType::rho_s);
+
+
     MeshDataContainer<FlowData<ProblemDim>, ProblemDim> compData(mpf.mesh, ini);
 
-
+/*
     for (auto& cell : mpf.mesh.getCells()){
         if(
                 cell.getCenter()[1] > 0.3 && cell.getCenter()[1] < 1.0
@@ -498,7 +504,7 @@ void MultiphaseFlowCalculation() {
             compData.at(cell).setPressure(1e5);
         }
     }
-
+*/
 /*
     for (auto& cell : mpf.mesh.getCells()){
         if(
