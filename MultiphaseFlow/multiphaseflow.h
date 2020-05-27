@@ -961,9 +961,9 @@ inline void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFluxSo
 
 
     // the velocity is 0
-     edgeData.grad_u_s = {};// tensorProduct({}, edgeData.n) * edgeData.Length;
+     edgeData.grad_u_s = {};
 
-    edgeData.fluxP_s = flux;// + viscose_side_diag + viscose_diag;
+    edgeData.fluxP_s = flux;
 
 }
 
@@ -1185,8 +1185,8 @@ void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFlux(const Fa
 
 
             ComputeFluxGas_inflow(*innerCellData, *innerCell, *currFaceData, fcData);
-            //ComputeFluxSolid_inflow(*innerCellData, *innerCell, *currFaceData, fcData);
-            ComputeFluxSolid_wall(*innerCellData, *currFaceData, fcData);
+            ComputeFluxSolid_inflow(*innerCellData, *innerCell, *currFaceData, fcData);
+            //ComputeFluxSolid_wall(*innerCellData, *currFaceData, fcData);
         } break;
 
         case OUTFLOW :{
@@ -1335,7 +1335,6 @@ void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeSource(const 
     resData.p_g += (cellData.getRho_g() * g_acceleration + drag);
 
     resData.p_s += ((rho_s - cellData.getRho_g()) * cellData.eps_s * g_acceleration - drag);
-
 
     resData.eps_s /= rho_s;
 
