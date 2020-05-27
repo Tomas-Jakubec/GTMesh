@@ -493,7 +493,8 @@ void MultiphaseFlowCalculation(string name) {
     MPFType::ResultType::rho_s = 1700;
 
 
-    mpf.artifitialDisspation = 0.1;
+    mpf.artifitialDisspationGas = 0.1;
+    mpf.artifitialDisspationSolid = 0.1;
     mpf.R_spec = MPFType::ResultType::R_spec;
     mpf.myu = 1e-5;
     mpf.rho_s = MPFType::ResultType::rho_s;
@@ -562,10 +563,10 @@ void MultiphaseFlowCalculation(string name) {
 
     mpf.exportData(0.0, compData);
     double exportStep = 1e-1;
-    for (double t = 0; t < 30 * exportStep; t += exportStep){
+    for (double t = 0; t < 5 * exportStep; t += exportStep){
 
 
-        RKMSolver(mpf, compData, 1e-3, t, t + exportStep, 1e-4);
+        RKMSolver(mpf, compData, 1e-7, t, t + exportStep, 1e-4);
 
         //EulerSolver(mpf, compData, 1e-5, t, t + exportStep);
         mpf.exportData((t + exportStep), compData, 1.0/exportStep);
