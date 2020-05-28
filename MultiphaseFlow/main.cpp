@@ -453,7 +453,7 @@ Type
 BoundaryCondition<BOUNDARY_SETUP::BOUNDARY_SETUP_BOILER2D>::
 TypeOfCell(const Cell &cell) {
     if (cell.getIndex() >= BOUNDARY_INDEX(size_t)){
-
+/*
         if (
                 cell.getCenter()[1] <= 1e-5
             ) {
@@ -465,7 +465,7 @@ TypeOfCell(const Cell &cell) {
            ) {
             return Type::OUTFLOW;
         }
-
+*/
         return Type::WALL;
 
     } else {
@@ -539,7 +539,7 @@ void MultiphaseFlowCalculation(string name) {
     for (auto& cell : mpf.mesh.getCells()){
         if(
                 //cell.getCenter()[1] > 1.5 && cell.getCenter()[1] < 1.6
-                cell.getCenter()[1] > 2 && cell.getCenter()[1] < 7
+                cell.getCenter()[1] > 2 && cell.getCenter()[1] < 14
                 //&& cell.getCenter()[0] * cell.getCenter()[0] + cell.getCenter()[2] * cell.getCenter()[2] < 0.03*0.03
           ){
             compData.at(cell).eps_s = 0.2;

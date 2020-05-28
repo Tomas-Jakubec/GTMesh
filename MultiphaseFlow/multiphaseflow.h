@@ -282,6 +282,16 @@ struct FaceData {
      */
     double fluxRho_g; //flux of "mass" over cell boundary
 
+    /**
+     * @brief partial gradient calculated over a face
+     */
+    Vector<Dim, double> grad_p;
+
+    /**
+     * @brief partial gradient calculated over a face
+     */
+    Vector<Dim, double> grad_eps_s;
+
 
     /**
      * @brief gradient of velocity of gas
@@ -503,7 +513,9 @@ public:
      * @brief Calculates gradient of velocity using Gauss-Green th. in a cell.
      * @param cell
      */
-    inline void ComupteGradU(const Cell& cell);
+    inline void ComupteGrads(const Cell& cell,
+                             MeshDataContainer<ResultType, ProblemDimension>& compData,
+                             MeshDataContainer<ResultType, ProblemDimension> &result);
 
     void ComputeSource(const Cell& ccData,
                        MeshDataContainer<ResultType, ProblemDimension>& compData,
@@ -622,9 +634,6 @@ inline void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFluxGa
     // computing the flux of momentum
     Vector<ProblemDimension,double> fluxP_g = (-product_of_u_and_n) * faceVal.p_g;
 
-    // adding the element of pressure gradient
-    fluxP_g -= (leftData.getPressure() * edgeData.LeftCellKoef + rightData.getPressure() * edgeData.RightCellKoef) *
-               (leftData.getEps_g() * edgeData.LeftCellKoef + rightData.getEps_g() * edgeData.RightCellKoef) * edgeData.n;
 
     // multiply by the face/edge measure
     fluxP_g *= edgeData.Measure;
@@ -632,6 +641,8 @@ inline void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFluxGa
     // add artifitial dissipation
     fluxP_g += (edgeData.MeasureOverDist * artifitialDisspationGas * ((rightData.p_g) - (leftData.p_g)));
 
+    // computation of grad_p
+    edgeData.grad_p = ((leftData.getPressure() * edgeData.LeftCellKoef + rightData.getPressure() * edgeData.RightCellKoef) * edgeData.Measure) * edgeData.n;
 
     // compuatation of grad(u)
     edgeData.grad_u_g = tensorProduct(edge_u_g, edgeData.n) * edgeData.Measure;
@@ -667,14 +678,14 @@ inline void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFluxGa
     Vector<ProblemDimension,double> flux = - (innerCellData.getRho_g()) * (product_of_u_and_n) * inFlow_eps_g * (modulatedU);
 
 
-    // adding the element of pressure gradient
-    flux -= (innerCellData.getPressure() * innerCellData.getEps_g()) * edgeData.n;
 
 
     flux *= edgeData.Measure;
     // artifitial dissipation
     flux += (edgeData.MeasureOverDist * artifitialDisspationGas * ((inFlow_u_g * inFlow_eps_g * innerCellData.getRho_g()) - (innerCellData.p_g)));
 
+    // adding the element of pressure gradient
+    edgeData.grad_p = (innerCellData.getPressure() * edgeData.Measure) * edgeData.n;
 
     // compuatation of grad(u)
     edgeData.grad_u_g = tensorProduct(modulatedU, edgeData.n) * edgeData.Measure;
@@ -707,11 +718,11 @@ inline void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFluxGa
                     (in_u_g);
 
 
-    // adding the element of pressure gradient
-    flux -= (outFlow.getPressure() * eps_g_e) * edgeData.n;
 
     flux *= edgeData.Measure;
 
+    // computation of grad(p)
+    edgeData.grad_p = (outFlow.getPressure() * edgeData.Measure) * edgeData.n;
 
     // compuatation of grad(u)
     edgeData.grad_u_g = tensorProduct(in_u_g, edgeData.n) * edgeData.Measure;
@@ -729,17 +740,14 @@ inline void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFluxGa
 
     // the flux of momentum
     // is reduced only to pressure gradient
-    Vector<ProblemDimension,double> flux = -(innerCellData.getPressure() * innerCellData.getEps_g()) * edgeData.n;
+    edgeData.grad_p = (innerCellData.getPressure() * edgeData.Measure) * edgeData.n;
 
-
-    flux *= edgeData.Measure;
-
-    //prepare eps_g
 
     // compuatation of grad(u)
     edgeData.grad_u_g = {};
 
-    edgeData.fluxP_g = flux;// + viscose_side_diag + viscose_diag;
+    // No convective flux
+    edgeData.fluxP_g = {};// + viscose_side_diag + viscose_diag;
     edgeData.fluxRho_g = 0;
 }
 
@@ -857,8 +865,8 @@ inline void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFluxSo
     // fluxP_s -= (leftData.getPressure() * edgeData.LeftCellKoef + rightData.getPressure() * edgeData.RightCellKoef) *
     //                (leftData.eps_s * edgeData.LeftCellKoef + rightData.eps_s * edgeData.RightCellKoef) * edgeData.n;
 
-    fluxP_s -= G(leftData.getEps_g() * edgeData.LeftCellKoef + rightData.getEps_g() * edgeData.RightCellKoef) *
-               ((leftData.eps_s * edgeData.LeftCellKoef) + (rightData.eps_s * edgeData.RightCellKoef))* edgeData.n;
+    // fluxP_s -= G(leftData.getEps_g() * edgeData.LeftCellKoef + rightData.getEps_g() * edgeData.RightCellKoef) *
+    //            ((leftData.eps_s * edgeData.LeftCellKoef) + (rightData.eps_s * edgeData.RightCellKoef))* edgeData.n;
 
 
     fluxP_s *= edgeData.Measure;
@@ -866,6 +874,7 @@ inline void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFluxSo
     // add artifitial dissipation
     fluxP_s += (edgeData.MeasureOverDist * artifitialDisspationSolid ) * (rightData.p_s - leftData.p_s);
 
+    edgeData.grad_eps_s = (((leftData.eps_s * edgeData.LeftCellKoef) + (rightData.eps_s * edgeData.RightCellKoef)) * edgeData.Measure) * edgeData.n;
 
     edgeData.grad_u_s = tensorProduct(edge_u_s, edgeData.n) * edgeData.Measure;
 
@@ -897,13 +906,14 @@ inline void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFluxSo
 
     // adding the element of pressure gradient
     //fluxP_s -= (innerCellData.getPressure() * innerCellData.eps_s) * edgeData.n;
-    fluxP_s -= G(inFlow_eps_g) * inFlow_eps_s * edgeData.n;
+    //fluxP_s -= G(inFlow_eps_g) * inFlow_eps_s * edgeData.n;
 
 
     fluxP_s *= edgeData.Measure;
 
     fluxP_s += (edgeData.MeasureOverDist * artifitialDisspationSolid * ((inFlow_u_s * inFlow_eps_s * rho_s) - (innerCellData.p_s)));
 
+    edgeData.grad_eps_s = (inFlow_eps_s * edgeData.Measure) * edgeData.n;
 
     edgeData.grad_u_s = tensorProduct(modulatedU, edgeData.n) * edgeData.Measure;
 
@@ -941,11 +951,12 @@ inline void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFluxSo
     // adding the element of pressure gradient
     //fluxP_s -= (outFlow.getPressure() * eps_s_e) * edgeData.n;
 
-    fluxP_s -= G(1.0 - eps_s_e) * eps_s_e * edgeData.n;
+    //fluxP_s -= G(1.0 - eps_s_e) * eps_s_e * edgeData.n;
 
 
     fluxP_s *= edgeData.Measure;
 
+    edgeData.grad_eps_s = (eps_s_e * edgeData.Measure) * edgeData.n;
     edgeData.grad_u_s = tensorProduct(in_u_s, edgeData.n) * edgeData.Measure;
 
 
@@ -964,15 +975,17 @@ inline void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFluxSo
 
     // the flux of momentum
     // is reduced only to pressure gradient
-    Vector<ProblemDimension,double> flux = -G(innerCellData.getEps_g()) * innerCellData.eps_s  * edgeData.n;
+    //Vector<ProblemDimension,double> flux = -G(innerCellData.getEps_g()) * innerCellData.eps_s  * edgeData.n;
     // gas pressure grad
     //flux -= (innerCellData.getPressure() * innerCellData.eps_s) * edgeData.n;
 
-    flux *= edgeData.Measure;
+    //flux *= edgeData.Measure;
     // the velocity is 0
-     edgeData.grad_u_s = {};
+    edgeData.grad_eps_s = innerCellData.eps_s * edgeData.Measure * edgeData.n;
 
-    edgeData.fluxP_s = flux;
+    edgeData.grad_u_s = {};
+
+    edgeData.fluxP_s = {};
 
 }
 
@@ -1055,30 +1068,6 @@ void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeViscousFluxSo
     ComputeViscousFluxSolid_inflow(innerCell, face);
 }
 
-template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
-void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComupteGradU(const Cell &cell)
-{
-    meshData.at(cell).grad_u_g = {};
-    meshData.at(cell).grad_u_s = {};
-
-    MeshApply<ProblemDimension, ProblemDimension - 1>::apply(
-                cell.getIndex(),
-                mesh,
-                [&](size_t cellIndex, size_t faceIndex){
-            const FaceData<ProblemDimension>& eData = meshData.template getDataByDim<ProblemDimension - 1>().at(faceIndex);
-
-            if (cellIndex == mesh.getFaces().at(faceIndex).getCellLeftIndex()){
-                meshData.at(cell).grad_u_g += eData.grad_u_g;
-                meshData.at(cell).grad_u_s += eData.grad_u_s;
-            } else {
-                meshData.at(cell).grad_u_g -= eData.grad_u_g;
-                meshData.at(cell).grad_u_s -= eData.grad_u_s;
-            }
-        }
-                );
-    meshData.at(cell).grad_u_g *= meshData.at(cell).invVolume;
-    meshData.at(cell).grad_u_s *= meshData.at(cell).invVolume;
-}
 
 
 
@@ -1124,7 +1113,7 @@ void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::calculateRHS(double,
     for (size_t cellIndex = 0; cellIndex < mesh.getCells().size(); cellIndex++){
         auto& cell = mesh.getCells()[cellIndex];
 
-        ComupteGradU(cell);
+        ComupteGrads(cell, compData, outDeltas);
     }
 
     // fourth: compute source terms
@@ -1290,6 +1279,46 @@ void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeViscousFlux(c
 
 
 
+template<unsigned int Dimension, typename BoundaryCond, unsigned int ... Reserve>
+void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComupteGrads(const Cell &cell,
+                                                                         MeshDataContainer<ResultType, ProblemDimension>& compData,
+                                                                         MeshDataContainer<ResultType, ProblemDimension> &result)
+{
+    // Calculation of gradients
+    meshData[cell].grad_u_g = {};
+    meshData[cell].grad_u_s = {};
+    Vector<ProblemDimension, double> grad_p = {};
+    Vector<ProblemDimension, double> grad_eps_s = {};
+
+    MeshApply<ProblemDimension, ProblemDimension - 1>::apply(
+                cell.getIndex(),
+                mesh,
+                [&](size_t cellIndex, size_t faceIndex){
+            const FaceData<ProblemDimension>& eData = meshData.template getDataByDim<ProblemDimension - 1>().at(faceIndex);
+
+            if (cellIndex == mesh.getFaces().at(faceIndex).getCellLeftIndex()){
+                meshData[cell].grad_u_g += eData.grad_u_g;
+                meshData[cell].grad_u_s += eData.grad_u_s;
+                grad_p                  += eData.grad_p;
+                grad_eps_s              += eData.grad_eps_s;
+            } else {
+                meshData[cell].grad_u_g -= eData.grad_u_g;
+                meshData[cell].grad_u_s -= eData.grad_u_s;
+                grad_p                  -= eData.grad_p;
+                grad_eps_s              -= eData.grad_eps_s;
+            }
+        }
+                );
+    meshData[cell].grad_u_g *= meshData[cell].invVolume;
+    meshData[cell].grad_u_s *= meshData[cell].invVolume;
+    // The measures of the cell canceles in the equation
+    //grad_p                  *= meshData[cell].invVolume;
+
+    // Apply the pressure gradient imidietly
+    result[cell].p_g = - compData[cell].getEps_g() * grad_p;
+    result[cell].p_s = - compData[cell].eps_s      * grad_p
+                       - G(compData[cell].getEps_g()) * grad_eps_s;
+}
 
 
 
@@ -1304,8 +1333,9 @@ void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeSource(const 
 
     resData.rho_g_x_eps_g = 0;
     resData.eps_s = 0; // Firstly, the flux of rho_s is calculated. Finally, the eps_s is computed as flux_rho_s / rho_s
-    resData.p_g = {};
-    resData.p_s = {};
+    // already initialized in computation of gradients
+    //resData.p_g = {};
+    //resData.p_s = {};
 
     MeshApply<ProblemDimension, ProblemDimension - 1>::apply(
                 cell.getIndex(),
