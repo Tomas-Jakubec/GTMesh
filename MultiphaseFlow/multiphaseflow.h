@@ -964,11 +964,11 @@ inline void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFluxSo
 
     // the flux of momentum
     // is reduced only to pressure gradient
-    Vector<ProblemDimension,double> flux = -G(innerCellData.getEps_g()) * innerCellData.eps_s * edgeData.Measure * edgeData.n;
+    Vector<ProblemDimension,double> flux = -G(innerCellData.getEps_g()) * innerCellData.eps_s  * edgeData.n;
     // gas pressure grad
     //flux -= (innerCellData.getPressure() * innerCellData.eps_s) * edgeData.n;
 
-
+    flux *= edgeData.Measure;
     // the velocity is 0
      edgeData.grad_u_s = {};
 

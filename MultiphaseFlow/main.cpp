@@ -442,7 +442,7 @@ double
 BoundaryCondition<BOUNDARY_SETUP::BOUNDARY_SETUP_BOILER2D>::
 inFlowModulation(const Vertex<MeshDim, double>& x)
 {
-
+    //return 1;
     double inFlowModulation = x[0];
     return -(inFlowModulation -1.9) * (inFlowModulation - 4.7) * 0.5102;
 }
@@ -479,7 +479,7 @@ TypeOfCell(const Cell &cell) {
 void MultiphaseFlowCalculation(string name) {
     constexpr unsigned int Reserve = 12;
     using BC = BoundaryCondition<BOUNDARY_SETUP::BOUNDARY_SETUP_BOILER2D>;
-    string meshName = BC::meshName();
+    string meshName = "../" + BC::meshName();
     if (!name.empty()) {
         meshName = name;
     }
@@ -563,12 +563,11 @@ void MultiphaseFlowCalculation(string name) {
 
     mpf.exportData(0.0, compData);
     double exportStep = 1e-1;
-    for (double t = 0; t < 14 * exportStep; t += exportStep){
+    for (double t = 0; t < 100 * exportStep; t += exportStep){
 
 
         RKMSolver(mpf, compData, 1e-7, t, t + exportStep, 1e-4);
 
-        //EulerSolver(mpf, compData, 1e-5, t, t + exportStep);
         mpf.exportData((t + exportStep), compData, 1.0/exportStep);
 
 
