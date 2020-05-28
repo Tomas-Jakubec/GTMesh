@@ -563,7 +563,7 @@ void MultiphaseFlowCalculation(string name) {
 
     mpf.exportData(0.0, compData);
     double exportStep = 1e-1;
-    for (double t = 0; t < 5 * exportStep; t += exportStep){
+    for (double t = 0; t < 14 * exportStep; t += exportStep){
 
 
         RKMSolver(mpf, compData, 1e-7, t, t + exportStep, 1e-4);
