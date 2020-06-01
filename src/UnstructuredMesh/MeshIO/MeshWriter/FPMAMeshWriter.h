@@ -101,7 +101,6 @@ DBGMSG("indexing mesh");
         // prepare connections
 
         for (typename MeshElements<3, IndexType, Real, Reserve...>::Face& face : mesh.getFaces()){
-            DBGVAR(face.getIndex());
             indexFace(mesh, face, faceVert.at(face));
         }
 DBGCHECK;

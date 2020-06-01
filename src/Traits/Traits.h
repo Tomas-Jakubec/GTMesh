@@ -345,7 +345,7 @@ auto& get(ArythmeticTraitT* arg){
 #include "../Macros/MacroForEach.h"
 
 #define IMPL_MEMREF_TYPE_CUSTOM(name, memberRef) decltype(memberRef)
-#define IMPL_NAME_AND_REF(Class, name, member) name, &Class::member
+#define IMPL_NAME_AND_REF(Class, name, member) name, (&Class::member)
 #define IMPL_NAME_ATT(attribute) #attribute, attribute
 
 #define IMPL_MAKE_CUSTOM_TRAIT(TraitName,Class,...) \
@@ -357,12 +357,27 @@ public: \
     static constexpr unsigned int size() {return traitsType::size();}\
 }
 
+#define IMPL_MAKE_CUSTOM_TEMPLATE_TRAIT(TraitName, TemplateParameters, Class,...) \
+template<TemplateParameters> \
+class TraitName<Class>{ \
+public: \
+    using traitsType = ::Traits<PASS(Class), FOR_EACH_2ARGS(IMPL_MEMREF_TYPE_CUSTOM, __VA_ARGS__)>; \
+    static const traitsType getTraits() {return traitsType(__VA_ARGS__);} \
+    static constexpr unsigned int size() {return traitsType::size();}\
+}
 
 #define MAKE_CUSTOM_TRAIT(Class,...) IMPL_MAKE_CUSTOM_TRAIT(Traits, Class, __VA_ARGS__) // defining specialization for Traits
 
 #define MAKE_NAMED_ATTRIBUTE_TRAIT(Class, ...) MAKE_CUSTOM_TRAIT(Class, FOR_EACH_3ARGS_1STAT(IMPL_NAME_AND_REF, Class, __VA_ARGS__))
 
 #define MAKE_ATTRIBUTE_TRAIT(Class, ...) MAKE_NAMED_ATTRIBUTE_TRAIT(Class, FOR_EACH(IMPL_NAME_ATT, __VA_ARGS__))
+
+
+#define MAKE_CUSTOM_TEMPLATE_TRAIT(Class, TemplateParameters, ...) IMPL_MAKE_CUSTOM_TEMPLATE_TRAIT(Traits, PASS(TemplateParameters), PASS(Class), __VA_ARGS__) // defining specialization for Traits
+
+#define MAKE_NAMED_ATTRIBUTE_TEMPLATE_TRAIT(Class, TemplateParameters, ...) MAKE_CUSTOM_TEMPLATE_TRAIT(PASS(Class), PASS(TemplateParameters), FOR_EACH_3ARGS_1STAT_PASS(IMPL_NAME_AND_REF, PASS(Class), __VA_ARGS__))
+
+#define MAKE_ATTRIBUTE_TEMPLATE_TRAIT(Class, TemplateParameters, ...) MAKE_NAMED_ATTRIBUTE_TEMPLATE_TRAIT(PASS(Class), PASS(TemplateParameters), FOR_EACH(IMPL_NAME_ATT, __VA_ARGS__))
 
 
 #define MAKE_CUSTOM_TRAIT_IO(Class,...) IMPL_MAKE_CUSTOM_TRAIT(DefaultIOTraits, Class,__VA_ARGS__) // defining specialization for DefaultIOTraits

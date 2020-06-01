@@ -70,11 +70,13 @@ struct inlineSubtraction<1, Real>{
 
 template <unsigned int N, typename Real>
 struct inlineMultiplication{
-    static inline void computation(Real *res, const Real *x, const Real& alpha){
+    template<typename RealOp>
+    static inline void computation(Real *res, const Real *x, const RealOp& alpha){
         inlineMultiplication<N-1, Real>::computation(res, x, alpha);
         res[N-1] = x[N-1] * alpha;
     }
-    static inline void computation(Real *x, const Real alpha){
+    template<typename RealOp>
+    static inline void computation(Real *x, const RealOp& alpha){
         inlineMultiplication<N-1, Real>::computation(x, alpha);
         x[N-1] *= alpha;
     }
@@ -82,10 +84,12 @@ struct inlineMultiplication{
 
 template <typename Real>
 struct inlineMultiplication<1, Real>{
-    static inline void computation(Real *res, const Real *x, const Real& alpha){
+    template<typename RealOp>
+    static inline void computation(Real *res, const Real *x, const RealOp& alpha){
         res[0] = x[0] * alpha;
     }
-    static inline void computation(Real *x, const Real alpha){
+    template<typename RealOp>
+    static inline void computation(Real *x, const RealOp& alpha){
         x[0] *= alpha;
     }
 };

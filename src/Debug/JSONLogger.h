@@ -85,7 +85,7 @@ public:
         }
 
         (*logFile) << "\t{\n\t\t\"expr\" : \""<< escapeQuotationMarks( name ) <<
-                      "\",\n\t\t\"data\"";
+                      "\",\n\t\t\"data\" : " ;
         VariableExport<>::exportVariable(*logFile, value);
         (*logFile) << "\n}";
 
