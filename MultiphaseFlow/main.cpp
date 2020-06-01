@@ -221,6 +221,7 @@ void EulerSolver(
 enum BOUNDARY_SETUP{
     BOUNDARY_SETUP_BOILER2D,
     BOUNDARY_SETUP_BOILER3D,
+    BOUNDARY_SETUP_BOILER3D_EX,
     BOUNDARY_SETUP_CUBE,
     BOUNDARY_SETUP_STACK
 };
@@ -296,10 +297,14 @@ double
 BoundaryCondition<BOUNDARY_SETUP::BOUNDARY_SETUP_BOILER3D>::
 inFlowModulation(const Vertex<MeshDim, double>& x)
 {
+    (void) x;
+    return 1.0;
+    /*
     double inFlowModulation = sqrt(pow(x[0],2) + pow(x[2],2));
 
     inFlowModulation = - (inFlowModulation + 0.05) * (inFlowModulation - 0.05) * 400;
     return inFlowModulation;
+    */
 }
 
 template <>
@@ -319,6 +324,58 @@ TypeOfCell(const Cell &cell) {
         if (
                 sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[2],2)) < 0.075 &&
                 cell.getCenter()[1] > 2.099
+           ) {
+            return Type::OUTFLOW;
+        }
+
+        return Type::WALL;
+
+    } else {
+
+        return Type(cell.getFlag());
+
+    }
+    throw(std::runtime_error ("cell type not recognized " + std::to_string(cell.getIndex())));
+}
+
+
+
+template <> constexpr unsigned int BoundaryCondition<BOUNDARY_SETUP::BOUNDARY_SETUP_BOILER3D_EX>::problemDim() {return 3;}
+template <> constexpr unsigned int BoundaryCondition<BOUNDARY_SETUP::BOUNDARY_SETUP_BOILER3D_EX>::g_axes() {return 1;}
+template <> std::string BoundaryCondition<BOUNDARY_SETUP::BOUNDARY_SETUP_BOILER3D_EX>::meshName() {return "boiler-expanded.vtk";}
+template <>
+template<unsigned int MeshDim>
+double
+BoundaryCondition<BOUNDARY_SETUP::BOUNDARY_SETUP_BOILER3D_EX>::
+inFlowModulation(const Vertex<MeshDim, double>& x)
+{
+    (void) x;
+    return 1.0;
+    /*
+    double inFlowModulation = sqrt(pow(x[0],2) + pow(x[2],2));
+
+    inFlowModulation = - (inFlowModulation + 0.05) * (inFlowModulation - 0.05) * 400;
+    return inFlowModulation;
+    */
+}
+
+template <>
+template<typename Cell>
+Type
+BoundaryCondition<BOUNDARY_SETUP::BOUNDARY_SETUP_BOILER3D_EX>::
+TypeOfCell(const Cell &cell) {
+    if (cell.getIndex() >= BOUNDARY_INDEX(size_t)){
+
+        if (
+                sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[2],2)) < 0.05 * 15 &&
+                cell.getCenter()[1] < 1e-5
+            ) {
+            return Type::INFLOW;
+        }
+
+        if (
+                sqrt(pow(cell.getCenter()[0],2) + pow(cell.getCenter()[2],2)) < 0.075 * 15 &&
+                cell.getCenter()[1] > 2.099 * 15
            ) {
             return Type::OUTFLOW;
         }
@@ -442,9 +499,10 @@ double
 BoundaryCondition<BOUNDARY_SETUP::BOUNDARY_SETUP_BOILER2D>::
 inFlowModulation(const Vertex<MeshDim, double>& x)
 {
-    //return 1;
-    double inFlowModulation = x[0];
-    return -(inFlowModulation -1.9) * (inFlowModulation - 4.7) * 0.5102;
+    (void) x;
+    return 1;
+    //double inFlowModulation = x[0];
+    //return -(inFlowModulation -1.9) * (inFlowModulation - 4.7) * 0.5102;
 }
 
 template <>
@@ -453,7 +511,7 @@ Type
 BoundaryCondition<BOUNDARY_SETUP::BOUNDARY_SETUP_BOILER2D>::
 TypeOfCell(const Cell &cell) {
     if (cell.getIndex() >= BOUNDARY_INDEX(size_t)){
-/*
+
         if (
                 cell.getCenter()[1] <= 1e-5
             ) {
@@ -465,7 +523,7 @@ TypeOfCell(const Cell &cell) {
            ) {
             return Type::OUTFLOW;
         }
-*/
+
         return Type::WALL;
 
     } else {
@@ -478,7 +536,7 @@ TypeOfCell(const Cell &cell) {
 
 void MultiphaseFlowCalculation(string name) {
     constexpr unsigned int Reserve = 12;
-    using BC = BoundaryCondition<BOUNDARY_SETUP::BOUNDARY_SETUP_BOILER2D>;
+    using BC = BoundaryCondition<BOUNDARY_SETUP::BOUNDARY_SETUP_BOILER3D_EX>;
     string meshName = "../" + BC::meshName();
     if (!name.empty()) {
         meshName = name;
@@ -493,8 +551,8 @@ void MultiphaseFlowCalculation(string name) {
     MPFType::ResultType::rho_s = 1700;
 
 
-    mpf.artifitialDisspationGas = 0.1;
-    mpf.artifitialDisspationSolid = 0.1;
+    mpf.artificialDisspationGas = 0.05;
+    mpf.artificialDisspationSolid = 0.05;
     mpf.R_spec = MPFType::ResultType::R_spec;
     mpf.myu = 1e-5;
     mpf.rho_s = MPFType::ResultType::rho_s;
@@ -514,7 +572,7 @@ void MultiphaseFlowCalculation(string name) {
     mpf.inFlow_eps_g = 1;
     mpf.inFlow_eps_s = 0;
     mpf.inFlow_u_g = {};
-    mpf.inFlow_u_g[BC::g_axes()] = 25;
+    mpf.inFlow_u_g[BC::g_axes()] = 3;
     mpf.inFlow_u_s = {};
 
 
@@ -538,11 +596,11 @@ void MultiphaseFlowCalculation(string name) {
 
     for (auto& cell : mpf.mesh.getCells()){
         if(
-                //cell.getCenter()[1] > 1.5 && cell.getCenter()[1] < 1.6
-                cell.getCenter()[1] > 2 && cell.getCenter()[1] < 14
+                cell.getCenter()[1] > 2 && cell.getCenter()[1] < 8
+                //cell.getCenter()[1] > 2 && cell.getCenter()[1] < 14
                 //&& cell.getCenter()[0] * cell.getCenter()[0] + cell.getCenter()[2] * cell.getCenter()[2] < 0.03*0.03
           ){
-            compData.at(cell).eps_s = 0.2;
+            compData.at(cell).eps_s = 0.4;
             compData.at(cell).setPressure(1e5);
         }
     }
@@ -561,9 +619,13 @@ void MultiphaseFlowCalculation(string name) {
     }
 */
 
+//    ifstream ist("MultiphaseFlow_0190.vtk", std::ios::binary);
+//    VTKMeshDataReader<3, size_t> dataReader;
+//    dataReader.readFromStream(ist, compData);
+
     mpf.exportData(0.0, compData);
     double exportStep = 1e-1;
-    for (double t = 0; t < 100 * exportStep; t += exportStep){
+    for (double t = 0; t < 300 * exportStep; t += exportStep){
 
 
         RKMSolver(mpf, compData, 1e-7, t, t + exportStep, 1e-4);
