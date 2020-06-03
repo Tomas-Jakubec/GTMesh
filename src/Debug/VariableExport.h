@@ -282,7 +282,7 @@ struct VariableExport<VARIABLE_EXPORT_METHOD::stdio> {
 
 
     template<typename T>
-    static auto exportVariable(std::ostream& ost, const T &list)
+    static auto exportVariable( const T &list)
       -> typename std::enable_if<
               IsIndexable<T>::value &&
              !IsIterable<T>::value &&
@@ -292,7 +292,7 @@ struct VariableExport<VARIABLE_EXPORT_METHOD::stdio> {
     {
         printf("[ ");
         for (decltype (list.size())i = 0; i < list.size(); i++){
-            exportVariable(ost, list[i]);
+            exportVariable(list[i]);
             if (i < list.size() - 1){
                 printf(", ");
             }
@@ -302,7 +302,7 @@ struct VariableExport<VARIABLE_EXPORT_METHOD::stdio> {
 
 
     template<typename T>
-    static auto exportVariable(std::ostream& ost, const T &list)
+    static auto exportVariable(const T &list)
       -> typename std::enable_if<
               IsTNLIndexable<T>::value &&
              !IsIndexable<T>::value &&
@@ -312,8 +312,8 @@ struct VariableExport<VARIABLE_EXPORT_METHOD::stdio> {
          >::type
     {
         printf("[ ");
-        for (decltype (list.size())i = 0; i < list.size(); i++){
-            exportVariable(ost, list[i]);
+        for (decltype (list.size())i = 0; i < list.getSize(); i++){
+            exportVariable(list[i]);
             if (i <  list.getSize() - 1){
                 printf(", ");
             }
@@ -324,12 +324,12 @@ struct VariableExport<VARIABLE_EXPORT_METHOD::stdio> {
 
 
     template<typename T>
-    static void exportVariable(std::ostream& ost, const std::initializer_list<T> &list)
+    static void exportVariable(const std::initializer_list<T> &list)
     {
         static auto it = list.begin();
         printf("[ ");
         while (it != list.end()){
-            exportVariable(ost, *it);
+            exportVariable(*it);
             if (++it != list.end()){
                 printf(", ");
             }

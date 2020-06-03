@@ -198,33 +198,16 @@ double FlowData<Dim>::R_spec = 0;
 template<unsigned int Dim>
 double FlowData<Dim>::T = 0;
 
-MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(FlowData<2>, rho_g_x_eps_g, eps_s, p_g, p_s);
-
-// TODO only temporary
-//MAKE_ATTRIBUTE_TRAIT_IO(FlowData, rho_g, eps_s, p_g, p_s)
+MAKE_ATTRIBUTE_TEMPLATE_TRAIT_ARITHMETIC((FlowData<dim>), (unsigned int dim), rho_g_x_eps_g, eps_s, p_g, p_s);
 
 
-MAKE_CUSTOM_TRAIT( FlowData<2>,
-                   "eps_g", std::make_pair(&FlowData<2>::getEps_g, &FlowData<2>::setEps_g),
-                   "pressure", std::make_pair(&FlowData<2>::getPressure, &FlowData<2>::setPressure),
-                   "rho_g", std::make_pair(&FlowData<2>::getRho_g, &FlowData<2>::setRho_g),
-                   "eps_s", &FlowData<2>::eps_s,
-                   "velocity_gas", std::make_pair(&FlowData<2>::getVelocityGas, &FlowData<2>::setVelocityGas),
-                   "velocity_solid", std::make_pair(&FlowData<2>::getVelocitySolid, &FlowData<2>::setVelocitySolid) );
-
-MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(FlowData<3>, rho_g_x_eps_g, eps_s, p_g, p_s);
-
-// TODO only temporary
-//MAKE_ATTRIBUTE_TRAIT_IO(FlowData, rho_g, eps_s, p_g, p_s)
-
-
-MAKE_CUSTOM_TRAIT( FlowData<3>,
-                   "eps_g", std::make_pair(&FlowData<3>::getEps_g, &FlowData<3>::setEps_g),
-                   "pressure", std::make_pair(&FlowData<3>::getPressure, &FlowData<3>::setPressure),
-                   "rho_g", std::make_pair(&FlowData<3>::getRho_g, &FlowData<3>::setRho_g),
-                   "eps_s", &FlowData<3>::eps_s,
-                   "velocity_gas", std::make_pair(&FlowData<3>::getVelocityGas, &FlowData<3>::setVelocityGas),
-                   "velocity_solid", std::make_pair(&FlowData<3>::getVelocitySolid, &FlowData<3>::setVelocitySolid) );
+MAKE_CUSTOM_TEMPLATE_TRAIT( (FlowData<Dim>),(unsigned int Dim),
+                   "eps_g", std::make_pair(&FlowData<Dim>::getEps_g, &FlowData<Dim>::setEps_g),
+                   "pressure", std::make_pair(&FlowData<Dim>::getPressure, &FlowData<Dim>::setPressure),
+                   "rho_g", std::make_pair(&FlowData<Dim>::getRho_g, &FlowData<Dim>::setRho_g),
+                   "eps_s", &FlowData<Dim>::eps_s,
+                   "velocity_gas", std::make_pair(&FlowData<Dim>::getVelocityGas, &FlowData<Dim>::setVelocityGas),
+                   "velocity_solid", std::make_pair(&FlowData<Dim>::getVelocitySolid, &FlowData<Dim>::setVelocitySolid) );
 
 
 
@@ -375,12 +358,12 @@ public:
      * @brief
      * Coefitient of artificial diffusion added to calculation of convective flux at all inner edges in order to guarantee numerial stability.
      */
-    double artificialDisspationGas;
+    double artificialDissipationGas;
     /**
      * @brief
      * Coefitient of artificial diffusion added to calculation of convective flux at all inner edges in order to guarantee numerial stability.
      */
-    double artificialDisspationSolid;
+    double artificialDissipationSolid;
     /**
      * @brief d_s
      * Average diameter of the solid particle.
@@ -546,9 +529,9 @@ public:
 
 };
 
-MAKE_ATTRIBUTE_TEMPLATE_TRAIT(PASS(MultiphaseFlow<Dim, BC, Res...>),
-                              PASS(unsigned int Dim, typename BC, unsigned int... Res),
-                              myu, myu_s, R_spec, T, artificialDisspationGas, artificialDisspationSolid, d_s, phi_s, rho_s,
+MAKE_ATTRIBUTE_TEMPLATE_TRAIT((MultiphaseFlow<Dim, BC, Res...>),
+                              (unsigned int Dim, typename BC, unsigned int... Res),
+                              myu, myu_s, R_spec, T, artificialDissipationGas, artificialDissipationSolid, d_s, phi_s, rho_s,
                               outFlow, inFlow_u_s, inFlow_u_g, inFlow_eps_s, inFlow_eps_g);
 
 
@@ -628,7 +611,7 @@ inline void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFluxGa
 
     // flux of density
     double delta_rho = - faceVal.rho_g_x_eps_g * product_of_u_and_n * edgeData.Measure +
-                       (rightData.rho_g_x_eps_g - leftData.rho_g_x_eps_g) * edgeData.MeasureOverDist * artificialDisspationGas;
+                       (rightData.rho_g_x_eps_g - leftData.rho_g_x_eps_g) * edgeData.MeasureOverDist * artificialDissipationGas;
 
 
     // computing the flux of momentum
@@ -639,7 +622,7 @@ inline void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFluxGa
     fluxP_g *= edgeData.Measure;
 
     // add artificial dissipation
-    fluxP_g += (edgeData.MeasureOverDist * artificialDisspationGas * ((rightData.p_g) - (leftData.p_g)));
+    fluxP_g += (edgeData.MeasureOverDist * artificialDissipationGas * ((rightData.p_g) - (leftData.p_g)));
 
     // computation of grad_p
     edgeData.grad_p = ((leftData.getPressure() * edgeData.LeftCellKoef + rightData.getPressure() * edgeData.RightCellKoef) * edgeData.Measure) * edgeData.n;
@@ -669,7 +652,7 @@ inline void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFluxGa
 
     // flux of density
     double delta_rho = -innerCellData.getRho_g() * inFlow_eps_g * product_of_u_and_n * edgeData.Measure +
-                        (innerCellData.getRho_g() * inFlow_eps_g - innerCellData.rho_g_x_eps_g) * edgeData.MeasureOverDist * artificialDisspationGas;
+                        (innerCellData.getRho_g() * inFlow_eps_g - innerCellData.rho_g_x_eps_g) * edgeData.MeasureOverDist * artificialDissipationGas;
 
 
 
@@ -682,7 +665,7 @@ inline void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFluxGa
 
     flux *= edgeData.Measure;
     // artificial dissipation
-    flux += (edgeData.MeasureOverDist * artificialDisspationGas * ((inFlow_u_g * inFlow_eps_g * innerCellData.getRho_g()) - (innerCellData.p_g)));
+    flux += (edgeData.MeasureOverDist * artificialDissipationGas * ((inFlow_u_g * inFlow_eps_g * innerCellData.getRho_g()) - (innerCellData.p_g)));
 
     // adding the element of pressure gradient
     edgeData.grad_p = (innerCellData.getPressure() * edgeData.Measure) * edgeData.n;
@@ -853,7 +836,7 @@ inline void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFluxSo
 
     // flux of mass
     double fluxRho_s = (-rho_s * faceVal.eps_s * edgeData.Measure * product_of_u_s_and_n  +
-                       (rightData.eps_s - leftData.eps_s) * rho_s * edgeData.MeasureOverDist * artificialDisspationSolid);
+                       (rightData.eps_s - leftData.eps_s) * rho_s * edgeData.MeasureOverDist * artificialDissipationSolid);
 
 
     // computing the flux of momentum
@@ -872,7 +855,7 @@ inline void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFluxSo
     fluxP_s *= edgeData.Measure;
 
     // add artificial dissipation
-    fluxP_s += (edgeData.MeasureOverDist * artificialDisspationSolid ) * (rightData.p_s - leftData.p_s);
+    fluxP_s += (edgeData.MeasureOverDist * artificialDissipationSolid ) * (rightData.p_s - leftData.p_s);
 
     edgeData.grad_eps_s = (((leftData.eps_s * edgeData.LeftCellKoef) + (rightData.eps_s * edgeData.RightCellKoef)) * edgeData.Measure) * edgeData.n;
 
@@ -911,7 +894,7 @@ inline void MultiphaseFlow< Dimension, BoundaryCond, Reserve... >::ComputeFluxSo
 
     fluxP_s *= edgeData.Measure;
 
-    fluxP_s += (edgeData.MeasureOverDist * artificialDisspationSolid * ((inFlow_u_s * inFlow_eps_s * rho_s) - (innerCellData.p_s)));
+    fluxP_s += (edgeData.MeasureOverDist * artificialDissipationSolid * ((inFlow_u_s * inFlow_eps_s * rho_s) - (innerCellData.p_s)));
 
     edgeData.grad_eps_s = (inFlow_eps_s * edgeData.Measure) * edgeData.n;
 

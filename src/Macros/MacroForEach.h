@@ -147,6 +147,8 @@
 #define FOR_EACH_3ARGS_1STAT(what, x_stat, ...) FOR_EACH_3ARGS_1STAT_(FOR_EACH_NARG(__VA_ARGS__), what, x_stat, __VA_ARGS__)
 
 #define PASS(...) __VA_ARGS__
+#define WRAP(...) (__VA_ARGS__)
+#define UNWRAP(arg) PASS arg
 
 #define FOR_EACH_3ARGS_1STAT_PASS_00(what, ...)
 #define FOR_EACH_3ARGS_1STAT_PASS_02(what,x_stat, x1, x2, ...)   what(PASS(x_stat), x1, x2)

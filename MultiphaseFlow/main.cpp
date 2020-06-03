@@ -551,8 +551,8 @@ void MultiphaseFlowCalculation(string name) {
     MPFType::ResultType::rho_s = 1700;
 
 
-    mpf.artificialDisspationGas = 0.05;
-    mpf.artificialDisspationSolid = 0.05;
+    mpf.artificialDissipationGas = 0.05;
+    mpf.artificialDissipationSolid = 0.05;
     mpf.R_spec = MPFType::ResultType::R_spec;
     mpf.myu = 1e-5;
     mpf.rho_s = MPFType::ResultType::rho_s;
