@@ -15,7 +15,7 @@ public:
 
     using reader = MeshReader<3>;
 
-    MeshDataContainer<typename reader::type::ElementType, 3> cellTypes;
+    MeshDataContainer<typename reader::elementType::ElementType, 3> cellTypes;
 
 
     FPMAMeshReader() = default;
@@ -25,13 +25,13 @@ public:
     virtual ~FPMAMeshReader() = default;
 
 
-    virtual MeshDataContainer<typename reader::type::ElementType, 3> getCellTypes() const {
+    virtual MeshDataContainer<typename reader::elementType::ElementType, 3> getCellTypes() const {
         return cellTypes;
     }
 
     template<typename IndexType, typename Real, unsigned int ...Reserve>
     void setupCellTypes(const MeshElements<3, IndexType, Real, Reserve...>& mesh){
-        cellTypes.allocateData(mesh, reader::type::ElementType::POLYHEDRON);
+        cellTypes.allocateData(mesh, reader::elementType::ElementType::POLYHEDRON);
     }
 
     template<typename IndexType, typename Real, unsigned int ...Reserve>

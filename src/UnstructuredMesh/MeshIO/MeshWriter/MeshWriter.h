@@ -8,10 +8,8 @@
  */
 template<unsigned int MeshDimension>
 class MeshWriter{
-
-
-protected:
-
+public:
+    virtual ~MeshWriter() = default;
 
 private:
     template<unsigned int Dim, typename Dummy = void>
@@ -41,7 +39,7 @@ private:
         char bytes[sizeof (HashData<IndexType, Real>) + 1] = {};
     };
 public:
-    using type = MeshNativeType<MeshDimension>;
+    using elementType = MeshNativeType<MeshDimension>;
 
     /**
      * @brief computeHash<HR>

@@ -51,10 +51,10 @@ struct _ComputeNormals<3, Method>{
                         const MeshElements<3, IndexType, Real, Reserve...>& mesh){
         for (auto& face : mesh.getFaces()) {
 
-            bool vectorSign = true;
+            double vectorSign = 1.0;
             IndexType cellIndex = face.getCellLeftIndex();
             if (isInvalidIndex( cellIndex ) || isBoundaryIndex( cellIndex )) {
-                vectorSign = false;
+                vectorSign = -1.0;
                 cellIndex = face.getCellRightIndex();
             }
 
@@ -73,15 +73,7 @@ struct _ComputeNormals<3, Method>{
 
             gramSchmidt<3,3,IndexType, Real>(gsVecs, gsNorms);
 
-            auto& faceNormal = gsVecs[2];
-
-            if (!vectorSign) {
-                faceNormal *= -1;
-            }
-
-            normals.at(face)[0] = fabs(faceNormal[0]) < 1e-8 ? 0 : faceNormal[0];
-            normals.at(face)[1] = fabs(faceNormal[1]) < 1e-8 ? 0 : faceNormal[1];
-            normals.at(face)[2] = fabs(faceNormal[2]) < 1e-8 ? 0 : faceNormal[2];
+            normals[face] = vectorSign * gsVecs[2];
         }
     }
 };
@@ -129,9 +121,7 @@ struct _ComputeNormals<3, METHOD_TESSELLATED>{
             if (!vectorSign) {
                 faceNormal *= -1;
             }
-            normals.at(face)[0] = fabs(faceNormal[0]) < 1e-8 ? 0 : faceNormal[0];
-            normals.at(face)[1] = fabs(faceNormal[1]) < 1e-8 ? 0 : faceNormal[1];
-            normals.at(face)[2] = fabs(faceNormal[2]) < 1e-8 ? 0 : faceNormal[2];
+            normals[face] =  faceNormal;
         }
     }
 };

@@ -9,13 +9,13 @@
 template<unsigned int MeshDimension>
 class MeshReader{
 public:
-    using type = MeshNativeType<MeshDimension>;
+    using elementType = MeshNativeType<MeshDimension>;
 
     /**
      * @brief Returns the types of the loaded cells.
      */
     virtual
-    MeshDataContainer<typename type::ElementType, MeshDimension>
+    MeshDataContainer<typename elementType::ElementType, MeshDimension>
     getCellTypes() const = 0;
 };
 

@@ -20,11 +20,11 @@ public:
 template<typename IndexType, typename Real>
 class VTKMeshWriter<2, IndexType, Real> : public MeshWriter<2>{
     using writer = MeshWriter<2>;
-    std::map<typename writer::type::ElementType, int> TypeConversionTable{
-        {writer::type::ElementType::LINE, 3},
-        {writer::type::ElementType::TRIANGLE, 5},
-        {writer::type::ElementType::QUAD, 9},
-        {writer::type::ElementType::POLYGON, 7},
+    std::map<typename writer::elementType::ElementType, int> TypeConversionTable{
+        {writer::elementType::ElementType::LINE, 3},
+        {writer::elementType::ElementType::TRIANGLE, 5},
+        {writer::elementType::ElementType::QUAD, 9},
+        {writer::elementType::ElementType::POLYGON, 7},
     };
 public:
     void writeHeader(std::ostream& ost, const std::string& dataName) {
@@ -135,7 +135,7 @@ public:
     template<unsigned int ...Reserve>
     void writeToStream(std::ostream& ost,
                        MeshElements<2, IndexType, Real, Reserve...>& mesh,
-                       MeshDataContainer<typename writer::type::ElementType, 2> cellTypes){
+                       MeshDataContainer<typename writer::elementType::ElementType, 2> cellTypes){
 
         size_t curHash = writer::computeHash(mesh);
         // if the mesh is the same as it was, return
@@ -169,7 +169,7 @@ public:
         ost << std::endl;
 
         ost << "CELL_TYPES " << mesh.getCells().size() << std::endl;
-        for (typename writer::type::ElementType type : cellTypes.template getDataByPos<0>()) {
+        for (typename writer::elementType::ElementType type : cellTypes.template getDataByPos<0>()) {
             ost << TypeConversionTable.at(type) << "\n";
         }
         ost << std::endl;
@@ -183,11 +183,11 @@ public:
 template<typename IndexType, typename Real>
 class VTKMeshWriter<3, IndexType, Real> : public MeshWriter<3>{
     using writer = MeshWriter<3>;
-    std::map<typename writer::type::ElementType, int> TypeConversionTable{
-        {writer::type::ElementType::TETRA, 10},
-        {writer::type::ElementType::HEXAHEDRON, 12},
-        {writer::type::ElementType::WEDGE, 13},
-        {writer::type::ElementType::PYRAMID, 14},
+    std::map<typename writer::elementType::ElementType, int> TypeConversionTable{
+        {writer::elementType::ElementType::TETRA, 10},
+        {writer::elementType::ElementType::HEXAHEDRON, 12},
+        {writer::elementType::ElementType::WEDGE, 13},
+        {writer::elementType::ElementType::PYRAMID, 14},
     };
 
 public:
@@ -207,7 +207,7 @@ public:
      * Vertices of all cells in correct order for vtk export.
      */
     MeshDataContainer<std::vector<IndexType>, 3> cellVert;
-    MeshDataContainer<typename writer::type::ElementType, 3> cellTypes;
+    MeshDataContainer<typename writer::elementType::ElementType, 3> cellTypes;
 
     /**
      * @brief totalNumberOfWrittenElements<HR>
@@ -293,9 +293,11 @@ private:
             MeshDataContainer<std::vector<bool>,2>& faceEdgeOri,
             std::vector<IndexType>& vertWrit
             ){
+
         indexFace(mesh,face, cell, faceEdgeOri, vertWrit);
 
-        for (IndexType index : cellVert[cell]) {
+        auto lambdaProc = [&](IndexType, IndexType index){
+
             bool vertOK = true;
             for (IndexType i : vertWrit){
                if (i == index){
@@ -305,7 +307,10 @@ private:
             if (vertOK){
                 vertWrit.push_back(index);
             }
-        }
+        };
+        MeshApply<3, 0>::apply( cell.getIndex(),
+                                mesh,
+                                lambdaProc );
     }
 
 
@@ -401,7 +406,7 @@ public:
      */
     template<unsigned int ...Reserve>
     void indexMesh(MeshElements<3, IndexType, Real, Reserve...>& mesh,
-                   MeshDataContainer<typename writer::type::ElementType, 3> cellTypes){
+                   MeshDataContainer<typename writer::elementType::ElementType, 3> cellTypes){
 
         appendedVertices.clear();
         cellVert.template getDataByPos<0>().clear();
@@ -410,7 +415,7 @@ public:
 DBGMSG("indexing mesh");
         // write cells of the mesh
         // prepare connections
-        auto cellVert = MeshConnections<3,0>::connections(mesh);
+        auto cellVert = MeshConnections<3,0,ORDER_ASCEND>::connections(mesh);
 
         // prepare orientation for correct export
         // this is very expensive procedure
@@ -431,19 +436,20 @@ DBGMSG("indexing mesh");
 
 
             // Cell type TETRA
-            case writer::type::ElementType::TETRA :{
+            case writer::elementType::ElementType::TETRA :{
                 // every face is base face for TETRAHEDRON
                 auto& face = mesh.getFaces().at(cell.getBoundaryElementIndex());
 
                 indexPyramid(mesh, cell, face, faceEdgeOri, vertWrit);
                 this->cellVert.template getDataByPos<0>().push_back(vertWrit);
                 this->cellTypes.template getDataByPos<0>().push_back(cellTypes.at(cell));
+
             }break;
 
 
 
             // Cell type PYRAMID
-            case writer::type::ElementType::PYRAMID :{
+            case writer::elementType::ElementType::PYRAMID :{
 
                 // search for the base face
                 typename MeshElements<3, IndexType, Real, Reserve...>::Face* face = nullptr;
@@ -468,7 +474,7 @@ DBGMSG("indexing mesh");
 
 
             // Cell type WEDGE
-            case writer::type::ElementType::WEDGE :{
+            case writer::elementType::ElementType::WEDGE :{
                 // write vertices of one face
                 typename MeshElements<3, IndexType, Real, Reserve...>::Face* face = nullptr;
                 // search for the base face
@@ -491,7 +497,7 @@ DBGMSG("indexing mesh");
 
 
             // Cell type HEXAHEDRON
-            case writer::type::ElementType::HEXAHEDRON :{
+            case writer::elementType::ElementType::HEXAHEDRON :{
                 // write vertices of one face
                 auto& face = mesh.getFaces().at(cell.getBoundaryElementIndex());
 
@@ -544,7 +550,7 @@ DBGMSG("indexing mesh");
                         vertWrit.push_back(cellCenterIndex);
                         backwardCellIndexMapping[this->cellVert.template getDataByPos<0>().size()] = cell.getIndex();
                         this->cellVert.template getDataByPos<0>().push_back(vertWrit);
-                        this->cellTypes.template getDataByPos<0>().push_back(writer::type::ElementType::TETRA);
+                        this->cellTypes.template getDataByPos<0>().push_back(writer::elementType::ElementType::TETRA);
                     }
 
                     tmpFace = face.getNextBElem(cell.getIndex());
@@ -576,10 +582,9 @@ DBGMSG("indexing mesh");
     template<unsigned int ...Reserve>
     void writeToStream(std::ostream& ost,
                        MeshElements<3, IndexType, Real, Reserve...>& mesh,
-                       MeshDataContainer<typename writer::type::ElementType, 3> cellTypes){
+                       MeshDataContainer<typename writer::elementType::ElementType, 3> cellTypes){
         // create index of mesh if the mesh has changed
         size_t curHash = writer::computeHash(mesh);
-
         // if the mesh is not the same as it was,
         // then update the index
         if (lastHash != curHash){
@@ -587,13 +592,16 @@ DBGMSG("indexing mesh");
         }
         lastHash = curHash;
 
+
         // first write verices
         ost << "POINTS " << mesh.getVertices().size() + appendedVertices.size() <<
                " double" << std::endl;
 
+
         for(auto vert : mesh.getVertices()) {
             ost << vert[0] << ' ' << vert[1] << ' ' << vert[2] <<"\n";
         }
+
 
         for(auto vert : appendedVertices) {
             ost << vert[0] << ' ' << vert[1] << ' ' << vert[2] <<"\n";
@@ -618,7 +626,7 @@ DBGMSG("indexing mesh");
         ost << std::endl;
 
         ost << "CELL_TYPES " << this->cellTypes.template getDataByPos<0>().size() << std::endl;
-        for (typename writer::type::ElementType type : this->cellTypes.template getDataByPos<0>()) {
+        for (typename writer::elementType::ElementType type : this->cellTypes.template getDataByPos<0>()) {
             ost << TypeConversionTable.at(type) << "\n";
         }
         ost << std::endl;

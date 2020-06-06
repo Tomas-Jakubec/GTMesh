@@ -29,16 +29,16 @@ public:
 template<>
 class VTKMeshReader<2> : public MeshReader<2>{
     using reader = MeshReader<2>;
-    std::map<int, typename reader::type::ElementType> TypeConversionTable{
-        {3, reader::type::ElementType::LINE},
-        {5, reader::type::ElementType::TRIANGLE},
-        {8, reader::type::ElementType::QUAD},
-        {9, reader::type::ElementType::QUAD},
-        {7, reader::type::ElementType::POLYGON},
+    std::map<int, typename reader::elementType::ElementType> TypeConversionTable{
+        {3, reader::elementType::ElementType::LINE},
+        {5, reader::elementType::ElementType::TRIANGLE},
+        {8, reader::elementType::ElementType::QUAD},
+        {9, reader::elementType::ElementType::QUAD},
+        {7, reader::elementType::ElementType::POLYGON},
     };
 
 
-    MeshDataContainer<typename reader::type::ElementType, 2> cellTypes;
+    MeshDataContainer<typename reader::elementType::ElementType, 2> cellTypes;
     // file indexing
     //
 
@@ -50,7 +50,7 @@ public:
 
     virtual ~VTKMeshReader() = default;
 
-    virtual MeshDataContainer<typename reader::type::ElementType, 2> getCellTypes() const {
+    virtual MeshDataContainer<typename reader::elementType::ElementType, 2> getCellTypes() const {
         return cellTypes;
     }
 
@@ -135,7 +135,7 @@ public:
         for (IndexType i = 0; i < numCells; i++) {
             int vtkType = 0;
             ist >> vtkType;
-            typename std::map<int, typename reader::type::ElementType>::iterator typeIt = TypeConversionTable.find(vtkType);
+            typename std::map<int, typename reader::elementType::ElementType>::iterator typeIt = TypeConversionTable.find(vtkType);
             if (typeIt != TypeConversionTable.end()){
                 cellTypes.template getDataByPos<0>().at(i) = typeIt->second;
             } else {
@@ -202,12 +202,12 @@ public:
 template<>
 class VTKMeshReader<3> : public MeshReader<3>{
     using reader = MeshReader<3>;
-    std::map<int, typename reader::type::ElementType> TypeConversionTable{
-        {10, reader::type::ElementType::TETRA},
-        {11, reader::type::ElementType::HEXAHEDRON},
-        {12, reader::type::ElementType::HEXAHEDRON},
-        {13, reader::type::ElementType::WEDGE},
-        {14, reader::type::ElementType::PYRAMID},
+    std::map<int, typename reader::elementType::ElementType> TypeConversionTable{
+        {10, reader::elementType::ElementType::TETRA},
+        {11, reader::elementType::ElementType::HEXAHEDRON},
+        {12, reader::elementType::ElementType::HEXAHEDRON},
+        {13, reader::elementType::ElementType::WEDGE},
+        {14, reader::elementType::ElementType::PYRAMID},
     };
     const std::map<
         const int,
@@ -279,7 +279,7 @@ class VTKMeshReader<3> : public MeshReader<3>{
         },
     };
 
-    MeshDataContainer<typename reader::type::ElementType, 3> cellTypes;
+    MeshDataContainer<typename reader::elementType::ElementType, 3> cellTypes;
     // file indexing
     //
 
@@ -293,7 +293,7 @@ public:
     template<typename IndexType, typename Real, unsigned int ...Reserve>
     VTKMeshReader(const MeshElements<3, IndexType, Real, Reserve...>&){}
 
-    virtual MeshDataContainer<typename reader::type::ElementType, 3> getCellTypes() const {
+    virtual MeshDataContainer<typename reader::elementType::ElementType, 3> getCellTypes() const {
         return cellTypes;
     }
 
@@ -414,7 +414,7 @@ public:
         for (IndexType i = 0; i < numCells; i++) {
             int vtkType = 0;
             ist >> vtkType;
-            typename std::map<int, typename reader::type::ElementType>::iterator typeIt = TypeConversionTable.find(vtkType);
+            typename std::map<int, typename reader::elementType::ElementType>::iterator typeIt = TypeConversionTable.find(vtkType);
             if (typeIt != TypeConversionTable.end()){
                 cellTypes.template getDataByPos<0>().at(i) = typeIt->second;
             } else {

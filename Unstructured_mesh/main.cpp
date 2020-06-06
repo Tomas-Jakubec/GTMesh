@@ -970,7 +970,7 @@ void test3DMeshLoad() {
     ifstream file("test_3Dmesh.vtk");
     reader.loadFromStream(file, mesh);
 
-DBGVAR(mesh.getVertices().size(),mesh.getEdges().size(), mesh.getFaces().size(), mesh.getCells().size());
+    DBGVAR(mesh.getVertices().size(),mesh.getEdges().size(), mesh.getFaces().size(), mesh.getCells().size());
     DBGVAR(mesh.getVertices());
 
 
@@ -1001,14 +1001,14 @@ DBGVAR(mesh.getVertices().size(),mesh.getEdges().size(), mesh.getFaces().size(),
 
     mesh.initializeCenters();
     DBGVAR(mesh.computeElementMeasures().getDataByDim<3>(),computeCenters<METHOD_DEFAULT>(mesh).getDataByDim<2>(),mesh.computeFaceNormals().getDataByPos<0>());
-
-
-
+    DBGVAR((MeshConnections<3,0>::connections(mesh).getDataByPos<0>()));
+DBGVAR(reader.getCellTypes().getDataByPos<0>());
     VTKMeshWriter<3, size_t, double> writer;
     ofstream out3D("3D_test_mesh_output.vtk");
     writer.writeHeader(out3D, "test data");
     writer.writeToStream(out3D, mesh, reader.getCellTypes());
-
+    auto wrt = mesh.write("3D_test_mesh_output1.vtk", reader.getCellTypes(), "Test data");
+    mesh.write("3D_test_mesh_output1.vtk", wrt, reader.getCellTypes(), "Test data");
 }
 
 
@@ -1083,164 +1083,19 @@ void testFPMA_poly(){
 
 }
 
-void MeshExample(){
-    UnstructuredMesh<3,size_t, double, 6> mesh;
-    // load the mesh from fpma file
-    FPMAMeshReader<3> reader;
-    ifstream file("MeshFile.fpma");
-    reader.loadFromStream(file, mesh);
-
-    // export the mesh into VTK file
-    VTKMeshWriter<3, size_t, double> writer;
-    ofstream ofile("Spark_mesh.vtk");
-    writer.writeHeader(ofile, "fpma_output_test");
-    writer.writeToStream(ofile, mesh, MeshDataContainer<MeshNativeType<3>::ElementType, 3>(mesh, MeshNativeType<3>::POLYHEDRON));
-
-    // obtaining the cell with index 0
-    mesh.getElements<3>().at(0);
-    mesh.getCells().at(0);
-
-    // otaining the vertex on index 0
-    mesh.getElements<0>().at(0);
-    mesh.getVertices().at(0);
-
-    // iteration over boundary of cell 0
-    auto& cell_0 = mesh.getCells().at(0);
-    size_t bElemIndex = cell_0.getBoundaryElementIndex();
-    do {
-        // ... do some stuff
-        // get next boundary element index
-        bElemIndex = mesh.getFaces().at(bElemIndex).getNextBElem(cell_0.getIndex());
-    } while (bElemIndex != cell_0.getBoundaryElementIndex());
-
-    // or equivalently
-    mesh.apply<3, 2>(
-                0,
-                [](size_t cellIndex, size_t faceIndex){
-        // ... do some stuff
-    });
-
-
-
-    // moreover it is possible to perform deeper loops
-    // and for all elements
-    mesh.apply<3, 0>(
-                [](size_t cellIndex, size_t faceIndex){
-        // ... do some stuff
-    });
-
-    // connections from vertices to cells
-    auto vertexToCellConnection = mesh.connections<0,3>();
-
-    // obtain respective Lebesgue measure of all elements of the mesh
-    // with dimension greater than 0
-    auto measures = mesh.computeElementMeasures();
-
-    // the length of edge with index 0
-    measures.getDataByDim<1>()[0];
-
-    // the length of edge with index 0
-    measures.getDataByDim<2>()[0];
-
-    // the volume of the cell 0
-    measures[cell_0];
-
-    // obtain vectors perpendiculat ro faces
-    auto normals = mesh.computeFaceNormals();
-
-    // calculate the centers of all elements with dimension greater than 0
-    auto centers = computeCenters<METHOD_DEFAULT>(mesh);
-
-}
-
-// function calculating sum of vertex indexes conndected to a cell in 2D
-template<typename IndexType, typename Real, unsigned int ...Reserve>
-MeshDataContainer<IndexType,2>
-countCellsVerticesIndexes(const MeshElements<2, IndexType, Real, Reserve...>& mesh){
-    // prepare container for the result
-    // resize to the mesh dimesnions and initialize with 0
-    MeshDataContainer<IndexType, 2> result(mesh, 0);
-
-    // loop over cell elements
-    for(IndexType cellIndex = 0; cellIndex < mesh.getCells().size(); cellIndex++){
-        // obtain the boundary element index (face=edge)
-        IndexType bElemIndex = mesh.getCells()[cellIndex].getBoundaryElementIndex();
-
-        // repeat until the first approached element is reached
-        do {
-            // because the boundary element is an edge, it has two vertices
-            result.template getDataByDim<2>()[cellIndex] += mesh.getEdges()[bElemIndex].getVertexAIndex();
-            result.template getDataByDim<2>()[cellIndex] += mesh.getEdges()[bElemIndex].getVertexBIndex();
-
-            // move to the next boundary element
-            bElemIndex = mesh.getEdges()[bElemIndex].getNextBElem(cellIndex);
-
-        } while (bElemIndex != mesh.getCells()[cellIndex].getBoundaryElementIndex());
-    }
-    return result;
-}
-
-// function calculating sum of vertex indexes connected to a cell in 3D
-template<typename IndexType, typename Real, unsigned int ...Reserve>
-MeshDataContainer<IndexType,3>
-countCellsVerticesIndexes(const MeshElements<3, IndexType, Real, Reserve...>& mesh){
-    // prepare container for the result
-    // resize to the mesh dimesnions and initialize with 0
-    MeshDataContainer<IndexType, 3> result(mesh, 0);
-
-    // loop over cell elements
-    for(IndexType cellIndex = 0; cellIndex < mesh.getCells().size(); cellIndex++){
-        // obtain the boundary element index (face)
-        IndexType bElemIndex = mesh.getCells()[cellIndex].getBoundaryElementIndex();
-
-        // repeat until the first approached face element is reached
-        do {
-            // loop over the edges of the face
-            for(IndexType edgeIndex : mesh.getFaces()[bElemIndex].getSubelements()){
-                // edge has two vertices
-                result.template getDataByDim<3>()[cellIndex] += mesh.getEdges()[edgeIndex].getVertexAIndex();
-                result.template getDataByDim<3>()[cellIndex] += mesh.getEdges()[edgeIndex].getVertexBIndex();
-            }
-            // move to the next boundary element
-            bElemIndex = mesh.getFaces()[bElemIndex].getNextBElem(cellIndex);
-
-        } while (bElemIndex != mesh.getCells()[cellIndex].getBoundaryElementIndex());
-    }
-    return result;
-}
-
-// function calculating sum of vertex indexes connected to a cell in generic dimension
-template<unsigned int MeshDim, typename IndexType, typename Real, unsigned int ...Reserve>
-MeshDataContainer<IndexType, MeshDim>
-countCellsVerticesIndexesGeneric(const MeshElements<MeshDim, IndexType, Real, Reserve...>& mesh){
-    // prepare container for the result
-    // resize to the mesh dimesnions and initialize with 0
-    MeshDataContainer<IndexType, MeshDim> result(mesh, 0);
-
-    // prepare the function to be applied in the loop
-    auto countLambda = [&result](IndexType cellIndex, IndexType vertIndex){
-        // add the index of vertex at the position
-        result.template getDataByDim<MeshDim>()[cellIndex] += vertIndex;
-    };
-
-    // loop over cells vertices using the MeshApply concept
-    MeshApply<MeshDim, 0>::apply(mesh,countLambda);
-
-    return result;
-}
 
 int main()
 {
     //meshSize();
-    testMesh2D();
+    //testMesh2D();
     //testMesh2DLoadAndWrite();
-    testMesh3D();
+    //testMesh3D();
     //test3DMeshDeformedPrisms();
-    testMeshRefine();
-    testMeshDataContainer();
+    //testMeshRefine();
+    //testMeshDataContainer();
     //UnstructuredMesh<5, size_t, double, 6,5,4> m;
     //m.ComputeElementMeasures();
-    //test3DMeshLoad();
+    test3DMeshLoad();
 
     //testFPMA_poly();
 

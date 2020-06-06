@@ -7,6 +7,8 @@
 #include "MeshIO/MeshReader/FPMAMeshReader.h"
 #include "MeshIO/MeshReader/VTKMeshReader.h"
 
+#include "MeshIO/MeshWriter/FPMAMeshWriter.h"
+#include "MeshIO/MeshWriter/VTKMeshWriter.h"
 
 
 /**
@@ -159,8 +161,8 @@ public:
      * @brief Loads the mesh from a file passed as parameter filePath.
      * For mesh with dimension 3, there are 2 provided formats VTK and FPMA.
      */
-    template<unsigned int MeshDim = MeshDimension>
-    typename std::enable_if<MeshDim == 3,std::unique_ptr<MeshReader<MeshDimension>>>::type
+    template<typename...T, unsigned int MeshDim = MeshDimension, typename std::enable_if<MeshDim == 3, bool>::type = true>
+    std::unique_ptr<MeshReader<MeshDimension>>
     load(const std::string& filePath){
 
         typedef std::unique_ptr<MeshReader<MeshDimension>> retType;
@@ -191,11 +193,11 @@ public:
     }
 
     /**
-     * @brief Loads the mesh from a file passed as parameter filePath.
-     * For mesh with dimension 2, only VTK format is supported so far.
+     * @brief Loads the mesh from a file passed as the parameter filePath.
+     * For the mesh with dimension 2, only VTK format is supported so far.
      */
-    template<unsigned int MeshDim = MeshDimension>
-    typename std::enable_if<MeshDim == 2,std::unique_ptr<MeshReader<MeshDimension>>>::type
+    template<typename...T, unsigned int MeshDim = MeshDimension, typename std::enable_if<MeshDim == 2, bool>::type = true>
+    std::unique_ptr<MeshReader<MeshDimension>>
     load(const std::string& filePath){
 
         typedef std::unique_ptr<MeshReader<MeshDimension>> retType;
@@ -217,6 +219,187 @@ public:
 
         return reader_ptr;
     }
+
+
+    /**
+     * @brief Writes the mesh from a file passed as parameter filePath.
+     * For mesh with dimension 3, there are 2 provided formats VTK and FPMA.
+     * For the mesh with dimension 2, only VTK format is supported so far.
+     */
+    std::unique_ptr<MeshWriter<MeshDimension>>
+    write(const std::string& filePath,
+          const MeshReader<MeshDimension>& meshReader,
+          const std::string& dataHeader = ""){
+        return write(filePath, meshReader.getCellTypes(), dataHeader);
+    }
+
+    /**
+     * @brief Writes the mesh from a file passed as parameter filePath.
+     * For mesh with dimension 3, there are 2 provided formats VTK and FPMA.
+     * For the mesh with dimension 2, only VTK format is supported so far.
+     */
+    void
+    write(const std::string& filePath,
+          std::unique_ptr<MeshWriter<MeshDimension>>& writer,
+          const MeshReader<MeshDimension>& meshReader,
+          const std::string& dataHeader = ""){
+        return write(filePath, writer, meshReader.getCellTypes(), dataHeader);
+    }
+protected:
+    template<unsigned int MeshDim = MeshDimension, typename std::enable_if<MeshDim == 3, bool>::type = true>
+    auto PolytopeType() {
+        return MeshReader<MeshDim>::elementType::ElementType::POLYHEDRON;
+    };
+    template<unsigned int MeshDim = MeshDimension, typename std::enable_if<MeshDim == 2, bool>::type = true>
+    auto PolytopeType() {
+        return MeshReader<MeshDim>::elementType::ElementType::POLYGON;
+    };
+
+
+public:
+    /**
+     * @brief Writes the mesh from a file passed as parameter filePath.
+     * For mesh with dimension 3, there are 2 provided formats VTK and FPMA.
+     * For the mesh with dimension 2, only VTK format is supported so far.
+     */
+    std::unique_ptr<MeshWriter<MeshDimension>>
+    write(const std::string& filePath,
+          const std::string& dataHeader = ""){
+        using ET = typename MeshReader<MeshDimension>::elementType::ElementType;
+        MeshDataContainer<ET, MeshDimension> cellTypes;
+        cellTypes.allocateData(*this, PolytopeType());
+        return write(filePath, cellTypes, dataHeader);
+    }
+
+    /**
+     * @brief Writes the mesh from a file passed as parameter filePath.
+     * For mesh with dimension 3, there are 2 provided formats VTK and FPMA.
+     */
+    template<typename...T, unsigned int MeshDim = MeshDimension, typename std::enable_if<MeshDim == 3, bool>::type = true>
+    std::unique_ptr<MeshWriter<MeshDimension>>
+    write(const std::string& filePath,
+          const MeshDataContainer<typename MeshWriter<MeshDimension>::elementType::ElementType, MeshDim>& cellTypes,
+          const std::string& dataHeader = ""){
+
+        typedef std::unique_ptr<MeshWriter<MeshDimension>> retType;
+        retType writer_ptr;
+
+        if (filePath.find(".vtk") != filePath.npos){
+            DBGMSG("file recognized as VTK");
+            writer_ptr = std::make_unique<VTKMeshWriter<MeshDimension>>();
+            write(filePath, writer_ptr, cellTypes, dataHeader);
+        }
+
+        if (filePath.find(".fpma") != filePath.npos){
+            DBGMSG("file recognized as FPMA");
+            writer_ptr = std::make_unique<FPMAMeshWriter<MeshDimension>>();
+            write(filePath, writer_ptr, cellTypes, dataHeader);
+        }
+
+        return writer_ptr;
+    }
+
+
+    /**
+     * @brief Writes the mesh from a file passed as parameter filePath.
+     * For mesh with dimension 3, there are 2 provided formats VTK and FPMA.
+     */
+    template<typename...T, unsigned int MeshDim = MeshDimension, typename std::enable_if<MeshDim == 3, bool>::type = true>
+    void
+    write(const std::string& filePath,
+          std::unique_ptr<MeshWriter<MeshDimension>>& writer,
+          const MeshDataContainer<typename MeshWriter<MeshDimension>::elementType::ElementType, MeshDim>& cellTypes = MeshDataContainer<typename MeshWriter<MeshDimension>::elementType::ElementType, MeshDim>(),
+          const std::string& dataHeader = ""){
+        if (writer == nullptr) {
+            writer = write(filePath, cellTypes, dataHeader);
+        } else {
+
+            std::ofstream file(filePath, std::ios::binary);
+            if (!file.is_open()) {
+                throw std::runtime_error("was not able to open file: \"" + filePath + "\"");
+            }
+
+            if (typeid (*writer.get()) == typeid (VTKMeshWriter<MeshDimension>)){
+                DBGMSG("writer recognized as VTK");
+                auto writer_loc = dynamic_cast<VTKMeshWriter<MeshDimension>*>(writer.get());
+                writer_loc->writeHeader(file, dataHeader);
+                if (cellTypes.template getDataByPos<0>().size() == 0) {
+                    MeshDataContainer<typename MeshWriter<MeshDimension>::elementType::ElementType, MeshDim> locCellTypes(*this, PolytopeType());
+                    writer_loc->writeToStream(file, *this, locCellTypes);
+                } else {
+                    writer_loc->writeToStream(file, *this, cellTypes);
+                }
+            }
+
+            else if (typeid (*writer.get()).hash_code() == typeid (FPMAMeshWriter<MeshDimension>).hash_code()){
+                DBGMSG("writer recognized as FPMA");
+                auto reader = dynamic_cast<FPMAMeshWriter<MeshDimension>*>(writer.get());
+                reader->writeToStream(file, *this);
+            }
+            file.close();
+        }
+    }
+
+
+    /**
+     * @brief Writer the mesh to a file passed as the parameter filePath.
+     * For the mesh with dimension 2, only VTK format is supported so far.
+     */
+    template<typename...T, unsigned int MeshDim = MeshDimension, typename std::enable_if<MeshDim == 2, bool>::type = true>
+    std::unique_ptr<MeshReader<MeshDimension>>
+    write(const std::string& filePath,
+          const MeshDataContainer<typename MeshWriter<MeshDimension>::elementType::ElementType, MeshDim>& cellTypes,
+          const std::string& dataHeader = ""){
+
+        typedef std::unique_ptr<MeshWriter<MeshDimension>> retType;
+        retType writer_ptr;
+
+        if (filePath.find(".vtk") != filePath.npos){
+            DBGMSG("file recognized as VTK");
+            writer_ptr = std::make_unique<VTKMeshWriter<MeshDimension>>();
+            write(filePath, writer_ptr, cellTypes, dataHeader);
+        }
+
+        return writer_ptr;
+    }
+
+    /**
+     * @brief Writer the mesh to a file passed as the parameter filePath.
+     * For the mesh with dimension 2, only VTK format is supported so far.
+     */
+    template<typename...T, unsigned int MeshDim = MeshDimension, typename std::enable_if<MeshDim == 2, bool>::type = true>
+    void
+    write(const std::string& filePath,
+          std::unique_ptr<MeshWriter<MeshDimension>>& writer,
+          const MeshDataContainer<typename MeshWriter<MeshDimension>::elementType::ElementType, MeshDim>& cellTypes = MeshDataContainer<typename MeshWriter<MeshDimension>::elementType::ElementType, MeshDim>(),
+          const std::string& dataHeader = ""){
+        if (writer == nullptr) {
+            writer = write(filePath, cellTypes, dataHeader);
+        } else {
+
+            std::ofstream file(filePath, std::ios::binary);
+            if (!file.is_open()) {
+                throw std::runtime_error("was not able to open file: \"" + filePath + "\"");
+            }
+
+            if (typeid (*writer.get()) == typeid (VTKMeshWriter<MeshDimension>)){
+                DBGMSG("writer recognized as VTK");
+                auto writer_loc = dynamic_cast<VTKMeshWriter<MeshDimension>*>(writer.get());
+                writer_loc->writeHeader(file, dataHeader);
+                if (cellTypes.template getDataByPos<0>().size() == 0) {
+                    MeshDataContainer<typename MeshWriter<MeshDimension>::elementType::ElementType, MeshDim> locCellTypes(*this, PolytopeType());
+                    writer_loc->writeToStream(file, *this, locCellTypes);
+                } else {
+                    writer_loc->writeToStream(file, *this, cellTypes);
+                }
+            }
+
+            file.close();
+        }
+
+    }
+
+
 };
 
 #endif // UNSTRUCTUREDMESH_H

@@ -2615,23 +2615,29 @@ void testFactorial() {
 
 
 
+
+
 int main()
 {
+
     //testDebug();
     //testOperator();
     //testMemberRef();
     //testConstrucorOrder();
+
     //testFunction();
     //testCalcCent();
     //testStructTransposition();
     //testTraitApply();
+
     //testCompileTimeTraits();
     //testTraitPerformance();
     //testCustomUnorderedMap();
     //testPrivateTrait();
     //testJson();
     //testTestTraits();
-    testTraitsAlgorithms();
+
+    //testTraitsAlgorithms();
     //testNumericTraitsPerformance();
     //testTraitsTuple();
     //testFactorial();

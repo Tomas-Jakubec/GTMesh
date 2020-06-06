@@ -113,7 +113,7 @@ public:
      * Exports the mesh to the output stream in VTK format.
      * If the mesh is written for the first time, it is indexed.
      * @see indexMesh
-     * @param ost
+     * @param ost output stream
      * @param mesh
      * @param cellTypes the types of cells in NativeType format
      */
