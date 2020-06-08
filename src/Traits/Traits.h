@@ -348,6 +348,8 @@ auto& get(ArythmeticTraitT* arg){
 #define IMPL_NAME_AND_REF(Class, name, member) name, (&Class::member)
 #define IMPL_NAME_ATT(attribute) #attribute, attribute
 
+#define IMPL_NAME_AND_REF_TEMPLATE(Class, name, member) name, (&UNWRAP(Class)::member)
+
 #define IMPL_MAKE_CUSTOM_TRAIT(TraitName,Class,...) \
 template<> \
 class TraitName<Class>{ \
@@ -358,10 +360,10 @@ public: \
 }
 
 #define IMPL_MAKE_CUSTOM_TEMPLATE_TRAIT(TraitName, TemplateParameters, Class,...) \
-template<TemplateParameters> \
-class TraitName<Class>{ \
+template<UNWRAP(TemplateParameters)> \
+class TraitName<UNWRAP(Class)>{ \
 public: \
-    using traitsType = ::Traits<PASS(Class), FOR_EACH_2ARGS(IMPL_MEMREF_TYPE_CUSTOM, __VA_ARGS__)>; \
+    using traitsType = ::Traits<UNWRAP(Class), FOR_EACH_2ARGS(IMPL_MEMREF_TYPE_CUSTOM, __VA_ARGS__)>; \
     static const traitsType getTraits() {return traitsType(__VA_ARGS__);} \
     static constexpr unsigned int size() {return traitsType::size();}\
 }
@@ -373,11 +375,11 @@ public: \
 #define MAKE_ATTRIBUTE_TRAIT(Class, ...) MAKE_NAMED_ATTRIBUTE_TRAIT(Class, FOR_EACH(IMPL_NAME_ATT, __VA_ARGS__))
 
 
-#define MAKE_CUSTOM_TEMPLATE_TRAIT(Class, TemplateParameters, ...) IMPL_MAKE_CUSTOM_TEMPLATE_TRAIT(Traits, PASS(TemplateParameters), PASS(Class), __VA_ARGS__) // defining specialization for Traits
+#define MAKE_CUSTOM_TEMPLATE_TRAIT(Class, TemplateParameters, ...) IMPL_MAKE_CUSTOM_TEMPLATE_TRAIT(Traits, TemplateParameters, Class, __VA_ARGS__) // defining specialization for Traits
 
-#define MAKE_NAMED_ATTRIBUTE_TEMPLATE_TRAIT(Class, TemplateParameters, ...) MAKE_CUSTOM_TEMPLATE_TRAIT(PASS(Class), PASS(TemplateParameters), FOR_EACH_3ARGS_1STAT_PASS(IMPL_NAME_AND_REF, PASS(Class), __VA_ARGS__))
+#define MAKE_NAMED_ATTRIBUTE_TEMPLATE_TRAIT(Class, TemplateParameters, ...) MAKE_CUSTOM_TEMPLATE_TRAIT(Class, TemplateParameters, FOR_EACH_3ARGS_1STAT(IMPL_NAME_AND_REF_TEMPLATE, Class, __VA_ARGS__))
 
-#define MAKE_ATTRIBUTE_TEMPLATE_TRAIT(Class, TemplateParameters, ...) MAKE_NAMED_ATTRIBUTE_TEMPLATE_TRAIT(PASS(Class), PASS(TemplateParameters), FOR_EACH(IMPL_NAME_ATT, __VA_ARGS__))
+#define MAKE_ATTRIBUTE_TEMPLATE_TRAIT(Class, TemplateParameters, ...) MAKE_NAMED_ATTRIBUTE_TEMPLATE_TRAIT(Class, TemplateParameters, FOR_EACH(IMPL_NAME_ATT, __VA_ARGS__))
 
 
 #define MAKE_CUSTOM_TRAIT_IO(Class,...) IMPL_MAKE_CUSTOM_TRAIT(DefaultIOTraits, Class,__VA_ARGS__) // defining specialization for DefaultIOTraits
@@ -387,10 +389,25 @@ public: \
 #define MAKE_ATTRIBUTE_TRAIT_IO(Class, ...) MAKE_NAMED_ATTRIBUTE_TRAIT_IO(Class, FOR_EACH(IMPL_NAME_ATT, __VA_ARGS__))
 
 
+#define MAKE_CUSTOM_TEMPLATE_TRAIT_IO(Class, TemplateParameters, ...) IMPL_MAKE_CUSTOM_TEMPLATE_TRAIT(DefaultIOTraits, TemplateParameters, Class, __VA_ARGS__) // defining specialization for Traits
+
+#define MAKE_NAMED_ATTRIBUTE_TEMPLATE_TRAIT_IO(Class, TemplateParameters, ...) MAKE_CUSTOM_TEMPLATE_TRAIT_IO(Class, TemplateParameters, FOR_EACH_3ARGS_1STAT(IMPL_NAME_AND_REF_TEMPLATE, Class, __VA_ARGS__))
+
+#define MAKE_ATTRIBUTE_TEMPLATE_TRAIT_IO(Class, TemplateParameters, ...) MAKE_NAMED_ATTRIBUTE_TEMPLATE_TRAIT_IO(Class, TemplateParameters, FOR_EACH(IMPL_NAME_ATT, __VA_ARGS__))
+
+
+
 #define MAKE_CUSTOM_TRAIT_ARITHMETIC(Class,...) IMPL_MAKE_CUSTOM_TRAIT(DefaultArithmeticTraits, Class,__VA_ARGS__) // defining specialization for DefaultArithmeticTraits
 
 #define MAKE_NAMED_ATTRIBUTE_TRAIT_ARITHMETIC(Class, ...) MAKE_CUSTOM_TRAIT_ARITHMETIC(Class, FOR_EACH_3ARGS_1STAT(IMPL_NAME_AND_REF, Class, __VA_ARGS__))
 
 #define MAKE_ATTRIBUTE_TRAIT_ARITHMETIC(Class, ...) MAKE_NAMED_ATTRIBUTE_TRAIT_ARITHMETIC(Class, FOR_EACH(IMPL_NAME_ATT, __VA_ARGS__))
+
+
+#define MAKE_CUSTOM_TEMPLATE_TRAIT_ARITHMETIC(Class, TemplateParameters, ...) IMPL_MAKE_CUSTOM_TEMPLATE_TRAIT(DefaultArithmeticTraits, TemplateParameters, Class, __VA_ARGS__) // defining specialization for Traits
+
+#define MAKE_NAMED_ATTRIBUTE_TEMPLATE_TRAIT_ARITHMETIC(Class, TemplateParameters, ...) MAKE_CUSTOM_TEMPLATE_TRAIT_ARITHMETIC(Class, TemplateParameters, FOR_EACH_3ARGS_1STAT(IMPL_NAME_AND_REF_TEMPLATE, Class, __VA_ARGS__))
+
+#define MAKE_ATTRIBUTE_TEMPLATE_TRAIT_ARITHMETIC(Class, TemplateParameters, ...) MAKE_NAMED_ATTRIBUTE_TEMPLATE_TRAIT_ARITHMETIC(Class, TemplateParameters, FOR_EACH(IMPL_NAME_ATT, __VA_ARGS__))
 
 #endif // TRAITS_H

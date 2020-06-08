@@ -147,32 +147,8 @@
 #define FOR_EACH_3ARGS_1STAT(what, x_stat, ...) FOR_EACH_3ARGS_1STAT_(FOR_EACH_NARG(__VA_ARGS__), what, x_stat, __VA_ARGS__)
 
 #define PASS(...) __VA_ARGS__
-
-#define FOR_EACH_3ARGS_1STAT_PASS_00(what, ...)
-#define FOR_EACH_3ARGS_1STAT_PASS_02(what,x_stat, x1, x2, ...)   what(PASS(x_stat), x1, x2)
-#define FOR_EACH_3ARGS_1STAT_PASS_04(what,x_stat, x1, x2, ...)   what(PASS(x_stat), x1, x2), FOR_EACH_3ARGS_1STAT_PASS_02(what, PASS(x_stat), __VA_ARGS__)
-#define FOR_EACH_3ARGS_1STAT_PASS_06(what,x_stat, x1, x2, ...)   what(PASS(x_stat), x1, x2), FOR_EACH_3ARGS_1STAT_PASS_04(what, PASS(x_stat), __VA_ARGS__)
-#define FOR_EACH_3ARGS_1STAT_PASS_08(what,x_stat, x1, x2, ...)   what(PASS(x_stat), x1, x2), FOR_EACH_3ARGS_1STAT_PASS_06(what, PASS(x_stat), __VA_ARGS__)
-#define FOR_EACH_3ARGS_1STAT_PASS_10(what,x_stat, x1, x2, ...)   what(PASS(x_stat), x1, x2), FOR_EACH_3ARGS_1STAT_PASS_08(what, PASS(x_stat), __VA_ARGS__)
-#define FOR_EACH_3ARGS_1STAT_PASS_12(what,x_stat, x1, x2, ...)   what(PASS(x_stat), x1, x2), FOR_EACH_3ARGS_1STAT_PASS_10(what, PASS(x_stat), __VA_ARGS__)
-#define FOR_EACH_3ARGS_1STAT_PASS_14(what,x_stat, x1, x2, ...)   what(PASS(x_stat), x1, x2), FOR_EACH_3ARGS_1STAT_PASS_12(what, PASS(x_stat), __VA_ARGS__)
-#define FOR_EACH_3ARGS_1STAT_PASS_16(what,x_stat, x1, x2, ...)   what(PASS(x_stat), x1, x2), FOR_EACH_3ARGS_1STAT_PASS_14(what, PASS(x_stat), __VA_ARGS__)
-#define FOR_EACH_3ARGS_1STAT_PASS_18(what,x_stat, x1, x2, ...)   what(PASS(x_stat), x1, x2), FOR_EACH_3ARGS_1STAT_PASS_16(what, PASS(x_stat), __VA_ARGS__)
-#define FOR_EACH_3ARGS_1STAT_PASS_20(what,x_stat, x1, x2, ...)   what(PASS(x_stat), x1, x2), FOR_EACH_3ARGS_1STAT_PASS_18(what, PASS(x_stat), __VA_ARGS__)
-#define FOR_EACH_3ARGS_1STAT_PASS_22(what,x_stat, x1, x2, ...)   what(PASS(x_stat), x1, x2), FOR_EACH_3ARGS_1STAT_PASS_20(what, PASS(x_stat), __VA_ARGS__)
-#define FOR_EACH_3ARGS_1STAT_PASS_24(what,x_stat, x1, x2, ...)   what(PASS(x_stat), x1, x2), FOR_EACH_3ARGS_1STAT_PASS_22(what, PASS(x_stat), __VA_ARGS__)
-#define FOR_EACH_3ARGS_1STAT_PASS_26(what,x_stat, x1, x2, ...)   what(PASS(x_stat), x1, x2), FOR_EACH_3ARGS_1STAT_PASS_24(what, PASS(x_stat), __VA_ARGS__)
-#define FOR_EACH_3ARGS_1STAT_PASS_28(what,x_stat, x1, x2, ...)   what(PASS(x_stat), x1, x2), FOR_EACH_3ARGS_1STAT_PASS_26(what, PASS(x_stat), __VA_ARGS__)
-#define FOR_EACH_3ARGS_1STAT_PASS_30(what,x_stat, x1, x2, ...)   what(PASS(x_stat), x1, x2), FOR_EACH_3ARGS_1STAT_PASS_28(what, PASS(x_stat), __VA_ARGS__)
-#define FOR_EACH_3ARGS_1STAT_PASS_32(what,x_stat, x1, x2, ...)   what(PASS(x_stat), x1, x2), FOR_EACH_3ARGS_1STAT_PASS_30(what, PASS(x_stat), __VA_ARGS__)
-#define FOR_EACH_3ARGS_1STAT_PASS_34(what,x_stat, x1, x2, ...)   what(PASS(x_stat), x1, x2), FOR_EACH_3ARGS_1STAT_PASS_32(what, PASS(x_stat), __VA_ARGS__)
-#define FOR_EACH_3ARGS_1STAT_PASS_36(what,x_stat, x1, x2, ...)   what(PASS(x_stat), x1, x2), FOR_EACH_3ARGS_1STAT_PASS_34(what, PASS(x_stat), __VA_ARGS__)
-#define FOR_EACH_3ARGS_1STAT_PASS_38(what,x_stat, x1, x2, ...)   what(PASS(x_stat), x1, x2), FOR_EACH_3ARGS_1STAT_PASS_36(what, PASS(x_stat), __VA_ARGS__)
-#define FOR_EACH_3ARGS_1STAT_PASS_40(what,x_stat, x1, x2, ...)   what(PASS(x_stat), x1, x2), FOR_EACH_3ARGS_1STAT_PASS_38(what, PASS(x_stat), __VA_ARGS__)
-
-
-#define FOR_EACH_3ARGS_1STAT_PASS_(N, what, x_stat, ...) CONCATENATE(FOR_EACH_3ARGS_1STAT_PASS_, N)(what, PASS(x_stat), __VA_ARGS__)
-#define FOR_EACH_3ARGS_1STAT_PASS(what, x_stat, ...) FOR_EACH_3ARGS_1STAT_PASS_(FOR_EACH_NARG(__VA_ARGS__), what, PASS(x_stat), __VA_ARGS__)
+#define WRAP(...) (__VA_ARGS__)
+#define UNWRAP(arg) PASS arg
 
 
 
