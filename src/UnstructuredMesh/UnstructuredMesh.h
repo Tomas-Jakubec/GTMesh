@@ -261,6 +261,7 @@ public:
      * @brief Writes the mesh from a file passed as parameter filePath.
      * For mesh with dimension 3, there are 2 provided formats VTK and FPMA.
      * For the mesh with dimension 2, only VTK format is supported so far.
+     * @return unique_ptr to an instance of MeshWriter which has indexed the mesh.
      */
     std::unique_ptr<MeshWriter<MeshDimension>>
     write(const std::string& filePath,
@@ -281,6 +282,8 @@ public:
     /**
      * @brief Writes the mesh from a file passed as parameter filePath.
      * For mesh with dimension 3, there are 2 provided formats VTK and FPMA.
+     * For the mesh with dimension 2, only VTK format is supported so far.
+     * @return unique_ptr to an instance of MeshWriter which has indexed the mesh.
      */
     template<typename...T, unsigned int MeshDim = MeshDimension, typename std::enable_if<MeshDim == 3, bool>::type = true>
     std::unique_ptr<MeshWriter<MeshDimension>>
@@ -308,8 +311,12 @@ public:
 
 
     /**
-     * @brief Writes the mesh from a file passed as parameter filePath.
+     * @brief Writes the mesh to a file passed as parameter filePath.
      * For mesh with dimension 3, there are 2 provided formats VTK and FPMA.
+     * This overload accepts a writer parameter which is a unique_ptr<MeshWriter<MeshDimension>>.
+     * The writer is utilized to export the mesh. If the writer type and the format of
+     * the export file does not match then the writer is corrected.
+     * @param writer instance of MeshWriter (e.g. VTKMeshWriter).
      */
     template<typename...T, unsigned int MeshDim = MeshDimension, typename std::enable_if<MeshDim == 3, bool>::type = true>
     void
@@ -327,21 +334,31 @@ public:
             }
 
             if (typeid (*writer.get()) == typeid (VTKMeshWriter<MeshDimension>)){
-                DBGMSG("writer recognized as VTK");
-                auto writer_loc = dynamic_cast<VTKMeshWriter<MeshDimension>*>(writer.get());
-                writer_loc->writeHeader(file, dataHeader);
-                if (cellTypes.template getDataByPos<0>().size() == 0) {
-                    MeshDataContainer<typename MeshWriter<MeshDimension>::elementType::ElementType, MeshDim> locCellTypes(*this, PolytopeType());
-                    writer_loc->writeToStream(file, *this, locCellTypes);
+                if (checkExtension(filePath, ".vtk")){
+                    DBGMSG("The writer type and file name does not match!");
+                    writer = write(filePath, cellTypes, dataHeader);
                 } else {
-                    writer_loc->writeToStream(file, *this, cellTypes);
+                    DBGMSG("writer recognized as VTK");
+                    auto writer_loc = dynamic_cast<VTKMeshWriter<MeshDimension>*>(writer.get());
+                    writer_loc->writeHeader(file, dataHeader);
+                    if (cellTypes.template getDataByPos<0>().size() == 0) {
+                        MeshDataContainer<typename MeshWriter<MeshDimension>::elementType::ElementType, MeshDim> locCellTypes(*this, PolytopeType());
+                        writer_loc->writeToStream(file, *this, locCellTypes);
+                    } else {
+                        writer_loc->writeToStream(file, *this, cellTypes);
+                    }
                 }
             }
 
             else if (typeid (*writer.get()).hash_code() == typeid (FPMAMeshWriter<MeshDimension>).hash_code()){
-                DBGMSG("writer recognized as FPMA");
-                auto reader = dynamic_cast<FPMAMeshWriter<MeshDimension>*>(writer.get());
-                reader->writeToStream(file, *this);
+                if (checkExtension(filePath, ".vtk")){
+                    DBGMSG("The writer type and file name does not match!");
+                    writer = write(filePath, cellTypes, dataHeader);
+                } else {
+                    DBGMSG("writer recognized as FPMA");
+                    auto reader = dynamic_cast<FPMAMeshWriter<MeshDimension>*>(writer.get());
+                    reader->writeToStream(file, *this);
+                }
             }
             file.close();
         }
@@ -349,8 +366,12 @@ public:
 
 
     /**
-     * @brief Writer the mesh to a file passed as the parameter filePath.
-     * For the mesh with dimension 2, only VTK format is supported so far.
+     * @brief Writes the mesh to a file passed as parameter filePath.
+     * For mesh with dimension 3, there are 2 provided formats VTK and FPMA.
+     * This overload accepts a writer parameter which is a unique_ptr<MeshWriter<MeshDimension>>.
+     * The writer is utilized to export the mesh. If the writer type and the format of
+     * the export file does not match then the writer is corrected.
+     * @param writer instance of MeshWriter (e.g. VTKMeshWriter).
      */
     template<typename...T, unsigned int MeshDim = MeshDimension, typename std::enable_if<MeshDim == 2, bool>::type = true>
     std::unique_ptr<MeshReader<MeshDimension>>
@@ -390,14 +411,19 @@ public:
             }
 
             if (typeid (*writer.get()) == typeid (VTKMeshWriter<MeshDimension>)){
-                DBGMSG("writer recognized as VTK");
-                auto writer_loc = dynamic_cast<VTKMeshWriter<MeshDimension>*>(writer.get());
-                writer_loc->writeHeader(file, dataHeader);
-                if (cellTypes.template getDataByPos<0>().size() == 0) {
-                    MeshDataContainer<typename MeshWriter<MeshDimension>::elementType::ElementType, MeshDim> locCellTypes(*this, PolytopeType());
-                    writer_loc->writeToStream(file, *this, locCellTypes);
+                if (checkExtension(filePath, ".vtk")){
+                    DBGMSG("The writer type and file name does not match!");
+                    writer = write(filePath, cellTypes, dataHeader);
                 } else {
-                    writer_loc->writeToStream(file, *this, cellTypes);
+                    DBGMSG("writer recognized as VTK");
+                    auto writer_loc = dynamic_cast<VTKMeshWriter<MeshDimension>*>(writer.get());
+                    writer_loc->writeHeader(file, dataHeader);
+                    if (cellTypes.template getDataByPos<0>().size() == 0) {
+                        MeshDataContainer<typename MeshWriter<MeshDimension>::elementType::ElementType, MeshDim> locCellTypes(*this, PolytopeType());
+                        writer_loc->writeToStream(file, *this, locCellTypes);
+                    } else {
+                        writer_loc->writeToStream(file, *this, cellTypes);
+                    }
                 }
             }
 
