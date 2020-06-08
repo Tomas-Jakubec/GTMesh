@@ -270,7 +270,14 @@ public:
         cellTypes.allocateData(*this, PolytopeType());
         return write(filePath, cellTypes, dataHeader);
     }
-
+private:
+    /**
+     * @brief Returns true if the filePath string ends with the string ext
+     */
+    bool checkExtension(const std::string& filePath, const std::string& ext){
+        return filePath.find_last_of(ext) != filePath.size() - ext.size();
+    }
+public:
     /**
      * @brief Writes the mesh from a file passed as parameter filePath.
      * For mesh with dimension 3, there are 2 provided formats VTK and FPMA.
@@ -284,13 +291,13 @@ public:
         typedef std::unique_ptr<MeshWriter<MeshDimension>> retType;
         retType writer_ptr;
 
-        if (filePath.find(".vtk") != filePath.npos){
+        if (checkExtension(filePath, ".vtk")){
             DBGMSG("file recognized as VTK");
             writer_ptr = std::make_unique<VTKMeshWriter<MeshDimension>>();
             write(filePath, writer_ptr, cellTypes, dataHeader);
         }
 
-        if (filePath.find(".fpma") != filePath.npos){
+        if (checkExtension(filePath, ".vtk")){
             DBGMSG("file recognized as FPMA");
             writer_ptr = std::make_unique<FPMAMeshWriter<MeshDimension>>();
             write(filePath, writer_ptr, cellTypes, dataHeader);
@@ -310,7 +317,7 @@ public:
           std::unique_ptr<MeshWriter<MeshDimension>>& writer,
           const MeshDataContainer<typename MeshWriter<MeshDimension>::elementType::ElementType, MeshDim>& cellTypes = MeshDataContainer<typename MeshWriter<MeshDimension>::elementType::ElementType, MeshDim>(),
           const std::string& dataHeader = ""){
-        if (writer == nullptr) {
+        if (!writer) {
             writer = write(filePath, cellTypes, dataHeader);
         } else {
 
@@ -373,7 +380,7 @@ public:
           std::unique_ptr<MeshWriter<MeshDimension>>& writer,
           const MeshDataContainer<typename MeshWriter<MeshDimension>::elementType::ElementType, MeshDim>& cellTypes = MeshDataContainer<typename MeshWriter<MeshDimension>::elementType::ElementType, MeshDim>(),
           const std::string& dataHeader = ""){
-        if (writer == nullptr) {
+        if (!writer) {
             writer = write(filePath, cellTypes, dataHeader);
         } else {
 
