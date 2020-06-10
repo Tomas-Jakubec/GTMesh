@@ -1,13 +1,8 @@
 // Test of several arithmetic operations
 #ifdef HAVE_GTEST
 #include <gtest/gtest.h>
-#include <list>
-#include <map>
-#include <vector>
-#include <sstream>
 #include <math.h>
 #include "GTMesh/Traits/Traits.h"
-#include "GTMesh/NumericStaticArray/Vector.h"
 
 struct NumStruct {
     double data1;
@@ -16,7 +11,7 @@ struct NumStruct {
     NumStruct(double d1 = 0.0, double d2 = 0.0): data1(d1), data2(d2){}
 
     template<unsigned int... Idxs>
-    auto& operator[](integer_sequence<unsigned int, Idxs...>){
+    auto& operator[](std::integer_sequence<unsigned int, Idxs...>){
         return get<Idxs...>(*this);
     }
     auto operator== (const NumStruct& rhs){
@@ -50,11 +45,10 @@ TEST( ArithmeticTraitsTest, basicTest )
     EXPECT_EQ(sum(ns), 21+15);
 
 
+    static constexpr std::integer_sequence<unsigned int, 1> d2();
+    EXPECT_EQ(ns2[d2], 3);
 
 }
-
-
-MAKE_ATTRIBUTE_TRAIT(ns::TraitedClass, d1, d2, ts);
 
 
 #endif
