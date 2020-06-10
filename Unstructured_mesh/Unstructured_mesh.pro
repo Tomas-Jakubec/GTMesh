@@ -6,10 +6,6 @@ CONFIG -= qt
 INCLUDEPATH += $$PWD/../src/
 
 SOURCES += \
-    ../src/UnitTests/Debug/DBGVAR_JSONTest.cpp \
-    ../src/UnitTests/Debug/VariableExportTest.cpp \
-    ../src/UnitTests/Traits/ArithmeticTraitsTest.cpp \
-    ../src/UnitTests/Traits/TraitsTest.cpp \
         main.cpp \
 
 HEADERS += \
@@ -56,9 +52,15 @@ HEADERS += \
     ../src/GTMesh/UnstructuredMesh/UnstructuredMesh.h \
     ../src/GTMesh/NumericStaticArray/Vector.h \
     ../src/GTMesh/NumericStaticArray/Vertex.h \
-    ../src/GTMesh/UnstructuredMesh/UnstructuredMeshDefine.h
+    ../src/GTMesh/UnstructuredMesh/UnstructuredMeshDefine.h \
+    ../src/UnitTests/UnstructuredMesh/MeshSetup.h
 
 DISTFILES += \
+    ../src/UnitTests/Debug/DBGVAR_JSONTest.cpp \
+    ../src/UnitTests/Debug/VariableExportTest.cpp \
+    ../src/UnitTests/Traits/ArithmeticTraitsTest.cpp \
+    ../src/UnitTests/Traits/TraitsTest.cpp \
+    ../src/UnitTests/UnstructuredMesh/MeshDataContainerTest.cpp \
     ../README.md \
     ../src/GTMesh/Debug/README.md \
     ../src/GTMesh/Traits/TraitsAlgorithm/README.md \
@@ -66,4 +68,5 @@ DISTFILES += \
     ../src/UnitTests/CMakeLists.txt \
     ../src/UnitTests/Debug/CMakeLists.txt \
     ../src/UnitTests/README.md \
-    ../src/UnitTests/Traits/CMakeLists.txt
+    ../src/UnitTests/Traits/CMakeLists.txt \
+    ../src/UnitTests/UnstructuredMesh/CMakeLists.txt

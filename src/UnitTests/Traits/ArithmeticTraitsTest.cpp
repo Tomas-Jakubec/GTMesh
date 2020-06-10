@@ -14,7 +14,7 @@ struct NumStruct {
     auto& operator[](std::integer_sequence<unsigned int, Idxs...>){
         return get<Idxs...>(*this);
     }
-    auto operator== (const NumStruct& rhs){
+    auto operator== (const NumStruct& rhs) const {
         return fabs(data1 - rhs.data1) < 1e-5 &&
                fabs(data1 - rhs.data1) < 1e-5;
     }
@@ -34,8 +34,8 @@ TEST( ArithmeticTraitsTest, basicTest )
 
 
     EXPECT_EQ(log(ns), NumStruct(3.04452,2.70805));
-    EXPECT_EQ(pow(ns, 2), NumStruct(21*21,15*15));
-    EXPECT_EQ(sqrt(ns, 2), NumStruct(sqrt(21),sqrt(15)));
+    EXPECT_EQ((pow(ns, 2)), NumStruct(21*21,15*15));
+    EXPECT_EQ(sqrt(ns), NumStruct(sqrt(21),sqrt(15)));
 
     EXPECT_EQ(-ns, NumStruct(-21,-15));
     EXPECT_EQ(abs(-ns), NumStruct(21,15));

@@ -27,6 +27,7 @@ include(BuildGtest)
 include_directories(${CMAKE_SOURCE_DIR}/..)
 add_subdirectory( Debug )
 add_subdirectory( Traits )
+add_subdirectory( UnstructuredMesh )
 
 ## below are targets for each test
 add_executable( MyTest MyTest.cpp )

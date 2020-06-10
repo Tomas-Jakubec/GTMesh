@@ -1092,7 +1092,7 @@ int main()
     //testMesh3D();
     //test3DMeshDeformedPrisms();
     //testMeshRefine();
-    //testMeshDataContainer();
+    testMeshDataContainer();
     //UnstructuredMesh<5, size_t, double, 6,5,4> m;
     //m.ComputeElementMeasures();
     test3DMeshLoad();

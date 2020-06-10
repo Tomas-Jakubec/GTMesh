@@ -59,13 +59,15 @@ TEST( TupleTraitsTest, basicTest )
 
     std::tuple<double> t{1.5};
     Traits<std::tuple<double>>::getTraits().getAttr<0>(t) = 2.5;
-    EXPECT_FLOAT_EQ(Traits<std::tuple<double>>::getTraits().getAttr<0>(t), 2.5);
+    EXPECT_EQ(Traits<std::tuple<double>>::getTraits().getAttr<0>(t), 2.5);
 }
 
 
 template< typename Real, size_t len >
 class TemplateClass{
     std::array<Real, len> arr;
+
+    friend class Traits<TemplateClass<Real, len>>;
 };
 
 MAKE_ATTRIBUTE_TEMPLATE_TRAIT( (TemplateClass<Real, len>),
@@ -75,16 +77,16 @@ MAKE_ATTRIBUTE_TEMPLATE_TRAIT( (TemplateClass<Real, len>),
 TEST( TemplateTraitsTest, basicTest )
 {
     TemplateClass<double, 3> tc;
-    tc.arr = {1.5,2.5,3.5};
+    Traits<TemplateClass<double, 3>>::getTraits().getAttr<0>(tc) = {1.5,2.5,3.5};
 
     EXPECT_TRUE((HasDefaultTraits<TemplateClass<double, 3>>::value));
     EXPECT_TRUE((HasDefaultTraits<TemplateClass<int, 5>>::value));
     EXPECT_TRUE((IsDirectAccess<Traits<TemplateClass<int, 5>>::traitsType::memRefType<0>>::value));
 
-    EXPECT_EQ(Traits<TemplateClass<int, 5>>::size(), 1);
-    EXPECT_EQ(Traits<TemplateClass<int, 5>>::getTraits().name<0>, "arr");
-    EXPECT_EQ(Traits<TemplateClass<double, 3>>::getTraits().getValue<0>(tc), std::array<double, 3>{1.5,2.5,3.5});
+    EXPECT_EQ((Traits<TemplateClass<int, 5>>::size()), 1);
+    EXPECT_EQ((Traits<TemplateClass<int, 5>>::getTraits().getName<0>()), "arr");
+    EXPECT_EQ((Traits<TemplateClass<double, 3>>::getTraits().getValue<0>(tc)), (std::array<double, 3>{1.5,2.5,3.5}));
 }
-#endif
+// #endif
 
 #include "UnitTests/main.h"
