@@ -27,24 +27,24 @@ MAKE_ATTRIBUTE_TRAIT(NumStruct, data1, data2);
 TEST( ArithmeticTraitsTest, basicTest )
 {
     NumStruct ns{21,15}, ns2{2,3};
-    EXPECT_EQ(2*ns,   NumStruct{42,30});
-    EXPECT_EQ(ns*2,   NumStruct{42,30});
-    EXPECT_EQ(ns*ns2, NumStruct{42,45});
-    EXPECT_EQ(ns2*ns, NumStruct{42,45});
+    EXPECT_EQ(2*ns,   NumStruct(42,30));
+    EXPECT_EQ(ns*2,   NumStruct(42,30));
+    EXPECT_EQ(ns*ns2, NumStruct(42,45));
+    EXPECT_EQ(ns2*ns, NumStruct(42,45));
 
 
-    EXPECT_EQ(log(ns), NumStruct{3.04452,2.70805});
-    EXPECT_EQ(pow(ns, 2), NumStruct{21*21,15*15});
-    EXPECT_EQ(sqrt(ns, 2), NumStruct{sqrt(21),sqrt(15)});
+    EXPECT_EQ(log(ns), NumStruct(3.04452,2.70805));
+    EXPECT_EQ(pow(ns, 2), NumStruct(21*21,15*15));
+    EXPECT_EQ(sqrt(ns, 2), NumStruct(sqrt(21),sqrt(15)));
 
-    EXPECT_EQ(-ns, NumStruct{-21,-15});
-    EXPECT_EQ(abs(-ns), NumStruct{21,15});
+    EXPECT_EQ(-ns, NumStruct(-21,-15));
+    EXPECT_EQ(abs(-ns), NumStruct(21,15));
     EXPECT_EQ(min(-ns), -21);
     EXPECT_EQ(max(-ns), -15);
     EXPECT_EQ(max(abs(-ns)), 21);
 
 
-    constexpr std::integer_sequence<unsigned int, 1> d2();
+    std::integer_sequence<unsigned int, 1> d2;
     EXPECT_EQ(ns2[d2], 3);
 
 }
