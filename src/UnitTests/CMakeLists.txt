@@ -26,6 +26,7 @@ enable_testing()
 include(BuildGtest)
 include_directories(${CMAKE_SOURCE_DIR}/..)
 add_subdirectory( Debug )
+add_subdirectory( Traits )
 
 ## below are targets for each test
 add_executable( MyTest MyTest.cpp )
