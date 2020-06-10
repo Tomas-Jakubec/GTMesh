@@ -87,6 +87,6 @@ TEST( TemplateTraitsTest, basicTest )
     EXPECT_EQ((Traits<TemplateClass<int, 5>>::getTraits().getName<0>()), "arr");
     EXPECT_EQ((Traits<TemplateClass<double, 3>>::getTraits().getValue<0>(tc)), (std::array<double, 3>{1.5,2.5,3.5}));
 }
-// #endif
+#endif
 
 #include "UnitTests/main.h"
