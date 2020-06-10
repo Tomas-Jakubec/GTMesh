@@ -8,6 +8,8 @@ INCLUDEPATH += $$PWD/../src/
 SOURCES += \
     ../src/UnitTests/Debug/DBGVAR_JSONTest.cpp \
     ../src/UnitTests/Debug/VariableExportTest.cpp \
+    ../src/UnitTests/Traits/ArithmeticTraitsTest.cpp \
+    ../src/UnitTests/Traits/TraitsTest.cpp \
         main.cpp \
 
 HEADERS += \
@@ -62,4 +64,5 @@ DISTFILES += \
     ../src/GTMesh/Traits/TraitsAlgorithm/README.md \
     ../src/GTMesh/UnstructuredMesh/MeshFunctions/README.md\
     ../src/UnitTests/Debug/CMakeLists.txt \
-    ../src/UnitTests/README.md
+    ../src/UnitTests/README.md \
+    ../src/UnitTests/Traits/CMakeLists.txt

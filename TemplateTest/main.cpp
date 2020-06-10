@@ -473,7 +473,7 @@ void testTraitsAlgorithms() {
            sqrt(sum(pow(e1, 2)))
            );
 
-    DBGVAR(abs(ns::TraitedClass()));
+    DBGVAR(abs(-ns));
 
     std::vector<ns::TraitedClass> vv;
     vv.resize(5, ns::TraitedClass());
@@ -2543,6 +2543,7 @@ void testTraitsTuple(){
 
     std::tuple<double> t{1.5};
     get<0>(t) = 2.5;
+    DefaultIOTraits<std::tuple<double>>::getTraits().getAttr<0>(t) = 2.5;
     auto foo = static_cast<double&(*)(std::tuple<double>&)>(std::get<0>);
     DBGVAR(foo(t), t);
     DBGVAR_JSON(t,t,t,t, ExportTest());
@@ -2648,7 +2649,7 @@ int main()
     //testJson();
     //testTestTraits();
 
-    //testTraitsAlgorithms();
+    testTraitsAlgorithms();
     //testNumericTraitsPerformance();
     //testTraitsTuple();
     //testFactorial();
