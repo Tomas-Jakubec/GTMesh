@@ -60,4 +60,5 @@ DISTFILES += \
     ../src/GTMesh/Debug/README.md \
     ../src/GTMesh/Traits/TraitsAlgorithm/README.md \
     ../src/GTMesh/UnstructuredMesh/MeshFunctions/README.md\
+    ../src/UnitTests/Debug/CMakeLists.txt \
     ../src/UnitTests/README.md

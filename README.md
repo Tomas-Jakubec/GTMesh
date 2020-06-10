@@ -1,3 +1,5 @@
+[![pipeline status](https://mmg-gitlab.fjfi.cvut.cz/gitlab/jakubec/UnstructuredMesh/badges/master/pipeline.svg)](https://mmg-gitlab.fjfi.cvut.cz/gitlab/jakubec/UnstructuredMesh/commits/master)
+
 # GTMesh
 
 The GTMesh is a C++ library utilizing modern C++ paradigms as template metaprogramming
