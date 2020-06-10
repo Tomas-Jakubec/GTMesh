@@ -53,11 +53,11 @@ TEST( VariableExportTest_Container, basicTest )
     EXPECT_EQ(ss.str(),"[ [ 1, 2, 3 ], [ 1, 2, 3 ], [ 1, 2, 3 ], [ 1, 2, 3 ], [ 1, 2, 3 ] ]");
     ss.clear();
     VariableExport<VARIABLE_EXPORT_METHOD::ostream>::exportVariable(ss, m);
-    EXPECT_EQ(ss.str(),"[ { "druhy": 2}, { "prvni": 1}, { "treti": 3} ]");
+    EXPECT_EQ(ss.str(),R"([ { "druhy": 2}, { "prvni": 1}, { "treti": 3} ])");
     ss.clear();
 
 }
-
+#include "GTMesh/NumericStaticArray/Vector.h"
 struct tempData {
     double density;
 
