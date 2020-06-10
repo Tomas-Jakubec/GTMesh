@@ -3,7 +3,10 @@ CONFIG += console c++17
 CONFIG -= app_bundle
 CONFIG -= qt
 
+INCLUDEPATH += $$PWD/../src/
+
 SOURCES += \
+    ../src/UnitTests/Debug/VariableExportTest.cpp \
         main.cpp \
 
 HEADERS += \

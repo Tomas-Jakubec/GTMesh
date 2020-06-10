@@ -25,6 +25,7 @@ endif()
 enable_testing()
 include(BuildGtest)
 
+add_subdirectory( Debug )
 
 ## below are targets for each test
 add_executable( MyTest MyTest.cpp )

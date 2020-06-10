@@ -68,6 +68,11 @@ void testDebug() {
         {"druhy", 2},
         {"treti", 3}
     };
+    stringstream ss;
+    VariableExport<VARIABLE_EXPORT_METHOD::ostream>::exportVariable(ss, r);
+    DBGVAR(ss.str() == "42.15");
+    ss.clear();
+
     ConsoleLogger<>::writeVar(__LINE__, __FILE__, "r", r, "i", i, "c", c, "list", list, "vec", vec, "b", b, "map", m);
     //ConsoleLogger<>::writeVar(__LINE__, __FILE__,"---", {5,4,3,2});
     DBGVAR(r, i, c, list, vec, b, m);
@@ -2622,7 +2627,7 @@ int main()
 
     //testDebug();
     //testOperator();
-    //testMemberRef();
+    testMemberRef();
     //testConstrucorOrder();
 
     //testFunction();
