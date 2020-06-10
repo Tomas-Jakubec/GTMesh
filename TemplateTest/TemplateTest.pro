@@ -8,3 +8,6 @@ SOURCES += \
 
 HEADERS += \
     ../src/Debug/JSONLogger.h
+
+DISTFILES += \
+    ../src/UnitTests/README.md

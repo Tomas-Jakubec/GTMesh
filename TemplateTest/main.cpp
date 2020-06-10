@@ -1,10 +1,10 @@
 #define CONSOLE_COLORED_OUTPUT
-#include "../src/Debug/Debug.h"
-#include "../src/Traits/TraitsAlgorithm/TraitsAlgorithm.h"
-//#include "../src/Traits/Traits.h"
-#include "../src/UnstructuredMesh/UnstructuredMesh.h"
-#include "../src/Traits/MemberAccess/MemberAccess.h"
-#include "../src/Singleton/Singleton.h"
+#include "../src/GTMesh/Debug/Debug.h"
+#include "../src/GTMesh/Traits/TraitsAlgorithm/TraitsAlgorithm.h"
+//#include "../src/GTMesh/Traits/Traits.h"
+#include "../src/GTMesh/UnstructuredMesh/UnstructuredMesh.h"
+#include "../src/GTMesh/Traits/MemberAccess/MemberAccess.h"
+#include "../src/GTMesh/Singleton/Singleton.h"
 #include <chrono>
 #include <functional>
 #include <type_traits>
@@ -1543,7 +1543,7 @@ void testCompileTimeTraits() {
     DBGVAR(foo.*(Bm::mp), Bm::getValue(foo), foo.*(Br::mp), (foo.*(Bp::get))());
 }
 
-#include "../src/Singleton/Singleton.h"
+#include "../src/GTMesh/Singleton/Singleton.h"
 /*
 Test of order of constructors
 */

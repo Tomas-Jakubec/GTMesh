@@ -7,53 +7,54 @@ SOURCES += \
         main.cpp \
 
 HEADERS += \
-    ../src/Debug/JSONLogger.h \
-    ../src/Macros/MacroForEach.h \
-    ../src/Debug/CSVLogger.h \
-    ../src/Debug/ConsoleLogger.h \
-    ../src/Debug/Debug.h \
-    ../src/Debug/HTMLLogger.h \
-    ../src/Debug/VariableExport.h \
-    ../src/NumericStaticArray/GramSchmidt.h \
-    ../src/NumericStaticArray/InlineArrayOperations.h \
-    ../src/Traits/CustomTypeTraits.h \
-    ../src/Traits/MemberAccess/MemberAccess.h \
-    ../src/Traits/TraitsAlgorithm/TraitsAlgorithm.h \
-    ../src/UnstructuredMesh/MeshDataContainer/MeshDataContainer.h \
-    ../src/UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataReader.h \
-    ../src/UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataWriter.h \
-    ../src/Singleton/Singleton.h \
-    ../src/Traits/Traits.h \
-    ../src/UnstructuredMesh/MeshElements/CellBoundaryConnection.h \
-    ../src/UnstructuredMesh/MeshElements/CellConnection.h \
-    ../src/UnstructuredMesh/MeshElements/ComputationalySignificantElement.h \
-    ../src/UnstructuredMesh/MeshElements/MeshElement.h \
-    ../src/UnstructuredMesh/MeshElements/MeshElements.h \
-    ../src/UnstructuredMesh/MeshFunctions/ComputeCenters.h \
-    ../src/UnstructuredMesh/MeshFunctions/ComputeMeasures.h \
-    ../src/UnstructuredMesh/MeshFunctions/ComputeNormals.h \
-    ../src/UnstructuredMesh/MeshFunctions/EdgesOrientation.h \
-    ../src/UnstructuredMesh/MeshFunctions/MeshApply.h \
-    ../src/UnstructuredMesh/MeshFunctions/MeshColoring.h \
-    ../src/UnstructuredMesh/MeshFunctions/MeshConnections.h \
-    ../src/UnstructuredMesh/MeshFunctions/MeshFunctions.h \
-    ../src/UnstructuredMesh/MeshFunctions/MeshFunctionsDefine.h \
-    ../src/UnstructuredMesh/MeshFunctions/CellsDistance.h \
-    ../src/UnstructuredMesh/MeshFunctions/MeshNeighborhood.h \
-    ../src/UnstructuredMesh/MeshIO/MeshNativeType.h \
-    ../src/UnstructuredMesh/MeshIO/MeshReader/FPMAMeshReader.h \
-    ../src/UnstructuredMesh/MeshIO/MeshReader/MeshReader.h \
-    ../src/UnstructuredMesh/MeshIO/MeshReader/VTKMeshReader.h \
-    ../src/UnstructuredMesh/MeshIO/MeshWriter/FPMAMeshWriter.h \
-    ../src/UnstructuredMesh/MeshIO/MeshWriter/MeshWriter.h \
-    ../src/UnstructuredMesh/MeshIO/MeshWriter/VTKMeshWriter.h \
-    ../src/UnstructuredMesh/UnstructuredMesh.h \
-    ../src/NumericStaticArray/Vector.h \
-    ../src/NumericStaticArray/Vertex.h \
-    ../src/UnstructuredMesh/UnstructuredMeshDefine.h
+    ../src/GTMesh/Debug/JSONLogger.h \
+    ../src/GTMesh/Macros/MacroForEach.h \
+    ../src/GTMesh/Debug/CSVLogger.h \
+    ../src/GTMesh/Debug/ConsoleLogger.h \
+    ../src/GTMesh/Debug/Debug.h \
+    ../src/GTMesh/Debug/HTMLLogger.h \
+    ../src/GTMesh/Debug/VariableExport.h \
+    ../src/GTMesh/NumericStaticArray/GramSchmidt.h \
+    ../src/GTMesh/NumericStaticArray/InlineArrayOperations.h \
+    ../src/GTMesh/Traits/CustomTypeTraits.h \
+    ../src/GTMesh/Traits/MemberAccess/MemberAccess.h \
+    ../src/GTMesh/Traits/TraitsAlgorithm/TraitsAlgorithm.h \
+    ../src/GTMesh/UnstructuredMesh/MeshDataContainer/MeshDataContainer.h \
+    ../src/GTMesh/UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataReader.h \
+    ../src/GTMesh/UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataWriter.h \
+    ../src/GTMesh/Singleton/Singleton.h \
+    ../src/GTMesh/Traits/Traits.h \
+    ../src/GTMesh/UnstructuredMesh/MeshElements/CellBoundaryConnection.h \
+    ../src/GTMesh/UnstructuredMesh/MeshElements/CellConnection.h \
+    ../src/GTMesh/UnstructuredMesh/MeshElements/ComputationalySignificantElement.h \
+    ../src/GTMesh/UnstructuredMesh/MeshElements/MeshElement.h \
+    ../src/GTMesh/UnstructuredMesh/MeshElements/MeshElements.h \
+    ../src/GTMesh/UnstructuredMesh/MeshFunctions/ComputeCenters.h \
+    ../src/GTMesh/UnstructuredMesh/MeshFunctions/ComputeMeasures.h \
+    ../src/GTMesh/UnstructuredMesh/MeshFunctions/ComputeNormals.h \
+    ../src/GTMesh/UnstructuredMesh/MeshFunctions/EdgesOrientation.h \
+    ../src/GTMesh/UnstructuredMesh/MeshFunctions/MeshApply.h \
+    ../src/GTMesh/UnstructuredMesh/MeshFunctions/MeshColoring.h \
+    ../src/GTMesh/UnstructuredMesh/MeshFunctions/MeshConnections.h \
+    ../src/GTMesh/UnstructuredMesh/MeshFunctions/MeshFunctions.h \
+    ../src/GTMesh/UnstructuredMesh/MeshFunctions/MeshFunctionsDefine.h \
+    ../src/GTMesh/UnstructuredMesh/MeshFunctions/CellsDistance.h \
+    ../src/GTMesh/UnstructuredMesh/MeshFunctions/MeshNeighborhood.h \
+    ../src/GTMesh/UnstructuredMesh/MeshIO/MeshNativeType.h \
+    ../src/GTMesh/UnstructuredMesh/MeshIO/MeshReader/FPMAMeshReader.h \
+    ../src/GTMesh/UnstructuredMesh/MeshIO/MeshReader/MeshReader.h \
+    ../src/GTMesh/UnstructuredMesh/MeshIO/MeshReader/VTKMeshReader.h \
+    ../src/GTMesh/UnstructuredMesh/MeshIO/MeshWriter/FPMAMeshWriter.h \
+    ../src/GTMesh/UnstructuredMesh/MeshIO/MeshWriter/MeshWriter.h \
+    ../src/GTMesh/UnstructuredMesh/MeshIO/MeshWriter/VTKMeshWriter.h \
+    ../src/GTMesh/UnstructuredMesh/UnstructuredMesh.h \
+    ../src/GTMesh/NumericStaticArray/Vector.h \
+    ../src/GTMesh/NumericStaticArray/Vertex.h \
+    ../src/GTMesh/UnstructuredMesh/UnstructuredMeshDefine.h
 
 DISTFILES += \
     ../README.md \
-    ../src/Debug/README.md \
-    ../src/Traits/TraitsAlgorithm/README.md \
-    ../src/UnstructuredMesh/MeshFunctions/README.md
+    ../src/GTMesh/Debug/README.md \
+    ../src/GTMesh/Traits/TraitsAlgorithm/README.md \
+    ../src/GTMesh/UnstructuredMesh/MeshFunctions/README.md\
+    ../src/UnitTests/README.md
