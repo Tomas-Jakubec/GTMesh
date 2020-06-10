@@ -1,0 +1,26 @@
+# vim: tabstop=4 shiftwidth=4 softtabstop=4
+
+before_script:
+    - which g++
+    - which cmake
+    - which make
+
+# Stages are useful only to enforce some ordering of the jobs. Every job is run
+# in its own directory and only very few data can be shared between the jobs in
+# different stages. It has to be zipped and uploaded to the server, so we can't
+# do it with the build directory. Hence, we must build, test and install in the
+# same job.
+stages:
+    - build
+
+my build job:
+    stage: build
+    script:
+        - export CTEST_OUTPUT_ON_FAILURE=1
+        - export CTEST_PARALLEL_LEVEL=4
+        - mkdir -p "./builddir/$CI_JOB_NAME"
+        - pushd "./builddir/$CI_JOB_NAME"
+        - cmake ../..
+        - make all
+        - make test
+        - popd
