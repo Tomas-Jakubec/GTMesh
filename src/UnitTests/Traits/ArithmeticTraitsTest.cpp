@@ -2,7 +2,7 @@
 #ifdef HAVE_GTEST
 #include <gtest/gtest.h>
 #include <math.h>
-#include "GTMesh/Traits/Traits.h"
+#include "GTMesh/Traits/TraitsAlgorithm/TraitsAlgorithm.h"
 
 struct NumStruct {
     double data1;
@@ -42,10 +42,9 @@ TEST( ArithmeticTraitsTest, basicTest )
     EXPECT_EQ(min(-ns), -21);
     EXPECT_EQ(max(-ns), -15);
     EXPECT_EQ(max(abs(-ns)), 21);
-    EXPECT_EQ(sum(ns), 21+15);
 
 
-    static constexpr std::integer_sequence<unsigned int, 1> d2();
+    constexpr std::integer_sequence<unsigned int, 1> d2();
     EXPECT_EQ(ns2[d2], 3);
 
 }
