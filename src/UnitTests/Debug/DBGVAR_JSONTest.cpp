@@ -4,9 +4,9 @@
 #include <list>
 #include <map>
 #include <vector>
-#include <sstream>
+#include <string>
 #include "GTMesh/Debug/Debug.h"
-#include <ifstream>
+#include <fstream>
 std::string expectedRes =
 R"({
 "logs":[

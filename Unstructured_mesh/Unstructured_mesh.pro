@@ -6,6 +6,7 @@ CONFIG -= qt
 INCLUDEPATH += $$PWD/../src/
 
 SOURCES += \
+    ../src/UnitTests/Debug/DBGVAR_JSONTest.cpp \
     ../src/UnitTests/Debug/VariableExportTest.cpp \
         main.cpp \
 
