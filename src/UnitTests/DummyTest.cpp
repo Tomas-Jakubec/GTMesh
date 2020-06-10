@@ -2,7 +2,6 @@
 #ifdef HAVE_GTEST
 #include <gtest/gtest.h>
 
-using namespace TNL;
 
 TEST( DummyTest, basicTest )
 {

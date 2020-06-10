@@ -2,7 +2,6 @@
 #ifdef HAVE_GTEST
 #include <gtest/gtest.h>
 
-using namespace TNL;
 
 TEST( DummyTest, basicTest )
 {
@@ -14,7 +13,7 @@ TEST( DummyTest, basicTest )
 	EXPECT_EQ(tr, true);
 	EXPECT_EQ(fa, false);
 	EXPECT_EQ(two, 2);
-	EXPECT_EQ(ten, 5); // fail expected
+        EXPECT_EQ(ten, 10); // fail expected
 	
 }
 #endif
