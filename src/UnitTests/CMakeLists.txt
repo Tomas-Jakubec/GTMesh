@@ -24,7 +24,7 @@ endif()
 # enable tests
 enable_testing()
 include(BuildGtest)
-
+include_directories(${CMAKE_SOURCE_DIR}/..)
 add_subdirectory( Debug )
 
 ## below are targets for each test

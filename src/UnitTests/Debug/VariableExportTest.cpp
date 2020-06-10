@@ -103,7 +103,7 @@ TEST( VariableExportTest_Traited, basicTest )
     std::stringstream ss;
 
     VariableExport<VARIABLE_EXPORT_METHOD::ostream>::exportVariable(ss, e);
-    EXPECT_EQ(ss.str(),"{ "attrInt" : 1, "attrDouble" : 42.15, "attrFloat" : 15.8, "attrLongDouble" : 1.58e+301, "attrChar" : "*", "attrULL" : 465135168421684684, "attrStr" : "Ahojky", "attrTempData" : { "density" : 42.15, "momentum" : [ 42.15, 84.3, 42.15 ] }, "attrVec" : [ "tohle", "je", "nejlepsi", "debugovaci", "system" ] }");
+    EXPECT_EQ(ss.str(),R"({ "attrInt" : 1, "attrDouble" : 42.15, "attrFloat" : 15.8, "attrLongDouble" : 1.58e+301, "attrChar" : "*", "attrULL" : 465135168421684684, "attrStr" : "Ahojky", "attrTempData" : { "density" : 42.15, "momentum" : [ 42.15, 84.3, 42.15 ] }, "attrVec" : [ "tohle", "je", "nejlepsi", "debugovaci", "system" ] })");
     ss.clear();
 
 }
