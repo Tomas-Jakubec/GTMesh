@@ -18,9 +18,14 @@ my build job:
     script:
         - export CTEST_OUTPUT_ON_FAILURE=1
         - export CTEST_PARALLEL_LEVEL=4
+        # go to the unit tests directory
+        - pushd src/UnitTests/
+        # create and go to the build directory
         - mkdir -p "./builddir/$CI_JOB_NAME"
         - pushd "./builddir/$CI_JOB_NAME"
+        # run cmake, build and execute all tests
         - cmake ../..
         - make all
         - make test
+        - popd
         - popd
