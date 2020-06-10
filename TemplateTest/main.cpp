@@ -106,6 +106,12 @@ void testDebug() {
     DBGVAR_JSON(r, i, c, list, vec, b, m);
 
     DBGVAR_JSON(r+1, i+1, char(c+1), list, vec[0], b, m["prvni"]);
+
+    std::ifstream ifs("DBG.json");
+    ifs.is_open();
+    std::string str((std::istreambuf_iterator<char>(ifs)),
+                     std::istreambuf_iterator<char>());
+    DBGVAR(str);
 }
 
 
@@ -2625,9 +2631,9 @@ void testFactorial() {
 int main()
 {
 
-    //testDebug();
+    testDebug();
     //testOperator();
-    testMemberRef();
+    //testMemberRef();
     //testConstrucorOrder();
 
     //testFunction();
