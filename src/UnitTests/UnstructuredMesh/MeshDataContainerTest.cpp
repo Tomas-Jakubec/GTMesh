@@ -48,7 +48,7 @@ TEST( MakeMeshDataContainerTest, basicTest )
     EXPECT_EQ(containerIni.getDataByPos<0>(), std::vector<int>(mesh3.getElements<3>().size(), 3));
     EXPECT_EQ(containerIni.getDataByPos<1>(), std::vector<double>(mesh3.getElements<2>().size(), 42.15));
     EXPECT_EQ(containerIni.getDataByPos<2>(), std::vector<char>(mesh3.getElements<0>().size(), 'a'));
-    EXPECT_EQ(containerIni.getDataByPos<3>(), std::vector<int>(mesh3.getElements<1>().size(), 3));
+    EXPECT_EQ(containerIni.getDataByPos<3>(), std::vector<int>(mesh3.getElements<1>().size(), 15));
 
 
     DBGMSG("assign test");
