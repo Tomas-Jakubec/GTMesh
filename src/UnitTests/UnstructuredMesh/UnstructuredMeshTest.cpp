@@ -3,11 +3,12 @@
 #include <gtest/gtest.h>
 //#else
 //#define TEST(_1,_2) void _1()
-//#define EXPECT_TRUE(_1) (void)(_1 == true)
-//#define EXPECT_FALSE(_1) (void)(_1 == false)
+//#define EXPECT_TRUE(_1) (void)(_1)
+//#define EXPECT_FALSE(_1) (void)(_1)
 //#define EXPECT_EQ(_1,_2) (void)(_1 == _2)
-//#define EXPECT_ANY_THROW(_1) (void)(_1)
+//#define EXPECT_ANY_THROW(_1) try{(_1);}catch(...){}
 //#endif
+#include "GTMesh/Debug/Debug.h"
 #include <list>
 #include <map>
 #include <array>
@@ -18,6 +19,21 @@
 #include "GTMesh/UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataReader.h"
 #include "GTMesh/UnstructuredMesh/MeshDataContainer/MeshDataIO/VTKMeshDataWriter.h"
 #include "MeshSetup.h"
+
+
+bool floatArrayCompare(const double& _1, const double& _2, double treshold = 1e-8){
+    return fabs(_1 - _2) < treshold;
+}
+
+template<typename ArrayT, typename ArrayT2, typename ..., std::enable_if_t<IsIndexable<ArrayT>::value && IsIndexable<ArrayT2>::value,bool> = true>
+bool floatArrayCompare(const ArrayT& _1, const ArrayT2& _2, double treshold = 1e-8){
+    for (decltype (_1.size()) i = 0; i < _1.size(); i++) {
+        if (!floatArrayCompare(_1[i], _2[i], treshold)){
+            return false;
+        }
+    }
+    return true;
+}
 
 
 template<unsigned int ColoredDim, unsigned int ConnectingDim, typename Mesh>
@@ -44,12 +60,12 @@ TEST( UnstructuredMesh2D_Functions_Test, basicTest )
     mesh.initializeCenters();
 
 
-    auto face = mesh.getFaces()[0];
+    auto& face = mesh.getFaces()[0];
     EXPECT_TRUE(isInvalidIndex(face.getCellRightIndex()));
 
     mesh.setupBoundaryCells();
     mesh.setupBoundaryCellsCenters();
-    EXPECT_EQ(face.getCenter(), (Vector<2, double>{0.5, 0}));
+    EXPECT_TRUE(floatArrayCompare( face.getCenter(), (Vector<2, double>{0, 0.5})));
     EXPECT_TRUE(isBoundaryIndex(face.getCellRightIndex()));
     EXPECT_EQ(extractBoundaryIndex(face.getCellRightIndex()), 0);
     EXPECT_TRUE(face.getCellLeftIndex() == 0);
@@ -165,7 +181,7 @@ TEST( UnstructuredMesh2DReadWrite, basicTest )
 
     for (auto& cell : mesh.getCells()){
         EXPECT_EQ(cellDataLoad[cell].color, cellData[cell].color);
-        EXPECT_EQ(cellDataLoad[cell].center, cellData[cell].center);
+        EXPECT_TRUE(floatArrayCompare( cellDataLoad[cell].center, cellData[cell].center ));
     }
 
 
@@ -191,24 +207,11 @@ TEST( UnstructuredMesh2DReadWrite, basicTest )
 
     for (auto& cell : meshRefined.getCells()){
         EXPECT_EQ(cellDataLoadRefined[cell].color, cellData.getDataByPos<0>()[writer1.backwardCellIndexMapping[cell.getIndex()]].color);
-        EXPECT_EQ(cellDataLoadRefined[cell].center, cellData.getDataByPos<0>()[writer1.backwardCellIndexMapping[cell.getIndex()]].center);
+        EXPECT_TRUE(floatArrayCompare(cellDataLoadRefined[cell].center, cellData.getDataByPos<0>()[writer1.backwardCellIndexMapping[cell.getIndex()]].center));
     }
 
 }
 
-bool floatArrayCompare(const double& _1, const double& _2, double treshold = 1e-8){
-    return fabs(_1 - _2) < treshold;
-}
-
-template<typename ArrayT, typename ArrayT2, typename ..., std::enable_if_t<IsIndexable<ArrayT>::value && IsIndexable<ArrayT2>::value,bool> = true>
-bool floatArrayCompare(const ArrayT& _1, const ArrayT2& _2, double treshold = 1e-8){
-    for (decltype (_1.size()) i = 0; i < _1.size(); i++) {
-        if (!floatArrayCompare(_1[i], _2[i], treshold)){
-            return false;
-        }
-    }
-    return true;
-}
 
 
 
@@ -223,7 +226,7 @@ TEST( UnstructuredMesh3D_Functions_Test, 3DMeshTest )
     mesh.initializeCenters();
 
 
-    auto face = mesh.getFaces()[0];
+    auto& face = mesh.getFaces()[0];
     EXPECT_TRUE(isInvalidIndex(face.getCellRightIndex()));
 
     mesh.setupBoundaryCells();
@@ -350,18 +353,22 @@ TEST( MeshRefineTest, 3DMeshTest ) {
     // compute centers
     auto centers = computeCenters<METHOD_DEFAULT>(mesh);
     std::vector<Vertex<3, double>> expectCenter = { {0.333333, 0.333333, 0.5}, {0.666667, 0.666667, 0.5} };
-    EXPECT_EQ((centers.getDataByDim<3>()), expectCenter);
+    EXPECT_TRUE(floatArrayCompare((centers.getDataByDim<3>()), expectCenter));
 
     // measures test
     auto measures = mesh.computeElementMeasures();
-    std::vector<double> expectEdgeM = { 1.0, 1.0, 1.41421, 1.0, 1.0 };
+
+    std::vector<double> expectEdgeM = { 1, 1.41421, 1, 1, 1, 1, 1, 1.41421, 1, 1, 1, 1, 1, 1 };
     EXPECT_EQ(measures.getDataByDim<1>(), expectEdgeM);
-    std::vector<double> expectCellM = { 0.5, 0.5 };
-    EXPECT_EQ(measures.getDataByDim<2>(), expectCellM);
+    std::vector<double> expectFaceM = {  0.5, 1, 1.41421, 1, 0.5, 0.5, 1, 1, 0.5 };
+    EXPECT_EQ(measures.getDataByDim<2>(), expectFaceM);
+    std::vector<double> expectCellM = {  0.5, 0.5 };
+    EXPECT_TRUE(floatArrayCompare(measures.getDataByDim<3>(), expectCellM));
+
 
     for (auto& cell : mesh.getCells()){
         EXPECT_EQ(cellDataLoad[cell].color, cellData[cell].color);
-        EXPECT_EQ(cellDataLoad[cell].center, cellData[cell].center);
+        EXPECT_TRUE(floatArrayCompare( cellDataLoad[cell].center, cellData[cell].center ));
     }
 
 
@@ -386,7 +393,7 @@ TEST( MeshRefineTest, 3DMeshTest ) {
 
     for (auto& cell : meshRefined.getCells()){
         EXPECT_EQ(cellDataLoad[cell].color, cellData.getDataByPos<0>()[writer1.backwardCellIndexMapping[cell.getIndex()]].color);
-        EXPECT_EQ(cellDataLoad[cell].center, cellData.getDataByPos<0>()[writer1.backwardCellIndexMapping[cell.getIndex()]].center);
+        EXPECT_TRUE(floatArrayCompare( cellDataLoad[cell].center, cellData.getDataByPos<0>()[writer1.backwardCellIndexMapping[cell.getIndex()]].center ));
     }
 }
 
