@@ -6,7 +6,7 @@
 //#define EXPECT_TRUE(_1) (void)(_1 == true)
 //#define EXPECT_FALSE(_1) (void)(_1 == false)
 //#define EXPECT_EQ(_1,_2) (void)(_1 == _2)
-//#define EXPECT_THROW(_1) (void)(_1)
+//#define EXPECT_ANY_THROW(_1) (void)(_1)
 //#endif
 #include <list>
 #include <map>
@@ -60,8 +60,8 @@ TEST( UnstructuredMesh2D_Functions_Test, basicTest )
     EXPECT_EQ(face.getNextBElem(face.getCellLeftIndex()), 1);
     EXPECT_EQ(face.getNextBElem(face.getCellRightIndex()), INVALID_INDEX(size_t));
 
-    EXPECT_THROW(face.getOtherCellIndex(1));
-    EXPECT_THROW(face.getNextBElem(1));
+    EXPECT_ANY_THROW(face.getOtherCellIndex(1));
+    EXPECT_ANY_THROW(face.getNextBElem(1));
 
     // compute centers
     auto centers = computeCenters<METHOD_DEFAULT>(mesh);
@@ -238,8 +238,8 @@ TEST( UnstructuredMesh3D_Functions_Test, 3DMeshTest )
     EXPECT_EQ(face.getNextBElem(face.getCellLeftIndex()), 1);
     EXPECT_EQ(face.getNextBElem(face.getCellRightIndex()), INVALID_INDEX(size_t));
 
-    EXPECT_THROW(face.getOtherCellIndex(1));
-    EXPECT_THROW(face.getNextBElem(1));
+    EXPECT_ANY_THROW(face.getOtherCellIndex(1));
+    EXPECT_ANY_THROW(face.getNextBElem(1));
 
 
     // compute centers
