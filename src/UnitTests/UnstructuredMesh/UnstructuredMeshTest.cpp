@@ -1,13 +1,13 @@
 // Test of Traits class
 #ifdef HAVE_GTEST
 #include <gtest/gtest.h>
-//#else
-//#define TEST(_1,_2) void _1()
-//#define EXPECT_TRUE(_1) (void)(_1)
-//#define EXPECT_FALSE(_1) (void)(_1)
-//#define EXPECT_EQ(_1,_2) (void)(_1 == _2)
-//#define EXPECT_ANY_THROW(_1) try{(_1);}catch(...){}
-//#endif
+#else
+#define TEST(_1,_2) void _1()
+#define EXPECT_TRUE(_1) (void)(_1)
+#define EXPECT_FALSE(_1) (void)(_1)
+#define EXPECT_EQ(_1,_2) (void)(_1 == _2)
+#define EXPECT_ANY_THROW(_1) try{(_1);}catch(...){}
+#endif
 #include "GTMesh/Debug/Debug.h"
 #include <list>
 #include <map>
@@ -144,72 +144,50 @@ MAKE_ATTRIBUTE_TEMPLATE_TRAIT((CellData<Dim>), (unsigned int Dim), center, color
 
 TEST( UnstructuredMesh2DReadWrite, basicTest )
 {
-    UnstructuredMesh<3, size_t, double, 6> mesh;
-    twoPrisms(mesh);
+    UnstructuredMesh<2, size_t, double> mesh;
+    square(mesh);
     mesh.initializeCenters();
 
-    auto col = mesh.coloring<3,1>();
+    auto col = mesh.coloring<2,1>();
 
-    MeshDataContainer<CellData<3>, 3> cellData(mesh);
+    MeshDataContainer<CellData<2>, 2> cellData(mesh);
     for (auto& cell : mesh.getCells()){
         cellData[cell].color = col[cell];
         cellData[cell].center = cell.getCenter();
     }
 
-    MeshDataContainer<MeshNativeType<3>::ElementType,3> types(mesh, MeshNativeType<3>::WEDGE);
-    VTKMeshWriter<3, size_t, double> writer;
-    std::ofstream out3D;
-    out3D.open("mesh_refine_0.vtk");
-    EXPECT_TRUE(bool(out3D));
-    writer.writeHeader(out3D, "test data");
-    writer.writeToStream(out3D, mesh, types);
-    VTKMeshDataWriter<3>::writeToStream(out3D, cellData, writer);
-    out3D.close();
+    MeshDataContainer<MeshNativeType<2>::ElementType,2> types(mesh, MeshNativeType<2>::TRIANGLE);
+    VTKMeshWriter<2, size_t, double> writer;
+    std::ofstream out2D;
+    out2D.open("test_mesh_2D.vtk");
+    EXPECT_TRUE(bool(out2D));
+    writer.writeHeader(out2D, "test data");
+    writer.writeToStream(out2D, mesh, types);
+    VTKMeshDataWriter<2>::writeToStream(out2D, cellData, writer);
+    out2D.close();
 
     mesh.clear();
 
 
-    VTKMeshReader<3> reader;
-    std::ifstream ifst("mesh_refine_0.vtk", std::ios::binary | std::ios::in);
+    VTKMeshReader<2> reader;
+    std::ifstream ifst("test_mesh_2D.vtk", std::ios::binary | std::ios::in);
     EXPECT_TRUE(bool(ifst));
     reader.loadFromStream(ifst, mesh);
-    MeshDataContainer<CellData<3>, 3> cellDataLoad(mesh);
-    VTKMeshDataReader<3, size_t>::readFromStream(ifst, cellDataLoad);
+    MeshDataContainer<CellData<2>, 2> cellDataLoad(mesh);
+    VTKMeshDataReader<2, size_t>::readFromStream(ifst, cellDataLoad);
     ifst.close();
 
-
+    mesh.initializeCenters();
+    auto measures = mesh.computeElementMeasures();
+    std::vector<double> expectEdgeM = { 1.0, 1.0, 1.41421, 1.0, 1.0 };
+    EXPECT_EQ(measures.getDataByDim<1>(), expectEdgeM);
+    std::vector<double> expectCellM = { 0.5, 0.5 };
+    EXPECT_EQ(measures.getDataByDim<2>(), expectCellM);
 
     for (auto& cell : mesh.getCells()){
         EXPECT_EQ(cellDataLoad[cell].color, cellData[cell].color);
-        EXPECT_TRUE(floatArrayCompare( cellDataLoad[cell].center, cellData[cell].center ));
+        EXPECT_TRUE(floatArrayCompare( cellDataLoad[cell].center, cellData[cell].center, 1e-4 ));
     }
-
-
-
-    MeshDataContainer<MeshNativeType<3>::ElementType,3> types1(mesh, MeshNativeType<3>::POLYHEDRON);
-    VTKMeshWriter<3, size_t, double> writer1;
-    out3D.open("mesh_refine_1.vtk");
-    EXPECT_TRUE(bool(out3D));
-    writer1.writeHeader(out3D, "test data");
-    writer1.writeToStream(out3D, mesh, types1);
-    VTKMeshDataWriter<3>::writeToStream(out3D, cellData, writer1);
-    out3D.close();
-
-    UnstructuredMesh<3, size_t, double, 6> meshRefined;
-
-    ifst.open("mesh_refine_1.vtk", std::ios::binary | std::ios::in);
-    EXPECT_TRUE(bool(ifst));
-    reader.loadFromStream(ifst, meshRefined);
-    EXPECT_EQ(meshRefined.getCells().size(), 36);
-    MeshDataContainer<CellData<3>, 3> cellDataLoadRefined(meshRefined);
-    VTKMeshDataReader<3, size_t>::readFromStream(ifst, cellDataLoadRefined);
-    ifst.close();
-
-    for (auto& cell : meshRefined.getCells()){
-        EXPECT_EQ(cellDataLoadRefined[cell].color, cellData.getDataByPos<0>()[writer1.backwardCellIndexMapping[cell.getIndex()]].color);
-        EXPECT_TRUE(floatArrayCompare(cellDataLoadRefined[cell].center, cellData.getDataByPos<0>()[writer1.backwardCellIndexMapping[cell.getIndex()]].center));
-    }
-
 }
 
 
@@ -359,16 +337,16 @@ TEST( MeshRefineTest, 3DMeshTest ) {
     auto measures = mesh.computeElementMeasures();
 
     std::vector<double> expectEdgeM = { 1, 1.41421, 1, 1, 1, 1, 1, 1.41421, 1, 1, 1, 1, 1, 1 };
-    EXPECT_EQ(measures.getDataByDim<1>(), expectEdgeM);
+    EXPECT_TRUE(floatArrayCompare(measures.getDataByDim<1>(), expectEdgeM));
     std::vector<double> expectFaceM = {  0.5, 1, 1.41421, 1, 0.5, 0.5, 1, 1, 0.5 };
-    EXPECT_EQ(measures.getDataByDim<2>(), expectFaceM);
+    EXPECT_TRUE(floatArrayCompare(measures.getDataByDim<2>(), expectFaceM));
     std::vector<double> expectCellM = {  0.5, 0.5 };
     EXPECT_TRUE(floatArrayCompare(measures.getDataByDim<3>(), expectCellM));
 
 
     for (auto& cell : mesh.getCells()){
         EXPECT_EQ(cellDataLoad[cell].color, cellData[cell].color);
-        EXPECT_TRUE(floatArrayCompare( cellDataLoad[cell].center, cellData[cell].center ));
+        EXPECT_TRUE(floatArrayCompare( cellDataLoad[cell].center, cellData[cell].center));
     }
 
 
@@ -393,11 +371,11 @@ TEST( MeshRefineTest, 3DMeshTest ) {
 
     for (auto& cell : meshRefined.getCells()){
         EXPECT_EQ(cellDataLoad[cell].color, cellData.getDataByPos<0>()[writer1.backwardCellIndexMapping[cell.getIndex()]].color);
-        EXPECT_TRUE(floatArrayCompare( cellDataLoad[cell].center, cellData.getDataByPos<0>()[writer1.backwardCellIndexMapping[cell.getIndex()]].center ));
+        EXPECT_TRUE(floatArrayCompare( cellDataLoad[cell].center, cellData.getDataByPos<0>()[writer1.backwardCellIndexMapping[cell.getIndex()]].center));
     }
 }
 
 
-#endif
+//#endif
 
 #include "UnitTests/main.h"
