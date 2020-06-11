@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 #else
 #define TEST(_1,_2) void _1()
-#define EXPECT_TRUE(_1) DBGCHECK;(void)(_1)
+#define EXPECT_TRUE(_1) DBGVAR(_1);(void)(_1)
 #define EXPECT_FALSE(_1) DBGCHECK;(void)(_1)
 #define EXPECT_EQ(_1,_2) DBGCHECK;(void)(_1 == _2)
 #define EXPECT_ANY_THROW(_1) DBGCHECK;try{(_1);}catch(...){}
@@ -21,12 +21,12 @@
 #include "MeshSetup.h"
 
 
-bool floatArrayCompare(const double& _1, const double& _2, double treshold = 1e-8){
+bool floatArrayCompare(const double& _1, const double& _2, double treshold = 1e-5){
     return fabs(_1 - _2) < treshold;
 }
 
 template<typename ArrayT, typename ArrayT2, typename ..., std::enable_if_t<IsIndexable<ArrayT>::value && IsIndexable<ArrayT2>::value,bool> = true>
-bool floatArrayCompare(const ArrayT& _1, const ArrayT2& _2, double treshold = 1e-8){
+bool floatArrayCompare(const ArrayT& _1, const ArrayT2& _2, double treshold = 1e-5){
     for (decltype (_1.size()) i = 0; i < _1.size(); i++) {
         if (!floatArrayCompare(_1[i], _2[i], treshold)){
             return false;
@@ -83,24 +83,24 @@ TEST( UnstructuredMesh2D_Functions_Test, basicTest )
     // compute centers
     auto centers = computeCenters<METHOD_DEFAULT>(mesh);
     std::vector<Vertex<2, double>> expectCenter = { {0.333333, 0.333333}, {0.666667, 0.666667} };
-    EXPECT_EQ((centers.getDataByDim<2>()), expectCenter);
+    EXPECT_TRUE(floatArrayCompare((centers.getDataByDim<2>()), expectCenter));
 
     // measures test
     auto measures = mesh.computeElementMeasures();
     std::vector<double> expectEdgeM = { 1.0, 1.0, 1.41421, 1.0, 1.0 };
-    EXPECT_EQ(measures.getDataByDim<1>(), expectEdgeM);
+    EXPECT_TRUE(floatArrayCompare(measures.getDataByDim<1>(), expectEdgeM));
     std::vector<double> expectCellM = { 0.5, 0.5 };
-    EXPECT_EQ(measures.getDataByDim<2>(), expectCellM);
+    EXPECT_TRUE(floatArrayCompare(measures.getDataByDim<2>(), expectCellM));
 
     // face normals test
     auto normals = mesh.computeFaceNormals();
     std::vector<Vector<2, double>> expectNormals = { {-1, 0}, {0, -1}, { 0.707107, 0.707107}, {0, 1}, {1, 0} };
-    EXPECT_EQ(normals.getDataByPos<0>(), expectNormals);
+    EXPECT_TRUE(floatArrayCompare(normals.getDataByPos<0>(), expectNormals));
 
     // center distance
     auto dist = computeCellsDistance(mesh);
     std::vector<double> expectCellDist = { 0.372678, 0.372678, 0.471405, 0.372678, 0.372678 };
-    EXPECT_EQ(dist.getDataByPos<0>(), expectCellDist);
+    EXPECT_TRUE(floatArrayCompare(dist.getDataByPos<0>(), expectCellDist));
 
     // Mesh connections
     std::vector<std::vector<size_t>> expCon20 = { { 0, 1, 2 }, { 1, 2, 3 } };
@@ -181,12 +181,12 @@ TEST( UnstructuredMesh2DReadWrite, basicTest )
     mesh.initializeCenters();
     auto measures = mesh.computeElementMeasures();
     std::vector<double> expectEdgeM = { 1.0, 1.0, 1.41421, 1.0, 1.0 };
-    EXPECT_EQ(measures.getDataByDim<1>(), expectEdgeM);
+    EXPECT_TRUE(floatArrayCompare(measures.getDataByDim<1>(), expectEdgeM));
     std::vector<double> expectCellM = { 0.5, 0.5 };
-    EXPECT_EQ(measures.getDataByDim<2>(), expectCellM);
+    EXPECT_TRUE(floatArrayCompare(measures.getDataByDim<2>(), expectCellM));
 
     for (auto& cell : mesh.getCells()){
-        EXPECT_EQ(cellDataLoad[cell].color, cellData[cell].color);
+        EXPECT_TRUE(floatArrayCompare(cellDataLoad[cell].color, cellData[cell].color));
         EXPECT_TRUE(floatArrayCompare( cellDataLoad[cell].center, cellData[cell].center, 1e-4 ));
     }
 }
@@ -227,10 +227,10 @@ TEST( UnstructuredMesh3D_Functions_Test, 3DMeshTest )
     // compute centers
     auto centers = computeCenters<METHOD_DEFAULT>(mesh);
     std::vector<Vertex<3, double>> expectCenter = { {0.333333, 0.333333, 0.5}, {0.666667, 0.666667, 0.5} };
-    EXPECT_EQ((centers.getDataByDim<3>()), expectCenter);
+    EXPECT_TRUE(floatArrayCompare((centers.getDataByDim<3>()), expectCenter));
 
     std::vector<Vertex<3, double>> expectCenterFace = {{ 0.333333, 0.333333, 0 }, { 0.666667, 0.666667, 0 }, { 0.5, 0, 0.5 }, { 0, 0.5, 0.5 }, { 0.5, 1, 0.5 }, { 1, 0.5, 0.5 }, { 0.333333, 0.333333, 1 }, { 0.666667, 0.666667, 1 }, { 0.5, 0.5, 0.5 }};
-    EXPECT_TRUE(floatArrayCompare((centers.getDataByDim<3>()), expectCenterFace));
+    EXPECT_TRUE(floatArrayCompare((centers.getDataByDim<2>()), expectCenterFace));
 
 
     // measures test
@@ -238,11 +238,11 @@ TEST( UnstructuredMesh3D_Functions_Test, 3DMeshTest )
     auto measuresTess = mesh.computeElementMeasures<METHOD_TESSELLATED>();
 
     std::vector<double> expectEdgeM = { 1, 1.41421, 1, 1, 1, 1, 1, 1.41421, 1, 1, 1, 1, 1, 1 };
-    EXPECT_EQ(measures.getDataByDim<1>(), expectEdgeM);
-    EXPECT_EQ(measuresTess.getDataByDim<1>(), expectEdgeM);
+    EXPECT_TRUE(floatArrayCompare(measures.getDataByDim<1>(), expectEdgeM));
+    EXPECT_TRUE(floatArrayCompare(measuresTess.getDataByDim<1>(), expectEdgeM));
     std::vector<double> expectFaceM = {  0.5, 1, 1.41421, 1, 0.5, 0.5, 1, 1, 0.5 };
-    EXPECT_EQ(measures.getDataByDim<2>(), expectFaceM);
-    EXPECT_EQ(measuresTess.getDataByDim<2>(), expectFaceM);
+    EXPECT_TRUE(floatArrayCompare(measures.getDataByDim<2>(), expectFaceM));
+    EXPECT_TRUE(floatArrayCompare(measuresTess.getDataByDim<2>(), expectFaceM));
     std::vector<double> expectCellM = {  0.5, 0.5 };
     EXPECT_TRUE(floatArrayCompare(measures.getDataByDim<3>(), expectCellM));
     EXPECT_TRUE(floatArrayCompare(measuresTess.getDataByDim<3>(), expectCellM));
@@ -255,7 +255,7 @@ TEST( UnstructuredMesh3D_Functions_Test, 3DMeshTest )
     // center distance
     auto dist = computeCellsDistance(mesh);
     std::vector<double> expectCellDist = { 0.687184, 1.06719, 0.687184, 0.687184, 1.06719, 1.06719, 0.687184, 1.06719, 0.471405 };
-    EXPECT_EQ(dist.getDataByPos<0>(), expectCellDist);
+    EXPECT_TRUE(floatArrayCompare(dist.getDataByPos<0>(), expectCellDist));
 
     // Mesh connections
     std::vector<std::vector<size_t>> expCon20 = { { 0, 1, 2 }, { 1, 2, 3 }, { 0, 1, 4, 5 }, { 0, 2, 4, 6 }, { 2, 3, 6, 7 }, { 1, 3, 5, 7 }, { 4, 5, 6 }, { 5, 6, 7 }, { 1, 2, 5, 6 } };
