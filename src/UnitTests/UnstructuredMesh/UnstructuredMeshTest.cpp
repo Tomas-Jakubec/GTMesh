@@ -1,13 +1,13 @@
 // Test of Traits class
 #ifdef HAVE_GTEST
 #include <gtest/gtest.h>
-//#else
-//#define TEST(_1,_2) void _1()
-//#define EXPECT_TRUE(_1) if(!_1)DBGVAR(_1);(void)(_1)
-//#define EXPECT_FALSE(_1) DBGCHECK;(void)(_1)
-//#define EXPECT_EQ(_1,_2) if (!(_1 == _2))DBGVAR(_1,_2);(void)(_1 == _2)
-//#define EXPECT_ANY_THROW(_1) DBGCHECK;try{(_1);}catch(...){}
-//#endif
+// #else
+// #define TEST(_1,_2) void _1()
+// #define EXPECT_TRUE(_1) if(!_1)DBGVAR(_1);(void)(_1)
+// #define EXPECT_FALSE(_1) DBGCHECK;(void)(_1)
+// #define EXPECT_EQ(_1,_2) if (!(_1 == _2))DBGVAR(_1,_2);(void)(_1 == _2)
+// #define EXPECT_ANY_THROW(_1) DBGCHECK;try{(_1);}catch(...){}
+// #endif
 #include "GTMesh/Debug/Debug.h"
 #include <list>
 #include <map>
@@ -254,6 +254,7 @@ TEST( UnstructuredMesh3D_Functions_Test, 3DMeshTest )
     // center distance
     auto dist = computeCellsDistance(mesh);
     std::vector<double> expectCellDist = { 0.5, 0.5, 0.372678, 0.372678, 0.372678, 0.372678, 0.5, 0.5, 0.471405 };
+
     EXPECT_TRUE(floatArrayCompare(dist.getDataByPos<0>(), expectCellDist));
 
     // Mesh connections
@@ -318,12 +319,12 @@ TEST( MeshRefineTest, 3DMeshTest ) {
 
     mesh.clear();
 
-    MeshDataContainer<CellData<3>, 3> cellDataLoad(mesh);
 
     VTKMeshReader<3> reader;
-    std::ifstream ifst("mesh_refine_0.vtk");
+    std::ifstream ifst("mesh_refine_0.vtk", std::ios::binary | std::ios::in);
     EXPECT_TRUE(bool(ifst));
     reader.loadFromStream(ifst, mesh);
+    MeshDataContainer<CellData<3>, 3> cellDataLoad(mesh);
     VTKMeshDataReader<3, size_t>::readFromStream(ifst, cellDataLoad);
     ifst.close();
 
@@ -355,26 +356,36 @@ TEST( MeshRefineTest, 3DMeshTest ) {
     VTKMeshWriter<3, size_t, double> writer1;
     out3D.open("mesh_refine_1.vtk");
     EXPECT_TRUE(bool(out3D));
-    writer.writeHeader(out3D, "test data");
-    writer.writeToStream(out3D, mesh, types1);
+    writer1.writeHeader(out3D, "test data");
+    writer1.writeToStream(out3D, mesh, types1);
     VTKMeshDataWriter<3>::writeToStream(out3D, cellData, writer1);
     out3D.close();
 
     UnstructuredMesh<3, size_t, double, 6> meshRefined;
 
-    ifst.open("mesh_refine_1.vtk");
+    ifst.open("mesh_refine_1.vtk", std::ios::binary | std::ios::in);
     EXPECT_TRUE(bool(ifst));
     reader.loadFromStream(ifst, meshRefined);
-    MeshDataContainer<CellData<3>, 3> cellDataLoadRefined(mesh);
-    VTKMeshDataReader<3, size_t>::readFromStream(ifst, cellDataLoad);
+    MeshDataContainer<CellData<3>, 3> cellDataLoadRefined(meshRefined);
+    VTKMeshDataReader<3, size_t>::readFromStream(ifst, cellDataLoadRefined);
     ifst.close();
 
+
     for (auto& cell : meshRefined.getCells()){
-        EXPECT_EQ(cellDataLoad[cell].color, cellData.getDataByPos<0>()[writer1.backwardCellIndexMapping[cell.getIndex()]].color);
-        EXPECT_TRUE(floatArrayCompare( cellDataLoad[cell].center, cellData.getDataByPos<0>()[writer1.backwardCellIndexMapping[cell.getIndex()]].center));
+        EXPECT_EQ(cellDataLoadRefined[cell].color, cellData.getDataByPos<0>()[writer1.backwardCellIndexMapping[cell.getIndex()]].color);
+        EXPECT_TRUE(floatArrayCompare( cellDataLoadRefined[cell].center, cellData.getDataByPos<0>()[writer1.backwardCellIndexMapping[cell.getIndex()]].center));
     }
 }
 
 
 #endif
+//#ifndef HAVE_GTEST
+//int main(){
+//    UnstructuredMesh2D_Functions_Test();
+//    UnstructuredMesh2DReadWrite();
+//    UnstructuredMesh3D_Functions_Test();
+//    MeshRefineTest();
+//}
+//#else
 #include "UnitTests/main.h"
+//#endif

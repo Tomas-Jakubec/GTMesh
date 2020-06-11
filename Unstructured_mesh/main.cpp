@@ -1055,7 +1055,7 @@ void testFPMA_poly(){
 
 }
 
-/*
+
 int main()
 {
     //meshSize();
@@ -1071,5 +1071,5 @@ int main()
 
     //testFPMA_poly();
 
-}*/
+}
 
