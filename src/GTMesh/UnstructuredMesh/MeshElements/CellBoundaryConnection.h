@@ -39,9 +39,6 @@ public:
 
     IndexType getNextBElem(IndexType cellIndex) const;
 
-    // Returns the other Cell than sent by parameter
-    IndexType getOtherCellIndex(IndexType cellIndex) const;
-
 
 };
 
