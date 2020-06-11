@@ -8,7 +8,7 @@ class MeshNeighborhood{
 public:
     template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
     static MeshDataContainer<std::vector<IndexType>, StartDim> neighbors(
-                MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
+                const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
             ) {
 
         MeshDataContainer<std::vector<IndexType>, StartDim> result(mesh);
@@ -48,7 +48,7 @@ class MeshNeighborhood<StartDim, ConnectingDim, ConnectedDim, Order::ORDER_ORIGI
 public:
     template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
     static MeshDataContainer<std::vector<IndexType>, StartDim> neighbors(
-                MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
+                const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
             ) {
 
         MeshDataContainer<std::vector<IndexType>, StartDim> result(mesh);

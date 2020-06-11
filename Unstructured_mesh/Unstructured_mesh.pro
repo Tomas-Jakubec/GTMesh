@@ -61,6 +61,7 @@ DISTFILES += \
     ../src/UnitTests/Traits/ArithmeticTraitsTest.cpp \
     ../src/UnitTests/Traits/TraitsTest.cpp \
     ../src/UnitTests/UnstructuredMesh/MeshDataContainerTest.cpp \
+    ../src/UnitTests/UnstructuredMesh/UnstructuredMeshTest.cpp \
     ../README.md \
     ../src/GTMesh/Debug/README.md \
     ../src/GTMesh/Traits/TraitsAlgorithm/README.md \

@@ -50,7 +50,7 @@ public:
      * higher than one.
      */
     template<ComputationMethod Method = ComputationMethod::METHOD_DEFAULT>
-    MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>> computeElementMeasures() {
+    MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>> computeElementMeasures() const {
         return computeMeasures<Method>(*this);
     }
 
@@ -58,7 +58,7 @@ public:
      * @brief Calculates the normal vectors of the faces in the mesh.
      */
     template<ComputationMethod Method = ComputationMethod::METHOD_DEFAULT>
-    MeshDataContainer<Vector<MeshDimension, Real>, MeshDimension-1> computeFaceNormals() {
+    MeshDataContainer<Vector<MeshDimension, Real>, MeshDimension-1> computeFaceNormals() const {
         return ::computeFaceNormals<Method>(*this);
     }
 
@@ -79,7 +79,7 @@ public:
      * @endcode
      */
     template<unsigned int StartDim, unsigned int TargetDim, typename Functor>
-    void apply(const Functor& func) {
+    void apply(const Functor& func) const {
         return MeshApply<StartDim, TargetDim>::apply(*this, func);
     }
 
@@ -102,7 +102,7 @@ public:
      * @endcode
      */
     template<unsigned int StartDim, unsigned int TargetDim, typename Functor>
-    void apply(IndexType startElementIndex,const Functor& func) {
+    void apply(IndexType startElementIndex,const Functor& func) const {
         return MeshApply<StartDim, TargetDim>::apply(startElementIndex, *this, func);
     }
 
@@ -112,7 +112,7 @@ public:
      * StartDim.
      */
     template<unsigned int StartDim, unsigned int TargetDim, Order ConnectionsOrder = ORDER_ASCEND>
-    MeshDataContainer<std::vector<IndexType>, StartDim> connections() {
+    MeshDataContainer<std::vector<IndexType>, StartDim> connections() const {
         return MeshConnections<StartDim, TargetDim, ConnectionsOrder>::connections(*this);
     }
 
@@ -122,7 +122,7 @@ public:
      * The connection is determined over the elements from ConnectingDim.
      */
     template<unsigned int StartDim, unsigned int ConnectingDim, unsigned int ConnectedDim = StartDim, Order ConnectionsOrder = Order::ORDER_ASCEND>
-    MeshDataContainer<std::vector<IndexType>, StartDim> neighborhood() {
+    MeshDataContainer<std::vector<IndexType>, StartDim> neighborhood() const {
         return MeshNeighborhood<StartDim, ConnectingDim, ConnectedDim, ConnectionsOrder>::neighbors(*this);
     }
 
@@ -133,7 +133,7 @@ public:
      */
     template<unsigned int StartDim, unsigned int ConnectingDim,  ColoringMethod Method = ColoringMethod::METHOD_GREEDY>
     typename std::enable_if<Method == METHOD_GREEDY,MeshDataContainer<unsigned int, StartDim>>::type
-    coloring() {
+    coloring() const {
         return MeshColoring<StartDim, ConnectingDim, Method>::color(*this);
     }
 
@@ -145,7 +145,7 @@ public:
      */
     template<unsigned int StartDim, unsigned int ConnectingDim,  ColoringMethod Method = ColoringMethod::METHOD_GREEDY>
     typename std::enable_if<Method == METHOD_RANDOM,MeshDataContainer<unsigned int, StartDim>>::type
-    coloring(unsigned int seed = 1562315) {
+    coloring(unsigned int seed = 1562315) const {
         return MeshColoring<StartDim, ConnectingDim, Method>::color(*this, seed);
     }
 

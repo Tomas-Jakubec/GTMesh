@@ -15,7 +15,7 @@ template<unsigned int ColoredDim, unsigned int ConnectingDim, ColoringMethod Met
 struct _MeshColoring {
     template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
     static MeshDataContainer<unsigned int, ColoredDim> color(
-            MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
+            const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
             ) {
         // resulting container of colours
         MeshDataContainer<unsigned int, ColoredDim> result(mesh);
@@ -70,7 +70,7 @@ template<unsigned int ColoredDim, unsigned int ConnectingDim>
 struct _MeshColoring <ColoredDim, ConnectingDim, METHOD_GREEDY, true> {
     template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
     static MeshDataContainer<unsigned int, ColoredDim> color(
-            MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
+            const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
             ) {
         MeshDataContainer<unsigned int, ColoredDim> result(mesh);
 
@@ -120,7 +120,7 @@ template<unsigned int ColoredDim, unsigned int ConnectingDim, bool Descend>
 struct _MeshColoring <ColoredDim, ConnectingDim, METHOD_RANDOM, Descend> {
     template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
     static MeshDataContainer<unsigned int, ColoredDim> color(
-            MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh,
+            const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh,
             unsigned int seed = 1562315
             ) {
         // calculating the reserve
@@ -195,7 +195,7 @@ struct MeshColoring{
 
 template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
 static MeshDataContainer<unsigned int, ColoredDim> color(
-            MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
+            const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
         ){
     return Impl::_MeshColoring<ColoredDim, ConnectingDim, Method>::color(mesh);
 }
@@ -207,7 +207,7 @@ struct MeshColoring<ColoredDim, ConnectingDim, METHOD_RANDOM>{
 
 template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
 static MeshDataContainer<unsigned int, ColoredDim> color(
-            MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh,
+            const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh,
             unsigned int seed = 1562315
         ){
     return Impl::_MeshColoring<ColoredDim, ConnectingDim, METHOD_RANDOM>::color(mesh, seed);

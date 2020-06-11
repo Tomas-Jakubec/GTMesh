@@ -15,7 +15,7 @@ namespace Impl {
 template <unsigned int CurrentDimension, unsigned int MeshDimension, ComputationMethod Method = METHOD_DEFAULT>
 struct _ComputeMeasures{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
-    static void compute(MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>>&,MeshElements<MeshDimension, IndexType, Real, Reserve...>&){
+    static void compute(MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>>&, const MeshElements<MeshDimension, IndexType, Real, Reserve...>&){
         static_assert (MeshDimension <= 3,"The measure computation of mesh of dimension higher than 3 is not implemented yet.");
     }
 };
@@ -24,7 +24,7 @@ struct _ComputeMeasures{
 template <unsigned int MeshDimension, ComputationMethod Method>
 struct _ComputeMeasures<1, MeshDimension, Method>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
-    static void compute(MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>>& measures,MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh){
+    static void compute(MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>>& measures, const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh){
 
         auto& edgeLengths = measures.template getDataByDim<1>();
 
@@ -42,7 +42,7 @@ struct _ComputeMeasures<1, MeshDimension, Method>{
 template <ComputationMethod Method>
 struct _ComputeMeasures<3, 3, Method>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
-    static void compute(MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, 3>>& measures,MeshElements<3, IndexType, Real, Reserve...>& mesh){
+    static void compute(MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, 3>>& measures, const MeshElements<3, IndexType, Real, Reserve...>& mesh){
 
         auto& cellMeasures = measures.template getDataByDim<3>();
 
@@ -58,9 +58,9 @@ struct _ComputeMeasures<3, 3, Method>{
                 IndexType vAIndex = mesh.getEdges().at(mesh.getFaces().at(tmpFace).getSubelements()[0]).getVertexAIndex();
                 IndexType vBIndex = mesh.getEdges().at(mesh.getFaces().at(tmpFace).getSubelements()[0]).getVertexBIndex();
 
-                Vertex<3,Real>& a = mesh.getVertices().at(vAIndex);
-                Vertex<3,Real>& b = mesh.getVertices().at(vBIndex);
-                Vertex<3,Real>& c = mesh.getFaces().at(tmpFace).getCenter();
+                const Vertex<3,Real>& a = mesh.getVertices().at(vAIndex);
+                const Vertex<3,Real>& b = mesh.getVertices().at(vBIndex);
+                const Vertex<3,Real>& c = mesh.getFaces().at(tmpFace).getCenter();
 
                 std::array<Vertex<3,Real>, 3> gsVecs = {a - b, a - c, a - cellCenter};
                 std::array<Real, 3> gsNorms = {};
@@ -83,18 +83,18 @@ struct _ComputeMeasures<3, 3, Method>{
 template <ComputationMethod Method>
 struct _ComputeMeasures<2, 2, Method>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
-    static void compute(MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, 2>>& measures,MeshElements<2, IndexType, Real, Reserve...>& mesh){
+    static void compute(MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, 2>>& measures, const MeshElements<2, IndexType, Real, Reserve...>& mesh){
 
         auto& surfaceMeasures = measures.template getDataByDim<2>();
 
         for (IndexType cellIndex = 0; cellIndex < mesh.getCells().size(); cellIndex++) {
-            typename MeshElements<2, IndexType, Real, Reserve...>::template ElementType<2>& cell = mesh.getCells().at(cellIndex);
+            auto& cell = mesh.getCells().at(cellIndex);
             IndexType tmpEdge = cell.getBoundaryElementIndex();
             Real measure = Real();
-            Vertex<2,Real>& cellCenter = cell.getCenter();
+            const Vertex<2,Real>& cellCenter = cell.getCenter();
             do {
-                Vertex<2,Real>& a = mesh.getVertices().at(mesh.getEdges().at(tmpEdge).getVertexAIndex());
-                Vertex<2,Real>& b = mesh.getVertices().at(mesh.getEdges().at(tmpEdge).getVertexBIndex());
+                const Vertex<2,Real>& a = mesh.getVertices().at(mesh.getEdges().at(tmpEdge).getVertexAIndex());
+                const Vertex<2,Real>& b = mesh.getVertices().at(mesh.getEdges().at(tmpEdge).getVertexBIndex());
                 double tmp = (cellCenter[0] - a[0]) * (b[1] - a[1]);
                 tmp -= (cellCenter[1] - a[1]) * (b[0] - a[0]);
                 measure += 0.5 * fabs(tmp);
@@ -112,7 +112,7 @@ struct _ComputeMeasures<2, 2, Method>{
 template <ComputationMethod Method>
 struct _ComputeMeasures<2, 3, Method>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
-    static void compute(MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, 3>>& measures,MeshElements<3, IndexType, Real, Reserve...>& mesh){
+    static void compute(MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, 3>>& measures, const MeshElements<3, IndexType, Real, Reserve...>& mesh){
 
         auto& surfaceMeasures = measures.template getDataByDim<2>();
 
@@ -123,8 +123,8 @@ struct _ComputeMeasures<2, 3, Method>{
             const Vertex<3,Real>& faceCenter = face.getCenter();
             for(auto sube : face.getSubelements()){
                 const auto& edge = mesh.getEdges().at(sube);
-                Vertex<3,Real>& a = mesh.getVertices().at(edge.getVertexAIndex());
-                Vertex<3,Real>& b = mesh.getVertices().at(edge.getVertexBIndex());
+                const Vertex<3,Real>& a = mesh.getVertices().at(edge.getVertexAIndex());
+                const Vertex<3,Real>& b = mesh.getVertices().at(edge.getVertexBIndex());
 
                 std::array<Vertex<3,Real>, 2> gsVecs = {b - a, faceCenter - a};
                 std::array<Real, 2> gsNorms = {};
@@ -149,7 +149,7 @@ struct _ComputeMeasures<2, 3, Method>{
 template <>
 struct _ComputeMeasures<3, 3, METHOD_TESSELLATED>{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
-    static void compute(MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, 3>>& measures,MeshElements<3, IndexType, Real, Reserve...>& mesh){
+    static void compute(MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, 3>>& measures, const MeshElements<3, IndexType, Real, Reserve...>& mesh){
 
         auto& cellMeasures = measures.template getDataByDim<3>();
 
@@ -191,7 +191,7 @@ struct _ComputeMeasures<3, 3, METHOD_TESSELLATED>{
 
 
 template <ComputationMethod Method, unsigned int MeshDimension,typename IndexType, typename Real, unsigned int ...Reserve>
-MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>> computeMeasures(MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh){
+MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>> computeMeasures(const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh){
     MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>> measures(mesh);
 
     Impl::_ComputeMeasures<1, MeshDimension, Method>::compute(measures, mesh);

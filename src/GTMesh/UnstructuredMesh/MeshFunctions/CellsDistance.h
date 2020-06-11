@@ -15,7 +15,7 @@
 
 
 template <unsigned int Dimension,typename IndexType, typename Real, unsigned int ...Reserve>
-MeshDataContainer<Real, Dimension-1> ComputeCellsDistance(const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
+MeshDataContainer<Real, Dimension-1> computeCellsDistance(const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
 
     MeshDataContainer<Real, Dimension-1> distances(mesh);
 

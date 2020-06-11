@@ -30,7 +30,7 @@ struct MeshConnections {
     MeshDataContainer<std::vector<IndexType>, StartDim>
     >::type
     connections(
-            MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
+            const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
             ) {
 
         MeshDataContainer<std::set<IndexType>, StartDim> tmpSet(mesh);
@@ -65,7 +65,7 @@ struct MeshConnections {
     MeshDataContainer<std::vector<IndexType>, StartDim>
     >::type
     connections(
-            MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
+            const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
             ) {
 
         std::set<IndexType> tmpSet;
@@ -135,7 +135,7 @@ struct MeshConnections<StartDim, TargetDim, Order::ORDER_ORIGINAL> {
      */
     template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
     static MeshDataContainer<std::vector<IndexType>, StartDim> connections(
-            MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
+            const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
             ) {
         MeshDataContainer<std::map<IndexType, IndexType>, StartDim> tempMap(mesh);
 

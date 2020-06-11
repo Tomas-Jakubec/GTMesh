@@ -390,11 +390,20 @@ void testMesh2D() {
 
     DBGMSG("2D cells distances");
 
-    auto distances = ComputeCellsDistance(mesh);
+    auto distances = computeCellsDistance(mesh);
     for(auto& edge : mesh.getEdges()){
         DBGVAR(edge.getIndex(),distances.at(edge));
     }
 
+    DBGVAR((mesh.connections<2,0>().getDataByPos<0>()),
+           (mesh.connections<2,1>().getDataByPos<0>()),
+           (mesh.connections<1,2>().getDataByPos<0>()),
+           (mesh.connections<0,2>().getDataByPos<0>()));
+
+    DBGVAR((mesh.neighborhood<2,0>().getDataByPos<0>()),
+           (mesh.neighborhood<2,1,0>().getDataByPos<0>()),
+           (mesh.neighborhood<1,2,0>().getDataByPos<0>()),
+           (mesh.neighborhood<0,2>().getDataByPos<0>()));
 }
 
 
@@ -411,10 +420,7 @@ void testMesh2DLoadAndWrite(){
     DBGVAR(mesh.getVertices().size(), mesh.getVertices().at(4),mesh.getCells().size());
 
 
-    DBGMSG("mesh apply test");
-    Impl::MeshRun<2, 2, 0, 2,false, true>::run(mesh,size_t(4), size_t(4), [](size_t ori, size_t i){
-        DBGVAR(ori,i);
-    });
+    DBGVAR((mesh.connections<2,0>().getDataByPos<0>()[4]));
 
     mesh.initializeCenters();
     auto normals = mesh.computeFaceNormals();
@@ -718,140 +724,95 @@ struct doubleEdgeNormalData {
 };
 MAKE_CUSTOM_TRAIT(doubleEdgeNormalData, "firstEdgeNormal", std::make_pair(&doubleEdgeNormalData::get, &doubleEdgeNormalData::set));
 
+template<unsigned int Dim>
+struct CellData {
+    unsigned int color;
+    Vertex<Dim, double> center;
+};
+
+MAKE_ATTRIBUTE_TEMPLATE_TRAIT((CellData<Dim>), (unsigned int Dim), center, color);
+
 
 void testMeshRefine() {
     UnstructuredMesh<3, size_t, double, 6> mesh;
     twoPrisms(mesh);
     mesh.initializeCenters();
 
+    auto col = mesh.coloring<3,1>();
+
+    MeshDataContainer<CellData<3>, 3> cellData(mesh);
+    for (auto& cell : mesh.getCells()){
+        cellData[cell].color = col[cell];
+        cellData[cell].center = cell.getCenter();
+    }
+
     MeshDataContainer<MeshNativeType<3>::ElementType,3> types(mesh, MeshNativeType<3>::WEDGE);
     VTKMeshWriter<3, size_t, double> writer;
-    ofstream out3D;
+    std::ofstream out3D;
     out3D.open("mesh_refine_0.vtk");
+    DBGVAR(bool(out3D));
     writer.writeHeader(out3D, "test data");
     writer.writeToStream(out3D, mesh, types);
-
-    auto colours = MeshColoring<3,0>::color(mesh);
-
-    out3D << "CELL_DATA " << mesh.getCells().size() << endl;
-    out3D << "SCALARS cell_wrt_vertex_colour double 1\nLOOKUP_TABLE default" << endl;
-    for (auto colour : colours.getDataByPos<0>()) {
-        out3D << colour << ' ';
-    }
+    VTKMeshDataWriter<3>::writeToStream(out3D, cellData, writer);
     out3D.close();
+
+    mesh.clear();
+
+
+    VTKMeshReader<3> reader;
+    std::ifstream ifst("mesh_refine_0.vtk", ios::binary | ios::in);
+    DBGVAR(bool(ifst));
+    reader.loadFromStream(ifst, mesh);
+    MeshDataContainer<CellData<3>, 3> cellDataLoad(mesh);
+    VTKMeshDataReader<3, size_t>::readFromStream(ifst, cellDataLoad);
+    ifst.close();
+
+    mesh.initializeCenters();
+    // compute centers
+    auto centers = computeCenters<METHOD_DEFAULT>(mesh);
+    std::vector<Vertex<3, double>> expectCenter = { {0.333333, 0.333333, 0.5}, {0.666667, 0.666667, 0.5} };
+    DBGVAR((centers.getDataByDim<3>()), expectCenter);
+
+    // measures test
+    auto measures = mesh.computeElementMeasures();
+    std::vector<double> expectEdgeM = { 1, 1.41421, 1, 1, 1, 1, 1, 1.41421, 1, 1, 1, 1, 1, 1 };
+    DBGVAR(measures.getDataByDim<1>(), expectEdgeM);
+    std::vector<double> expectFaceM = {  0.5, 1, 1.41421, 1, 0.5, 0.5, 1, 1, 0.5 };
+    DBGVAR(measures.getDataByDim<2>(), expectFaceM);
+    std::vector<double> expectCellM = {  0.5, 0.5 };
+    DBGVAR(measures.getDataByDim<3>(), expectCellM);
+
+    for (auto& cell : mesh.getCells()){
+        DBGVAR(cellDataLoad[cell].color, cellData[cell].color);
+        DBGVAR(cellDataLoad[cell].center, cellData[cell].center);
+    }
+
+
 
     MeshDataContainer<MeshNativeType<3>::ElementType,3> types1(mesh, MeshNativeType<3>::POLYHEDRON);
-
     VTKMeshWriter<3, size_t, double> writer1;
     out3D.open("mesh_refine_1.vtk");
+    DBGVAR(bool(out3D));
     writer1.writeHeader(out3D, "test data");
     writer1.writeToStream(out3D, mesh, types1);
-    auto colours1 = MeshColoring<3,0>::color(mesh);
-
-    MeshDataContainer<colorData, 3> cd(mesh);
-    auto normals = mesh.computeFaceNormals();
-
-    for(auto& cell : mesh.getCells()){
-        cd.at(cell).color = colours1.at(cell);
-        cd.at(cell).firstEdgeNormal = normals.getDataByDim<2>().at(mesh.getFaces().at(cell.getBoundaryElementIndex()).getNextBElem(cell.getIndex()));
-    }
-    DBGVAR(cd.getDataByDim<3>());
-
-    VTKMeshDataWriter<3> dataWriter;
-
-    cd.getDataByPos<0>()[0] = cd.getDataByPos<0>()[0] + cd.getDataByPos<0>()[1];
-    dataWriter.writeToStream(out3D, cd, writer1);
-
-
-    //out3D << "CELL_DATA " << writer1.cellVert.getDataByPos<0>().size() << endl;
-    out3D << "SCALARS cell_wrt_vertex_colour double 1\nLOOKUP_TABLE default" << endl;
-    size_t realIndex = 0;
-    for (size_t i = 0; i < writer1.cellVert.getDataByPos<0>().size(); i++) {
-        auto iterator = writer1.backwardCellIndexMapping.find(i);
-        if (iterator == writer1.backwardCellIndexMapping.end()){
-            out3D << colours1.getDataByPos<0>().at(realIndex) << ' ';
-            realIndex++;
-        } else {
-            out3D << colours1.getDataByPos<0>().at(iterator->second) << ' ';
-            realIndex = iterator->second;
-        }
-    }
+    VTKMeshDataWriter<3>::writeToStream(out3D, cellData, writer1);
     out3D.close();
 
+    UnstructuredMesh<3, size_t, double, 6> meshRefined;
 
-    auto reader_ptr = mesh.load("mesh_refine_1.vtk");
-    DBGVAR(reader_ptr->getCellTypes().getDataByPos<0>());
-    ifstream in3D;
-    in3D.open("mesh_refine_1.vtk", std::ios::binary);
-    VTKMeshReader<3> reader;
-    //reader.loadFromStream(in3D, mesh);
+    ifst.open("mesh_refine_1.vtk", ios::binary | ios::in);
+    DBGVAR(bool(ifst));
+    reader.loadFromStream(ifst, meshRefined);
+    DBGVAR(meshRefined.getCells().size());
+    MeshDataContainer<CellData<3>, 3> cellDataLoadRefined(meshRefined);
+    VTKMeshDataReader<3, size_t>::readFromStream(ifst, cellDataLoadRefined);
+    ifst.close();
 
-
-    MeshDataContainer<colorData, 3> cd1(mesh);
-    VTKMeshDataReader<3, size_t>::readFromStream(in3D, cd1);
-
-    DBGVAR(cd1.getDataByDim<3>());
-
-    MeshDataContainer<std::tuple<doubleColorData, doubleEdgeNormalData>, 3,3> cd2(mesh);
-    VTKMeshDataReader<3, size_t>::readFromStream(in3D, cd2);
-
-    DBGVAR(cd2.getDataByPos<0>(), cd2.getDataByPos<1>());
-
-    in3D.close();
-
-
-
-    mesh.initializeCenters();
-
-    MeshDataContainer<MeshNativeType<3>::ElementType,3> types2(mesh, MeshNativeType<3>::POLYHEDRON);
-    out3D.open("mesh_refine_2.vtk");
-    writer1.writeHeader(out3D, "test data");
-    writer1.writeToStream(out3D, mesh, types2);
-
-    auto colours2 = MeshColoring<3,0>::color(mesh);
-
-    out3D << "CELL_DATA " << writer1.cellVert.getDataByPos<0>().size() << endl;
-    out3D << "SCALARS cell_wrt_vertex_colour double 1\nLOOKUP_TABLE default" << endl;
-    realIndex = 0;
-    for (size_t i = 0; i < writer1.cellVert.getDataByPos<0>().size(); i++) {
-        auto iterator = writer1.backwardCellIndexMapping.find(i);
-        if (iterator == writer1.backwardCellIndexMapping.end()){
-            out3D << colours2.getDataByPos<0>().at(realIndex) << ' ';
-            realIndex++;
-        } else {
-            out3D << colours2.getDataByPos<0>().at(iterator->second) << ' ';
-            realIndex = iterator->second;
-        }
+    for (auto& cell : meshRefined.getCells()){
+        DBGVAR(cellDataLoadRefined[cell].color, cellData.getDataByPos<0>()[writer1.backwardCellIndexMapping[cell.getIndex()]].color);
+        DBGVAR(cellDataLoadRefined[cell].center, cellData.getDataByPos<0>()[writer1.backwardCellIndexMapping[cell.getIndex()]].center);
     }
-    out3D.close();
 
-
-    in3D.open("mesh_refine_2.vtk");
-    reader.loadFromStream(in3D, mesh);
-    in3D.close();
-
-    mesh.initializeCenters();
-
-    MeshDataContainer<MeshNativeType<3>::ElementType,3> types3(mesh, MeshNativeType<3>::POLYHEDRON);
-    out3D.open("mesh_refine_3.vtk");
-    writer1.writeHeader(out3D, "test data");
-    writer1.writeToStream(out3D, mesh, types3);
-    auto colours3 = MeshColoring<3,0>::color(mesh);
-
-    out3D << "CELL_DATA " << writer1.cellVert.getDataByPos<0>().size() << endl;
-    out3D << "SCALARS cell_wrt_vertex_colour double 1\nLOOKUP_TABLE default" << endl;
-    realIndex = 0;
-    for (size_t i = 0; i < writer1.cellVert.getDataByPos<0>().size(); i++) {
-        auto iterator = writer1.backwardCellIndexMapping.find(i);
-        if (iterator == writer1.backwardCellIndexMapping.end()){
-            out3D << colours3.getDataByPos<0>().at(realIndex) << ' ';
-            realIndex++;
-        } else {
-            out3D << colours3.getDataByPos<0>().at(iterator->second) << ' ';
-            realIndex = iterator->second;
-        }
-    }
-    out3D.close();
 }
 
 
@@ -1091,11 +1052,11 @@ int main()
     //testMesh2DLoadAndWrite();
     //testMesh3D();
     //test3DMeshDeformedPrisms();
-    //testMeshRefine();
-    testMeshDataContainer();
+    testMeshRefine();
+    //testMeshDataContainer();
     //UnstructuredMesh<5, size_t, double, 6,5,4> m;
     //m.ComputeElementMeasures();
-    test3DMeshLoad();
+    //test3DMeshLoad();
 
     //testFPMA_poly();
 
