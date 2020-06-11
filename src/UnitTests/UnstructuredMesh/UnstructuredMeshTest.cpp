@@ -3,10 +3,10 @@
 #include <gtest/gtest.h>
 #else
 #define TEST(_1,_2) void _1()
-#define EXPECT_TRUE(_1) (void)(_1)
-#define EXPECT_FALSE(_1) (void)(_1)
-#define EXPECT_EQ(_1,_2) (void)(_1 == _2)
-#define EXPECT_ANY_THROW(_1) try{(_1);}catch(...){}
+#define EXPECT_TRUE(_1) DBGCHECK;(void)(_1)
+#define EXPECT_FALSE(_1) DBGCHECK;(void)(_1)
+#define EXPECT_EQ(_1,_2) DBGCHECK;(void)(_1 == _2)
+#define EXPECT_ANY_THROW(_1) DBGCHECK;try{(_1);}catch(...){}
 #endif
 #include "GTMesh/Debug/Debug.h"
 #include <list>
@@ -65,13 +65,14 @@ TEST( UnstructuredMesh2D_Functions_Test, basicTest )
 
     mesh.setupBoundaryCells();
     mesh.setupBoundaryCellsCenters();
+    face = mesh.getFaces()[0];
     EXPECT_TRUE(floatArrayCompare( face.getCenter(), (Vector<2, double>{0, 0.5})));
     EXPECT_TRUE(isBoundaryIndex(face.getCellRightIndex()));
     EXPECT_EQ(extractBoundaryIndex(face.getCellRightIndex()), 0);
     EXPECT_TRUE(face.getCellLeftIndex() == 0);
 
-    EXPECT_EQ(face.getOtherCellIndex(makeBoundaryIndex(0)), 0);
-    EXPECT_EQ(face.getOtherCellIndex(0), makeBoundaryIndex(0));
+    EXPECT_EQ(face.getOtherCellIndex(makeBoundaryIndex<size_t>(0)), 0);
+    EXPECT_EQ(face.getOtherCellIndex(0), makeBoundaryIndex<size_t>(0));
 
     EXPECT_EQ(face.getNextBElem(face.getCellLeftIndex()), 1);
     EXPECT_EQ(face.getNextBElem(face.getCellRightIndex()), INVALID_INDEX(size_t));
@@ -213,7 +214,7 @@ TEST( UnstructuredMesh3D_Functions_Test, 3DMeshTest )
     EXPECT_EQ(extractBoundaryIndex(face.getCellRightIndex()), 0);
     EXPECT_TRUE(face.getCellLeftIndex() == 0);
 
-    EXPECT_EQ(face.getOtherCellIndex(makeBoundaryIndex(0)), 0);
+    EXPECT_EQ(face.getOtherCellIndex(makeBoundaryIndex<size_t>(0)), 0);
     EXPECT_EQ(face.getOtherCellIndex(0), makeBoundaryIndex(0));
 
     EXPECT_EQ(face.getNextBElem(face.getCellLeftIndex()), 1);
@@ -377,5 +378,13 @@ TEST( MeshRefineTest, 3DMeshTest ) {
 
 
 //#endif
-
+#ifndef HAVE_GTEST
+int main(){
+    UnstructuredMesh2D_Functions_Test();
+    UnstructuredMesh2DReadWrite();
+    MeshRefineTest();
+    UnstructuredMesh3D_Functions_Test();
+}
+#else
 #include "UnitTests/main.h"
+#endif

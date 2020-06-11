@@ -54,7 +54,7 @@ class VTKMeshDataReader {
        >::type
     {
 
-        ist.seekg(dataPositions[DefaultIOTraits<T>::traitsType::template getName<Index>()]);
+        ist.seekg(dataPositions[DefaultIOTraits<T>::getTraits().template getName<Index>()]);
 
         typename DefaultIOTraits<T>::traitsType::template type<Index> value;
         typename DefaultIOTraits<T>::traitsType::template type<Index> dummy;

@@ -21,7 +21,7 @@ bool isBoundaryIndex(const IndexType& index){
 
 template <typename IndexType>
 IndexType makeBoundaryIndex(const IndexType& index){
-    return (EXTRACTING_INDEX(IndexType) | index);
+    return (BOUNDARY_INDEX(IndexType) | index);
 }
 
 
