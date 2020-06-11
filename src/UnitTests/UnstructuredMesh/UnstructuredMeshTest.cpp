@@ -1,13 +1,13 @@
 // Test of Traits class
 #ifdef HAVE_GTEST
 #include <gtest/gtest.h>
-#else
-#define TEST(_1,_2) void _1()
-#define EXPECT_TRUE(_1) DBGVAR(_1);(void)(_1)
-#define EXPECT_FALSE(_1) DBGCHECK;(void)(_1)
-#define EXPECT_EQ(_1,_2) DBGCHECK;(void)(_1 == _2)
-#define EXPECT_ANY_THROW(_1) DBGCHECK;try{(_1);}catch(...){}
-#endif
+//#else
+//#define TEST(_1,_2) void _1()
+//#define EXPECT_TRUE(_1) if(!_1)DBGVAR(_1);(void)(_1)
+//#define EXPECT_FALSE(_1) DBGCHECK;(void)(_1)
+//#define EXPECT_EQ(_1,_2) if (!(_1 == _2))DBGVAR(_1,_2);(void)(_1 == _2)
+//#define EXPECT_ANY_THROW(_1) DBGCHECK;try{(_1);}catch(...){}
+//#endif
 #include "GTMesh/Debug/Debug.h"
 #include <list>
 #include <map>
@@ -215,9 +215,8 @@ TEST( UnstructuredMesh3D_Functions_Test, 3DMeshTest )
     EXPECT_TRUE(face.getCellLeftIndex() == 0);
 
     EXPECT_EQ(face.getOtherCellIndex(makeBoundaryIndex<size_t>(0)), 0);
-    EXPECT_EQ(face.getOtherCellIndex(0), makeBoundaryIndex(0));
+    EXPECT_EQ(face.getOtherCellIndex(0), makeBoundaryIndex<size_t>(0));
 
-    EXPECT_EQ(face.getNextBElem(face.getCellLeftIndex()), 1);
     EXPECT_EQ(face.getNextBElem(face.getCellRightIndex()), INVALID_INDEX(size_t));
 
     EXPECT_ANY_THROW(face.getOtherCellIndex(1));
@@ -237,10 +236,10 @@ TEST( UnstructuredMesh3D_Functions_Test, 3DMeshTest )
     auto measures = mesh.computeElementMeasures();
     auto measuresTess = mesh.computeElementMeasures<METHOD_TESSELLATED>();
 
-    std::vector<double> expectEdgeM = { 1, 1.41421, 1, 1, 1, 1, 1, 1.41421, 1, 1, 1, 1, 1, 1 };
+    std::vector<double> expectEdgeM = {  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.41421, 1.41421 };
     EXPECT_TRUE(floatArrayCompare(measures.getDataByDim<1>(), expectEdgeM));
     EXPECT_TRUE(floatArrayCompare(measuresTess.getDataByDim<1>(), expectEdgeM));
-    std::vector<double> expectFaceM = {  0.5, 1, 1.41421, 1, 0.5, 0.5, 1, 1, 0.5 };
+    std::vector<double> expectFaceM = { 0.5, 0.5, 1, 1, 1, 1, 0.5, 0.5, 1.41421 };
     EXPECT_TRUE(floatArrayCompare(measures.getDataByDim<2>(), expectFaceM));
     EXPECT_TRUE(floatArrayCompare(measuresTess.getDataByDim<2>(), expectFaceM));
     std::vector<double> expectCellM = {  0.5, 0.5 };
@@ -254,7 +253,7 @@ TEST( UnstructuredMesh3D_Functions_Test, 3DMeshTest )
 
     // center distance
     auto dist = computeCellsDistance(mesh);
-    std::vector<double> expectCellDist = { 0.687184, 1.06719, 0.687184, 0.687184, 1.06719, 1.06719, 0.687184, 1.06719, 0.471405 };
+    std::vector<double> expectCellDist = { 0.5, 0.5, 0.372678, 0.372678, 0.372678, 0.372678, 0.5, 0.5, 0.471405 };
     EXPECT_TRUE(floatArrayCompare(dist.getDataByPos<0>(), expectCellDist));
 
     // Mesh connections
@@ -271,7 +270,7 @@ TEST( UnstructuredMesh3D_Functions_Test, 3DMeshTest )
     // Test neighbors
     std::vector<std::vector<size_t>> expNeighbors20 = { { 1, 2, 3, 4, 5, 8 }, { 0, 2, 3, 4, 5, 8 }, { 0, 1, 3, 5, 6, 7, 8 }, { 0, 1, 2, 4, 6, 7, 8 }, { 0, 1, 3, 5, 6, 7, 8 }, { 0, 1, 2, 4, 6, 7, 8 }, { 2, 3, 4, 5, 7, 8 }, { 2, 3, 4, 5, 6, 8 }, { 0, 1, 2, 3, 4, 5, 6, 7 } };
     std::vector<std::vector<size_t>> expNeighbors230 = { { 0, 1, 2, 4, 5, 6 }, { 1, 2, 3, 5, 6, 7 }, { 0, 1, 2, 4, 5, 6 }, { 0, 1, 2, 4, 5, 6 }, { 1, 2, 3, 5, 6, 7 }, { 1, 2, 3, 5, 6, 7 }, { 0, 1, 2, 4, 5, 6 }, { 1, 2, 3, 5, 6, 7 }, { 0, 1, 2, 3, 4, 5, 6, 7 } };
-    std::vector<std::vector<size_t>> expNeighbors020 = { { 0, 1, 2, 4, 5, 6 }, { 1, 2, 3, 5, 6, 7 }, { 0, 1, 2, 4, 5, 6 }, { 0, 1, 2, 4, 5, 6 }, { 1, 2, 3, 5, 6, 7 }, { 1, 2, 3, 5, 6, 7 }, { 0, 1, 2, 4, 5, 6 }, { 1, 2, 3, 5, 6, 7 }, { 0, 1, 2, 3, 4, 5, 6, 7 } };
+    std::vector<std::vector<size_t>> expNeighbors020 = { { 1, 2, 4, 5, 6 }, { 0, 2, 3, 4, 5, 6, 7 }, { 0, 1, 3, 4, 5, 6, 7 }, { 1, 2, 5, 6, 7 }, { 0, 1, 2, 5, 6 }, { 0, 1, 2, 3, 4, 6, 7 }, { 0, 1, 2, 3, 4, 5, 7 }, { 1, 2, 3, 5, 6 } };
     std::vector<std::vector<size_t>> expNeighbors320 = { { 0, 1, 2, 4, 5, 6 }, { 1, 2, 3, 5, 6, 7 } };
     std::vector<std::vector<size_t>> expNeighbors02 = { { 1, 2, 4, 5, 6 }, { 0, 2, 3, 4, 5, 6, 7 }, { 0, 1, 3, 4, 5, 6, 7 }, { 1, 2, 5, 6, 7 }, { 0, 1, 2, 5, 6 }, { 0, 1, 2, 3, 4, 6, 7 }, { 0, 1, 2, 3, 4, 5, 7 }, { 1, 2, 3, 5, 6 } };
 
@@ -377,14 +376,5 @@ TEST( MeshRefineTest, 3DMeshTest ) {
 }
 
 
-//#endif
-#ifndef HAVE_GTEST
-int main(){
-    UnstructuredMesh2D_Functions_Test();
-    UnstructuredMesh2DReadWrite();
-    MeshRefineTest();
-    UnstructuredMesh3D_Functions_Test();
-}
-#else
-#include "UnitTests/main.h"
 #endif
+#include "UnitTests/main.h"
