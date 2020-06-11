@@ -465,38 +465,49 @@ void testMesh3D() {
     using sit3 = UnstructuredMesh<3, size_t, double, 6>;
 
 
-    UnstructuredMesh<3, size_t, double, 6> mesh3;
-    twoPrisms(mesh3);
-    mesh3.setupBoundaryCells();
-    size_t tmp_face = mesh3.getCells().at(0).getBoundaryElementIndex();
+    UnstructuredMesh<3, size_t, double, 6> mesh;
+    twoPrisms(mesh);
+    mesh.setupBoundaryCells();
+    size_t tmp_face = mesh.getCells().at(0).getBoundaryElementIndex();
 
     do {
         DBGVAR(tmp_face);
-        for (auto& sube : mesh3.getFaces().at(tmp_face).getSubelements()) {
+        for (auto& sube : mesh.getFaces().at(tmp_face).getSubelements()) {
             DBGVAR(sube);
             if (sube != INVALID_INDEX(size_t) ){
-                DBGVAR(sube, mesh3.getVertices().at(mesh3.getEdges().at(sube).getVertexAIndex()),mesh3.getVertices().at(mesh3.getEdges().at(sube).getVertexBIndex()));
+                DBGVAR(sube, mesh.getVertices().at(mesh.getEdges().at(sube).getVertexAIndex()),mesh.getVertices().at(mesh.getEdges().at(sube).getVertexBIndex()));
             }
         }
 
-        tmp_face = mesh3.getFaces().at(tmp_face).getNextBElem(0);
-    } while (tmp_face != mesh3.getCells().at(0).getBoundaryElementIndex());
+        tmp_face = mesh.getFaces().at(tmp_face).getNextBElem(0);
+    } while (tmp_face != mesh.getCells().at(0).getBoundaryElementIndex());
 //    mesh3.getElements<0>().at(0).;
 
 
     DBGMSG("Iterator wrapper test");
-    sit3::MeshElementWrap<2> elem(&mesh3, mesh3.getFaces().at(0));
+    sit3::MeshElementWrap<2> elem(&mesh, mesh.getFaces().at(0));
     for(auto i : elem.getSubelements()){
         DBGVAR(i);
     }
+    mesh.initializeCenters();
 
-
-    DBGVAR(mesh3.getSignature());
+    DBGVAR(computeCellsDistance(mesh).getDataByPos<0>(),
+           (mesh.connections<2,0>().getDataByPos<0>()),
+           (mesh.connections<3,0>().getDataByPos<0>()),
+           (mesh.connections<0,3>().getDataByPos<0>()),
+           (mesh.connections<1,3>().getDataByPos<0>()),
+           (mesh.neighborhood<2,0>().getDataByPos<0>()),
+           (mesh.neighborhood<2,3,0>().getDataByPos<0>()),
+           (mesh.neighborhood<0,2,0>().getDataByPos<0>()),
+           (mesh.neighborhood<3,2,0>().getDataByPos<0>()),
+           (mesh.neighborhood<0,2>().getDataByPos<0>())
+           );
+    DBGVAR(mesh.getSignature());
 
     DBGMSG("mesh conatiner test");
-    MeshDataContainer<double, 3,2,1,0> cont(mesh3);
+    MeshDataContainer<double, 3,2,1,0> cont(mesh);
 
-    MakeMeshDataContainer_t<double, make_custom_integer_sequence_t<unsigned int, 3,0,-1>> cont1(mesh3);
+    MakeMeshDataContainer_t<double, make_custom_integer_sequence_t<unsigned int, 3,0,-1>> cont1(mesh);
 
     cont = cont1;
 
@@ -513,29 +524,29 @@ void testMesh3D() {
 
 
     //_ComputeCenters<1,3, 3,2,1>::compute<size_t, double, 6>(centers, mesh3);
-    auto centers = computeCenters<METHOD_DEFAULT>(mesh3);
+    auto centers = computeCenters<METHOD_DEFAULT>(mesh);
 
 
 
-    for(auto& face : mesh3.getFaces()) {
+    for(auto& face : mesh.getFaces()) {
         face.setCenter(centers.template getDataByDim<2>().at(face.getIndex()));
         DBGVAR(face.getCenter());
     }
     DBGMSG("cellCenter - default method");
-    for(auto& cell : mesh3.getCells()) {
+    for(auto& cell : mesh.getCells()) {
         cell.setCenter(centers.template getDataByDim<3>().at(cell.getIndex()));
         DBGVAR(cell.getCenter());
     }
 
     DBGMSG("centers - tessellated faces");
-    auto centers1 = computeCenters<METHOD_TESSELLATED>(mesh3);
+    auto centers1 = computeCenters<METHOD_TESSELLATED>(mesh);
 
-    for(auto& face : mesh3.getFaces()) {
+    for(auto& face : mesh.getFaces()) {
         face.setCenter(centers1.template getDataByDim<2>().at(face.getIndex()));
         DBGVAR(face.getCenter());
     }
     DBGMSG("cellCenter");
-    for(auto& cell : mesh3.getCells()) {
+    for(auto& cell : mesh.getCells()) {
         cell.setCenter(centers1.template getDataByDim<3>().at(cell.getIndex()));
         DBGVAR(cell.getCenter());
     }
@@ -543,12 +554,12 @@ void testMesh3D() {
     DBGMSG("measure computation");
 
 DBGMSG("tessellated cell volume");
-    auto measures1 = computeMeasures<METHOD_TESSELLATED>(mesh3);
+    auto measures1 = computeMeasures<METHOD_TESSELLATED>(mesh);
 
     DBGVAR(measures1.getDataByDim<3>());
 
 
-    auto measures = computeMeasures<METHOD_DEFAULT>(mesh3);
+    auto measures = computeMeasures<METHOD_DEFAULT>(mesh);
     for(double edgeM : measures.getDataByDim<1>()) {
         DBGVAR(edgeM);
     }
@@ -563,79 +574,79 @@ DBGMSG("tessellated cell volume");
 
     DBGMSG("3D normals test");
 
-    auto normals = mesh3.computeFaceNormals();
-    for(auto& face : mesh3.getFaces()){
+    auto normals = mesh.computeFaceNormals();
+    for(auto& face : mesh.getFaces()){
         DBGVAR(face.getIndex(),normals.at(face));
     }
 
     DBGMSG("3D normals test");
 
-    auto normalsTess = mesh3.computeFaceNormals<METHOD_TESSELLATED>();
-    for(auto& face : mesh3.getFaces()){
+    auto normalsTess = mesh.computeFaceNormals<METHOD_TESSELLATED>();
+    for(auto& face : mesh.getFaces()){
         DBGVAR(face.getIndex(),normalsTess.at(face));
     }
 
     DBGMSG("mesh apply test");
-    MeshApply<3, 2>::apply(mesh3, [](size_t ori, size_t i){
+    MeshApply<3, 2>::apply(mesh, [](size_t ori, size_t i){
         DBGVAR(ori,i);
     });
     DBGMSG("mesh apply test");
-    MeshApply<2, 3>::apply(mesh3,[](size_t ori, size_t i){
+    MeshApply<2, 3>::apply(mesh,[](size_t ori, size_t i){
         DBGVAR(ori,i);
     });
 
 
     DBGMSG("3D edge orientation");
-    MeshApply<2, 1>::apply(mesh3,[&mesh3](size_t faceIndex, size_t edgeIndex){
-        size_t iA = mesh3.getEdges().at(edgeIndex).getVertexAIndex(), iB =mesh3.getEdges().at(edgeIndex).getVertexBIndex();
+    MeshApply<2, 1>::apply(mesh,[&mesh](size_t faceIndex, size_t edgeIndex){
+        size_t iA = mesh.getEdges().at(edgeIndex).getVertexAIndex(), iB =mesh.getEdges().at(edgeIndex).getVertexBIndex();
         DBGVAR(faceIndex,
                edgeIndex,
                iA, iB,
-               edgeIsLeft(mesh3,faceIndex, edgeIndex));
+               edgeIsLeft(mesh,faceIndex, edgeIndex));
     });
 
 
-    auto orientation =  edgesOrientation(mesh3);
-    for(auto & face : mesh3.getFaces()){
+    auto orientation =  edgesOrientation(mesh);
+    for(auto & face : mesh.getFaces()){
         DBGVAR(face.getIndex(),orientation[face]);
     }
 
 
     DBGMSG("connection test");
-    auto con = MeshConnections<3,0>::connections(mesh3);
-    for (auto& cell : mesh3.getCells()){
+    auto con = MeshConnections<3,0>::connections(mesh);
+    for (auto& cell : mesh.getCells()){
             DBGVAR(cell.getIndex(), con[cell]);
     }
 
     DBGMSG("connections original order");
-    auto conOrig = MeshConnections<3,0,Order::ORDER_ORIGINAL>::connections(mesh3);
-    for (auto& cell : mesh3.getCells()){
+    auto conOrig = MeshConnections<3,0,Order::ORDER_ORIGINAL>::connections(mesh);
+    for (auto& cell : mesh.getCells()){
             DBGVAR(cell.getIndex(), conOrig[cell]);
     }
 
     DBGMSG("connection test oposite");
-    auto con1 = MeshConnections<0,3>::connections(mesh3);
-    for (auto& vert : mesh3.getVertices()){
+    auto con1 = MeshConnections<0,3>::connections(mesh);
+    for (auto& vert : mesh.getVertices()){
         DBGVAR(vert.getIndex(), con1[vert]);
     }
 
     DBGMSG("connection test oposite");
-    auto con2 = MeshConnections<2,3>::connections(mesh3);
-    for (auto& face : mesh3.getFaces()){
+    auto con2 = MeshConnections<2,3>::connections(mesh);
+    for (auto& face : mesh.getFaces()){
         DBGVAR(face.getIndex(), con2[face]);
     }
 
     DBGMSG("neighbors test");
-    auto nbh = MeshNeighborhood<0,3>::neighbors(mesh3);
-    for (auto& vert : mesh3.getVertices()){
+    auto nbh = MeshNeighborhood<0,3>::neighbors(mesh);
+    for (auto& vert : mesh.getVertices()){
         DBGVAR(vert.getIndex(), nbh[vert]);
     }
 
-    MeshDataContainer<std::vector<size_t>,0> nbh2Order(mesh3);
-    for(auto& vert : mesh3.getVertices()){
+    MeshDataContainer<std::vector<size_t>,0> nbh2Order(mesh);
+    for(auto& vert : mesh.getVertices()){
         nbh2Order[vert] = nbh[vert];
         for (auto nvi : nbh[vert]){
-            auto& nVert = mesh3.getVertices()[nvi];
+            auto& nVert = mesh.getVertices()[nvi];
             std::vector<size_t> res;
             set_union(nbh2Order[vert].begin(), nbh2Order[vert].end(),
                       nbh[nVert].begin(), nbh[nVert].end(),
@@ -650,42 +661,42 @@ DBGMSG("tessellated cell volume");
     }
 
     DBGMSG("neighborhood");
-    auto nbh2 = mesh3.neighborhood<2,3,2,ORDER_ORIGINAL>();
-    for (auto& face : mesh3.getFaces()){
+    auto nbh2 = mesh.neighborhood<2,3,2,ORDER_ORIGINAL>();
+    for (auto& face : mesh.getFaces()){
         DBGVAR(face.getIndex(), nbh2[face]);
     }
 
 
 
     DBGMSG("face to vertex colouring");
-    auto colours = MeshColoring<2,0>::color(mesh3);
+    auto colours = MeshColoring<2,0>::color(mesh);
     DBGVAR(colours.getDataByDim<2>());
 
     DBGMSG("vertex to face colouring");
-    auto colours1 = MeshColoring<0,2>::color(mesh3);
+    auto colours1 = MeshColoring<0,2>::color(mesh);
     DBGVAR(colours1.getDataByDim<0>());
 
 
     DBGMSG("face to vertex colouring RANDOM");
-    auto coloursRand = MeshColoring<2,0,METHOD_RANDOM>::color(mesh3);
+    auto coloursRand = MeshColoring<2,0,METHOD_RANDOM>::color(mesh);
     DBGVAR(coloursRand.getDataByDim<2>());
 
     DBGMSG("vertex to face colouring RANDOM");
-    auto colours1Rand = mesh3.coloring<0,2,METHOD_RANDOM>();//ColorMesh<0,2,METHOD_RANDOM>::color(mesh3);
+    auto colours1Rand = mesh.coloring<0,2,METHOD_RANDOM>();//ColorMesh<0,2,METHOD_RANDOM>::color(mesh3);
     DBGVAR(colours1Rand.getDataByDim<0>());
 
-    MeshDataContainer<MeshNativeType<3>::ElementType,3> types(mesh3, MeshNativeType<3>::ElementType::WEDGE);
+    MeshDataContainer<MeshNativeType<3>::ElementType,3> types(mesh, MeshNativeType<3>::ElementType::WEDGE);
 
     VTKMeshWriter<3, size_t, double> writer;
-    writer.indexMesh(mesh3, types);
+    writer.indexMesh(mesh, types);
 
     DBGVAR(writer.cellVert.getDataByPos<0>());
     ofstream out3D("3D_test_mesh_two_prisms.vtk");
     writer.writeHeader(out3D, "test data");
-    writer.writeToStream(out3D, mesh3, types);
+    writer.writeToStream(out3D, mesh, types);
 
 
-    MeshDataContainer<MeshNativeType<3>::ElementType,3> types1(mesh3);
+    MeshDataContainer<MeshNativeType<3>::ElementType,3> types1(mesh);
 
     types1.getDataByPos<0>().at(0) = MeshNativeType<3>::ElementType::WEDGE;
 
@@ -694,7 +705,7 @@ DBGMSG("tessellated cell volume");
     VTKMeshWriter<3, size_t, double> writer1;
     ofstream out3D1("3D_test_mesh_two_prisms_split.vtk");
     writer1.writeHeader(out3D1, "test data");
-    writer1.writeToStream(out3D1, mesh3, types1);
+    writer1.writeToStream(out3D1, mesh, types1);
     DBGVAR(writer1.backwardCellIndexMapping);
 
 }
@@ -1050,9 +1061,9 @@ int main()
     //meshSize();
     //testMesh2D();
     //testMesh2DLoadAndWrite();
-    //testMesh3D();
+    testMesh3D();
     //test3DMeshDeformedPrisms();
-    testMeshRefine();
+    //testMeshRefine();
     //testMeshDataContainer();
     //UnstructuredMesh<5, size_t, double, 6,5,4> m;
     //m.ComputeElementMeasures();

@@ -73,7 +73,7 @@ void cube(UnstructuredMesh<3, size_t, double, Reserve...>& mesh3){
 }
 template <unsigned int ...Reserve>
 void twoPrisms(UnstructuredMesh<3, size_t, double, Reserve...>& mesh3){
-
+        using MeshType = UnstructuredMesh<3, size_t, double, Reserve...>;
         mesh3.getVertices().push_back({0, {0,0,0}});
         mesh3.getVertices().push_back({1, {1,0,0}});
         mesh3.getVertices().push_back({2, {0,1,0}});
@@ -99,43 +99,43 @@ void twoPrisms(UnstructuredMesh<3, size_t, double, Reserve...>& mesh3){
         mesh3.getEdges().push_back({13,2,1});
 
     size_t index = 0;
-        mesh3.getFaces().push_back(UnstructuredMesh<3, size_t, double, 6>::Face(index));
+        mesh3.getFaces().push_back(typename MeshType::Face(index));
         mesh3.getFaces().at(index).getSubelements().addSubelement(0);
         mesh3.getFaces().at(index).getSubelements().addSubelement(1);
         mesh3.getFaces().at(index).getSubelements().addSubelement(13);
-        mesh3.getFaces().push_back(UnstructuredMesh<3, size_t, double, 6>::Face(++index));
+        mesh3.getFaces().push_back(typename MeshType::Face(++index));
         mesh3.getFaces().at(index).getSubelements().addSubelement(13);
         mesh3.getFaces().at(index).getSubelements().addSubelement(2);
         mesh3.getFaces().at(index).getSubelements().addSubelement(3);
-        mesh3.getFaces().push_back(UnstructuredMesh<3, size_t, double, 6>::Face(++index));
+        mesh3.getFaces().push_back(typename MeshType::Face(++index));
         mesh3.getFaces().at(index).getSubelements().addSubelement(0);
         mesh3.getFaces().at(index).getSubelements().addSubelement(5);
         mesh3.getFaces().at(index).getSubelements().addSubelement(8);
         mesh3.getFaces().at(index).getSubelements().addSubelement(4);
-        mesh3.getFaces().push_back(UnstructuredMesh<3, size_t, double, 6>::Face(++index));
+        mesh3.getFaces().push_back(typename MeshType::Face(++index));
         mesh3.getFaces().at(index).getSubelements().addSubelement(1);
         mesh3.getFaces().at(index).getSubelements().addSubelement(4);
         mesh3.getFaces().at(index).getSubelements().addSubelement(11);
         mesh3.getFaces().at(index).getSubelements().addSubelement(7);
-        mesh3.getFaces().push_back(UnstructuredMesh<3, size_t, double, 6>::Face(++index));
+        mesh3.getFaces().push_back(typename MeshType::Face(++index));
         mesh3.getFaces().at(index).getSubelements().addSubelement(3);
         mesh3.getFaces().at(index).getSubelements().addSubelement(6);
         mesh3.getFaces().at(index).getSubelements().addSubelement(10);
         mesh3.getFaces().at(index).getSubelements().addSubelement(7);
-        mesh3.getFaces().push_back(UnstructuredMesh<3, size_t, double, 6>::Face(++index));
+        mesh3.getFaces().push_back(typename MeshType::Face(++index));
         mesh3.getFaces().at(index).getSubelements().addSubelement(2);
         mesh3.getFaces().at(index).getSubelements().addSubelement(6);
         mesh3.getFaces().at(index).getSubelements().addSubelement(9);
         mesh3.getFaces().at(index).getSubelements().addSubelement(5);
-        mesh3.getFaces().push_back(UnstructuredMesh<3, size_t, double, 6>::Face(++index));
+        mesh3.getFaces().push_back(typename MeshType::Face(++index));
         mesh3.getFaces().at(index).getSubelements().addSubelement(8);
         mesh3.getFaces().at(index).getSubelements().addSubelement(12);
         mesh3.getFaces().at(index).getSubelements().addSubelement(11);
-        mesh3.getFaces().push_back(UnstructuredMesh<3, size_t, double, 6>::Face(++index));
+        mesh3.getFaces().push_back(typename MeshType::Face(++index));
         mesh3.getFaces().at(index).getSubelements().addSubelement(9);
         mesh3.getFaces().at(index).getSubelements().addSubelement(10);
         mesh3.getFaces().at(index).getSubelements().addSubelement(12);
-        mesh3.getFaces().push_back(UnstructuredMesh<3, size_t, double, 6>::Face(++index));
+        mesh3.getFaces().push_back(typename MeshType::Face(++index));
         mesh3.getFaces().at(index).getSubelements().addSubelement(12);
         mesh3.getFaces().at(index).getSubelements().addSubelement(7);
         mesh3.getFaces().at(index).getSubelements().addSubelement(13);
