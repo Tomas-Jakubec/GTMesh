@@ -77,15 +77,15 @@ MAKE_ATTRIBUTE_TEMPLATE_TRAIT( (TemplateClass<Real, len>),
 TEST( TemplateTraitsTest, basicTest )
 {
     TemplateClass<double, 3> tc;
-    Traits<TemplateClass<double, 3>>::getTraits().getAttr<0>(tc) = {1.5,2.5,3.5};
+    DefaultTraits<TemplateClass<double, 3>>::getTraits().getAttr<0>(tc) = {1.5,2.5,3.5};
 
     EXPECT_TRUE((HasDefaultTraits<TemplateClass<double, 3>>::value));
     EXPECT_TRUE((HasDefaultTraits<TemplateClass<int, 5>>::value));
     EXPECT_TRUE((IsDirectAccess<Traits<TemplateClass<int, 5>>::traitsType::memRefType<0>>::value));
 
-    EXPECT_EQ((Traits<TemplateClass<int, 5>>::size()), 1);
-    EXPECT_EQ((Traits<TemplateClass<int, 5>>::getTraits().getName<0>()), "arr");
-    EXPECT_EQ((Traits<TemplateClass<double, 3>>::getTraits().getValue<0>(tc)), (std::array<double, 3>{1.5,2.5,3.5}));
+    EXPECT_EQ((DefaultTraits<TemplateClass<int, 5>>::size()), 1);
+    EXPECT_EQ((DefaultTraits<TemplateClass<int, 5>>::getTraits().getName<0>()), "arr");
+    EXPECT_EQ((DefaultTraits<TemplateClass<double, 3>>::getTraits().getValue<0>(tc)), (std::array<double, 3>{1.5,2.5,3.5}));
 }
 #endif
 
