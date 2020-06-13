@@ -95,21 +95,21 @@ private:
     template<typename T,unsigned int Index = 0, typename Void = void>
     struct readCellData{};
 
-    template<typename T,unsigned int Index, typename... Types>
-    struct readCellData <Traits<T, Types...>, Index, std::enable_if_t<Index < Traits<T, Types...>::size() - 1>>{
+    template<typename T,unsigned int Index>
+    struct readCellData <DefaultIOTraits<T>, Index, std::enable_if_t<Index < DefaultIOTraits<T>::size() - 1>>{
 
 
 
         static void read(std::istream& ist, DataContainer<T, MeshDimension> &data, std::map<std::string, std::istream::pos_type>& dataPositions){
 
             readColumn<T, Index>(ist, data, dataPositions);
-            readCellData<Traits<T, Types...>, Index + 1>::read(ist, data, dataPositions);
+            readCellData<DefaultIOTraits<T>, Index + 1>::read(ist, data, dataPositions);
 
         }
     };
 
-    template<typename T,unsigned int Index, typename ... Types>
-    struct readCellData <Traits<T, Types...>, Index, std::enable_if_t<Index == Traits<T, Types...>::size() - 1>>{
+    template<typename T,unsigned int Index>
+    struct readCellData <DefaultIOTraits<T>, Index, std::enable_if_t<Index == DefaultIOTraits<T>::size() - 1>>{
 
         static void read(std::istream& ist, DataContainer<T, MeshDimension> &data, std::map<std::string, std::istream::pos_type>& dataPositions){
 
@@ -176,8 +176,9 @@ private:
     >::type
     readMDC(std::istream& ist, MeshDataContainer<T, Dimensions...> &data, std::map<std::string, std::istream::pos_type>& dataPositions){
 
+        using type = typename MeshDataContainer<T, Dimensions...>::template DataContainerType<Index>::type;
         readCellData<
-                typename DefaultIOTraits<typename MeshDataContainer<T, Dimensions...>::template DataContainerType<Index>::type>::traitsType
+                DefaultIOTraits<type>
                 >::read(ist, data.template getDataByPos<Index>(), dataPositions);
         readMDC<Index + 1, true, T, Dimensions...>(ist, data, dataPositions);
 
@@ -205,9 +206,9 @@ private:
     >::type
     readMDC(std::istream& ist, MeshDataContainer<T, Dimensions...> &data, std::map<std::string, std::istream::pos_type>& dataPositions){
 
-
+        using type = typename MeshDataContainer<T, Dimensions...>::template DataContainerType<Index>::type;
         readCellData<
-                typename DefaultIOTraits<typename MeshDataContainer<T, Dimensions...>::template DataContainerType<Index>::type>::traitsType
+                DefaultIOTraits<type>
                 >::read(ist, data.template getDataByPos<Index>(), dataPositions);
     }
 

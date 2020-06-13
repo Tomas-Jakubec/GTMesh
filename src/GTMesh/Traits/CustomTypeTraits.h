@@ -78,7 +78,7 @@ template <typename T1>
 struct __has_default_traits<
         T1,
         typename std::enable_if<
-            noexcept(Traits<T1>::getTraits)
+            noexcept(DefaultTraits<T1>::getTraits)
         >::type
         > : public std::true_type {};
 

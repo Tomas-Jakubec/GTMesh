@@ -182,8 +182,8 @@ class VTKMeshDataWriter {
     template<typename T,unsigned int Index = 0, typename Void = void>
     struct writeCellData{};
 
-    template<typename T,unsigned int Index, typename... Types>
-    struct writeCellData <Traits<T, Types...>, Index, std::enable_if_t<(Index < Traits<T, Types...>::size() - 1)>>{
+    template<typename T,unsigned int Index>
+    struct writeCellData <DefaultIOTraits<T>, Index, std::enable_if_t<(Index < DefaultIOTraits<T>::size() - 1)>>{
 
         template<typename IndexType, typename Real>
 
@@ -191,13 +191,13 @@ class VTKMeshDataWriter {
             //DBGVAR(IsIndexable<typename DefaultIOTraits<T>::traitsType::template type<Index>>::value);
             writeColumn<T, Index, IndexType, Real>(ost, data, writer);
             ost << std::endl;
-            writeCellData<Traits<T, Types...>, Index + 1>::write(ost, data, writer);
+            writeCellData<DefaultIOTraits<T>, Index + 1>::write(ost, data, writer);
 
         }
     };
 
-    template<typename T,unsigned int Index, typename ... Types>
-    struct writeCellData <Traits<T, Types...>, Index, std::enable_if_t<Index == Traits<T, Types...>::size() - 1>>{
+    template<typename T,unsigned int Index>
+    struct writeCellData <DefaultIOTraits<T>, Index, std::enable_if_t<Index == DefaultIOTraits<T>::size() - 1>>{
         template< typename IndexType, typename Real>
         static void write(std::ostream& ost, const DataContainer<T, MeshDimension> &data, VTKMeshWriter<MeshDimension,IndexType, Real>& writer){
             //DBGVAR(IsIndexable<typename DefaultIOTraits<T>::traitsType::template type<Index>>::value);
@@ -267,7 +267,7 @@ private:
         {
             using type = typename MeshDataContainer<T, Dimensions...>::template DataContainerType<Index>::type;
 
-            VTKMeshDataWriter<MeshDimension>::writeCellData<typename DefaultIOTraits<type>::traitsType>::write(ost, data.template getDataByPos<Index>(), writer);
+            VTKMeshDataWriter<MeshDimension>::writeCellData<DefaultIOTraits<type>>::write(ost, data.template getDataByPos<Index>(), writer);
 
             MeshDataIterator<Index - 1, OK | HasDefaultIOTraits<type>::value>:: writeToStream(ost, data, writer);
         }
@@ -301,7 +301,7 @@ private:
         {
             using type = typename MeshDataContainer<T, Dimensions...>::template DataContainerType<0>::type;
 
-            VTKMeshDataWriter<MeshDimension>::writeCellData<typename DefaultIOTraits<type>::traitsType>::write(ost, data.template getDataByPos<0>(), writer);
+            VTKMeshDataWriter<MeshDimension>::writeCellData<DefaultIOTraits<type>>::write(ost, data.template getDataByPos<0>(), writer);
 
         }
     };

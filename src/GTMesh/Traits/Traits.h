@@ -285,14 +285,14 @@ public:
 
 
 template<typename Class>
-class Traits<Class>{};
+class DefaultTraits{};
 
 
 template<typename Class>
-class DefaultIOTraits : public Traits<Class> {};
+class DefaultIOTraits : public DefaultTraits<Class> {};
 
 template<typename Class>
-class DefaultArithmeticTraits : public Traits<Class> {};
+class DefaultArithmeticTraits : public DefaultTraits<Class> {};
 
 
 #include "CustomTypeTraits.h"
@@ -368,14 +368,14 @@ public: \
     static constexpr unsigned int size() {return traitsType::size();}\
 }
 
-#define MAKE_CUSTOM_TRAIT(Class,...) IMPL_MAKE_CUSTOM_TRAIT(Traits, Class, __VA_ARGS__) // defining specialization for Traits
+#define MAKE_CUSTOM_TRAIT(Class,...) IMPL_MAKE_CUSTOM_TRAIT(DefaultTraits, Class, __VA_ARGS__) // defining specialization for Traits
 
 #define MAKE_NAMED_ATTRIBUTE_TRAIT(Class, ...) MAKE_CUSTOM_TRAIT(Class, FOR_EACH_3ARGS_1STAT(IMPL_NAME_AND_REF, Class, __VA_ARGS__))
 
 #define MAKE_ATTRIBUTE_TRAIT(Class, ...) MAKE_NAMED_ATTRIBUTE_TRAIT(Class, FOR_EACH(IMPL_NAME_ATT, __VA_ARGS__))
 
 
-#define MAKE_CUSTOM_TEMPLATE_TRAIT(Class, TemplateParameters, ...) IMPL_MAKE_CUSTOM_TEMPLATE_TRAIT(Traits, TemplateParameters, Class, __VA_ARGS__) // defining specialization for Traits
+#define MAKE_CUSTOM_TEMPLATE_TRAIT(Class, TemplateParameters, ...) IMPL_MAKE_CUSTOM_TEMPLATE_TRAIT(DefaultTraits, TemplateParameters, Class, __VA_ARGS__) // defining specialization for Traits
 
 #define MAKE_NAMED_ATTRIBUTE_TEMPLATE_TRAIT(Class, TemplateParameters, ...) MAKE_CUSTOM_TEMPLATE_TRAIT(Class, TemplateParameters, FOR_EACH_3ARGS_1STAT(IMPL_NAME_AND_REF_TEMPLATE, Class, __VA_ARGS__))
 
