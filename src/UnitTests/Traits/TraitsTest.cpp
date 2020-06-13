@@ -1,6 +1,14 @@
 // Test of Traits class
 #ifdef HAVE_GTEST
 #include <gtest/gtest.h>
+//#else
+//#include "GTMesh/Debug/Debug.h"
+//#define TEST(_1,_2) void _1()
+//#define EXPECT_TRUE(_1) if(!_1)DBGVAR(_1);(void)(_1)
+//#define EXPECT_FALSE(_1) DBGCHECK;(void)(_1)
+//#define EXPECT_EQ(_1,_2) if (!(_1 == _2))DBGVAR(_1,_2);(void)(_1 == _2)
+//#define EXPECT_ANY_THROW(_1) DBGCHECK;try{(_1);}catch(...){}
+//#endif
 #include <list>
 #include <map>
 #include <array>
@@ -58,8 +66,8 @@ TEST( TupleTraitsTest, basicTest )
 
 
     std::tuple<double> t{1.5};
-    Traits<std::tuple<double>>::getTraits().getAttr<0>(t) = 2.5;
-    EXPECT_EQ(Traits<std::tuple<double>>::getTraits().getAttr<0>(t), 2.5);
+    DefaultTraits<std::tuple<double>>::getTraits().getAttr<0>(t) = 2.5;
+    EXPECT_EQ(DefaultTraits<std::tuple<double>>::getTraits().getAttr<0>(t), 2.5);
 }
 
 
@@ -67,7 +75,7 @@ template< typename Real, size_t len >
 class TemplateClass{
     std::array<Real, len> arr;
 
-    friend class Traits<TemplateClass<Real, len>>;
+    friend class DefaultTraits<TemplateClass<Real, len>>;
 };
 
 MAKE_ATTRIBUTE_TEMPLATE_TRAIT( (TemplateClass<Real, len>),
@@ -81,7 +89,7 @@ TEST( TemplateTraitsTest, basicTest )
 
     EXPECT_TRUE((HasDefaultTraits<TemplateClass<double, 3>>::value));
     EXPECT_TRUE((HasDefaultTraits<TemplateClass<int, 5>>::value));
-    EXPECT_TRUE((IsDirectAccess<Traits<TemplateClass<int, 5>>::traitsType::memRefType<0>>::value));
+    EXPECT_TRUE((IsDirectAccess<DefaultTraits<TemplateClass<int, 5>>::traitsType::memRefType<0>>::value));
 
     EXPECT_EQ((DefaultTraits<TemplateClass<int, 5>>::size()), 1);
     EXPECT_EQ((DefaultTraits<TemplateClass<int, 5>>::getTraits().getName<0>()), "arr");
