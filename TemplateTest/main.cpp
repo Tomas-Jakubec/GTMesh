@@ -481,7 +481,8 @@ void testTraitsAlgorithms() {
            log(ns), exp(log(ns)),
            pow(sqrt(ns), 2),
            abs(pow(e1,2)),
-           sqrt(sum(pow(e1, 2)))
+           sqrt(sum(pow(e1, 2))),
+           min(-ns), -ns
            );
 
     DBGVAR(abs(-ns));

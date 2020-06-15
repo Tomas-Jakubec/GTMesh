@@ -938,7 +938,7 @@ struct Min{
 
 template <typename T>
 auto min(const T& val){
-    return TraitsAggregationProcesor<Max>::evaluate(val);
+    return TraitsAggregationProcesor<Min>::evaluate(val);
 }
 
 
