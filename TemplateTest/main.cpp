@@ -291,12 +291,12 @@ struct tempData {
 
 /*
 template<>
-class Traits<tempData>{
+class DefaultTraits<tempData>{
 public:
     using ttype = Traits<tempData, double, Vector<3,double>>;
     const static ttype tr;
 };
-const Traits<tempData>::ttype Traits<tempData>::tr("density", &tempData::density, "momentum"s, std::make_pair(&tempData::getMomentum, &tempData::setMomentum));
+const DefaultTraits<tempData>::ttype DefaultTraits<tempData>::tr("density", &tempData::density, "momentum"s, std::make_pair(&tempData::getMomentum, &tempData::setMomentum));
 */
 
 
@@ -306,7 +306,7 @@ const Traits<tempData>::ttype Traits<tempData>::tr("density", &tempData::density
 MAKE_CUSTOM_TRAIT(tempData, "density", &tempData::density, "momentum", std::make_pair(&tempData::getMomentum, &tempData::setMomentum));
 /*
 template<>
-class Traits<tempData>{
+class DefaultTraits<tempData>{
 public:
     using traitsType = ::Traits<Class, double tempData::*, decltype(std::make_pair(&tempData::getMomentum, &tempData::setMomentum))>;
     static const traitsType getTraits() {return traitsType( "density", &tempData::density, "momentum", std::make_pair(&tempData::getMomentum, &tempData::setMomentum));}
@@ -360,12 +360,12 @@ struct testData {
 
 /*
 template<>
-class Traits<tempData>{
+class DefaultTraits<tempData>{
 public:
     using ttype = Traits<tempData, double, Vector<3,double>>;
     const static ttype tr;
 };
-const Traits<tempData>::ttype Traits<tempData>::tr("density", &tempData::density, "momentum"s, std::make_pair(&tempData::getMomentum, &tempData::setMomentum));
+const DefaultTraits<tempData>::ttype DefaultTraits<tempData>::tr("density", &tempData::density, "momentum"s, std::make_pair(&tempData::getMomentum, &tempData::setMomentum));
 */
 
 
@@ -380,14 +380,14 @@ void testMemberRef(){
 
     tempData d;
 
-    //DBGVAR(Traits<tempData>::ttype::getName<0>());
+    //DBGVAR(DefaultTraits<tempData>::ttype::getName<0>());
 
-    Traits<tempData>::getTraits().getReference<0>().setValue(&d, 0.0);
-    DBGVAR(Traits<tempData>::getTraits().getReference<0>().getValue(&d));
-    Traits<tempData>::getTraits().getReference<0>().setValue(d, 42.15);
-    Traits<tempData>::getTraits().getReference<1>().setValue(&d, {42.15,84.30,42.15});
+    DefaultTraits<tempData>::getTraits().getReference<0>().setValue(&d, 0.0);
+    DBGVAR(DefaultTraits<tempData>::getTraits().getReference<0>().getValue(&d));
+    DefaultTraits<tempData>::getTraits().getReference<0>().setValue(d, 42.15);
+    DefaultTraits<tempData>::getTraits().getReference<1>().setValue(&d, {42.15,84.30,42.15});
 
-    DBGVAR(Traits<tempData>::getTraits().getName<0>(),(Traits<tempData>::getTraits().getReference<0>().getValue(&d)), Traits<tempData>::getTraits().getName<1>(), d.velocity);
+    DBGVAR(DefaultTraits<tempData>::getTraits().getName<0>(),(DefaultTraits<tempData>::getTraits().getReference<0>().getValue(&d)), DefaultTraits<tempData>::getTraits().getName<1>(), d.velocity);
     DBGVAR(HasDefaultTraits<tempData>::value, d);
 
     Traits<tempData, decltype(&tempData::getData)> trait("density", &tempData::getData);
@@ -437,7 +437,7 @@ public:
     explicit TraitedClass() {DBGMSG("TC construtor");}
     //TraitedClass(const TraitedClass& rhs) = default;
     //TraitedClass(TraitedClass&&) = default;
-    friend class Traits<TraitedClass>;
+    friend class DefaultTraits<TraitedClass>;
 
     template<unsigned int... Idxs>
     auto& operator[](integer_sequence<unsigned int, Idxs...>){
@@ -452,6 +452,7 @@ MAKE_ATTRIBUTE_TRAIT(ns::TraitedClass, d1, d2, ts);
 
 template <typename T>
 auto sum(const T& val){
+    DBGVAR(val);
     return TraitsAggregationProcesor<BinaryPlus>::evaluate(val);
 }
 
@@ -459,6 +460,10 @@ void testTraitsAlgorithms() {
     ExportTest e1, e2;
     ExportTest res = e1 + e2;
     std::vector<ExportTest> vec(40, ExportTest());
+    DBGVAR(std::make_pair(e1, DefaultArithmeticTraits<ExportTest>::getTraits()));
+    DBGVAR(std::make_pair(e1.attrTempData, DefaultArithmeticTraits<tempData>::getTraits()));
+
+    DBGVAR(sum(e1));
 
     DBGVAR(2.45*e1,e1 + e2, e1, e2,HasDefaultArithmeticTraits<int>::value, max(e2), min(e2), max(vec));
 
@@ -1151,7 +1156,7 @@ void testNumericTraitsPerformance() {
 
 
     DBGMSG("Traits approach instead of numeric traits +=");
-    Traits<NumStruct2> t;
+    DefaultTraits<NumStruct2> t;
     start = clock.now();
     res2 = NumStruct2({0,0});
     for(int rep = 0; rep < maxRep; rep++){
@@ -1266,7 +1271,7 @@ Test of trasposing vector of struct to struct of vectors
 */
 
 
-template <typename DataType, typename DataTypeTrait = Traits<DataType>>
+template <typename DataType, typename DataTypeTrait = DefaultTraits<DataType>>
 struct Container{
     template <unsigned int index = 0, typename Dummy = void>
     struct StructOfArrays : public StructOfArrays<index + 1>{
@@ -1275,7 +1280,7 @@ struct Container{
 
 
     template <typename Dummy>
-    struct StructOfArrays<Traits<DataType>::traitsType::size() - 1, Dummy>{
+    struct StructOfArrays<DefaultTraits<DataType>::traitsType::size() - 1, Dummy>{
         std::vector<typename DataTypeTrait::template type<DataTypeTrait::size() - 1>> vec;
     };
 
@@ -1287,18 +1292,18 @@ struct Container{
 
     template <unsigned int pos>
     const char* name() {
-        return Traits<DataType>::getTraits().template getName<pos>();
+        return DefaultTraits<DataType>::getTraits().template getName<pos>();
     }
 
     template <unsigned int pos>
-    std::vector<typename Traits<DataType>::traitsType::template type<pos>>& getDataAtPos() {
+    std::vector<typename DefaultTraits<DataType>::traitsType::template type<pos>>& getDataAtPos() {
         return data.StructOfArrays<pos>::vec;
     }
 };
 
 
 void testStructTransposition() {
-    Container<ExportTest, Traits<ExportTest>::traitsType> data;
+    Container<ExportTest, DefaultTraits<ExportTest>::traitsType> data;
 
     data.getDataAtPos<5>().resize(2);
     DBGVAR(data.size(), data.getDataAtPos<5>(), data.name<5>());
@@ -1329,7 +1334,7 @@ public:
              std::unique_ptr<
                 MemberApproach<
                     ExportTest,
-                    Traits<ExportTest>::ttype::type<index>
+                    DefaultTraits<ExportTest>::ttype::type<index>
                 >>&,
              const std::string&
              )
@@ -1342,13 +1347,13 @@ public:
                          std::unique_ptr<
                             MemberApproach<
                                 ExportTest,
-                                Traits<ExportTest>::ttype::type<index>
+                                DefaultTraits<ExportTest>::ttype::type<index>
                             >>&,
                          const std::string&
                          )
                 >, Functor>, "");
 
-        f(index, Traits<ExportTest>::ttype::getReference<index>(), Traits<ExportTest>::ttype::getName<index>());
+        f(index, DefaultTraits<ExportTest>::ttype::getReference<index>(), DefaultTraits<ExportTest>::ttype::getName<index>());
         TraitApply<index - 1>::apply(f);
     }
 
@@ -1361,7 +1366,7 @@ public:
         void(std::unique_ptr<
                 MemberApproach<
                     ExportTest,
-                    Traits<ExportTest>::ttype::type<index>
+                    DefaultTraits<ExportTest>::ttype::type<index>
                 >>&,
              const std::string&
              )
@@ -1373,19 +1378,19 @@ public:
                     void(std::unique_ptr<
                             MemberApproach<
                                 ExportTest,
-                                Traits<ExportTest>::ttype::type<index>
+                                DefaultTraits<ExportTest>::ttype::type<index>
                             >>&,
                          const std::string&
                          )
                 >, Functor>, "");
 
-        f(Traits<ExportTest>::ttype::getReference<index>(), Traits<ExportTest>::ttype::getName<index>());
+        f(DefaultTraits<ExportTest>::ttype::getReference<index>(), DefaultTraits<ExportTest>::ttype::getName<index>());
         TraitApply<index - 1>::apply(f);
     }
 
     template <template <typename, typename>class Functor>
     static auto apply ()
-    -> typename std::enable_if<std::is_class<Functor<ExportTest, Traits<ExportTest>::ttype::type<index>>>::value>::type
+    -> typename std::enable_if<std::is_class<Functor<ExportTest, DefaultTraits<ExportTest>::ttype::type<index>>>::value>::type
     {
 
         static_assert (std::is_assignable<
@@ -1394,14 +1399,14 @@ public:
                          std::unique_ptr<
                             MemberApproach<
                                 ExportTest,
-                                Traits<ExportTest>::ttype::type<index>
+                                DefaultTraits<ExportTest>::ttype::type<index>
                             >>&,
                          const std::string&
                          )
-                >, Functor<ExportTest, Traits<ExportTest>::ttype::type<index>>>::value, "");
+                >, Functor<ExportTest, DefaultTraits<ExportTest>::ttype::type<index>>>::value, "");
 
 
-        Functor<ExportTest, Traits<ExportTest>::ttype::type<index>>()(index, Traits<ExportTest>::ttype::getReference<index>(), Traits<ExportTest>::ttype::getName<index>());
+        Functor<ExportTest, DefaultTraits<ExportTest>::ttype::type<index>>()(index, DefaultTraits<ExportTest>::ttype::getReference<index>(), DefaultTraits<ExportTest>::ttype::getName<index>());
         TraitApply<index - 1>::template apply<Functor>();
     }
 
@@ -1419,13 +1424,13 @@ public:
              std::unique_ptr<
                 MemberApproach<
                     ExportTest,
-                    Traits<ExportTest>::ttype::type<0>
+                    DefaultTraits<ExportTest>::ttype::type<0>
                 >>&,
              const std::string&
              )
     >, Functor>>::type
     {
-        f(0, Traits<ExportTest>::ttype::getReference<0>(), Traits<ExportTest>::ttype::getName<0>());
+        f(0, DefaultTraits<ExportTest>::ttype::getReference<0>(), DefaultTraits<ExportTest>::ttype::getName<0>());
     }
 
 
@@ -1436,20 +1441,20 @@ public:
         void(std::unique_ptr<
                 MemberApproach<
                     ExportTest,
-                    Traits<ExportTest>::ttype::type<0>
+                    DefaultTraits<ExportTest>::ttype::type<0>
                 >>&,
              const std::string&
              )
     >, Functor>>::type
     {
-        f(Traits<ExportTest>::ttype::getReference<0>(), Traits<ExportTest>::ttype::getName<0>());
+        f(DefaultTraits<ExportTest>::ttype::getReference<0>(), DefaultTraits<ExportTest>::ttype::getName<0>());
     }
 
     template <template <typename, typename>class Functor>
     static auto apply ()
-    -> typename std::enable_if<std::is_class<Functor<ExportTest,Traits<ExportTest>::ttype::type<0>>>::value>::type
+    -> typename std::enable_if<std::is_class<Functor<ExportTest,DefaultTraits<ExportTest>::ttype::type<0>>>::value>::type
     {
-        Functor<ExportTest, Traits<ExportTest>::ttype::type<0>>()(0, Traits<ExportTest>::ttype::getReference<0>(), Traits<ExportTest>::ttype::getName<0>());
+        Functor<ExportTest, DefaultTraits<ExportTest>::ttype::type<0>>()(0, DefaultTraits<ExportTest>::ttype::getReference<0>(), DefaultTraits<ExportTest>::ttype::getName<0>());
     }
 };
 */
@@ -1475,7 +1480,7 @@ public:
     {
         DBGVAR(Singleton<Depth>::getInstance().value,index, name);
         Singleton<Depth>::getInstance().value++;
-        Traits<T>::getTraits().template apply<Func>();
+        DefaultTraits<T>::getTraits().template apply<Func>();
         Singleton<Depth>::getInstance().value--;
     }
 };
@@ -1494,14 +1499,14 @@ void testTraitApply() {
 
     //TraitApply<5>::apply(lambda1);
 DBGMSG("Tady");
-    Traits<ExportTest>::getTraits().apply<Func>();
+    DefaultTraits<ExportTest>::getTraits().apply<Func>();
     //TraitApply<5>::apply<Func>();
 
-    Traits<ExportTest>::getTraits().apply(lambda);
+    DefaultTraits<ExportTest>::getTraits().apply(lambda);
 
-    Traits<ExportTest>::getTraits().apply(lambda1);
+    DefaultTraits<ExportTest>::getTraits().apply(lambda1);
 
-    //Traits<ExportTest>::ttype::apply<Func>();
+    //DefaultTraits<ExportTest>::ttype::apply<Func>();
 
 
 }
@@ -2092,7 +2097,7 @@ void testTraitPerformance() {
     res = 0;
     for(int rep = 0; rep < maxRep; rep++){
         for(size_t i = 0; i < vec.size(); i++) {
-            res += Traits<ExportTest>::getTraits().getValue<1>(vec[i]);
+            res += DefaultTraits<ExportTest>::getTraits().getValue<1>(vec[i]);
         }
         duration += (clock.now() - start).count();
         deviation += (clock.now() - start).count() * (clock.now() - start).count();
@@ -2238,7 +2243,7 @@ private:
     std::string attr = "attr";
 public:
     const std::string& getAttr(){return attr;}
-    friend Traits<privateAttr>;
+    friend DefaultTraits<privateAttr>;
 };
 
 MAKE_NAMED_ATTRIBUTE_TRAIT(privateAttr, "str_attr", attr);
@@ -2247,7 +2252,7 @@ MAKE_NAMED_ATTRIBUTE_TRAIT(privateAttr, "str_attr", attr);
 void testPrivateTrait(){
     privateAttr a;
     DBGVAR(a);
-    Traits<privateAttr>::getTraits().setValue<0>(a, "new value");
+    DefaultTraits<privateAttr>::getTraits().setValue<0>(a, "new value");
     DBGVAR(a);
 
 }
@@ -2275,12 +2280,12 @@ struct TraitToJson {
     template<typename traitedClass>
     static
     typename enable_if<
-        (Traits<traitedClass>::ttype::size() - 1 > Index)
+        (DefaultTraits<traitedClass>::ttype::size() - 1 > Index)
     >::type
     to_json(json& j, const traitedClass& t) {
 
-//        j.at(Traits<traitedClass>::ttype::template getName<Index>()) = Traits<traitedClass>::ttype::template getValue<Index>(t);
-        j.push_back({Traits<traitedClass>::ttype::template getName<Index>(), Traits<traitedClass>::ttype::template getValue<Index>(t)});
+//        j.at(DefaultTraits<traitedClass>::ttype::template getName<Index>()) = DefaultTraits<traitedClass>::ttype::template getValue<Index>(t);
+        j.push_back({DefaultTraits<traitedClass>::ttype::template getName<Index>(), DefaultTraits<traitedClass>::ttype::template getValue<Index>(t)});
         TraitToJson<Index + 1>::to_json(j, t);
     }
 
@@ -2288,12 +2293,12 @@ struct TraitToJson {
     template<typename traitedClass>
     static
     typename enable_if<
-        (Traits<traitedClass>::ttype::size() - 1 == Index)
+        (DefaultTraits<traitedClass>::ttype::size() - 1 == Index)
     >::type
     to_json(json& j, const traitedClass& t) {
 
-        j.push_back({Traits<traitedClass>::ttype::template getName<Index>(), Traits<traitedClass>::ttype::template getValue<Index>(t)});
-        //j.at(Traits<traitedClass>::ttype::template getName<Index>()) = Traits<traitedClass>::ttype::template getValue<Index>(t);
+        j.push_back({DefaultTraits<traitedClass>::ttype::template getName<Index>(), DefaultTraits<traitedClass>::ttype::template getValue<Index>(t)});
+        //j.at(DefaultTraits<traitedClass>::ttype::template getName<Index>()) = DefaultTraits<traitedClass>::ttype::template getValue<Index>(t);
 
     }
 };
@@ -2314,13 +2319,13 @@ struct JsonToTrait {
     template<typename traitedClass>
     static
     typename enable_if<
-        (Traits<traitedClass>::ttype::size() - 1 > Index)
+        (DefaultTraits<traitedClass>::ttype::size() - 1 > Index)
     >::type
     from_json(const json& j, traitedClass& t) {
 
-        Traits<traitedClass>::ttype::template setValue<Index>(
+        DefaultTraits<traitedClass>::ttype::template setValue<Index>(
             t,
-            j.at(Traits<traitedClass>::ttype::template getName<Index>()).template get<typename Traits<traitedClass>::ttype::template type<Index>>()
+            j.at(DefaultTraits<traitedClass>::ttype::template getName<Index>()).template get<typename DefaultTraits<traitedClass>::ttype::template type<Index>>()
         );
         JsonToTrait<Index + 1>::from_json(j, t);
     }
@@ -2329,13 +2334,13 @@ struct JsonToTrait {
     template<typename traitedClass>
     static
     typename enable_if<
-        (Traits<traitedClass>::ttype::size() - 1 == Index)
+        (DefaultTraits<traitedClass>::ttype::size() - 1 == Index)
     >::type
     from_json(const json& j, traitedClass& t) {
 
-        Traits<traitedClass>::ttype::template setValue<Index>(
+        DefaultTraits<traitedClass>::ttype::template setValue<Index>(
             t,
-            j.at(Traits<traitedClass>::ttype::template getName<Index>()).template get<typename Traits<traitedClass>::ttype::template type<Index>>()
+            j.at(DefaultTraits<traitedClass>::ttype::template getName<Index>()).template get<typename DefaultTraits<traitedClass>::ttype::template type<Index>>()
         );
 
     }

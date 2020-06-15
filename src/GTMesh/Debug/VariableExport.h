@@ -59,7 +59,10 @@ struct VariableExport {
 
 
     template<typename T1, typename T2>
-    static auto exportVariable(std::ostream& ost, const std::pair<T1,T2>& b) -> void
+    static auto exportVariable(std::ostream& ost, const std::pair<T1,T2>& b)
+    -> typename std::enable_if<
+            !IsTraits<T2>::value
+       >::type
     {
         ost << "{ ";
         exportVariable(ost, b.first);
@@ -146,21 +149,21 @@ struct VariableExport {
     }
 
 
-    template<typename T, unsigned int Index = 0, bool = Index == DefaultIOTraits<T>::size() - 1>
+    template<typename T, typename TraitsIO, unsigned int Index = 0, bool = Index == TraitsIO::size() - 1>
     struct PrintClass{
-        static void print(std::ostream& ost, const T &traitedClass){
-            PrintClass<T, Index, true>::print(ost, traitedClass);
+        static void print(std::ostream& ost, const T &traitedClass, const TraitsIO& traitsIO){
+            PrintClass<T, TraitsIO, Index, true>::print(ost, traitedClass, traitsIO);
             ost << ", ";
-            PrintClass<T, Index + 1>::print(ost, traitedClass);
+            PrintClass<T, TraitsIO, Index + 1>::print(ost, traitedClass, traitsIO);
 
         }
     };
 
-    template<typename T, unsigned int Index>
-    struct PrintClass<T, Index, true>{
-        static void print(std::ostream& ost, const T &traitedClass){
-            ost << '"' << DefaultIOTraits<T>::getTraits().template getName<Index>() << "\" : ";
-            VariableExport::exportVariable(ost, DefaultIOTraits<T>::getTraits().template getValue<Index>(traitedClass));
+    template<typename T, typename TraitsIO, unsigned int Index>
+    struct PrintClass<T, TraitsIO, Index, true>{
+        static void print(std::ostream& ost, const T &traitedClass, const TraitsIO& traitsIO){
+            ost << '"' << traitsIO.template getName<Index>() << "\" : ";
+            VariableExport::exportVariable(ost, traitsIO.template getValue<Index>(traitedClass));
         }
     };
 
@@ -172,10 +175,20 @@ struct VariableExport {
          >::type
     {
         ost << "{ ";
-        PrintClass<T>::print(ost, traitedClass);
+        PrintClass<T, typename DefaultIOTraits<T>::traitsType>::print(ost, traitedClass, DefaultIOTraits<T>::getTraits());
         ost << " }";
     }
 
+    template<typename T, typename... Refs>
+    static auto exportVariable(std::ostream& ost, const std::pair<T, Traits<std::decay_t<T>, Refs...>> &traitedClassWithTraits)
+      -> typename std::enable_if<
+             HasDefaultIOTraits<T>::value
+         >::type
+    {
+        ost << "{ ";
+        PrintClass<T, Traits<std::decay_t<T>, Refs...>>::print(ost, traitedClassWithTraits.first, traitedClassWithTraits.second);
+        ost << " }";
+    }
 
 };
 
@@ -251,7 +264,10 @@ struct VariableExport<VARIABLE_EXPORT_METHOD::stdio> {
 
 
     template<typename T1, typename T2>
-    static auto exportVariable(const std::pair<T1,T2>& b) -> void
+    static auto exportVariable(const std::pair<T1,T2>& b)
+    -> typename std::enable_if<
+            !IsTraits<T2>::value
+       >::type
     {
         printf("{ ");
         exportVariable(b.first);
@@ -338,24 +354,23 @@ struct VariableExport<VARIABLE_EXPORT_METHOD::stdio> {
     }
 
 
-    template<typename T, unsigned int Index = 0, bool = Index == DefaultIOTraits<T>::size() - 1>
+    template<typename T, typename TraitsIO, unsigned int Index = 0, bool = Index == TraitsIO::size() - 1>
     struct PrintClass{
-        static void print(const T &traitedClass){
-            PrintClass<T, Index, true>::print(traitedClass);
+        static void print(const T &traitedClass, const TraitsIO& traitsIO){
+            PrintClass<T, TraitsIO, Index, true>::print(traitedClass, traitsIO);
             printf(", ");
-            PrintClass<T, Index + 1>::print(traitedClass);
+            PrintClass<T, TraitsIO, Index + 1>::print(traitedClass, traitsIO);
 
         }
     };
 
-    template<typename T, unsigned int Index>
-    struct PrintClass<T, Index, true>{
-        static void print(const T &traitedClass){
-            printf("\"%s\" : ", DefaultIOTraits<T>::getTraits().template getName<Index>());
-            VariableExport::exportVariable(DefaultIOTraits<T>::getTraits().template getValue<Index>(traitedClass));
+    template<typename T, typename TraitsIO, unsigned int Index>
+    struct PrintClass<T, TraitsIO, Index, true>{
+        static void print(const T &traitedClass, const TraitsIO& traitsIO){
+            printf("\"%s\" : ", traitsIO.template getName<Index>());
+            VariableExport::exportVariable(traitsIO.template getValue<Index>(traitedClass));
         }
     };
-
 
 
     template<typename T>
@@ -365,7 +380,18 @@ struct VariableExport<VARIABLE_EXPORT_METHOD::stdio> {
          >::type
     {
         printf("{ ");
-        PrintClass<T>::print(traitedClass);
+        PrintClass<T, typename DefaultIOTraits<T>::traitsType>::print(traitedClass, DefaultIOTraits<T>::getTraits());
+        printf(" }");
+    }
+
+    template<typename T, typename... Refs>
+    static auto exportVariable(const std::pair<T, Traits<std::decay_t<T>, Refs...>>& traitedClassWithTraits)
+      -> typename std::enable_if<
+             HasDefaultIOTraits<T>::value
+         >::type
+    {
+        printf("{ ");
+        PrintClass<T, Traits<std::decay_t<T>, Refs...>>::print(traitedClassWithTraits.first, traitedClassWithTraits.second);
         printf(" }");
     }
 

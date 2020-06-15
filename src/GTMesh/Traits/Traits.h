@@ -11,6 +11,8 @@
 template<typename Class, typename...RefTypes>
 class Traits {
 public:
+    static constexpr bool isTraits = true;
+
     template<unsigned int Index>
     using refType = typename std::tuple_element<Index,std::tuple<RefTypes...>>::type;
 
@@ -49,11 +51,15 @@ public:
     /**
      * The constructor of Traits initializes the names
      * and references in the refs container.
+     * The first parameter is specified in order to distinguish the
+     * copy and move constructors.
      * @param refsAndNames a parameter pack of names and references
      */
     template<typename...Refs>
-    Traits(Refs... refsAndNames) : refs(refsAndNames...){}
+    Traits(const char* n1, Refs... refsAndNames) : refs(n1, refsAndNames...){}
 
+    Traits(const Traits<Class, RefTypes...>&) = default;
+    Traits(Traits<Class, RefTypes...>&&) = default;
 
     static constexpr unsigned int size(){
         return sizeof... (RefTypes);

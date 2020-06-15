@@ -44,6 +44,18 @@ struct __is_tnl_indexable< T1,
                            void_t<decltype (std::declval<const T1&>()[0]), decltype (std::declval<const T1&>().getSize())> > : public std::true_type {};
 
 
+
+template <typename T1, typename VOID = void>
+struct __is_traits : public std::false_type {};
+
+
+template <typename T1>
+struct __is_traits<
+        T1,
+        void_t<decltype(T1::isTraits)>
+        > : public std::true_type {};
+
+
 template <typename T1, typename VOID = void>
 struct __has_default_traits : public std::false_type {};
 
@@ -51,7 +63,7 @@ struct __has_default_traits : public std::false_type {};
 template <typename T1>
 struct __has_default_traits<
         T1,
-        void_t<decltype(DefaultTraits<T1>::getTraits)>
+        void_t<decltype(DefaultTraits<T1>::getTraits())>
         > : public std::true_type {};
 
 
@@ -63,7 +75,7 @@ struct __has_default_io_traits : public std::false_type {};
 template <typename T1>
 struct __has_default_io_traits<
         T1,
-        void_t<decltype(DefaultIOTraits<T1>::getTraits)>
+        void_t<decltype(DefaultIOTraits<T1>::getTraits())>
         > : public std::true_type {};
 
 
@@ -75,7 +87,7 @@ struct __has_default_arithmetic_traits : public std::false_type {};
 template <typename T1>
 struct __has_default_arithmetic_traits<
         T1,
-        void_t<decltype(DefaultArithmeticTraits<T1>::getTraits)>
+        void_t<decltype(DefaultArithmeticTraits<T1>::getTraits())>
         > : public std::true_type {};
 
 } // Impl namespace
@@ -97,6 +109,10 @@ struct IsIndexable : public Impl::__is_indexable<T1>
 template <typename T1>
 struct IsTNLIndexable : public Impl::__is_tnl_indexable<T1>
 {};
+
+
+template<typename T>
+struct IsTraits : public Impl::__is_traits<T> {};
 
 template<typename T>
 struct HasDefaultTraits : public Impl::__has_default_traits<T> {};

@@ -868,62 +868,49 @@ public:
 template<template<typename, typename> class Operator>
 struct TraitsAggregationProcesor {
 
-    template<typename TraitT, unsigned int Index = DefaultArithmeticTraits<TraitT>::size() - 1>
+    template<typename TraitT, unsigned int Index = DefaultArithmeticTraits<TraitT>::size() - 1, typename std::enable_if< Index == 0, bool >::type = true >
     inline static
-    typename std::enable_if<
-        Index == 0 ,
-        double //typename TraitCommonType<TraitT>::type
-    >::type
+    auto
     evaluate(const TraitT& op1){
         return evaluate(DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index>(op1));
     }
 
-    template<typename TraitT, unsigned int Index = DefaultArithmeticTraits<TraitT>::size() - 1>
+    template<typename TraitT, unsigned int Index = DefaultArithmeticTraits<TraitT>::size() - 1, typename std::enable_if< (Index > 0) && (Index <= DefaultArithmeticTraits<TraitT>::size() - 1), bool >::type = true>
     inline static
-    typename std::enable_if<
-        (Index > 0) && (Index <= DefaultArithmeticTraits<TraitT>::size() - 1) ,
-        double
-    >::type
+    auto
     evaluate(const TraitT& op1){
 
         return Operator<
-                decltype(evaluate(DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index - 1>(op1))),
+                decltype(evaluate<TraitT, Index - 1>(op1)),
                 decltype(evaluate(DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index>(op1)))
                 >::evaluate(
-                    (evaluate(DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index - 1>(op1))),
+                    (evaluate<TraitT, Index - 1>(op1)),
                     (evaluate(DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index>(op1)))
                 );
 
     }
 
-    template <typename T>
+    template <typename T, typename std::enable_if< !std::is_class<T>::value, bool >::type = true>
     inline static
-    typename std::enable_if<
-        !std::is_class<T>::value,
-        T
-    >::type
+    auto
     evaluate(const T& arg) noexcept {
-
         return  arg;
     }
 
-    template <typename T>
+    template <typename T, typename std::enable_if< IsIndexable<T>::value, bool >::type = true>
     inline static
-    typename std::enable_if<
-        IsIndexable<T>::value,
-        double
-    >::type
+    auto
     evaluate(const T& array) noexcept {
-
         if (array.size() > 0){
-            double res = evaluate(array[0]);
+            using resType = decltype (evaluate(array[0]));
+            auto res = evaluate(array[0]);
             for (decltype (array.size()) index = 1; index < array.size(); index++){
-                res = Operator<double, double>::evaluate(res, evaluate(array[index]));
+                res = Operator<resType, resType>::evaluate(res, evaluate(array[index]));
             }
 
             return  res;
         }
-        return 0;
+        return 0.0;
     }
 
 
