@@ -450,10 +450,13 @@ public:
 MAKE_ATTRIBUTE_TRAIT(ns::TraitedClass, d1, d2, ts);
 
 
+
+
+
+
 template <typename T>
-auto sum(const T& val){
-    DBGVAR(val);
-    return TraitsAggregationProcesor<BinaryPlus>::evaluate(val);
+auto _max(const T& val){
+    return TraitsAggregationProcesor<Max>::evaluate(val);
 }
 
 void testTraitsAlgorithms() {
@@ -463,7 +466,10 @@ void testTraitsAlgorithms() {
     DBGVAR(std::make_pair(e1, DefaultArithmeticTraits<ExportTest>::getTraits()));
     DBGVAR(std::make_pair(e1.attrTempData, DefaultArithmeticTraits<tempData>::getTraits()));
 
-    DBGVAR(sum(e1));
+    DBGVAR(sum(e1), _max(e1));
+    e1.attrInt = 100;
+    e1.attrTempData.velocity[0]=1e5;
+    DBGVAR(max(e1), _max(e1));
 
     DBGVAR(2.45*e1,e1 + e2, e1, e2,HasDefaultArithmeticTraits<int>::value, max(e2), min(e2), max(vec));
 

@@ -41,6 +41,7 @@ TEST( ArithmeticTraitsTest, basicTest )
     EXPECT_EQ(abs(-ns), NumStruct(21,15));
     EXPECT_EQ(min(-ns), -21);
     EXPECT_EQ(max(-ns), -15);
+    EXPECT_EQ(sum(ns), 15 + 21);
     EXPECT_EQ(max(abs(-ns)), 21);
 
 

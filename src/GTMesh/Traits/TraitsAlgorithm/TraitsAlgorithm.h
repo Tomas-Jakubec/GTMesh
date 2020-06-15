@@ -916,147 +916,36 @@ struct TraitsAggregationProcesor {
 
 };
 
-
-
-template <typename T>
-typename std::enable_if<
-    !std::is_class<T>::value,
-    T
->::type
-max(const T& arg) noexcept {
-
-    return  arg;
-}
-
-template <typename T>
-typename std::enable_if<
-    IsIndexable<T>::value,
-    double
->::type
-max(const T& array) noexcept {
-
-    double res = std::numeric_limits<double>::min();
-    for (decltype (array.size()) index = 0; index < array.size(); index++){
-        double m = max(array[index]);
-        if (res < m){
-            res = m;
-        }
-
+template <typename T1, typename T2>
+struct Max{
+    static auto evaluate(const T1& _1, const T2& _2){
+        return std::max<std::common_type_t<T1, T2>>(_1, _2);
     }
-    return  res;
-}
+};
 
 template <typename T>
-typename std::enable_if<
-    IsTNLIndexable<T>::value,
-    double
->::type
-max(const T& array) noexcept {
+auto max(const T& val){
+    return TraitsAggregationProcesor<Max>::evaluate(val);
+}
 
-    double res = std::numeric_limits<double>::min();
-    for (decltype (array.getSize()) index = 0; index < array.getSize(); index++){
-        double m = max(array[index]);
-        if (res < m){
-            res = m;
-        }
 
+template <typename T1, typename T2>
+struct Min{
+    static auto evaluate(const T1& _1, const T2& _2){
+        return std::min<std::common_type_t<T1, T2>>(_1, _2);
     }
-    return  res;
+};
+
+template <typename T>
+auto min(const T& val){
+    return TraitsAggregationProcesor<Max>::evaluate(val);
 }
-
-namespace ImplMax {
-template<typename TraitT, unsigned int Index = DefaultArithmeticTraits<TraitT>::size() - 1>
-typename std::enable_if<
-    Index == 0 ,
-    double //typename TraitCommonType<TraitT>::type
->::type
-max(const TraitT& op1){
-    using ::max;
-    return max(DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index>(op1));
-}
-
-template<typename TraitT, unsigned int Index = DefaultArithmeticTraits<TraitT>::size() - 1>
-typename std::enable_if<
-    (Index > 0) && (Index <= DefaultArithmeticTraits<TraitT>::size() - 1) ,
-    double
->::type
-max(const TraitT& op1){
-    using ::max;
-    using common_type = typename std::common_type<
-        decltype (max(DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index - 1>(op1))),
-        decltype (max(DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index>(op1)))
-    >::type;
-    return std::max<common_type>(
-                    (max(DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index - 1>(op1))),
-                    (max(DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index>(op1)))
-                );
-
-}
-
-
-}
-
-
-template <typename TraitT>
-typename std::enable_if<
-    HasDefaultArithmeticTraits<TraitT>::value,
-    double //typename TraitCommonType<TraitT>::type
->::type
-max(const TraitT& op1) noexcept {
-
-    return  ImplMax::max(op1);
-}
-
 
 
 template <typename T>
-typename std::enable_if<
-    !std::is_class<T>::value,
-    T
->::type
-min(const T& arg) noexcept {
-
-    return  arg;
+auto sum(const T& val){
+    return TraitsAggregationProcesor<BinaryPlus>::evaluate(val);
 }
-
-template <typename T>
-typename std::enable_if<
-    IsIndexable<T>::value,
-    double
->::type
-min(const T& array) noexcept {
-
-    double res = std::numeric_limits<double>::max();
-    for (decltype (array.size()) index = 0; index < array.size(); index++){
-        double m = min(array[index]);
-        if (res > m){
-            res = m;
-        }
-
-    }
-    return  res;
-}
-
-template <typename TraitT>
-typename std::enable_if<
-    HasDefaultArithmeticTraits<TraitT>::value,
-    double//typename TraitCommonType<TraitT>::type
->::type
-min(const TraitT& op1) noexcept {
-    double res = std::numeric_limits<double>::max();
-    //typename TraitCommonType<TraitT>::type res = std::numeric_limits<typename TraitCommonType<TraitT>::type>::max();
-
-    DefaultArithmeticTraits<TraitT>::getTraits().apply(
-                [&res, &op1](unsigned int, const auto& ref, const std::string&) noexcept {
-         auto m = min(ref.getValue(op1));
-         if (res > m) {
-             res = m;
-         }
-    }
-    );
-    return  res;
-}
-
 
 
 
