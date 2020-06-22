@@ -56,6 +56,7 @@ HEADERS += \
     ../src/UnitTests/UnstructuredMesh/MeshSetup.h
 
 DISTFILES += \
+    ../src/GTMesh/Traits/README.md \
     ../src/UnitTests/Debug/DBGVAR_JSONTest.cpp \
     ../src/UnitTests/Debug/VariableExportTest.cpp \
     ../src/UnitTests/Traits/ArithmeticTraitsTest.cpp \

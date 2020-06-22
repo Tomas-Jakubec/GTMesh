@@ -8,6 +8,6 @@ of any dimension and topology. Furthermore, the library provides additional tool
 during the development of UnstructuredMesh and its functionalities.
 
 The tools developed as part of GTMesh:
-- [unstructured mesh](src/UnstructuredMesh/) with simple and user friendly inferface
-- user friendly, simple and generic [debugging tool](src/Debug/)
-- [Traits](src/Traits/), a tool describing C++ data structures and
+- [unstructured mesh](src/GTMesh/UnstructuredMesh/) with simple and user friendly inferface
+- user friendly, simple and generic [debugging tool](src/GTMesh/Debug/)
+- [Traits](src/GTMesh/Traits/), a tool describing C++ data structures and
