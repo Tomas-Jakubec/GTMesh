@@ -5,7 +5,7 @@ The macros can export almost any variable type.
 
 Example:
 ```c++
-#include "[[path]]/src/Debug/Debug.h"
+#include "GTMesh/Debug/Debug.h"
 #include <vector>
 #include <map>
 #include <string>
