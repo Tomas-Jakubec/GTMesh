@@ -91,7 +91,7 @@ public:
      */
     template<ComputationMethod Method = ComputationMethod::METHOD_DEFAULT, typename ..., unsigned int MD = MeshDimension, typename std::enable_if< (MD <= 3) , bool >::type = true>
     MeshDataContainer<Vector<MeshDimension, Real>, MeshDimension-1> computeFaceNormals() const {
-        return computeFaceNormals<Method>(*this);
+        return ::computeFaceNormals<Method>(*this);
     }
 
     /**
@@ -99,7 +99,7 @@ public:
      */
     template<ComputationMethod Method = ComputationMethod::METHOD_DEFAULT, typename ..., unsigned int MD = MeshDimension, typename std::enable_if< (MD > 3) , bool >::type = true>
     MeshDataContainer<Vector<MeshDimension, Real>, MeshDimension-1> computeFaceNormals() const {
-        return computeFaceNormals<Method>(computeCenters<Method>(*this), *this);
+        return ::computeFaceNormals<Method>(computeCenters<Method>(*this), *this);
     }
 
     /**

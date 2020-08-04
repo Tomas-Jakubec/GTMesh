@@ -174,9 +174,8 @@ MeshDataContainer<Vector<Dimension, Real>, Dimension-1> computeFaceNormals(const
 
 
 template <ComputationMethod Method, unsigned int MeshDimension,typename IndexType, typename Real, unsigned int ...Reserve>
-MeshDataContainer<Vector<MeshDimension, Real>, MeshDimension-1> computeFaceNormals(
-        const MakeMeshDataContainer_t<Vertex<MeshDimension, Real>, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>>& centers,
-        const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh){
+MeshDataContainer<Vector<MeshDimension, Real>, MeshDimension-1> computeFaceNormals( const MakeMeshDataContainer_t<Vertex<MeshDimension, Real>, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>>& centers,
+                                                                                    const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh ){
 
     MeshDataContainer<Vector<MeshDimension, Real>, MeshDimension-1> normals(mesh);
 

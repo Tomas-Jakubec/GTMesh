@@ -49,9 +49,6 @@ struct GetCenters {
 
         IndexType sube = mesh.template getElements<CurrentDimension>()[elementIndex].getBoundaryElementIndex();
         GetCenters<Dimension, CurrentDimension - 1, MeshDimension>::get(res, centers, mesh, sube);
-
-        return res;
-
     }
 
 
