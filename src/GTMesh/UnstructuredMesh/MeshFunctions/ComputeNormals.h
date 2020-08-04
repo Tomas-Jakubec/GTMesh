@@ -7,17 +7,48 @@
 #include "../../NumericStaticArray/GramSchmidt.h"
 #include "MeshApply.h"
 #include "MeshFunctionsDefine.h"
+#include "GetCenters.h"
 
 namespace Impl {
 
-template <unsigned int Dimension, ComputationMethod Method = METHOD_DEFAULT>
+template <unsigned int MeshDimension, ComputationMethod Method = METHOD_DEFAULT>
 struct _ComputeNormals{
     template <typename IndexType, typename Real, unsigned int ...Reserve>
-    static void compute(MeshDataContainer<Vector<Dimension, Real>, Dimension-1>&,
-                        const MeshElements<Dimension, IndexType, Real, Reserve...>&){
-        static_assert (Dimension > 3,"The measure computation of mesh of dimension higher than 3 is not implemented yet.");
+    static void compute(MeshDataContainer<Vector<MeshDimension, Real>, MeshDimension-1>&,
+                        const MeshElements<MeshDimension, IndexType, Real, Reserve...>&){
+        static_assert (MeshDimension > 3,"The measure computation of mesh of dimension higher than 3 is not implemented yet.");
         throw std::runtime_error("The computation of face normal vectors of mesh of dimension higher than 3 is not implemented yet.");
     }
+
+    template <typename IndexType, typename Real, unsigned int ...Reserve>
+    static void compute(MeshDataContainer<Vector<MeshDimension, Real>, MeshDimension-1>& normals,
+                        const MakeMeshDataContainer_t<Vertex<MeshDimension, Real>, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>>& centers,
+                        const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh){
+        for (auto& face : mesh.getFaces()) {
+
+            double vectorSign = 1.0;
+            IndexType cellIndex = face.getCellLeftIndex();
+            if (isInvalidIndex( cellIndex ) || isBoundaryIndex( cellIndex )) {
+                vectorSign = -1.0;
+                cellIndex = face.getCellRightIndex();
+            }
+
+            const Vertex<MeshDimension,Real>& cellCenter = centers.template getDataByDim<MeshDimension>().at(cellIndex);
+
+            auto res = getCenters<MeshDimension - 1>(centers, mesh, face.getIndex());
+
+            std::array<Vector<MeshDimension, Real>, MeshDimension> gsVecs;
+            for (size_t i = 1; i < res.size(); i++){
+                gsVecs[i-1] = res[i] - res[0];
+            }
+            gsVecs.back() = cellCenter - res[0];
+            std::array<Real, MeshDimension> norms;
+            gramSchmidt<MeshDimension, MeshDimension, IndexType, Real>(gsVecs, norms);
+
+            normals[face] = vectorSign * gsVecs.back();
+        }
+    }
+
 };
 
 
@@ -141,5 +172,17 @@ MeshDataContainer<Vector<Dimension, Real>, Dimension-1> computeFaceNormals(const
     return normals;
 }
 
+
+template <ComputationMethod Method, unsigned int MeshDimension,typename IndexType, typename Real, unsigned int ...Reserve>
+MeshDataContainer<Vector<MeshDimension, Real>, MeshDimension-1> computeFaceNormals(
+        const MakeMeshDataContainer_t<Vertex<MeshDimension, Real>, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>>& centers,
+        const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh){
+
+    MeshDataContainer<Vector<MeshDimension, Real>, MeshDimension-1> normals(mesh);
+
+    Impl::_ComputeNormals<MeshDimension, Method>::compute(normals, centers, mesh);
+
+    return normals;
+}
 
 #endif // COMPUTENORMALS_H

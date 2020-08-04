@@ -6,20 +6,97 @@
 #include "../MeshDataContainer/MeshDataContainer.h"
 #include "../../NumericStaticArray/GramSchmidt.h"
 #include <array>
-
-
+#include "GetCenters.h"
 
 namespace Impl {
 
 
 template <unsigned int CurrentDimension, unsigned int MeshDimension, ComputationMethod Method = METHOD_DEFAULT>
 struct _ComputeMeasures{
+
     template <typename IndexType, typename Real, unsigned int ...Reserve>
     static void compute(MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>>&, const MeshElements<MeshDimension, IndexType, Real, Reserve...>&){
         static_assert (MeshDimension <= 3,"The measure computation of mesh of dimension higher than 3 is not implemented yet.");
     }
+
+    /**
+     * @brief compute
+     * @param measures
+     * @param centers
+     * @param mesh
+     */
+    template <typename IndexType, typename Real, unsigned int ...Reserve>
+    static void compute(
+            MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>>& measures,
+            const MakeMeshDataContainer_t<Vertex<MeshDimension, Real>, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>>& centers,
+            const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh){
+        // Calculate the measures of the elements of dimension CurrentDimension
+        for(const auto& element : mesh.template getElements<CurrentDimension>()){
+
+            Real measure = 0;
+
+            // Prepare the lambda function to be applied in the mesh.apply
+            auto calculationLambda = [&](IndexType, IndexType sube){
+                auto res = getCenters<CurrentDimension - 1>(centers, mesh, sube);
+
+                std::array<Vector<MeshDimension, Real>, CurrentDimension> v;
+                for (size_t i = 1; i < res.size(); i++){
+                    v[i-1] = res[i] - res[0];
+                }
+                v.back() = centers[element] - res[0];
+                std::array<Real, CurrentDimension> norms;
+
+                gramSchmidt<CurrentDimension, MeshDimension, IndexType, Real>(v, norms);
+                measure += norms.back() * measures.template getDataByDim<CurrentDimension - 1>()[sube];
+            };
+
+            // Perform the calculation
+            MeshApply<CurrentDimension, CurrentDimension - 1>::apply( element.getIndex(),
+                                                                      mesh,
+                                                                      calculationLambda );
+            measures[element] = (1.0/CurrentDimension) * measure;
+        }
+        _ComputeMeasures<CurrentDimension + 1, MeshDimension, Method>::compute(measures, centers, mesh);
+    }
 };
 
+
+template < unsigned int MeshDimension, ComputationMethod Method >
+struct _ComputeMeasures<MeshDimension, MeshDimension, Method>{
+
+
+    template <typename IndexType, typename Real, unsigned int ...Reserve>
+    static void compute(
+            MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>>& measures,
+            const MakeMeshDataContainer_t<Vertex<MeshDimension, Real>, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>>& centers,
+            const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh){
+        // Calculate the measures of the elements of dimension MeshDimension
+        for(const auto& element : mesh.template getElements<MeshDimension>()){
+
+            Real measure = 0;
+
+            // Prepare the lambda function to be applied in the mesh.apply
+            auto calculationLambda = [&](IndexType, IndexType sube){
+                auto res = getCenters<MeshDimension-1>(centers, mesh, sube);
+                std::array<Vector<MeshDimension, Real>, MeshDimension> v;
+                for (size_t i = 1; i < res.size(); i++){
+                    v[i-1] = res[i] - res[0];
+                }
+                v.back() = centers[element] - res[0];
+                std::array<Real, MeshDimension> norms;
+
+                gramSchmidt<MeshDimension, MeshDimension, IndexType, Real>(v, norms);
+                measure += norms.back() * measures.template getDataByDim<MeshDimension - 1>()[sube];
+            };
+
+            // Perform the calculation
+            MeshApply<MeshDimension, MeshDimension - 1>::apply( element.getIndex(),
+                                                                mesh,
+                                                                calculationLambda );
+            measures[element] = (1.0/MeshDimension) * measure;
+        }
+    }
+};
 
 template <unsigned int MeshDimension, ComputationMethod Method>
 struct _ComputeMeasures<1, MeshDimension, Method>{
@@ -35,6 +112,23 @@ struct _ComputeMeasures<1, MeshDimension, Method>{
         }
 
         _ComputeMeasures<2, MeshDimension>::compute(measures, mesh);
+    }
+
+    template <typename IndexType, typename Real, unsigned int ...Reserve>
+    static void compute(
+            MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>>& measures,
+            const MakeMeshDataContainer_t<Vertex<MeshDimension, Real>, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>>& centers,
+            const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh){
+
+        auto& edgeLengths = measures.template getDataByDim<1>();
+
+        for (IndexType edgeIndex = 0; edgeIndex < mesh.template getElements<1>().size(); edgeIndex++) {
+            auto& edge = mesh.getEdges().at(edgeIndex);
+            edgeLengths.at(edgeIndex) = (mesh.getVertices().at(edge.getVertexAIndex()) -
+                                         mesh.getVertices().at(edge.getVertexBIndex())).normEuclid();
+        }
+
+        _ComputeMeasures<2, MeshDimension>::compute(measures, centers, mesh);
     }
 };
 
@@ -190,11 +284,33 @@ struct _ComputeMeasures<3, 3, METHOD_TESSELLATED>{
 
 
 
+/**
+ * @brief Calculates measures of all elements in the mesh
+ * with dimension higher than 1. This function is able to work
+ * with meshes with dimension lower or equal to 3.
+ */
 template <ComputationMethod Method, unsigned int MeshDimension,typename IndexType, typename Real, unsigned int ...Reserve>
 MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>> computeMeasures(const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh){
     MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>> measures(mesh);
 
     Impl::_ComputeMeasures<1, MeshDimension, Method>::compute(measures, mesh);
+
+    return measures;
+}
+
+/**
+ * @brief Calculates measures of all elements in the mesh
+ * with dimension higher than 1. This function is able to work
+ * with meshes with dimension higher than 3.
+ */
+template <ComputationMethod Method, unsigned int MeshDimension,typename IndexType, typename Real, unsigned int ...Reserve>
+MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>> computeMeasures(
+        const MakeMeshDataContainer_t<Vertex<MeshDimension, Real>, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>>& centers,
+        const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
+    ){
+    MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>> measures(mesh);
+
+    Impl::_ComputeMeasures<1, MeshDimension, Method>::compute(measures, centers, mesh);
 
     return measures;
 }

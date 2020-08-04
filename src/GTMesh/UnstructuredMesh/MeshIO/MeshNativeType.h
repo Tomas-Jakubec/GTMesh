@@ -2,7 +2,9 @@
 #define MESHNATIVETYPE_H
 template <unsigned int MeshDimension>
 struct MeshNativeType{
-
+    enum ElementType{
+        POLYTOPE = 1000
+    };
 };
 
 //! Element types of GTMesh in 2D mesh

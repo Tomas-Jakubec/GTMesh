@@ -164,7 +164,9 @@ public:
     }
 
     MeshElement(IndexType index = INVALID_INDEX(IndexType))
-        :MeshElementBase<IndexType>(index), CellBoundaryConnection<IndexType> () {}
+        :MeshElementBase<IndexType>(index),
+         std::conditional<ElementDim == MeshDim - 1,CellBoundaryConnection<IndexType>, emptyStruct>::type()
+    {}
 
 };
 

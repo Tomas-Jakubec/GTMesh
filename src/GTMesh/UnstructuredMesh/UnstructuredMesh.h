@@ -46,20 +46,60 @@ public:
     }
 
     /**
+     * @brief Sets the centers up according to the ones passed by parameter.
+     */
+    void initializeCenters(MakeMeshDataContainer_t<Vertex<MeshDimension, Real>, make_custom_integer_sequence_t<unsigned int, 1,MeshDimension>> centers){
+        for (auto& face : this->getFaces()){
+            face.setCenter(centers[face]);
+        }
+        for (auto& cell : this->getCells()){
+            cell.setCenter(centers[cell]);
+        }
+    }
+
+    /**
+     * @brief Calculates the centers of all elements in the mesh
+     * with dimension higher or equal to one.
+     * The METHOD_TESELATED calculates the centers of faces in
+     * 3D by averaging using the measures of partial triangles.
+     */
+    template<ComputationMethod Method = ComputationMethod::METHOD_DEFAULT>
+    void computeElementCenters(){
+        return computeCenters<Method>(*this);
+    }
+
+    /**
      * @brief Calculates the measure of the elements with dimenson
      * higher than one.
      */
-    template<ComputationMethod Method = ComputationMethod::METHOD_DEFAULT>
+    template<ComputationMethod Method = ComputationMethod::METHOD_DEFAULT, typename ..., unsigned int MD = MeshDimension, typename std::enable_if< (MD <= 3) , bool >::type = true>
     MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>> computeElementMeasures() const {
         return computeMeasures<Method>(*this);
     }
 
     /**
+     * @brief Calculates the measure of the elements with dimenson
+     * higher than one.
+     */
+    template<ComputationMethod Method = ComputationMethod::METHOD_DEFAULT, typename ..., unsigned int MD = MeshDimension, typename std::enable_if< (MD > 3) , bool >::type = true>
+    MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>> computeElementMeasures() const {
+        return computeMeasures<Method>(computeCenters<Method>(*this), *this);
+    }
+
+    /**
      * @brief Calculates the normal vectors of the faces in the mesh.
      */
-    template<ComputationMethod Method = ComputationMethod::METHOD_DEFAULT>
+    template<ComputationMethod Method = ComputationMethod::METHOD_DEFAULT, typename ..., unsigned int MD = MeshDimension, typename std::enable_if< (MD <= 3) , bool >::type = true>
     MeshDataContainer<Vector<MeshDimension, Real>, MeshDimension-1> computeFaceNormals() const {
-        return ::computeFaceNormals<Method>(*this);
+        return computeFaceNormals<Method>(*this);
+    }
+
+    /**
+     * @brief Calculates the normal vectors of the faces in the mesh.
+     */
+    template<ComputationMethod Method = ComputationMethod::METHOD_DEFAULT, typename ..., unsigned int MD = MeshDimension, typename std::enable_if< (MD > 3) , bool >::type = true>
+    MeshDataContainer<Vector<MeshDimension, Real>, MeshDimension-1> computeFaceNormals() const {
+        return computeFaceNormals<Method>(computeCenters<Method>(*this), *this);
     }
 
     /**
