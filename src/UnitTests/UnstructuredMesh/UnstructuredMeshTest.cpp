@@ -1,4 +1,4 @@
-// Test of Traits class
+// Test of the UnstructuredMesh class
 #ifdef HAVE_GTEST
 #include <gtest/gtest.h>
 // #else
@@ -377,6 +377,188 @@ TEST( MeshRefineTest, 3DMeshTest ) {
     }
 }
 
+template <typename IndexType, typename Real, unsigned int ... Reserve>
+void Pyramid4D(UnstructuredMesh<4, IndexType, Real, Reserve...>& mesh3){
+
+
+    mesh3.getVertices().push_back({0, {0,0,0,0}});
+    mesh3.getVertices().push_back({1, {1,0,0,0}});
+    mesh3.getVertices().push_back({2, {0,1,0,0}});
+    mesh3.getVertices().push_back({3, {0,0,1,0}});
+    mesh3.getVertices().push_back({4, {0,0,0,1}});
+
+
+
+
+    size_t index = 0;
+    mesh3.getEdges().push_back({index++,0,1});
+    mesh3.getEdges().push_back({index++,0,2});
+    mesh3.getEdges().push_back({index++,1,2});
+    mesh3.getEdges().push_back({index++,0,3});
+    mesh3.getEdges().push_back({index++,1,3});
+    mesh3.getEdges().push_back({index++,2,3});
+
+    mesh3.getEdges().push_back({index++,0,4});//6
+    mesh3.getEdges().push_back({index++,1,4});//7
+    mesh3.getEdges().push_back({index++,2,4});//8
+    mesh3.getEdges().push_back({index++,3,4});//9
+
+    // Dim 2
+    index = 0;
+    mesh3.template getElements<2>().push_back(index++);
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(0);
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(1);
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(2);
+
+    mesh3.template getElements<2>().push_back(index++);
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(0);
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(3);
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(4);
+
+    mesh3.template getElements<2>().push_back(index++);
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(2);
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(4);
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(5);
+
+    mesh3.template getElements<2>().push_back(index++);
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(1);
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(3);
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(5);
+    // postup do 4D
+    mesh3.template getElements<2>().push_back(index++);//4
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(0);
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(6);
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(7);
+
+    mesh3.template getElements<2>().push_back(index++);//5
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(1);
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(6);
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(8);
+
+    mesh3.template getElements<2>().push_back(index++);//6
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(2);
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(7);
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(8);
+
+    mesh3.template getElements<2>().push_back(index++);//7
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(3);
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(6);
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(9);
+
+    mesh3.template getElements<2>().push_back(index++);//8
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(4);
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(7);
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(9);
+
+    mesh3.template getElements<2>().push_back(index++);//9
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(5);
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(8);
+    mesh3.template getElements<2>().back().getSubelements().addSubelement(9);
+
+
+
+    // 3D
+    index = 0;
+    mesh3.template getElements<3>().push_back(index++);
+    mesh3.template getElements<3>().back().getSubelements().addSubelement(0);
+    mesh3.template getElements<3>().back().getSubelements().addSubelement(1);
+    mesh3.template getElements<3>().back().getSubelements().addSubelement(2);
+    mesh3.template getElements<3>().back().getSubelements().addSubelement(3);
+
+    mesh3.template getElements<3>().push_back(index++);
+    mesh3.template getElements<3>().back().getSubelements().addSubelement(0);
+    mesh3.template getElements<3>().back().getSubelements().addSubelement(4);
+    mesh3.template getElements<3>().back().getSubelements().addSubelement(5);
+    mesh3.template getElements<3>().back().getSubelements().addSubelement(6);
+
+    mesh3.template getElements<3>().push_back(index++);
+    mesh3.template getElements<3>().back().getSubelements().addSubelement(1);
+    mesh3.template getElements<3>().back().getSubelements().addSubelement(4);
+    mesh3.template getElements<3>().back().getSubelements().addSubelement(7);
+    mesh3.template getElements<3>().back().getSubelements().addSubelement(8);
+
+    mesh3.template getElements<3>().push_back(index++);
+    mesh3.template getElements<3>().back().getSubelements().addSubelement(2);
+    mesh3.template getElements<3>().back().getSubelements().addSubelement(6);
+    mesh3.template getElements<3>().back().getSubelements().addSubelement(8);
+    mesh3.template getElements<3>().back().getSubelements().addSubelement(9);
+
+    mesh3.template getElements<3>().push_back(index++);
+    mesh3.template getElements<3>().back().getSubelements().addSubelement(3);
+    mesh3.template getElements<3>().back().getSubelements().addSubelement(5);
+    mesh3.template getElements<3>().back().getSubelements().addSubelement(7);
+    mesh3.template getElements<3>().back().getSubelements().addSubelement(9);
+    // 4D
+    mesh3.getCells().push_back(0);
+
+    for (auto& face : mesh3.getFaces()) {
+        face.setCellIndex(0);
+        face.setNextBElem((face.getIndex() + 1)%5, 0);
+    }
+    mesh3.getCells()[0].setBoundaryElementIndex(0);
+    mesh3.updateSignature();
+
+}
+
+
+template <typename IndexType, typename Real, unsigned int ... Reserve>
+void test4DMesh(UnstructuredMesh<4, IndexType, Real, Reserve...>& mesh){
+
+    Pyramid4D(mesh);
+    mesh.initializeCenters();
+    // Tests of connections
+    auto con20 = mesh.template connections<2,0>();
+    std::vector<std::vector<IndexType>> ex_con20 = { { 0, 1, 2 }, { 0, 1, 3 }, { 1, 2, 3 }, { 0, 2, 3 }, { 0, 1, 4 }, { 0, 2, 4 }, { 1, 2, 4 }, { 0, 3, 4 }, { 1, 3, 4 }, { 2, 3, 4 } };
+    EXPECT_EQ(con20.template getDataByPos<0>(), ex_con20);
+
+    auto con30 = mesh.template connections<3,0>();
+    std::vector<std::vector<IndexType>> ex_con30 = { { 0, 1, 2, 3 }, { 0, 1, 2, 4 }, { 0, 1, 3, 4 }, { 1, 2, 3, 4 }, { 0, 2, 3, 4 } };
+    EXPECT_EQ(con30.template getDataByPos<0>(), ex_con30);
+
+    auto con40 = mesh.template connections<4,0>();
+    std::vector<std::vector<IndexType>> ex_con40 = { { 0, 1, 2, 3, 4 } };
+    EXPECT_EQ(con40.template getDataByPos<0>(), ex_con40);
+
+    // Tests of center calculation
+    auto centers = computeCenters<METHOD_DEFAULT>(mesh);
+    std::vector<Vertex<4, Real>> ex_centers4D = { { 0.2, 0.2, 0.2, 0.2 } };
+    EXPECT_TRUE(floatArrayCompare(centers.template getDataByDim<4>(), ex_centers4D));
+    std::vector<Vertex<4, Real>> ex_centers3D = { { 0.25, 0.25, 0.25, 0 }, { 0.25, 0.25, 0, 0.25 }, { 0.25, 0, 0.25, 0.25 }, { 0.25, 0.25, 0.25, 0.25 }, { 0, 0.25, 0.25, 0.25 } };
+    EXPECT_TRUE(floatArrayCompare(centers.template getDataByDim<3>(), ex_centers3D));
+    std::vector<Vertex<4, Real>> ex_centers2D = { { 0.333333, 0.333333, 0, 0 }, { 0.333333, 0, 0.333333, 0 }, { 0.333333, 0.333333, 0.333333, 0 }, { 0, 0.333333, 0.333333, 0 }, { 0.333333, 0, 0, 0.333333 }, { 0, 0.333333, 0, 0.333333 }, { 0.333333, 0.333333, 0, 0.333333 }, { 0, 0, 0.333333, 0.333333 }, { 0.333333, 0, 0.333333, 0.333333 }, { 0, 0.333333, 0.333333, 0.333333 } };
+    EXPECT_TRUE(floatArrayCompare(centers.template getDataByDim<2>(), ex_centers2D));
+    std::vector<Vertex<4, Real>> ex_centers1D = { { 0.5, 0, 0, 0 }, { 0, 0.5, 0, 0 }, { 0.5, 0.5, 0, 0 }, { 0, 0, 0.5, 0 }, { 0.5, 0, 0.5, 0 }, { 0, 0.5, 0.5, 0 }, { 0, 0, 0, 0.5 }, { 0.5, 0, 0, 0.5 }, { 0, 0.5, 0, 0.5 }, { 0, 0, 0.5, 0.5 } };
+    EXPECT_TRUE(floatArrayCompare(centers.template getDataByDim<1>(), ex_centers1D));
+
+
+
+
+    auto measures = mesh.computeElementMeasures();
+    std::vector<Real> ex_measures1D = { 1, 1, 1.41421, 1, 1.41421, 1.41421, 1, 1.41421, 1.41421, 1.41421 };
+    std::vector<Real> ex_measures2D = { 0.5, 0.5, 0.866025, 0.5, 0.5, 0.5, 0.866025, 0.5, 0.866025, 0.866025 };
+    std::vector<Real> ex_measures3D = { 0.166667, 0.166667, 0.166667, 0.333333, 0.166667 };
+    std::vector<Real> ex_measures4D = { 0.0416667 };
+    EXPECT_TRUE(floatArrayCompare(measures.template getDataByDim<1>(), ex_measures1D));
+    EXPECT_TRUE(floatArrayCompare(measures.template getDataByDim<2>(), ex_measures2D));
+    EXPECT_TRUE(floatArrayCompare(measures.template getDataByDim<3>(), ex_measures3D));
+    EXPECT_TRUE(floatArrayCompare(measures.template getDataByDim<4>(), ex_measures4D));
+
+    auto n = computeFaceNormals<METHOD_DEFAULT>(centers, mesh);
+    std::vector<Vertex<4, Real>> ex_normals = { {0, 0, 0, 1 }, { 0, 0, 1, 0 }, { 0, 1, 0, 0 }, { -0.5, -0.5, -0.5, -0.5 }, { 1, 0, 0, 0 } };
+    EXPECT_TRUE(floatArrayCompare( n.template getDataByPos<0>(), ex_normals ));
+}
+
+TEST(Mesh4D, Mesh4Dproperties)
+{
+    UnstructuredMesh<4, size_t, double> mesh;
+    test4DMesh(mesh);
+}
+
+TEST(Mesh4D, Mesh4DpropertiesEmbed)
+{
+    UnstructuredMesh<4, size_t, double, 4, 4> mesh;
+    test4DMesh(mesh);
+}
 
 #endif
 //#ifndef HAVE_GTEST
