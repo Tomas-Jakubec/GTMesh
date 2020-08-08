@@ -9,11 +9,11 @@
 
 
 enum VARIABLE_EXPORT_METHOD {
-    ostream,
-    stdio
+    VARIABLE_EXPORT_METHOD_OSTREAM,
+    VARIABLE_EXPORT_METHOD_STDIO
 };
 
-template <VARIABLE_EXPORT_METHOD target = VARIABLE_EXPORT_METHOD::ostream>
+template <VARIABLE_EXPORT_METHOD target = VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_OSTREAM>
 struct VariableExport {
 
 
@@ -194,7 +194,7 @@ struct VariableExport {
 
 
 template <>
-struct VariableExport<VARIABLE_EXPORT_METHOD::stdio> {
+struct VariableExport<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_STDIO> {
 
 
     static void exportVariable(...)

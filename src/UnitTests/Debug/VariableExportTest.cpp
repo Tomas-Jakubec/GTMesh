@@ -17,19 +17,19 @@ TEST( VariableExportTest_Basic, basicTest )
 
     std::stringstream ss;
 
-    VariableExport<VARIABLE_EXPORT_METHOD::ostream>::exportVariable(ss, r);
+    VariableExport<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_OSTREAM>::exportVariable(ss, r);
     EXPECT_EQ(ss.str(),"42.15");
     ss.str("");
     ss.clear();
-    VariableExport<VARIABLE_EXPORT_METHOD::ostream>::exportVariable(ss, i);
+    VariableExport<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_OSTREAM>::exportVariable(ss, i);
     EXPECT_EQ(ss.str(),"15");
     ss.str("");
     ss.clear();
-    VariableExport<VARIABLE_EXPORT_METHOD::ostream>::exportVariable(ss, c);
+    VariableExport<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_OSTREAM>::exportVariable(ss, c);
     EXPECT_EQ(ss.str(),"\"*\"");
     ss.str("");
     ss.clear();
-    VariableExport<VARIABLE_EXPORT_METHOD::ostream>::exportVariable(ss, b);
+    VariableExport<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_OSTREAM>::exportVariable(ss, b);
     EXPECT_EQ(ss.str(),"false");
     ss.str("");
     ss.clear();
@@ -50,15 +50,15 @@ TEST( VariableExportTest_Container, basicTest )
 
     std::stringstream ss;
 
-    VariableExport<VARIABLE_EXPORT_METHOD::ostream>::exportVariable(ss, list);
+    VariableExport<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_OSTREAM>::exportVariable(ss, list);
     EXPECT_EQ(ss.str(),"[ 1, 2, 3 ]");
     ss.str("");
     ss.clear();
-    VariableExport<VARIABLE_EXPORT_METHOD::ostream>::exportVariable(ss, vec);
+    VariableExport<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_OSTREAM>::exportVariable(ss, vec);
     EXPECT_EQ(ss.str(),"[ [ 1, 2, 3 ], [ 1, 2, 3 ], [ 1, 2, 3 ], [ 1, 2, 3 ], [ 1, 2, 3 ] ]");
     ss.str("");
     ss.clear();
-    VariableExport<VARIABLE_EXPORT_METHOD::ostream>::exportVariable(ss, m);
+    VariableExport<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_OSTREAM>::exportVariable(ss, m);
     EXPECT_EQ(ss.str(),R"([ { "druhy": 2}, { "prvni": 1}, { "treti": 3} ])");
     ss.str("");
     ss.clear();
@@ -109,7 +109,7 @@ TEST( VariableExportTest_Traited, basicTest )
 
     std::stringstream ss;
 
-    VariableExport<VARIABLE_EXPORT_METHOD::ostream>::exportVariable(ss, e);
+    VariableExport<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_OSTREAM>::exportVariable(ss, e);
     EXPECT_EQ(ss.str(),R"({ "attrInt" : 1, "attrDouble" : 42.15, "attrFloat" : 15.8, "attrLongDouble" : 1.58e+301, "attrChar" : "*", "attrULL" : 465135168421684684, "attrStr" : "Ahojky", "attrTempData" : { "density" : 42.15, "momentum" : [ 42.15, 84.3, 42.15 ] }, "attrVec" : [ "tohle", "je", "nejlepsi", "debugovaci", "system" ] })");
     ss.str("");
     ss.clear();

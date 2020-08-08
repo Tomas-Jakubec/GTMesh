@@ -10,7 +10,7 @@
 /**
  * @brief The ConsoleLogger class
  */
-template <VARIABLE_EXPORT_METHOD method = VARIABLE_EXPORT_METHOD::ostream>
+template <VARIABLE_EXPORT_METHOD method = VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_OSTREAM>
 class ConsoleLogger {
 
 public:
@@ -131,7 +131,7 @@ public:
 
 
 template <>
-class ConsoleLogger<VARIABLE_EXPORT_METHOD::stdio> {
+class ConsoleLogger<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_STDIO> {
 
 public:
 
@@ -150,7 +150,7 @@ public:
                sourceFile,
                line);
 
-        VariableExport<VARIABLE_EXPORT_METHOD::stdio>::exportVariable(message);
+        VariableExport<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_STDIO>::exportVariable(message);
 
         printf(" <==\n");
     }
@@ -186,7 +186,7 @@ public:
                line,
                name);
 
-        VariableExport<VARIABLE_EXPORT_METHOD::stdio>::exportVariable(value);
+        VariableExport<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_STDIO>::exportVariable(value);
         printf("\n");
     }
 
@@ -198,7 +198,7 @@ public:
                line,
                name);
 
-        VariableExport<VARIABLE_EXPORT_METHOD::stdio>::exportVariable(value);
+        VariableExport<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_STDIO>::exportVariable(value);
         printf("\n");
     }
 
