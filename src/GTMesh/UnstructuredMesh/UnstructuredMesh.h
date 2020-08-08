@@ -316,7 +316,8 @@ private:
      * @brief Returns true if the filePath string ends with the string ext
      */
     bool checkExtension(const std::string& filePath, const std::string& ext){
-        return filePath.find_last_of(ext) != filePath.size() - ext.size();
+        std::string fileExt = filePath.substr(filePath.find_last_of("."));
+        return fileExt == ext;
     }
 public:
     /**
@@ -340,7 +341,7 @@ public:
             write(filePath, writer_ptr, cellTypes, dataHeader);
         }
 
-        if (checkExtension(filePath, ".vtk")){
+        if (checkExtension(filePath, ".fpma")){
             DBGMSG("file recognized as FPMA");
             writer_ptr = std::make_unique<FPMAMeshWriter<MeshDimension>>();
             write(filePath, writer_ptr, cellTypes, dataHeader);
@@ -374,7 +375,7 @@ public:
             }
 
             if (typeid (*writer.get()) == typeid (VTKMeshWriter<MeshDimension>)){
-                if (checkExtension(filePath, ".vtk")){
+                if (!checkExtension(filePath, ".vtk")){
                     DBGMSG("The writer type and file name does not match!");
                     writer = write(filePath, cellTypes, dataHeader);
                 } else {
@@ -391,7 +392,7 @@ public:
             }
 
             else if (typeid (*writer.get()).hash_code() == typeid (FPMAMeshWriter<MeshDimension>).hash_code()){
-                if (checkExtension(filePath, ".vtk")){
+                if (!checkExtension(filePath, ".fpma")){
                     DBGMSG("The writer type and file name does not match!");
                     writer = write(filePath, cellTypes, dataHeader);
                 } else {
