@@ -2,7 +2,7 @@
 #define MEMBERAPPROACH_H
 #include <type_traits>
 #include <utility>
-
+#include <functional>
 
 
 /**
@@ -64,17 +64,18 @@ struct HasConstGetAccess : public Impl::HasConstGetAccess<T> {};
 
 
 
-template<typename Ref>
+template<typename Class, typename Ref, typename = void>
 class MemberAccess{
     static_assert (!std::is_same<Ref, void>::value,
                    "The type Ref must be reference to member (ValueType Class::*),"
                    " member function or pointer to getter and setter");
+public:
     MemberAccess(Ref);
 };
 
 
 template <typename Class, typename ValueType>
-class MemberAccess<ValueType Class::*> : public DirectAccess, public ConstGetAccess {
+class MemberAccess<Class, ValueType Class::*, void> : public DirectAccess, public ConstGetAccess {
 public:
     using typeValue = ValueType;
     using typeClass = Class;
@@ -89,9 +90,9 @@ public:
         //ref = referenceToMember;
     }
 
-    MemberAccess(const MemberAccess<ValueType Class::*>&) = default;
+    MemberAccess(const MemberAccess<Class, ValueType Class::*, void>&) = default;
 
-    MemberAccess(MemberAccess<ValueType Class::*>&&) = default;
+    MemberAccess(MemberAccess<Class, ValueType Class::*, void>&&) = default;
 
     ValueType getValue(const Class* c) const {
         return c->*ref;
@@ -121,7 +122,7 @@ public:
 
 
 
-
+/*
 template <typename Class, typename ValueType>
 class MemberAccess<ValueType& (Class::*)()> : public DirectAccess {
 public:
@@ -454,5 +455,281 @@ public:
         return set(c);
     }
 };
+*/
+// Experimental function traits approach
+#include "../FunctionTraits.h"
+#include <type_traits>
+namespace Impl {
+
+
+struct empty{};
+
+template<class GetFunctor, typename Class = void>
+struct _get: public ConstGetAccess{
+#if __cplusplus <= 201702L // standard c++14 and older
+    using _typeValue = typename std::result_of<GetFunctor(Class)>::type;
+#else
+    using _typeValue = typename std::invoke_result<GetFunctor,Class>::type;
+#endif
+    using _getterType = GetFunctor;
+private:
+    const _getterType get;
+public:
+
+    _get(_getterType& g): get(g){};
+
+    _get(const _get< GetFunctor, Class >&) = default;
+
+    _get(_get< GetFunctor, Class >&&) = default;
+
+
+    auto getValue(const Class* c) const {
+        return get(*c);
+    }
+
+    auto getValue(const Class& c) const {
+        return get(c);
+    }
+};
+
+template <class GetFunctor>
+struct _get<GetFunctor, std::enable_if_t<!std::is_member_pointer<GetFunctor>::value && !std::is_bind_expression<GetFunctor>::value, void>>
+: public std::conditional_t< std::is_const< std::remove_reference_t<typename function_traits< GetFunctor >::template argument< 0 >::type > >::value, ConstGetAccess, empty >
+{
+
+    using _getterType = GetFunctor;
+private:
+    const _getterType get;
+    using _getClassRef = std::remove_reference_t<typename function_traits<GetFunctor>::template argument<0>::type>;
+public:
+
+    _get(_getterType& g): get(g){};
+
+    _get(const _get<GetFunctor, std::enable_if_t<!std::is_member_pointer<GetFunctor>::value && !std::is_bind_expression<GetFunctor>::value, void>>&) = default;
+
+    _get(_get<GetFunctor, std::enable_if_t<!std::is_member_pointer<GetFunctor>::value && !std::is_bind_expression<GetFunctor>::value, void>>&&) = default;
+
+
+    auto getValue(_getClassRef* c) const {
+        return get(*c);
+    }
+
+    auto getValue(_getClassRef& c) const {
+        return get(c);
+    }
+};
+
+
+template <class GetFunctor>
+struct _get<GetFunctor, std::enable_if_t<std::is_member_pointer<GetFunctor>::value, void>>
+: public std::conditional_t< std::is_const< std::remove_reference_t<typename function_traits< GetFunctor >::template argument< 0 >::type > >::value, ConstGetAccess, empty >
+{
+private:
+
+    using _getterType = GetFunctor;
+    const _getterType get;
+    using _getClassRef = std::remove_reference_t<typename function_traits<GetFunctor>::template argument<0>::type>;
+public:
+
+    _get(_getterType& g): get(g){};
+
+    _get(const _get<GetFunctor, std::enable_if_t<std::is_member_pointer<GetFunctor>::value, void>>&) = default;
+
+    _get(_get<GetFunctor, std::enable_if_t<std::is_member_pointer<GetFunctor>::value, void>>&&) = default;
+
+
+    auto getValue(_getClassRef* c) const {
+        return (c->*get)();
+    }
+
+    /**
+     * @brief Returns a value of a member of the object c.
+     */
+    auto getValue(_getClassRef& c) const {
+        return (c.*get)();
+    }
+};
+
+
+template <class SetFunctor, typename Spec = void>
+struct _set{
+    using _setterType = SetFunctor;
+private:
+    const _setterType set;
+public:
+    _set(const _setterType& s): set(s){}
+
+
+    _set(const _set<SetFunctor, Spec>&) = default;
+
+    _set(_set<SetFunctor, Spec>&&) = default;
+
+    template<typename typeClass, typename typeValue>
+    void setValue(typeClass* c, const typeValue& val) const {
+        set(c, val);
+    }
+
+    template<typename typeClass, typename typeValue>
+    void setValue(typeClass& c, const typeValue& val) const {
+        set(c, val);
+    }
+};
+
+
+template<typename SetFunctor>
+struct _set<SetFunctor, std::enable_if_t<!std::is_member_pointer<SetFunctor>::value && function_traits<SetFunctor>::arity == 2, void>>{
+
+    using _typeValue = std::decay_t<typename function_traits<SetFunctor>::template argument<1>::type>;
+    using _typeClass = std::decay_t<typename function_traits<SetFunctor>::template argument<0>::type>;
+
+    using _setterType = SetFunctor;
+private:
+    const _setterType set;
+public:
+    _set(const _setterType& s): set(s){}
+
+
+    void setValue(_typeClass* c, const _typeValue& val) const {
+        set(c) = val;
+    }
+
+
+    void setValue(_typeClass& c, const _typeValue& val) const {
+        set(c) = val;
+    }
+
+    auto getAttr(_typeClass* c) const {
+        return set(c);
+    }
+
+
+    auto getAttr(_typeClass& c) const {
+        return set(c);
+    }
+};
+
+
+template<typename SetFunctor>
+struct _set<SetFunctor, std::enable_if_t<!std::is_member_pointer<SetFunctor>::value && function_traits<SetFunctor>::arity == 1, void>>{
+
+    using _typeValue = std::decay_t<typename function_traits<SetFunctor>::return_type>;
+    using _typeClass = std::decay_t<typename function_traits<SetFunctor>::template argument<0>::type>;
+
+    using _setterType = SetFunctor;
+private:
+    const _setterType set;
+public:
+    _set(const _setterType& s): set(s){}
+
+
+
+    void setValue(_typeClass* c, const _typeValue& val) const {
+        set(c) = val;
+    }
+
+
+    void setValue(_typeClass& c, const _typeValue& val) const {
+        set(c) = val;
+    }
+};
+
+template<typename SetFunctor>
+struct _set<SetFunctor, std::enable_if_t<std::is_member_pointer<SetFunctor>::value && function_traits<SetFunctor>::arity == 2, void>>{
+private:
+    using _typeValue = std::decay_t<typename function_traits<SetFunctor>::template argument<1>::type>;
+    using _typeClass = std::decay_t<typename function_traits<SetFunctor>::template argument<0>::type>;
+
+    using _setterType = SetFunctor;
+private:
+    const _setterType set;
+public:
+    _set(const _setterType& s): set(s){}
+
+    void setValue(_typeClass* c, const _typeValue& val) const {
+        (c->*set)(val);
+    }
+
+
+    void setValue(_typeClass& c, const _typeValue& val) const {
+        (c.*set)(val);
+    }
+};
+
+template<typename SetFunctor>
+struct _set<SetFunctor, std::enable_if_t<std::is_member_pointer<SetFunctor>::value && function_traits<SetFunctor>::arity == 1, void>>
+: public DirectAccess {
+private:
+    using _typeValue = std::decay_t<typename function_traits<SetFunctor>::return_type>;
+    using _typeClass = std::decay_t<typename function_traits<SetFunctor>::template argument<0>::type>;
+
+    using _setterType = SetFunctor;
+private:
+    const _setterType set;
+public:
+    _set(const _setterType& s): set(s){}
+
+
+
+    void setValue(_typeClass* c, const _typeValue& val) const {
+        (c->*set)() = val;
+    }
+
+
+    void setValue(_typeClass& c, const _typeValue& val) const {
+        (c.*set)() = val;
+    }
+
+    auto getAttr(_typeClass* c) const {
+        return (c->*set)();
+    }
+
+
+    auto getAttr(_typeClass& c) const {
+        return (c.*set)();
+    }
+};
+}
+
+template <class Class, class GetFunctor, class SetFunctor>
+class MemberAccess<Class, std::pair<GetFunctor, SetFunctor>, std::enable_if_t<!std::is_bind_expression<GetFunctor>::value>>
+: public Impl::_get<GetFunctor>, public Impl::_set<SetFunctor>{
+public:
+    using typeValue = std::decay_t<typename function_traits<GetFunctor>::return_type>;
+    using typeClass = std::decay_t<typename function_traits<GetFunctor>::template argument<0>::type>;
+
+public:
+
+    MemberAccess(std::pair<GetFunctor, SetFunctor> getSet)
+        : Impl::_get<GetFunctor>(getSet.first), Impl::_set<SetFunctor>(getSet.second)
+    {}
+
+    MemberAccess(const MemberAccess<Class, std::pair<GetFunctor, SetFunctor>, std::enable_if_t<!std::is_bind_expression<GetFunctor>::value>>&) = default;
+
+    MemberAccess(MemberAccess<Class, std::pair<GetFunctor, SetFunctor>, std::enable_if_t<!std::is_bind_expression<GetFunctor>::value>>&&) = default;
+
+};
+
+
+
+template <class Class, class GetFunctor, class SetFunctor>
+class MemberAccess<Class, std::pair<GetFunctor, SetFunctor>, std::enable_if_t<std::is_bind_expression<GetFunctor>::value> >
+: public Impl::_get<GetFunctor, Class>, public Impl::_set<SetFunctor, Class>{
+public:
+    using typeValue = typename Impl::_get<GetFunctor, Class>::_typeValue;
+    using typeClass = Class;
+
+public:
+
+    MemberAccess(std::pair<GetFunctor, SetFunctor> getSet)
+        : Impl::_get<GetFunctor, Class>(getSet.first), Impl::_set<SetFunctor, Class>(getSet.second)
+    {}
+
+    MemberAccess(const MemberAccess<Class, std::pair<GetFunctor, SetFunctor>, std::enable_if_t<std::is_bind_expression<GetFunctor>::value> >&) = default;
+
+    MemberAccess(MemberAccess<Class, std::pair<GetFunctor, SetFunctor>, std::enable_if_t<std::is_bind_expression<GetFunctor>::value> >&&) = default;
+
+};
+
+
 
 #endif // MEMBERAPPROACH_H

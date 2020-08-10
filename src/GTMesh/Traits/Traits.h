@@ -17,17 +17,17 @@ public:
     using refType = typename std::tuple_element<Index,std::tuple<RefTypes...>>::type;
 
     template<unsigned int Index>
-    using memRefType = MemberAccess<refType<Index>>;
+    using memRefType = MemberAccess<Class, refType<Index>>;
 
     template <unsigned int Index>
-    using type = typename MemberAccess<refType<Index>>::typeValue;
+    using type = typename MemberAccess<Class, refType<Index>>::typeValue;
 
 private:
 
     template<unsigned int Index = 0, typename = void>
     struct MemRefs: public MemRefs<Index + 1> {
 
-        const MemberAccess<refType<Index>> ref;
+        const MemberAccess<Class, refType<Index>> ref;
         const char* name;
 
         template <typename ... REST>
@@ -36,7 +36,7 @@ private:
 
     template<typename Dummy>
     struct MemRefs<sizeof...(RefTypes) - 1, Dummy>{
-        const MemberAccess<refType<sizeof...(RefTypes) - 1>> ref;
+        const MemberAccess<Class, refType<sizeof...(RefTypes) - 1>> ref;
         const char* name;
 
         MemRefs(const char* n, refType<sizeof...(RefTypes) - 1> r) : ref(r), name(n){}
@@ -67,7 +67,7 @@ public:
 
 
     template<unsigned int Index>
-    const MemberAccess<refType<Index>> getReference() const {
+    const MemberAccess<Class, refType<Index>> getReference() const {
         return refs.MemRefs<Index, void>::ref;
     }
 
