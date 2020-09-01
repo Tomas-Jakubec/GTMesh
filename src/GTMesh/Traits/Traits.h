@@ -287,7 +287,39 @@ public:
         }
 };
 
+template<typename,typename >
+struct MakeTraitsFromTuple {
 
+};
+
+template<typename TraitedClass, typename ... Refs>
+struct MakeTraitsFromTuple<TraitedClass, std::tuple<Refs...>> {
+    using type = Traits<TraitedClass, Refs...>;
+};
+
+template<typename T1, typename A>
+struct TupleAppend {};
+
+template<typename T1, typename ... A>
+struct TupleAppend<T1, std::tuple<A...>> {
+    using type = std::tuple<T1, A...>;
+};
+
+template<typename odd, typename even, typename ... Refs>
+struct SelectEvenTypes {
+    using type = typename TupleAppend<even, typename SelectEvenTypes<Refs...>::type>::type;
+};
+
+template<typename odd, typename even>
+struct SelectEvenTypes<odd, even> {
+    using type = std::tuple<even>;
+};
+
+template<typename TraitedClass, typename ... Args>
+auto
+makeTraits(const Args&... args) {
+    return typename MakeTraitsFromTuple<TraitedClass, typename SelectEvenTypes<Args...>::type>::type(args...);
+}
 
 
 template<typename Class>

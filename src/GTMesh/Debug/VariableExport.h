@@ -5,7 +5,43 @@
 #include <string>
 #include <sstream>
 #include "../Traits/Traits.h"
+#include "../Traits/TraitsBind/TraitsBind.h"
 #include "../Traits/CustomTypeTraits.h"
+
+
+template <typename Class, typename ClassTraits>
+struct isTraitsOf : public std::false_type {};
+
+template <typename Class, typename ClassTraits>
+struct isTraitsOf<Class, const ClassTraits&> : public isTraitsOf<Class, std::decay_t<ClassTraits>>{};
+
+
+template <typename Class, typename ... TraitsArgs>
+struct isTraitsOf<Class, Traits<Class, TraitsArgs...>> : public std::true_type {};
+
+
+
+template <typename Class,typename TraitsType, typename... TraitsTypes>
+struct SelectTraits : public
+        std::conditional_t<isTraitsOf<Class, TraitsType>::value, SelectTraits<Class, TraitsType>, SelectTraits<Class, TraitsTypes...>>{};
+
+
+template <typename Class,typename TraitsType>
+struct SelectTraits<Class, TraitsType> {
+    using TypeTraits = std::conditional_t< isTraitsOf<Class, TraitsType>::value, TraitsType, typename DefaultIOTraits<Class>::traitsType>;
+
+    template<typename ... Args, typename TT = TraitsType, typename std::enable_if<isTraitsOf<Class, TT>::value, bool>::type = true>
+    static const auto& getTraitsInstance(const std::tuple<Args...>& t) {
+        return std::get<const TypeTraits&>(t);
+    }
+
+
+    template<typename ... Args, typename TT = TraitsType, typename std::enable_if<!isTraitsOf<Class, TT>::value, bool>::type = true>
+    static auto getTraitsInstance(const std::tuple<Args...>&) {
+        return DefaultIOTraits<Class>::getTraits();
+    }
+};
+
 
 
 enum VARIABLE_EXPORT_METHOD {
@@ -24,7 +60,7 @@ struct VariableExport {
 
 
     template<typename T>
-    static auto exportVariable(std::ostream& ost, const T& b)
+    static auto exportVariable(std::ostream& ost, const T& b, ...)
       -> typename std::enable_if<
              IsExportable<T>::value &&
             !std::is_same<T, bool>::value &&
@@ -40,7 +76,7 @@ struct VariableExport {
 
 
 
-    static void exportVariable(std::ostream& ost, const bool& b)
+    static void exportVariable(std::ostream& ost, const bool& b, ...)
     {
         ost << (b == true ? "true" : "false");
     }
@@ -59,7 +95,7 @@ struct VariableExport {
 
 
     template<typename T1, typename T2>
-    static auto exportVariable(std::ostream& ost, const std::pair<T1,T2>& b)
+    static auto exportVariable(std::ostream& ost, const std::pair<T1,T2>& b, ...)
     -> typename std::enable_if<
             !IsTraits<T2>::value
        >::type
@@ -93,7 +129,7 @@ struct VariableExport {
 
 
     template<typename T>
-    static auto exportVariable(std::ostream& ost, const T &list)
+    static auto exportVariable(std::ostream& ost, const T &list, ...)
       -> typename std::enable_if<
               IsIndexable<T>::value &&
              !IsIterable<T>::value &&
@@ -113,7 +149,7 @@ struct VariableExport {
 
 
     template<typename T>
-    static auto exportVariable(std::ostream& ost, const T &list)
+    static auto exportVariable(std::ostream& ost, const T &list, ...)
       -> typename std::enable_if<
               IsTNLIndexable<T>::value &&
              !IsIndexable<T>::value &&
@@ -135,7 +171,7 @@ struct VariableExport {
 
 
     template<typename T>
-    static void exportVariable(std::ostream& ost, const std::initializer_list<T> &list)
+    static void exportVariable(std::ostream& ost, const std::initializer_list<T> &list, ...)
     {
         static auto it = list.begin();
         ost << "[ ";
@@ -157,19 +193,34 @@ struct VariableExport {
             PrintClass<T, TraitsIO, Index + 1>::print(ost, traitedClass, traitsIO);
 
         }
+        template <typename ... _Traits, typename _T = T>
+        static void print(std::ostream& ost, const _T &traitedClass, const TraitsIO& traitsIO, std::tuple<const _Traits& ...> t){
+            PrintClass<T, TraitsIO, Index, true>::print(ost, traitedClass, traitsIO, t);
+            ost << ", ";
+            PrintClass<T, TraitsIO, Index + 1>::print(ost, traitedClass, traitsIO, t);
+
+        }
     };
 
     template<typename T, typename TraitsIO, unsigned int Index>
     struct PrintClass<T, TraitsIO, Index, true>{
+
         static void print(std::ostream& ost, const T &traitedClass, const TraitsIO& traitsIO){
             ost << '"' << traitsIO.template getName<Index>() << "\" : ";
             VariableExport::exportVariable(ost, traitsIO.template getValue<Index>(traitedClass));
         }
+
+        template <typename ... _Traits, typename _T = T>
+        static void print(std::ostream& ost, const _T &traitedClass, const TraitsIO& traitsIO, std::tuple<const _Traits& ...> t) {
+            ost << '"' << traitsIO.template getName<Index>() << "\" : ";
+            VariableExport::exportVariable(ost, traitsIO.template getValue<Index>(traitedClass), t);
+        }
     };
 
 
+
     template<typename T>
-    static auto exportVariable(std::ostream& ost, const T &traitedClass)
+    static auto exportVariable(std::ostream& ost, const T &traitedClass, ...)
       -> typename std::enable_if<
              HasDefaultIOTraits<T>::value
          >::type
@@ -179,8 +230,26 @@ struct VariableExport {
         ost << " }";
     }
 
+    template< typename Class, typename PrimaryTraits,  typename ... SecondaryTraits>
+    static void exportVariable(std::ostream& ost, const TraitsBinder<Class, PrimaryTraits, SecondaryTraits...> &traitedClass)
+    {
+        auto traits = SelectTraits<Class, PrimaryTraits, SecondaryTraits...>::getTraitsInstance(traitedClass.tupTraits);
+        ost << "{ ";
+        PrintClass<Class, decltype(traits)>::print(ost, traitedClass.object, traits, traitedClass.tupTraits);
+        ost << " }";
+    }
+
+    template< typename Class, typename PrimaryTraits,  typename ... SecondaryTraits, typename std::enable_if<std::is_class<Class>::value, bool>::type = true>
+    static void exportVariable(std::ostream& ost, const Class &traitedClass, std::tuple<PrimaryTraits, SecondaryTraits...> tupleTraits)
+    {
+        auto traits = SelectTraits<Class, PrimaryTraits, SecondaryTraits...>::getTraitsInstance(tupleTraits);
+        ost << "{ ";
+        PrintClass<Class, decltype(traits)>::print(ost, traitedClass, traits, tupleTraits);
+        ost << " }";
+    }
+
     template<typename T, typename... Refs>
-    static auto exportVariable(std::ostream& ost, const std::pair<T, Traits<std::decay_t<T>, Refs...>> &traitedClassWithTraits)
+    static auto exportVariable(std::ostream& ost, const std::pair<T, Traits<std::decay_t<T>, Refs...>> &traitedClassWithTraits, ...)
       -> typename std::enable_if<
              HasDefaultIOTraits<T>::value
          >::type

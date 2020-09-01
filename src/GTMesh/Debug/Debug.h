@@ -31,7 +31,7 @@ namespace dbg {
 #define DBGVAR(...) ConsoleLogger<>::writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
 #define DBGVARCOND(condition, ...) if(condition) DBGVAR(__VA_ARGS__)
 
-#define DBGVAR_STDIO(...) ConsoleLogger<VARIABLE_EXPORT_METHOD::stdio>::writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
+#define DBGVAR_STDIO(...) ConsoleLogger<VARIABLE_EXPORT_METHOD_STDIO>::writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
 #define DBGVARCOND_STDIO(condition, ...) if(condition) DBGVAR_STDIO(__VA_ARGS__)
 
 #define DBGMSG(...) ConsoleLogger<>::writeMessage("++", __LINE__, __FILE__, __VA_ARGS__)

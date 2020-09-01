@@ -86,7 +86,7 @@ public:
 
 template <class Class, class GetFunctor, class SetFunctor>
 class MemberAccess<Class, std::pair<GetFunctor, SetFunctor>, std::enable_if_t<std::is_bind_expression<GetFunctor>::value> >
-: public Impl::GetAccess<GetFunctor, Class>, public Impl::SetAccess<SetFunctor, Class>{
+: public Impl::GetAccess<GetFunctor, Class>, public Impl::SetAccess<SetFunctor>{
 public:
     using typeValue = typename Impl::GetAccess<GetFunctor, Class>::_typeValue;
     using typeClass = Class;
@@ -94,7 +94,7 @@ public:
 public:
 
     MemberAccess(std::pair<GetFunctor, SetFunctor> getSet)
-        : Impl::GetAccess<GetFunctor, Class>(getSet.first), Impl::SetAccess<SetFunctor, Class>(getSet.second)
+        : Impl::GetAccess<GetFunctor, Class>(getSet.first), Impl::SetAccess<SetFunctor>(getSet.second)
     {}
 
     MemberAccess(const MemberAccess<Class, std::pair<GetFunctor, SetFunctor>, std::enable_if_t<std::is_bind_expression<GetFunctor>::value> >&) = default;

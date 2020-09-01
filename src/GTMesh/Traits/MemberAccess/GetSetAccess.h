@@ -135,27 +135,21 @@ public:
 
 
     void setValue(_typeClass* c, const _typeValue& val) const {
-        set(c) = val;
+        set(c, val);
     }
 
 
     void setValue(_typeClass& c, const _typeValue& val) const {
-        set(c) = val;
-    }
-
-    auto getAttr(_typeClass* c) const {
-        return set(c);
+        set(c, val);
     }
 
 
-    auto getAttr(_typeClass& c) const {
-        return set(c);
-    }
 };
 
 
 template<typename SetFunctor>
-struct SetAccess<SetFunctor, std::enable_if_t<!std::is_member_pointer<SetFunctor>::value && function_traits<SetFunctor>::arity == 1, void>>{
+struct SetAccess<SetFunctor, std::enable_if_t<!std::is_member_pointer<SetFunctor>::value && function_traits<SetFunctor>::arity == 1, void>>
+: public DirectAccess{
 
     using _typeValue = std::decay_t<typename function_traits<SetFunctor>::return_type>;
     using _typeClass = std::decay_t<typename function_traits<SetFunctor>::template argument<0>::type>;
@@ -175,6 +169,15 @@ public:
 
     void setValue(_typeClass& c, const _typeValue& val) const {
         set(c) = val;
+    }
+
+    auto getAttr(_typeClass* c) const {
+        return set(c);
+    }
+
+
+    auto getAttr(_typeClass& c) const {
+        return set(c);
     }
 };
 
