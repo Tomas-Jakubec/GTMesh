@@ -9,6 +9,10 @@ namespace Impl {
 template<typename ...>
 using void_t = void;
 
+template<typename ...>
+using bool_t = bool;
+
+
 template <typename T1, typename T2 = void>
 struct __is_exportable : public std::false_type {
 
