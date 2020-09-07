@@ -119,7 +119,7 @@ struct PrintTraitedClass {
     {
         ost << "{ ";
         PrintClass<TraitedClass, typename DefaultIOTraits<TraitedClass>::traitsType>::print(ost, var, DefaultIOTraits<TraitedClass>::getTraits());
-        ost << "}";
+        ost << " }";
     }
 
     template<typename Class, typename ...TraitsTypes>
@@ -148,7 +148,7 @@ struct PrintTraitedClass {
     {
         printf("{ ");
         PrintClass<TraitedClass, typename DefaultIOTraits<TraitedClass>::traitsType>::print(var, DefaultIOTraits<TraitedClass>::getTraits());
-        printf("}");
+        printf(" }");
     }
 
     template< typename Class, typename PrimaryTraits,  typename ... SecondaryTraits>
