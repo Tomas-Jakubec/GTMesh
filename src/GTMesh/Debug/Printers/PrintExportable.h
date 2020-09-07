@@ -1,7 +1,7 @@
 #ifndef PRINTEXPORTABLE_H
 #define PRINTEXPORTABLE_H
 #include <type_traits>
-#include <GTMesh/Traits/CustomTypeTraits.h>
+#include "../VariableExport.h"
 
 struct PrintExportable {
     static int print(...) {return 0;}
@@ -16,7 +16,6 @@ struct PrintExportable {
         ost << var;
     }
 
-    template <typename T>
     static void print(std::ostream& ost, const bool& var, ...) {
         ost << (var == true ? "true" : "false");
     }
