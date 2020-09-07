@@ -171,12 +171,12 @@ public:
         set(c) = val;
     }
 
-    auto getAttr(_typeClass* c) const {
+    auto& getAttr(_typeClass* c) const {
         return set(c);
     }
 
 
-    auto getAttr(_typeClass& c) const {
+    auto& getAttr(_typeClass& c) const {
         return set(c);
     }
 };
@@ -227,12 +227,12 @@ public:
         (c.*set)() = val;
     }
 
-    auto getAttr(_typeClass* c) const {
+    auto& getAttr(_typeClass* c) const {
         return (c->*set)();
     }
 
 
-    auto getAttr(_typeClass& c) const {
+    auto& getAttr(_typeClass& c) const {
         return (c.*set)();
     }
 };
