@@ -15,10 +15,14 @@ struct IsTraitsOf<Class, Traits<Class, TraitsArgs...>> : public std::true_type {
 
 /**
  * This class selects the first class traits with respect
- * to Class.
+ * to Class. If none type of traits is given, it returns
+ * DefaultIOTraits<Class> if possible.
  */
+template <typename Class, size_t Index, typename... TraitsTypes>
+struct SelectTraits{};
+
 template <typename Class, size_t Index, typename TraitsType, typename... TraitsTypes>
-struct SelectTraits : public
+struct SelectTraits<Class, Index, TraitsType, TraitsTypes...> : public
         std::conditional_t<IsTraitsOf<Class, TraitsType>::value, SelectTraits<Class, Index, TraitsType>, SelectTraits<Class, Index + 1, TraitsTypes...>>{};
 
 template <typename Class, size_t Index, typename TraitsType>
@@ -50,6 +54,30 @@ public:
 
 
     template<typename ... Args, typename TT = TraitsType, typename std::enable_if<!IsTraitsOf<Class, TT>::value, bool>::type = true>
+    static auto getTraitsInstance(const std::tuple<Args...>&) {
+        return DefaultIOTraits<Class>::getTraits();
+    }
+};
+
+template <typename Class, size_t Index>
+struct SelectTraits<Class, Index> {
+    static constexpr bool valid = HasDefaultIOTraits<Class>::value;
+private:
+    template <bool valid, typename = void>
+    struct _conditional{
+        using type = typename DefaultIOTraits<Class>::traitsType;
+    };
+
+
+    template <typename Dummy>
+    struct _conditional<false, Dummy>{
+        using type = void;
+    };
+public:
+    using TypeTraits = typename _conditional< valid >::type;
+
+
+    template<typename ... Args>
     static auto getTraitsInstance(const std::tuple<Args...>&) {
         return DefaultIOTraits<Class>::getTraits();
     }

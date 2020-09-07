@@ -1,13 +1,6 @@
 // Test of the UnstructuredMesh class
 #ifdef HAVE_GTEST
 #include <gtest/gtest.h>
-// #else
-// #define TEST(_1,_2) void _1()
-// #define EXPECT_TRUE(_1) if(!_1)DBGVAR(_1);(void)(_1)
-// #define EXPECT_FALSE(_1) DBGCHECK;(void)(_1)
-// #define EXPECT_EQ(_1,_2) if (!(_1 == _2))DBGVAR(_1,_2);(void)(_1 == _2)
-// #define EXPECT_ANY_THROW(_1) DBGCHECK;try{(_1);}catch(...){}
-// #endif
 #include "GTMesh/Debug/Debug.h"
 #include <list>
 #include <map>
