@@ -1,20 +1,13 @@
 // Test of Traits class
 #ifdef HAVE_GTEST
 #include <gtest/gtest.h>
-//#else
-//#include "GTMesh/Debug/Debug.h"
-//#define TEST(_1,_2) void _1()
-//#define EXPECT_TRUE(_1) if(!_1)DBGVAR(_1);(void)(_1)
-//#define EXPECT_FALSE(_1) DBGCHECK;(void)(_1)
-//#define EXPECT_EQ(_1,_2) if (!(_1 == _2))DBGVAR(_1,_2);(void)(_1 == _2)
-//#define EXPECT_ANY_THROW(_1) DBGCHECK;try{(_1);}catch(...){}
-//#endif
 #include <list>
 #include <map>
 #include <array>
 #include <string>
+#include <type_traits>
 #include "GTMesh/Traits/Traits.h"
-
+#include <GTMesh/NumericStaticArray/Vector.h>
 
 using double_tuple = std::tuple<double>;
 
@@ -94,6 +87,99 @@ TEST( TemplateTraitsTest, basicTest )
     EXPECT_EQ((DefaultTraits<TemplateClass<int, 5>>::size()), 1);
     EXPECT_EQ((DefaultTraits<TemplateClass<int, 5>>::getTraits().getName<0>()), "arr");
     EXPECT_EQ((DefaultTraits<TemplateClass<double, 3>>::getTraits().getValue<0>(tc)), (std::array<double, 3>{1.5,2.5,3.5}));
+}
+
+template<typename Real>
+class quantity {
+public:
+    Real rho;
+    Real getPressure(Real T) const {
+        return rho * T;
+    }
+
+    void setPressure(Real p, Real T) {
+        rho = p / T;
+    }
+};
+
+template <typename Real>
+Real& Temperature() {
+    static Real result =  5;
+    return result;
+}
+
+template <typename Real>
+Real getFunc(const quantity<Real>& obj){
+    return obj.getPressure(Temperature<Real>());
+}
+
+template <typename Real>
+void setFunc(quantity<Real>& obj, const Real& p){
+    obj.setPressure(p, Temperature<Real>());
+}
+
+MAKE_CUSTOM_TEMPLATE_TRAIT((quantity<Real>), (typename Real),
+                           "pressure",
+                           std::make_pair( getFunc<Real>, setFunc<Real>)
+                           );
+
+
+template <typename Real>
+auto bindPressure(Real& Temperature){
+    return std::make_pair(
+                std::bind(quantity<Real>::getPressure, std::placeholders::_1, Temperature),
+                std::bind(quantity<Real>::setPressure, std::placeholders::_1, std::placeholders::_2, Temperature)
+                );
+}
+
+
+
+TEST( TraitsOnBind, basicTest )
+{
+
+    quantity<double> instance;
+    instance.rho = 1;
+    EXPECT_EQ(DefaultTraits<quantity<double>>::getTraits().getValue<0>(instance), Temperature<double>());
+    double T = 4 * Temperature<double>();
+    // ability to bind std::bind using traits
+    auto traits = makeTraits<quantity<double>>("4pressure", bindPressure<double>(T));
+
+    EXPECT_EQ(traits.getValue<0>(instance), 4*Temperature<double>());
+    EXPECT_TRUE((std::is_same<decltype(traits)::type<0>, double>::value));
+    EXPECT_FALSE((IsDirectAccess<decltype(traits)::refType<0>>::value));
+
+    // changing the value
+    traits.setValue<0>(instance, 40);
+    EXPECT_EQ(instance.rho, 2);
+    EXPECT_EQ(DefaultTraits<quantity<double>>::getTraits().getValue<0>(instance), 10);
+}
+
+// Test binding lambda function
+TEST( TraitsLambda, basicTest )
+{
+
+    quantity<double> instance;
+    instance.rho = 1;
+
+    double temperature = 50;
+    auto traits = makeTraits<quantity<double>>(
+        "pressure",
+        std::make_pair(
+            [&temperature](const quantity<double>& q){return q.getPressure(temperature);},
+            [&temperature](quantity<double>& q, double p){return q.setPressure(temperature, p);}
+        )
+    );
+
+    EXPECT_EQ(traits.getValue<0>(instance), 50);
+    EXPECT_EQ(traits.getValue<0>(instance), instance.getPressure(temperature));
+    EXPECT_TRUE((std::is_same<decltype(traits)::type<0>, double>::value));
+    EXPECT_FALSE((IsDirectAccess<decltype(traits)::refType<0>>::value));
+
+
+    // changing the value
+    traits.setValue<0>(instance, 25);
+    EXPECT_EQ(instance.rho, 2);
+    EXPECT_EQ(DefaultTraits<quantity<double>>::getTraits().getValue<0>(instance), 10);
 }
 #endif
 
