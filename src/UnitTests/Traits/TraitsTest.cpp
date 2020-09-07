@@ -127,8 +127,8 @@ MAKE_CUSTOM_TEMPLATE_TRAIT((quantity<Real>), (typename Real),
 template <typename Real>
 auto bindPressure(Real& Temperature){
     return std::make_pair(
-                std::bind(quantity<Real>::getPressure, std::placeholders::_1, Temperature),
-                std::bind(quantity<Real>::setPressure, std::placeholders::_1, std::placeholders::_2, Temperature)
+                std::bind(&quantity<Real>::getPressure, std::placeholders::_1, Temperature),
+                std::bind(&quantity<Real>::setPressure, std::placeholders::_1, std::placeholders::_2, Temperature)
                 );
 }
 
