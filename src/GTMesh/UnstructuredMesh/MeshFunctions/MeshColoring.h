@@ -167,7 +167,7 @@ struct _MeshColoring <ColoredDim, ConnectingDim, METHOD_RANDOM, Descend> {
                 // if the random index of new color is equal to
                 // the number of possible colors,
                 // then the color of the element remains the same
-                if (rnd == nPossibleColors) break;
+                if (rnd == nPossibleColors) continue;
 
                 while (rnd != 0 || !freeColors[selectedColor]) {
                     if(freeColors[selectedColor]){

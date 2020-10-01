@@ -64,7 +64,7 @@ public:
      * 3D by averaging using the measures of partial triangles.
      */
     template<ComputationMethod Method = ComputationMethod::METHOD_DEFAULT>
-    void computeElementCenters(){
+    auto computeElementCenters(){
         return computeCenters<Method>(*this);
     }
 
@@ -415,7 +415,7 @@ public:
      * @param writer instance of MeshWriter (e.g. VTKMeshWriter).
      */
     template<typename...T, unsigned int MeshDim = MeshDimension, typename std::enable_if<MeshDim == 2, bool>::type = true>
-    std::unique_ptr<MeshReader<MeshDimension>>
+    std::unique_ptr<MeshWriter<MeshDimension>>
     write(const std::string& filePath,
           const MeshDataContainer<typename MeshWriter<MeshDimension>::elementType::ElementType, MeshDim>& cellTypes,
           const std::string& dataHeader = ""){
@@ -423,7 +423,7 @@ public:
         typedef std::unique_ptr<MeshWriter<MeshDimension>> retType;
         retType writer_ptr;
 
-        if (filePath.find(".vtk") != filePath.npos){
+        if (checkExtension(filePath, ".vtk")){
             DBGMSG("file recognized as VTK");
             writer_ptr = std::make_unique<VTKMeshWriter<MeshDimension>>();
             write(filePath, writer_ptr, cellTypes, dataHeader);
@@ -453,9 +453,6 @@ public:
 
             if (typeid (*writer.get()) == typeid (VTKMeshWriter<MeshDimension>)){
                 if (checkExtension(filePath, ".vtk")){
-                    DBGMSG("The writer type and file name does not match!");
-                    writer = write(filePath, cellTypes, dataHeader);
-                } else {
                     DBGMSG("writer recognized as VTK");
                     auto writer_loc = dynamic_cast<VTKMeshWriter<MeshDimension>*>(writer.get());
                     writer_loc->writeHeader(file, dataHeader);
@@ -465,6 +462,9 @@ public:
                     } else {
                         writer_loc->writeToStream(file, *this, cellTypes);
                     }
+                } else {
+                    DBGMSG("The writer type and file name does not match!");
+                    writer = write(filePath, cellTypes, dataHeader);
                 }
             }
 

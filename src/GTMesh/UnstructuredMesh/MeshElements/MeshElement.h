@@ -70,7 +70,7 @@ public:
         return numberOfElements;
     }
 
-    unsigned int reserve() const {
+    constexpr unsigned int reserve() const {
         return Reserve;
     }
 
