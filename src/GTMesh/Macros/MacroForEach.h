@@ -3,7 +3,7 @@
 
 /*
  * Macros FOR_EACH are supposed to repeat
- * any other macro for each argument passed as
+ * any other macro for each argument passed through
  * variadic parameters.
 */
 

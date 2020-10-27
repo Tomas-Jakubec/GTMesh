@@ -31,7 +31,7 @@ private:
         const char* name;
 
         template <typename ... REST>
-        MemRefs(const char* n, refType<Index> r, REST... rest) : MemRefs<Index + 1> (rest...), ref(r), name(n){}
+        constexpr MemRefs(const char* n, refType<Index> r, REST... rest) : MemRefs<Index + 1> (rest...), ref(r), name(n){}
     };
 
     template<typename Dummy>
@@ -39,13 +39,13 @@ private:
         const MemberAccess<Class, refType<sizeof...(RefTypes) - 1>> ref;
         const char* name;
 
-        MemRefs(const char* n, refType<sizeof...(RefTypes) - 1> r) : ref(r), name(n){}
+        constexpr MemRefs(const char* n, refType<sizeof...(RefTypes) - 1> r) : ref(r), name(n){}
     };
 
     /**
      * @brief Container matching MemberAccess and a name.
      */
-    const MemRefs<0, void> refs;
+    const MemRefs<0, void> mReferences;
 
 public:
     /**
@@ -56,10 +56,10 @@ public:
      * @param refsAndNames a parameter pack of names and references
      */
     template<typename...Refs>
-    Traits(const char* n1, Refs... refsAndNames) : refs(n1, refsAndNames...){}
+    constexpr Traits(const char* n1, Refs... refsAndNames) : mReferences(n1, refsAndNames...){}
 
-    Traits(const Traits<Class, RefTypes...>&) = default;
-    Traits(Traits<Class, RefTypes...>&&) = default;
+    constexpr Traits(const Traits<Class, RefTypes...>&) = default;
+    constexpr Traits(Traits<Class, RefTypes...>&&) = default;
 
     static constexpr unsigned int size(){
         return sizeof... (RefTypes);
@@ -67,59 +67,59 @@ public:
 
 
     template<unsigned int Index>
-    const MemberAccess<Class, refType<Index>> getReference() const {
-        return refs.MemRefs<Index, void>::ref;
+    inline const MemberAccess<Class, refType<Index>>& getReference() const {
+            return mReferences.MemRefs<Index, void>::ref;
     }
 
     template<unsigned int Index>
-    type<Index> getValue(Class* c) const {
+    inline type<Index> getValue(Class* c) const {
         return getReference<Index>().getValue(c);
     }
 
     template<unsigned int Index>
-    type<Index> getValue(Class& c) const {
+    inline type<Index> getValue(Class& c) const {
         return getReference<Index>().getValue(c);
     }
 
     template<unsigned int Index>
-    type<Index> getValue(const Class* c) const {
+    inline type<Index> getValue(const Class* c) const {
         static_assert (HasConstGetAccess<memRefType<Index>>::value, "The current reference to the member does not provide constant approach.");
         return getReference<Index>().getValue(c);
     }
 
     template<unsigned int Index>
-    type<Index> getValue(const Class& c) const {
+    inline type<Index> getValue(const Class& c) const {
         static_assert (HasConstGetAccess<memRefType<Index>>::value, "The current reference to the member does not provide constant approach.");
         return getReference<Index>().getValue(c);
     }
 
     template<unsigned int Index>
-    void setValue(Class* c, const type<Index>& val) const {
+    inline void setValue(Class* c, const type<Index>& val) const {
         getReference<Index>().setValue(c, val);
     }
 
     template<unsigned int Index>
-    void setValue(Class& c, const type<Index>& val) const {
+    inline void setValue(Class& c, const type<Index>& val) const {
         getReference<Index>().setValue(c, val);
     }
 
 
     template<unsigned int Index>
-    type<Index>& getAttr(Class* c) const {
+    inline type<Index>& getAttr(Class* c) const {
         static_assert (IsDirectAccess<memRefType<Index>>::value, "The current reference to the member does not provide direct approach.");
         return getReference<Index>().getAttr(c);
     }
 
     template<unsigned int Index>
-    type<Index>& getAttr(Class& c) const {
+    inline type<Index>& getAttr(Class& c) const {
         static_assert (IsDirectAccess<memRefType<Index>>::value, "The current reference to the member does not provide direct approach.");
         return getReference<Index>().getAttr(c);
     }
 
 
     template<unsigned int Index>
-    const char* getName() const {
-        return refs.MemRefs<Index, void>::name;
+    inline const char* getName() const {
+        return mReferences.MemRefs<Index, void>::name;
     }
 
 
@@ -287,10 +287,10 @@ public:
         }
 };
 
-template<typename,typename >
-struct MakeTraitsFromTuple {
+namespace Impl {
 
-};
+template<typename,typename >
+struct MakeTraitsFromTuple {};
 
 template<typename TraitedClass, typename ... Refs>
 struct MakeTraitsFromTuple<TraitedClass, std::tuple<Refs...>> {
@@ -315,10 +315,12 @@ struct SelectEvenTypes<odd, even> {
     using type = std::tuple<even>;
 };
 
+}
+
 template<typename TraitedClass, typename ... Args>
 auto
 makeTraits(const Args&... args) {
-    return typename MakeTraitsFromTuple<TraitedClass, typename SelectEvenTypes<Args...>::type>::type(args...);
+    return typename Impl::MakeTraitsFromTuple<TraitedClass, typename Impl::SelectEvenTypes<Args...>::type>::type(args...);
 }
 
 

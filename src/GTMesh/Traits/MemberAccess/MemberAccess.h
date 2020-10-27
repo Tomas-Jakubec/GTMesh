@@ -11,7 +11,7 @@ class MemberAccess{
                    "The type Ref must be reference to member (ValueType Class::*),"
                    " member function or pointer to getter and setter");
 public:
-    MemberAccess(Ref);
+    constexpr MemberAccess(Ref);
 };
 
 
@@ -23,40 +23,38 @@ public:
     using refType = ValueType Class::*;
 
 private:
-    const refType ref;
+    const refType mReference;
 
 public:
 
-    MemberAccess(refType referenceToMember) : ref(referenceToMember){
-        //ref = referenceToMember;
+    constexpr MemberAccess(const refType& referenceToMember) : mReference(referenceToMember) {}
+
+    constexpr MemberAccess(const MemberAccess<Class, ValueType Class::*, void>&) = default;
+
+    constexpr MemberAccess(MemberAccess<Class, ValueType Class::*, void>&&) = default;
+
+    inline ValueType getValue(const Class* c) const {
+        return c->*mReference;
     }
 
-    MemberAccess(const MemberAccess<Class, ValueType Class::*, void>&) = default;
-
-    MemberAccess(MemberAccess<Class, ValueType Class::*, void>&&) = default;
-
-    ValueType getValue(const Class* c) const {
-        return c->*ref;
+    inline void setValue(Class* c, const ValueType& val) const {
+        c->*mReference = val;
     }
 
-    void setValue(Class* c, const ValueType& val) const {
-        c->*ref = val;
+    inline ValueType& getAttr(Class* c) const {
+        return c->*mReference;
     }
 
-    ValueType& getAttr(Class* c) const {
-        return c->*ref;
+    inline ValueType getValue(const Class& c) const {
+        return c.*mReference;
     }
 
-    ValueType getValue(const Class& c) const {
-        return c.*ref;
+    inline void setValue(Class& c, const ValueType& val) const {
+        c.*mReference = val;
     }
 
-    void setValue(Class& c, const ValueType& val) const {
-        c.*ref = val;
-    }
-
-    ValueType& getAttr(Class& c) const {
-        return c.*ref;
+    inline ValueType& getAttr(Class& c) const {
+        return c.*mReference;
     }
 };
 
@@ -72,13 +70,13 @@ public:
 
 public:
 
-    MemberAccess(std::pair<GetFunctor, SetFunctor> getSet)
+    constexpr MemberAccess(const std::pair<GetFunctor, SetFunctor>& getSet)
         : Impl::GetAccess<GetFunctor>(getSet.first), Impl::SetAccess<SetFunctor>(getSet.second)
     {}
 
-    MemberAccess(const MemberAccess<Class, std::pair<GetFunctor, SetFunctor>, std::enable_if_t<!std::is_bind_expression<GetFunctor>::value>>&) = default;
+    constexpr MemberAccess(const MemberAccess<Class, std::pair<GetFunctor, SetFunctor>, std::enable_if_t<!std::is_bind_expression<GetFunctor>::value>>&) = default;
 
-    MemberAccess(MemberAccess<Class, std::pair<GetFunctor, SetFunctor>, std::enable_if_t<!std::is_bind_expression<GetFunctor>::value>>&&) = default;
+    constexpr MemberAccess(MemberAccess<Class, std::pair<GetFunctor, SetFunctor>, std::enable_if_t<!std::is_bind_expression<GetFunctor>::value>>&&) = default;
 
 };
 
@@ -93,13 +91,13 @@ public:
 
 public:
 
-    MemberAccess(std::pair<GetFunctor, SetFunctor> getSet)
+    constexpr MemberAccess(const std::pair<GetFunctor, SetFunctor>& getSet)
         : Impl::GetAccess<GetFunctor, Class>(getSet.first), Impl::SetAccess<SetFunctor>(getSet.second)
     {}
 
-    MemberAccess(const MemberAccess<Class, std::pair<GetFunctor, SetFunctor>, std::enable_if_t<std::is_bind_expression<GetFunctor>::value> >&) = default;
+    constexpr MemberAccess(const MemberAccess<Class, std::pair<GetFunctor, SetFunctor>, std::enable_if_t<std::is_bind_expression<GetFunctor>::value> >&) = default;
 
-    MemberAccess(MemberAccess<Class, std::pair<GetFunctor, SetFunctor>, std::enable_if_t<std::is_bind_expression<GetFunctor>::value> >&&) = default;
+    constexpr MemberAccess(MemberAccess<Class, std::pair<GetFunctor, SetFunctor>, std::enable_if_t<std::is_bind_expression<GetFunctor>::value> >&&) = default;
 
 };
 

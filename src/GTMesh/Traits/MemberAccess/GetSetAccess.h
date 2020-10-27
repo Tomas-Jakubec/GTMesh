@@ -21,18 +21,18 @@ private:
     const _getterType get;
 public:
 
-    GetAccess(_getterType& g): get(g){};
+    constexpr GetAccess(const _getterType& g): get(g){};
 
-    GetAccess(const GetAccess< GetFunctor, Class >&) = default;
+    constexpr GetAccess(const GetAccess< GetFunctor, Class >&) = default;
 
-    GetAccess(GetAccess< GetFunctor, Class >&&) = default;
+    constexpr GetAccess(GetAccess< GetFunctor, Class >&&) = default;
 
 
-    auto getValue(const Class* c) const {
+    inline auto getValue(const Class* c) const {
         return get(*c);
     }
 
-    auto getValue(const Class& c) const {
+    inline auto getValue(const Class& c) const {
         return get(c);
     }
 };
@@ -48,18 +48,18 @@ private:
     using _getClassRef = std::remove_reference_t<typename function_traits<GetFunctor>::template argument<0>::type>;
 public:
 
-    GetAccess(_getterType& g): get(g){};
+    constexpr GetAccess(const _getterType& g): get(g){};
 
-    GetAccess(const GetAccess<GetFunctor, std::enable_if_t<!std::is_member_pointer<GetFunctor>::value && !std::is_bind_expression<GetFunctor>::value, void>>&) = default;
+    constexpr GetAccess(const GetAccess<GetFunctor, std::enable_if_t<!std::is_member_pointer<GetFunctor>::value && !std::is_bind_expression<GetFunctor>::value, void>>&) = default;
 
-    GetAccess(GetAccess<GetFunctor, std::enable_if_t<!std::is_member_pointer<GetFunctor>::value && !std::is_bind_expression<GetFunctor>::value, void>>&&) = default;
+    constexpr GetAccess(GetAccess<GetFunctor, std::enable_if_t<!std::is_member_pointer<GetFunctor>::value && !std::is_bind_expression<GetFunctor>::value, void>>&&) = default;
 
 
-    auto getValue(_getClassRef* c) const {
+    inline auto getValue(_getClassRef* c) const {
         return get(*c);
     }
 
-    auto getValue(_getClassRef& c) const {
+    inline auto getValue(_getClassRef& c) const {
         return get(c);
     }
 };
@@ -76,21 +76,21 @@ private:
     using _getClassRef = std::remove_reference_t<typename function_traits<GetFunctor>::template argument<0>::type>;
 public:
 
-    GetAccess(_getterType& g): get(g){};
+    constexpr GetAccess(const _getterType& g): get(g){};
 
-    GetAccess(const GetAccess<GetFunctor, std::enable_if_t<std::is_member_pointer<GetFunctor>::value, void>>&) = default;
+    constexpr GetAccess(const GetAccess<GetFunctor, std::enable_if_t<std::is_member_pointer<GetFunctor>::value, void>>&) = default;
 
-    GetAccess(GetAccess<GetFunctor, std::enable_if_t<std::is_member_pointer<GetFunctor>::value, void>>&&) = default;
+    constexpr GetAccess(GetAccess<GetFunctor, std::enable_if_t<std::is_member_pointer<GetFunctor>::value, void>>&&) = default;
 
 
-    auto getValue(_getClassRef* c) const {
+    inline auto getValue(_getClassRef* c) const {
         return (c->*get)();
     }
 
     /**
      * @brief Returns a value of a member of the object c.
      */
-    auto getValue(_getClassRef& c) const {
+    inline auto getValue(_getClassRef& c) const {
         return (c.*get)();
     }
 };
@@ -102,20 +102,20 @@ struct SetAccess{
 private:
     const _setterType set;
 public:
-    SetAccess(const _setterType& s): set(s){}
 
+    constexpr SetAccess(const _setterType& s): set(s){}
 
-    SetAccess(const SetAccess<SetFunctor, Spec>&) = default;
+    constexpr SetAccess(const SetAccess<SetFunctor, Spec>&) = default;
 
-    SetAccess(SetAccess<SetFunctor, Spec>&&) = default;
+    constexpr SetAccess(SetAccess<SetFunctor, Spec>&&) = default;
 
     template<typename typeClass, typename typeValue>
-    void setValue(typeClass* c, const typeValue& val) const {
+    inline void setValue(typeClass* c, const typeValue& val) const {
         set(c, val);
     }
 
     template<typename typeClass, typename typeValue>
-    void setValue(typeClass& c, const typeValue& val) const {
+    inline void setValue(typeClass& c, const typeValue& val) const {
         set(c, val);
     }
 };
@@ -131,15 +131,15 @@ struct SetAccess<SetFunctor, std::enable_if_t<!std::is_member_pointer<SetFunctor
 private:
     const _setterType set;
 public:
-    SetAccess(const _setterType& s): set(s){}
 
+    constexpr SetAccess(const _setterType& s): set(s){}
 
-    void setValue(_typeClass* c, const _typeValue& val) const {
+    inline void setValue(_typeClass* c, const _typeValue& val) const {
         set(c, val);
     }
 
 
-    void setValue(_typeClass& c, const _typeValue& val) const {
+    inline void setValue(_typeClass& c, const _typeValue& val) const {
         set(c, val);
     }
 
@@ -158,25 +158,24 @@ struct SetAccess<SetFunctor, std::enable_if_t<!std::is_member_pointer<SetFunctor
 private:
     const _setterType set;
 public:
-    SetAccess(const _setterType& s): set(s){}
 
+    constexpr SetAccess(const _setterType& s): set(s){}
 
-
-    void setValue(_typeClass* c, const _typeValue& val) const {
+    inline void setValue(_typeClass* c, const _typeValue& val) const {
         set(c) = val;
     }
 
 
-    void setValue(_typeClass& c, const _typeValue& val) const {
+    inline void setValue(_typeClass& c, const _typeValue& val) const {
         set(c) = val;
     }
 
-    auto& getAttr(_typeClass* c) const {
+    inline auto& getAttr(_typeClass* c) const {
         return set(c);
     }
 
 
-    auto& getAttr(_typeClass& c) const {
+    inline auto& getAttr(_typeClass& c) const {
         return set(c);
     }
 };
@@ -191,14 +190,14 @@ private:
 private:
     const _setterType set;
 public:
-    SetAccess(const _setterType& s): set(s){}
+    constexpr SetAccess(const _setterType& s): set(s){}
 
-    void setValue(_typeClass* c, const _typeValue& val) const {
+    inline void setValue(_typeClass* c, const _typeValue& val) const {
         (c->*set)(val);
     }
 
 
-    void setValue(_typeClass& c, const _typeValue& val) const {
+    inline void setValue(_typeClass& c, const _typeValue& val) const {
         (c.*set)(val);
     }
 };
@@ -214,25 +213,27 @@ private:
 private:
     const _setterType set;
 public:
-    SetAccess(const _setterType& s): set(s){}
+
+
+    constexpr SetAccess(const _setterType& s): set(s){}
 
 
 
-    void setValue(_typeClass* c, const _typeValue& val) const {
+    inline void setValue(_typeClass* c, const _typeValue& val) const {
         (c->*set)() = val;
     }
 
 
-    void setValue(_typeClass& c, const _typeValue& val) const {
+    inline void setValue(_typeClass& c, const _typeValue& val) const {
         (c.*set)() = val;
     }
 
-    auto& getAttr(_typeClass* c) const {
+    inline auto& getAttr(_typeClass* c) const {
         return (c->*set)();
     }
 
 
-    auto& getAttr(_typeClass& c) const {
+    inline auto& getAttr(_typeClass& c) const {
         return (c.*set)();
     }
 };
