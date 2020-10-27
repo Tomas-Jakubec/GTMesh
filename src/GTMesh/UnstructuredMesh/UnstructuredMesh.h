@@ -34,13 +34,14 @@ public:
      * partial triangles.
      */
     template<ComputationMethod Method = ComputationMethod::METHOD_DEFAULT>
-    void initializeCenters(){
+    void initializeCenters()
+    {
         auto centers = computeCenters<Method>(*this);
 
-        for (auto& face : this->getFaces()){
+        for (auto &face : this->getFaces()) {
             face.setCenter(centers[face]);
         }
-        for (auto& cell : this->getCells()){
+        for (auto &cell : this->getCells()) {
             cell.setCenter(centers[cell]);
         }
     }
@@ -72,8 +73,13 @@ public:
      * @brief Calculates the measure of the elements with dimenson
      * higher than one.
      */
-    template<ComputationMethod Method = ComputationMethod::METHOD_DEFAULT, typename ..., unsigned int MD = MeshDimension, typename std::enable_if< (MD <= 3) , bool >::type = true>
-    MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>> computeElementMeasures() const {
+    template<ComputationMethod Method = ComputationMethod::METHOD_DEFAULT,
+             typename...,
+             unsigned int MD = MeshDimension,
+             typename std::enable_if<(MD <= 3), bool>::type = true>
+    MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>>
+    computeElementMeasures() const
+    {
         return computeMeasures<Method>(*this);
     }
 
@@ -81,24 +87,37 @@ public:
      * @brief Calculates the measure of the elements with dimenson
      * higher than one.
      */
-    template<ComputationMethod Method = ComputationMethod::METHOD_DEFAULT, typename ..., unsigned int MD = MeshDimension, typename std::enable_if< (MD > 3) , bool >::type = true>
-    MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>> computeElementMeasures() const {
+    template<ComputationMethod Method = ComputationMethod::METHOD_DEFAULT,
+             typename...,
+             unsigned int MD = MeshDimension,
+             typename std::enable_if<(MD > 3), bool>::type = true>
+    MakeMeshDataContainer_t<Real, make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>>
+    computeElementMeasures() const
+    {
         return computeMeasures<Method>(computeCenters<Method>(*this), *this);
     }
 
     /**
      * @brief Calculates the normal vectors of the faces in the mesh.
      */
-    template<ComputationMethod Method = ComputationMethod::METHOD_DEFAULT, typename ..., unsigned int MD = MeshDimension, typename std::enable_if< (MD <= 3) , bool >::type = true>
-    MeshDataContainer<Vector<MeshDimension, Real>, MeshDimension-1> computeFaceNormals() const {
+    template<ComputationMethod Method = ComputationMethod::METHOD_DEFAULT,
+             typename...,
+             unsigned int MD = MeshDimension,
+             typename std::enable_if<(MD <= 3), bool>::type = true>
+    MeshDataContainer<Vector<MeshDimension, Real>, MeshDimension - 1> computeFaceNormals() const
+    {
         return ::computeFaceNormals<Method>(*this);
     }
 
     /**
      * @brief Calculates the normal vectors of the faces in the mesh.
      */
-    template<ComputationMethod Method = ComputationMethod::METHOD_DEFAULT, typename ..., unsigned int MD = MeshDimension, typename std::enable_if< (MD > 3) , bool >::type = true>
-    MeshDataContainer<Vector<MeshDimension, Real>, MeshDimension-1> computeFaceNormals() const {
+    template<ComputationMethod Method = ComputationMethod::METHOD_DEFAULT,
+             typename...,
+             unsigned int MD = MeshDimension,
+             typename std::enable_if<(MD > 3), bool>::type = true>
+    MeshDataContainer<Vector<MeshDimension, Real>, MeshDimension - 1> computeFaceNormals() const
+    {
         return ::computeFaceNormals<Method>(computeCenters<Method>(*this), *this);
     }
 
@@ -119,7 +138,8 @@ public:
      * @endcode
      */
     template<unsigned int StartDim, unsigned int TargetDim, typename Functor>
-    void apply(const Functor& func) const {
+    void apply(const Functor &func) const
+    {
         return MeshApply<StartDim, TargetDim>::apply(*this, func);
     }
 
@@ -142,7 +162,8 @@ public:
      * @endcode
      */
     template<unsigned int StartDim, unsigned int TargetDim, typename Functor>
-    void apply(IndexType startElementIndex,const Functor& func) const {
+    void apply(IndexType startElementIndex, const Functor &func) const
+    {
         return MeshApply<StartDim, TargetDim>::apply(startElementIndex, *this, func);
     }
 
@@ -152,7 +173,8 @@ public:
      * StartDim.
      */
     template<unsigned int StartDim, unsigned int TargetDim, Order ConnectionsOrder = ORDER_ASCEND>
-    MeshDataContainer<std::vector<IndexType>, StartDim> connections() const {
+    MeshDataContainer<std::vector<IndexType>, StartDim> connections() const
+    {
         return MeshConnections<StartDim, TargetDim, ConnectionsOrder>::connections(*this);
     }
 
@@ -161,19 +183,26 @@ public:
      * ConnectedDim that neighbors with elements from StartDim.
      * The connection is determined over the elements from ConnectingDim.
      */
-    template<unsigned int StartDim, unsigned int ConnectingDim, unsigned int ConnectedDim = StartDim, Order ConnectionsOrder = Order::ORDER_ASCEND>
-    MeshDataContainer<std::vector<IndexType>, StartDim> neighborhood() const {
-        return MeshNeighborhood<StartDim, ConnectingDim, ConnectedDim, ConnectionsOrder>::neighbors(*this);
+    template<unsigned int StartDim,
+             unsigned int ConnectingDim,
+             unsigned int ConnectedDim = StartDim,
+             Order ConnectionsOrder = Order::ORDER_ASCEND>
+    MeshDataContainer<std::vector<IndexType>, StartDim> neighborhood() const
+    {
+        return MeshNeighborhood<StartDim, ConnectingDim, ConnectedDim, ConnectionsOrder>::neighbors(
+            *this);
     }
-
 
     /**
      * @brief Colors the mesh elements of dimension StartDim with connection over
      * ConnectingDim.
      */
-    template<unsigned int StartDim, unsigned int ConnectingDim,  ColoringMethod Method = ColoringMethod::METHOD_GREEDY>
-    typename std::enable_if<Method == METHOD_GREEDY,MeshDataContainer<unsigned int, StartDim>>::type
-    coloring() const {
+    template<unsigned int StartDim,
+             unsigned int ConnectingDim,
+             ColoringMethod Method = ColoringMethod::METHOD_GREEDY>
+    typename std::enable_if<Method == METHOD_GREEDY, MeshDataContainer<unsigned int, StartDim>>::type
+    coloring() const
+    {
         return MeshColoring<StartDim, ConnectingDim, Method>::color(*this);
     }
 
@@ -183,9 +212,12 @@ public:
      * reselection of the colors. Random reselection provides more even distribution
      * of the colors.
      */
-    template<unsigned int StartDim, unsigned int ConnectingDim,  ColoringMethod Method = ColoringMethod::METHOD_GREEDY>
-    typename std::enable_if<Method == METHOD_RANDOM,MeshDataContainer<unsigned int, StartDim>>::type
-    coloring(unsigned int seed = 1562315) const {
+    template<unsigned int StartDim,
+             unsigned int ConnectingDim,
+             ColoringMethod Method = ColoringMethod::METHOD_GREEDY>
+    typename std::enable_if<Method == METHOD_RANDOM, MeshDataContainer<unsigned int, StartDim>>::type
+    coloring(unsigned int seed = 1562315) const
+    {
         return MeshColoring<StartDim, ConnectingDim, Method>::color(*this, seed);
     }
 
