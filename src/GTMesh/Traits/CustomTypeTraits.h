@@ -5,13 +5,27 @@
 #include <type_traits>
 
 namespace Impl {
+#ifdef _MSC_VER
+template<typename... T> struct make_void {
+    using type = void;
+};
 
+template<typename... T>
+using void_t = typename make_void<T...>::type;
+
+template<typename... T> struct make_bool {
+    using type = bool;
+};
+
+template<typename... T>
+using bool_t = typename make_bool<T...>::type;
+#else
 template<typename...>
 using void_t = void;
 
 template<typename...>
 using bool_t = bool;
-
+#endif
 template<typename T1, typename T2 = void>
 struct is_exportable : public std::false_type
 {};

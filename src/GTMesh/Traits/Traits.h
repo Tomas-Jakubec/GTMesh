@@ -34,8 +34,9 @@ private:
         constexpr MemRefs(const char* n, refType<Index> r, REST... rest) : MemRefs<Index + 1> (rest...), ref(r), name(n){}
     };
 
-    template<typename Dummy>
-    struct MemRefs<sizeof...(RefTypes) - 1, Dummy>{
+
+    template<unsigned int Index>
+    struct MemRefs<Index, std::enable_if_t<Index == sizeof... (RefTypes) - 1>>{
         const MemberAccess<Class, refType<sizeof...(RefTypes) - 1>> ref;
         const char* name;
 
@@ -197,8 +198,8 @@ private:
 
     };
 
-    template<typename Dummy>
-    struct Apply<size() - 1, Dummy> {
+    template<unsigned int Index>
+    struct Apply<Index, std::enable_if_t<Index == size() - 1>> {
         using ThisTrait = Traits<Class, RefTypes...>;
 
         template <class Functor>
@@ -275,7 +276,7 @@ public:
      * arguments: <BR> (unsigned int,
      * const auto& [as const MemberApproach<Class, typename>&]
      * const std::string&)
-     */
+     *//*
     template<typename Functor>
         void apply(Functor f) const {
             Apply<>::apply(*this,f);
@@ -284,7 +285,7 @@ public:
     template<template <typename, typename>class Functor>
         void apply() const {
             Apply<>::template apply<Functor>(*this);
-        }
+        }*/
 };
 
 namespace Impl {
@@ -338,16 +339,16 @@ class DefaultArithmeticTraits : public DefaultTraits<Class> {};
 #include "CustomTypeTraits.h"
 
 namespace Impl {
-template <unsigned int Index, unsigned int ...Indexes>
+template <unsigned int Index, unsigned int ...Indices>
 struct TraitedAttributeGetter{
     template<typename TraitT, typename = typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value>::type>
     static auto& get(TraitT& arg){
-        return TraitedAttributeGetter<Indexes...>::get(DefaultArithmeticTraits<TraitT>::getTraits().template getAttr<Index>(arg));
+        return TraitedAttributeGetter<Indices...>::get(DefaultArithmeticTraits<TraitT>::getTraits().template getAttr<Index>(arg));
     }
 
     template<typename TraitT, typename = typename std::enable_if<HasDefaultArithmeticTraits<TraitT>::value>::type>
     static auto& get(TraitT* arg){
-        return TraitedAttributeGetter<Indexes...>::get(DefaultArithmeticTraits<TraitT>::getTraits().template getAttr<Index>(arg));
+        return TraitedAttributeGetter<Indices...>::get(DefaultArithmeticTraits<TraitT>::getTraits().template getAttr<Index>(arg));
     }
 };
 
@@ -367,15 +368,15 @@ struct TraitedAttributeGetter<Index>{
 } //Impl
 
 
-template <unsigned int ...Indexes, typename ArythmeticTraitT, typename = typename std::enable_if<HasDefaultArithmeticTraits<ArythmeticTraitT>::value>::type>
+template <unsigned int ...Indices, typename ArythmeticTraitT, typename = typename std::enable_if<HasDefaultArithmeticTraits<ArythmeticTraitT>::value>::type>
 auto& get(ArythmeticTraitT& arg){
-    return Impl::TraitedAttributeGetter<Indexes...>::get(arg);
+    return Impl::TraitedAttributeGetter<Indices...>::get(arg);
 }
 
 
-template <unsigned int ...Indexes, typename ArythmeticTraitT, typename = typename std::enable_if<HasDefaultArithmeticTraits<ArythmeticTraitT>::value>::type>
+template <unsigned int ...Indices, typename ArythmeticTraitT, typename = typename std::enable_if<HasDefaultArithmeticTraits<ArythmeticTraitT>::value>::type>
 auto& get(ArythmeticTraitT* arg){
-    return Impl::TraitedAttributeGetter<Indexes...>::get(arg);
+    return Impl::TraitedAttributeGetter<Indices...>::get(arg);
 }
 
 

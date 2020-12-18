@@ -55,33 +55,56 @@ struct VariableExport<VARIABLE_EXPORT_METHOD_STDIO>
 #include "Printers/PrintTuple.h"
 #include "Printers/PrintTraitedClass.h"
 
+template<typename VarType, typename Printer, typename = void>
+struct IsPrintableBy : public std::false_type
+{};
 
-template <typename VarType, typename Printer, typename... Printers>
-struct SelectPrinter :
-        public std::conditional_t<
-            std::is_void<decltype(Printer::print(std::declval<std::ostream&>(),std::declval<const VarType&>()))>::value,
-            SelectPrinter<VarType, Printer>,
-            SelectPrinter<VarType, Printers...>
-        >{};
+template<typename VarType, typename Printer>
+struct IsPrintableBy<VarType,
+                     Printer,
+                     decltype(Printer::print(std::declval<std::ostream &>(),
+                                             std::declval<const VarType &>()))>
+    : public std::true_type
+{};
 
-template <typename VarType, typename Printer>
-struct SelectPrinter<VarType, Printer> {
+template<typename VarType, typename Printer, typename... Printers>
+struct SelectPrinter : public std::conditional_t<IsPrintableBy<VarType, Printer>::value,
+                                                 SelectPrinter<VarType, Printer>,
+                                                 SelectPrinter<VarType, Printers...>>
+{};
+
+template<typename VarType, typename Printer>
+struct SelectPrinter<VarType, Printer>
+{
     using PrinterType = Printer;
 };
 
-template <typename VarType, typename TraitsTuple, typename Printer, typename... Printers>
-struct SelectPrinterTraitsTuple :
-        public std::conditional_t<
-            std::is_void<decltype(Printer::print(std::declval<std::ostream&>(),std::declval<const VarType&>(), std::declval<const TraitsTuple&>()))>::value,
-            SelectPrinterTraitsTuple<VarType, TraitsTuple, Printer>,
-            SelectPrinterTraitsTuple<VarType, TraitsTuple, Printers...>
-        >{};
+template<typename VarType, typename TraitsTuple, typename Printer, typename = void>
+struct IsPrintableByWithTuple : public std::false_type
+{};
 
-template <typename VarType, typename TraitsTuple, typename Printer>
-struct SelectPrinterTraitsTuple<VarType, TraitsTuple, Printer> {
+template<typename VarType, typename TraitsTuple, typename Printer>
+struct IsPrintableByWithTuple<VarType,
+                              TraitsTuple,
+                              Printer,
+                              decltype(Printer::print(std::declval<std::ostream &>(),
+                                                      std::declval<const VarType &>(),
+                                                      std::declval<const TraitsTuple &>()))>
+    : public std::true_type
+{};
+
+template<typename VarType, typename TraitsTuple, typename Printer, typename... Printers>
+struct SelectPrinterTraitsTuple
+    : public std::conditional_t<IsPrintableByWithTuple<VarType, TraitsTuple, Printer>::value,
+                                SelectPrinterTraitsTuple<VarType, TraitsTuple, Printer>,
+                                SelectPrinterTraitsTuple<VarType, TraitsTuple, Printers...>>
+{};
+
+template<typename VarType, typename TraitsTuple, typename Printer>
+struct SelectPrinterTraitsTuple<VarType, TraitsTuple, Printer>
+{
     using PrinterType = Printer;
 };
-
 
 template<>
 template<typename T>

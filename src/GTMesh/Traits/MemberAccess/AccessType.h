@@ -6,7 +6,7 @@
  * reference can provide direct approach to the member.
  */
 struct DirectAccess{
-    static constexpr std::true_type is_direct{};
+    static constexpr bool is_direct = true;
 };
 
 
@@ -15,7 +15,7 @@ struct DirectAccess{
  * reference can provide constant access to the member.
  */
 struct ConstGetAccess{
-    static constexpr std::true_type has_const_get{};
+    static constexpr bool has_const_get = true;
 };
 
 
@@ -23,25 +23,16 @@ namespace Impl {
 template <typename T, typename = void>
 struct IsDirectAccess : public std::false_type {};
 
-template <typename T>
-struct IsDirectAccess
-        <
-        T,
-        typename std::enable_if<T::is_direct>::type
-        >
-        : public std::true_type {};
+template<typename T>
+struct IsDirectAccess<T, typename std::enable_if<T::is_direct>::type> : public std::true_type
+{};
 
 template <typename T, typename = void>
 struct HasConstGetAccess : public std::false_type {};
 
-template <typename T>
-struct HasConstGetAccess
-        <
-        T,
-        typename std::enable_if<T::has_const_get>::type
-        >
-        : public std::true_type {};
-
+template<typename T>
+struct HasConstGetAccess<T, typename std::enable_if<T::has_const_get>::type> : public std::true_type
+{};
 
 } // Impl
 
