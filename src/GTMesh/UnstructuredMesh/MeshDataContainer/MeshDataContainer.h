@@ -3,7 +3,22 @@
 
 #include "../MeshElements/MeshElements.h"
 
+// TODO move
+/**
+ * @brief The DimensionPos struct
+ * realizes the method indexof in the parameter pack @a Dimensions.
+ * If the searched value is nor present, the index @a pos ran out of bounds.
+ */
+template<unsigned int dim, unsigned int pos, unsigned int _dim, unsigned int... Dimensions>
+struct DimensionPos : public std::conditional_t<dim == _dim,
+                                                std::integral_constant<unsigned int, pos>,
+                                                DimensionPos<dim, pos + 1, Dimensions...>>
+{};
 
+template<unsigned int dim, unsigned int pos, unsigned int _dim>
+struct DimensionPos<dim, pos, _dim> : public std::integral_constant<unsigned int, pos>{
+    static_assert(dim == _dim, "The desired number was not found.");
+};
 
 template<typename DataType, unsigned int MappedDimenion = 0>
 struct DataContainer : public std::vector<DataType> {
@@ -23,27 +38,11 @@ struct DataContainer : public std::vector<DataType> {
  */
 template <typename DataType, unsigned int ...Dimensions>
 struct MeshDataContainer{
-private:
-
-    /**
-     * @brief The DimensionPos struct
-     * realizes the method indexof in the parameter pack @a Dimensions.
-     * If the searched value is nor present, the index @a pos ran out of bounds.
-     */
-    template<unsigned int dim, unsigned int pos, unsigned int _dim>
-    struct DimensionPos : DimensionPos<dim, pos + 1,std::get<pos + 1>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...})>{};
-
-    template<unsigned int dim, unsigned int pos>
-    struct DimensionPos<dim, pos, dim>{
-        static constexpr unsigned int res(){return pos;}
-    };
-
-
+public:
     template<unsigned int dim>
     static constexpr unsigned int dimensionIndex(){
-        return DimensionPos<dim, 0, std::get<0>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...})>::res();
+        return DimensionPos<dim, 0, Dimensions...>::value;
     }
-public:
     template<unsigned int pos>
     static constexpr unsigned int dimensionAt(){
         return std::get<pos>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...});
@@ -544,20 +543,11 @@ public:
  */
 template <typename ...DataTypes, unsigned int ...Dimensions>
 struct MeshDataContainer<std::tuple<DataTypes...>, Dimensions...>{
-private:
-
-    template<unsigned int dim, unsigned int pos, unsigned int _dim>
-    struct DimensionPos : DimensionPos<dim, pos + 1,std::get<pos + 1>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...})>{};
-
-    template<unsigned int dim, unsigned int pos>
-    struct DimensionPos<dim, pos, dim>{
-        static constexpr unsigned int res(){return pos;}
-    };
 
 public:
     template<unsigned int dim>
     static constexpr unsigned int dimensionIndex(){
-        return DimensionPos<dim, 0, std::get<0>(std::array<unsigned int, sizeof... (Dimensions)>{Dimensions...})>::res();
+        return DimensionPos<dim, 0, Dimensions...>::value;
     }
 
     template<unsigned int pos>
@@ -572,13 +562,11 @@ private:
     template<unsigned int Pos, typename Dummy = void>
     struct _DataContainer : _DataContainer<Pos - 1, Dummy>{
         DataContainer<DataType<Pos>, dimensionAt<Pos>()> _data;
-        //std::vector<DataType<Pos>> _data;
     };
 
     template<typename Dummy>
     struct _DataContainer<0, Dummy>{
         DataContainer<DataType<0>, dimensionAt<0>()> _data;
-        //std::vector<DataType<0>> _data;
     };
 
     /**
@@ -597,6 +585,60 @@ public:
        return sizeof... (Dimensions);
    }
 private:
+    /// Stops the template recursion of allocateMemory
+    template <unsigned int pos, typename ContainterType>
+    std::enable_if_t<(pos == sizeof...(Dimensions))>
+    allocateMemory(const ContainterType& mesh) {}
+
+    template <unsigned int pos, unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
+    std::enable_if_t<(pos < sizeof...(Dimensions))>
+    allocateMemory(const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh) {
+        getDataByPos<pos>().resize(mesh.template getElements<dimensionAt<pos>()>().size());
+        allocateMemory<pos + 1>(mesh);
+    }
+
+    template<unsigned int pos,
+             typename _DataType,
+             unsigned int Dimension,
+             typename IndexType,
+             typename Real,
+             unsigned int... Reserve,
+             typename... _DataTypes>
+    std::enable_if_t<(pos < sizeof...(Dimensions))>
+    allocateMemory(
+        const MeshElements<Dimension, IndexType, Real, Reserve...> &mesh,
+        const _DataType &initialValue,
+        const _DataTypes &... values)
+    {
+        getDataByPos<pos>().resize(mesh.template getElements<dimensionAt<pos>()>().size(),
+                                   initialValue);
+        allocateMemory<pos + 1>(mesh, values...);
+    }
+
+    template <unsigned int pos, typename ..._DataTypes, unsigned int ..._Dimensions>
+    std::enable_if_t<(pos < sizeof...(Dimensions))>
+    allocateMemory(const MeshDataContainer<_DataTypes..., _Dimensions...>& meshDataContainer) {
+        getDataByPos<pos>().resize(meshDataContainer.template getDataByDim<dimensionAt<pos>()>().size());
+        allocateMemory<pos + 1>(meshDataContainer);
+    }
+
+    template<unsigned int pos,
+             typename _DataType,
+             typename... _DataTypes,
+             unsigned int... _Dimensions,
+             typename... _ValDataTypes>
+    std::enable_if_t<(pos < sizeof...(Dimensions))>
+    allocateMemory(
+        const MeshDataContainer<std::tuple<_DataTypes...>, _Dimensions...> &meshDataContainer,
+        const _DataType &initialValue,
+        const _ValDataTypes &... values)
+    {
+        getDataByPos<pos>()
+            .resize(meshDataContainer.template getDataByDim<dimensionAt<pos>()>().size(),
+                    initialValue);
+        allocateMemory<pos + 1>(meshDataContainer, values...);
+    }
+/*
     template<unsigned int pos, typename _DataType, typename... _DataTypes>
     struct Allocator{
         template<unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
@@ -682,7 +724,7 @@ private:
 
         }
     };
-
+*/
 
 
 
@@ -804,7 +846,7 @@ public:
 
     template <unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
     void allocateData(const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh){
-        Allocator<0, DataTypes...>::allocateMemory(*this, mesh);
+        allocateMemory<0>(mesh);
     }
 
 
@@ -812,19 +854,19 @@ public:
     template <unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
     void allocateData(const MeshElements<Dimension, IndexType, Real, Reserve...>& mesh,
                      const DataTypes&... initialValues){
-        Allocator<0, DataTypes...>::allocateMemory(*this, mesh, initialValues...);
+        allocateMemory<0>(mesh, initialValues...);
     }
 
 
     void allocateData(const MeshDataContainer<std::tuple<DataTypes...>, Dimensions...>& meshDataContainer){
-        Allocator<0, DataTypes...>::allocateMemory(*this, meshDataContainer);
+        allocateMemory<0>(meshDataContainer);
     }
 
 
 
     void allocateData(const MeshDataContainer<std::tuple<DataTypes...>, Dimensions...>& meshDataContainer,
-                     const DataTypes&... initialValues){
-        Allocator<0, DataTypes...>::allocateMemory(*this, meshDataContainer, initialValues...);
+                      const DataTypes&... initialValues){
+        allocateMemory<0>(meshDataContainer, initialValues...);
     }
 
     MeshDataContainer<std::tuple<DataTypes...>, Dimensions...>& operator=(const MeshDataContainer<std::tuple<DataTypes...>, Dimensions...>& rhs) {
@@ -851,9 +893,9 @@ template<typename DataType, typename Sequence>
 struct MakeMeshDataContainer {
     static_assert(
         std::is_class<Sequence>::value && !std::is_class<Sequence>::value,
-        "The Sequence parameter in MakeMeshDataContainer \
-must be a std::integer_sequence<unsigned int, seq...>\
-please notice the type unsigned int"
+        "The Sequence parameter in MakeMeshDataContainer "
+        "must be a std::integer_sequence<unsigned int, seq...>"
+        "please notice the type unsigned int"
         );
 };
 

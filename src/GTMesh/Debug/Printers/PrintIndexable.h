@@ -4,7 +4,6 @@
 #include <GTMesh/Traits/CustomTypeTraits.h>
 
 struct PrintIndexable {
-    static int print(...) {return 0;}
 
     template <typename Indexable, std::enable_if_t<IsIndexable<Indexable>::value, bool> = true>
     static auto size(const Indexable& vec) {

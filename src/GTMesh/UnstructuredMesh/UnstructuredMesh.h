@@ -46,14 +46,18 @@ public:
         }
     }
 
+    using dimensionSeq = make_custom_integer_sequence_t<unsigned int, 1, MeshDimension>;
     /**
      * @brief Sets the centers up according to the ones passed by parameter.
      */
-    void initializeCenters(MakeMeshDataContainer_t<Vertex<MeshDimension, Real>, make_custom_integer_sequence_t<unsigned int, 1,MeshDimension>> centers){
-        for (auto& face : this->getFaces()){
+    void initializeCenters(const MakeMeshDataContainer_t<
+                           ::Vertex<MeshDimension, Real>,
+                           dimensionSeq> &centers)
+    {
+        for (const auto &face : this->getFaces()) {
             face.setCenter(centers[face]);
         }
-        for (auto& cell : this->getCells()){
+        for (const auto &cell : this->getCells()) {
             cell.setCenter(centers[cell]);
         }
     }

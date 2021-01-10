@@ -76,30 +76,13 @@ template<typename T1>
 struct is_traits<T1, void_t<decltype(T1::isTraits)>> : public std::true_type
 {};
 
-template<typename T1, typename VOID = void>
+
+template<typename T1, template<typename> class TraitsType, typename = void>
 struct has_default_traits : public std::false_type
 {};
 
-template<typename T1>
-struct has_default_traits<T1, void_t<decltype(DefaultTraits<T1>::getTraits())>>
-    : public std::true_type
-{};
-
-template<typename T1, typename = void>
-struct has_default_io_traits : public std::false_type
-{};
-
-template<typename T1>
-struct has_default_io_traits<T1, void_t<decltype(DefaultIOTraits<T1>::getTraits())>>
-    : public std::true_type
-{};
-
-template<typename T1, typename VOID = void>
-struct has_default_arithmetic_traits : public std::false_type
-{};
-
-template<typename T1>
-struct has_default_arithmetic_traits<T1, void_t<decltype(DefaultArithmeticTraits<T1>::getTraits())>>
+template<typename T1, template<typename> class TraitsType>
+struct has_default_traits<T1, TraitsType, void_t<decltype(TraitsType<T1>::getTraits())>>
     : public std::true_type
 {};
 
@@ -125,16 +108,20 @@ template<typename T>
 struct IsTraits : public Impl::is_traits<T>
 {};
 
-template<typename T>
-struct HasDefaultTraits : public Impl::has_default_traits<T>
+template <typename T, template<typename> class DefaultTraitsType>
+struct HasDefaultTraitsOfType: public Impl::has_default_traits<T, DefaultTraitsType>
 {};
 
 template<typename T>
-struct HasDefaultIOTraits : public Impl::has_default_io_traits<T>
+struct HasDefaultTraits : public Impl::has_default_traits<T, DefaultTraits>
 {};
 
 template<typename T>
-struct HasDefaultArithmeticTraits : public Impl::has_default_arithmetic_traits<T>
+struct HasDefaultIOTraits : public Impl::has_default_traits<T, DefaultIOTraits>
+{};
+
+template<typename T>
+struct HasDefaultArithmeticTraits : public Impl::has_default_traits<T, DefaultArithmeticTraits>
 {};
 
 #endif // CUSTOMTRAITS_H

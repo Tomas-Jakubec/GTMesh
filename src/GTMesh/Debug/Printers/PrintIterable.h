@@ -4,7 +4,6 @@
 #include <GTMesh/Traits/CustomTypeTraits.h>
 
 struct PrintIterable {
-    static int print(...) {return 0;}
 
     template<typename T>
     using isIterable = std::enable_if_t < IsIterable<T>::value, bool >;

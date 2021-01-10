@@ -20,12 +20,12 @@ class VTKMeshDataReader {
      */
     template<typename T, unsigned int Index, typename ... TraitsArgs>
     static
-    std::enable_if_t< IsIndexable<typename Traits<T, TraitsArgs...>::template type<Index>>::value &&
-                      MeshDimension == 3 >
-    readColumn( std::istream& ist,
-                DataContainer<T, MeshDimension> &data,
-                std::map<std::string, std::istream::pos_type>& dataPositions,
-                const Traits<T, TraitsArgs...>& traits)
+        std::enable_if_t< IsIndexable<typename Traits<T, TraitsArgs...>::template type<Index>>::value &&
+                         MeshDimension == 3 >
+        readColumn( std::istream& ist,
+                   DataContainer<T, MeshDimension> &data,
+                   std::map<std::string, std::istream::pos_type>& dataPositions,
+                   const Traits<T, TraitsArgs...>& traits)
     {
 
         ist.seekg(dataPositions[traits.template getName<Index>()]);
@@ -44,13 +44,13 @@ class VTKMeshDataReader {
 
     template<typename T, unsigned int Index, typename ... TraitsArgs>
     static auto readColumn( std::istream& ist,
-                            DataContainer<T, MeshDimension> &data,
-                            std::map<std::string, std::istream::pos_type>& dataPositions,
-                            const Traits<T, TraitsArgs...>& traits)
-    -> typename std::enable_if<
-        IsIndexable<typename DefaultIOTraits<T>::traitsType::template type<Index>>::value &&
-        MeshDimension == 2
-       >::type
+                           DataContainer<T, MeshDimension> &data,
+                           std::map<std::string, std::istream::pos_type>& dataPositions,
+                           const Traits<T, TraitsArgs...>& traits)
+        -> typename std::enable_if<
+            IsIndexable<typename DefaultIOTraits<T>::traitsType::template type<Index>>::value &&
+            MeshDimension == 2
+            >::type
     {
 
         ist.seekg(dataPositions[traits.template getName<Index>()]);
@@ -72,12 +72,12 @@ class VTKMeshDataReader {
 
     template<typename T, unsigned int Index, typename ... TraitsArgs>
     static auto readColumn( std::istream& ist,
-                            DataContainer<T, MeshDimension> &data,
-                            std::map<std::string, std::istream::pos_type>& dataPositions,
-                            const Traits<T, TraitsArgs...>& traits)
-    -> typename std::enable_if<
-        !IsIndexable<typename Traits<T, TraitsArgs...>::template type<Index>>::value
-    >::type
+                           DataContainer<T, MeshDimension> &data,
+                           std::map<std::string, std::istream::pos_type>& dataPositions,
+                           const Traits<T, TraitsArgs...>& traits)
+        -> typename std::enable_if<
+            !IsIndexable<typename Traits<T, TraitsArgs...>::template type<Index>>::value
+            >::type
     {
 
 
@@ -92,30 +92,20 @@ class VTKMeshDataReader {
 
     }
 private:
-
-
-    template< unsigned int Index,
-              typename T,
-              typename ... TraitsArgs,
-              std::enable_if_t<(Index < Traits<T, TraitsArgs...>::size()), bool> = true>
-    static void readData( std::istream& ist,
-                          DataContainer<T, MeshDimension> &data,
-                          std::map<std::string, std::istream::pos_type>& dataPositions,
-                          const Traits<T, TraitsArgs...>& traits = DefaultIOTraits<T>::getTraits()){
-        //DBGVAR(IsIndexable<typename DefaultIOTraits<T>::traitsType::template type<Index>>::value);
-        readColumn<T, Index>(ist, data, dataPositions, traits);
-        readData< Index + 1 >(ist, data, dataPositions, traits);
-    }
-
-    template< unsigned int Index,
-              typename T,
-              typename ... TraitsArgs,
-              std::enable_if_t<Index == Traits<T, TraitsArgs...>::size(), bool> = true>
-    static void readData( std::istream&,
-                          DataContainer<T, MeshDimension> &,
-                          std::map<std::string, std::istream::pos_type>&,
-                          const Traits<T, TraitsArgs...>& = DefaultIOTraits<T>::getTraits()){}
-
+    // A helper class to be executed by the readFromStream member function of
+    // MeshDataIterator
+    struct ReadData {
+        template<unsigned int Index,
+                 typename T,
+                 typename... TraitsArgs>
+        static void exec(std::istream &ist,
+                         DataContainer<T, MeshDimension> &data,
+                         std::map<std::string, std::istream::pos_type> &dataPositions,
+                         const Traits<T, TraitsArgs...> &traits = DefaultIOTraits<T>::getTraits())
+        {
+            readColumn<T, Index>(ist, data, dataPositions, traits);
+        }
+    };
 
 
 public:
@@ -134,8 +124,8 @@ public:
         while(std::getline(ist, line, '\n')) {
 
             int flag = (line.find("SCALARS")!= line.npos ? 1
-                             : line.find("VECTORS") != line.npos ? 2
-                                   : 0 );
+                                                          : line.find("VECTORS") != line.npos ? 2
+                                                                                              : 0 );
             if (flag != 0){
                 std::string dataName;
                 std::stringstream sstream(line);
@@ -162,80 +152,94 @@ public:
 
         readData(ist, data, dataPositions);
     }
-// Search for importable containers
+    // Search for importable containers
 
-    template <unsigned int Index, bool OK = false>
-    struct MeshDataIterator{
-
-        template<typename T, unsigned int ...Dimensions, typename ... TraitsTuple>
-        static
-        typename std::enable_if<
-            (!SelectTraits<typename MeshDataContainer<T, Dimensions...>::template DataContainerType<Index>::type, 0, TraitsTuple...>::valid)
-        >::type
-        readFromStream( std::istream& ist,
-                 MeshDataContainer<T, Dimensions...> &data,
-                 std::map<std::string, std::istream::pos_type>& dataPositions,
-                 const std::tuple<TraitsTuple...>& tupTraits )
+    template<unsigned int Index, bool OK = false>
+    struct MeshDataIterator
+    {
+        template<typename T, unsigned int... Dimensions, typename... TraitsTuple>
+        static typename std::enable_if<(!SelectTraits<typename MeshDataContainer<T, Dimensions...>::
+                                                          template DataContainerType<Index>::type,
+                                                      0,
+                                                      TraitsTuple...>::valid)>::type
+        readFromStream(std::istream &ist,
+                       MeshDataContainer<T, Dimensions...> &data,
+                       std::map<std::string, std::istream::pos_type> &dataPositions,
+                       const std::tuple<TraitsTuple...> &tupTraits)
         {
             MeshDataIterator<Index - 1, OK>::readFromStream(ist, data, dataPositions, tupTraits);
         }
 
-        template<typename T, unsigned int ...Dimensions, typename ... TraitsTuple>
-        static
-        typename std::enable_if<
-            (SelectTraits<typename MeshDataContainer<T, Dimensions...>::template DataContainerType<Index>::type, 0, TraitsTuple...>::valid)
-        >::type
-        readFromStream( std::istream& ist,
-                 MeshDataContainer<T, Dimensions...> &data,
-                 std::map<std::string, std::istream::pos_type>& dataPositions,
-                 const std::tuple<TraitsTuple...>& tupTraits )
+        template<typename T, unsigned int... Dimensions, typename... TraitsTuple>
+        static typename std::enable_if<(SelectTraits<typename MeshDataContainer<T, Dimensions...>::
+                                                         template DataContainerType<Index>::type,
+                                                     0,
+                                                     TraitsTuple...>::valid)>::type
+        readFromStream(std::istream &ist,
+                       MeshDataContainer<T, Dimensions...> &data,
+                       std::map<std::string, std::istream::pos_type> &dataPositions,
+                       const std::tuple<TraitsTuple...> &tupTraits)
         {
-            using type = typename MeshDataContainer<T, Dimensions...>::template DataContainerType<Index>::type;
+            using type =
+                typename MeshDataContainer<T, Dimensions...>::template DataContainerType<Index>::type;
 
-            MeshDataIterator<Index - 1, true>:: writeToStream(ist, data, dataPositions, tupTraits);
+            MeshDataIterator<Index - 1, true>::writeToStream(ist, data, dataPositions, tupTraits);
 
-            readData<0>(ist, data.template getDataByPos<Index>(), dataPositions, SelectTraits<type, 0, TraitsTuple...>::getTraitsInstance(tupTraits));
+            constexprFor<ReadData, SelectTraits<type, 0, TraitsTuple...>::TypeTraits::size()>(
+                ist,
+                data.template getDataByPos<Index>(),
+                dataPositions,
+                SelectTraits<type, 0, TraitsTuple...>::getTraitsInstance(tupTraits));
         }
     };
 
-    template <bool OK>
-    struct MeshDataIterator <0, OK> {
-        template<typename T, unsigned int ...Dimensions, typename ... TraitsTuple>
-        static
-        typename std::enable_if<
-            (!SelectTraits<typename MeshDataContainer<T, Dimensions...>::template DataContainerType<0>::type, 0, TraitsTuple...>::valid)
-        >::type
-        readFromStream( std::istream&,
-                 MeshDataContainer<T, Dimensions...>&,
-                 std::map<std::string, std::istream::pos_type>&,
-                 const std::tuple<TraitsTuple...>& )
+    template<bool OK>
+    struct MeshDataIterator<0, OK>
+    {
+        template<typename T, unsigned int... Dimensions, typename... TraitsTuple>
+        static typename std::enable_if<
+            (!SelectTraits<
+                typename MeshDataContainer<T, Dimensions...>::template DataContainerType<0>::type,
+                0,
+                TraitsTuple...>::valid)>::type
+        readFromStream(std::istream &,
+                       MeshDataContainer<T, Dimensions...> &,
+                       std::map<std::string, std::istream::pos_type> &,
+                       const std::tuple<TraitsTuple...> &)
         {
-            static_assert (OK , "The mesh data container must have at least one DataContainer mapped to cells with traits for example using macro MAKE_ATTRIBUTE_TRAIT see header Traits.h");
-
+            static_assert(
+                OK,
+                "The mesh data container must have at least one DataContainer mapped to cells with "
+                "traits for example using macro MAKE_ATTRIBUTE_TRAIT see header Traits.h");
         }
 
-        template<typename T, unsigned int ...Dimensions, typename ... TraitsTuple>
-        static
-        typename std::enable_if<
-            (SelectTraits<typename MeshDataContainer<T, Dimensions...>::template DataContainerType<0>::type, 0, TraitsTuple...>::valid)
-        >::type
-        readFromStream( std::istream& ist,
-                 MeshDataContainer<T, Dimensions...>& data,
-                 std::map<std::string, std::istream::pos_type>& dataPositions,
-                 const std::tuple<TraitsTuple...>& tupTraits)
+        template<typename T, unsigned int... Dimensions, typename... TraitsTuple>
+        static typename std::enable_if<
+            (SelectTraits<
+                typename MeshDataContainer<T, Dimensions...>::template DataContainerType<0>::type,
+                0,
+                TraitsTuple...>::valid)>::type
+        readFromStream(std::istream &ist,
+                       MeshDataContainer<T, Dimensions...> &data,
+                       std::map<std::string, std::istream::pos_type> &dataPositions,
+                       const std::tuple<TraitsTuple...> &tupTraits)
         {
-            using type = typename MeshDataContainer<T, Dimensions...>::template DataContainerType<0>::type;
+            using type =
+                typename MeshDataContainer<T, Dimensions...>::template DataContainerType<0>::type;
 
-            readData<0>(ist, data.template getDataByPos<0>(), dataPositions, SelectTraits<type, 0, TraitsTuple...>::getTraitsInstance(tupTraits));
-
+            constexprFor<ReadData, SelectTraits<type, 0, TraitsTuple...>::TypeTraits::size()>(
+                ist,
+                data.template getDataByPos<0>(),
+                dataPositions,
+                SelectTraits<type, 0, TraitsTuple...>::getTraitsInstance(tupTraits));
         }
     };
 
 public:
     template<typename T, unsigned int ...Dimensions, typename ... TraitsTypes>
     static void readFromStream( std::istream& ist,
-                                MeshDataContainer<T, Dimensions...>& data,
-                                const std::tuple<TraitsTypes...>& tupTraits = std::tuple<>()) {
+                               MeshDataContainer<T, Dimensions...>& data,
+                               const std::tuple<TraitsTypes...>& tupTraits = std::tuple<>()) {
 
         std::map<std::string, std::istream::pos_type> dataPositions = indexData(ist);
 
@@ -243,7 +247,7 @@ public:
     }
     template<typename T, unsigned int ...Dimensions, typename ... TraitsTypes>
     static void readFromStream( std::istream& ist,
-                                const TraitsBinder<MeshDataContainer<T, Dimensions...>, TraitsTypes...>& data) {
+                               const TraitsBinder<MeshDataContainer<T, Dimensions...>, TraitsTypes...>& data) {
 
         std::map<std::string, std::istream::pos_type> dataPositions = indexData(ist);
 

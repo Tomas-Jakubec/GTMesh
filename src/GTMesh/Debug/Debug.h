@@ -23,23 +23,28 @@ namespace dbg {
         JSONLogger JSONDBGLog = JSONLogger("DBG.json");
 
     };
+
+    ConsoleLogger<>& getDebugConsoleLogger() {
+        static ConsoleLogger<> consoleLogger = ConsoleLogger<>();
+        return consoleLogger;
+    }
 }
 
 #define STRVAR(var) #var, var
 
 
-#define DBGVAR(...) ConsoleLogger<>::writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
+#define DBGVAR(...) dbg::getDebugConsoleLogger().writeVariable(__LINE__, __func__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
 #define DBGVARCOND(condition, ...) if(condition) DBGVAR(__VA_ARGS__)
 
 #define DBGVAR_STDIO(...) ConsoleLogger<VARIABLE_EXPORT_METHOD_STDIO>::writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
 #define DBGVARCOND_STDIO(condition, ...) if(condition) DBGVAR_STDIO(__VA_ARGS__)
 
-#define DBGMSG(...) ConsoleLogger<>::writeMessage("++", __LINE__, __FILE__, __VA_ARGS__)
+#define DBGMSG(...) dbg::getDebugConsoleLogger().writeMessage("++", __LINE__, __func__, __FILE__, __VA_ARGS__)
 
 #define DBGTRY(code) \
 try{code;} \
 catch(const std::exception& e){ \
-ConsoleLogger<>::writeMessage("!!", __LINE__, __FILE__, std::string("something went wrong in try block: ") + e.what()); \
+dbg::getDebugConsoleLogger().writeMessage("!!", __LINE__, __func__, __FILE__, std::string("something went wrong in try block: ") + e.what()); \
 exit(1);}
 
 // Macros using html debug output
@@ -56,7 +61,7 @@ exit(1);}
 
 
 
-#define DBGCHECK ConsoleLogger<>::writeMessage("--", __LINE__, __FILE__, "check line")
+#define DBGCHECK dbg::getDebugConsoleLogger().writeMessage("--", __LINE__, __func__, __FILE__, "check line")
 
 
 #else

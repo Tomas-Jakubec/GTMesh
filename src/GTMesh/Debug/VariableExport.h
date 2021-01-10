@@ -46,6 +46,7 @@ struct VariableExport<VARIABLE_EXPORT_METHOD_STDIO>
 /*
  * Printers
  */
+#include <GTMesh/Utils/ClassSelector.h>
 #include "Printers/PrintAny.h"
 #include "Printers/PrintCustom.h"
 #include "Printers/PrintExportable.h"
@@ -55,6 +56,10 @@ struct VariableExport<VARIABLE_EXPORT_METHOD_STDIO>
 #include "Printers/PrintTuple.h"
 #include "Printers/PrintTraitedClass.h"
 
+
+
+
+namespace Impl {
 template<typename VarType, typename Printer, typename = void>
 struct IsPrintableBy : public std::false_type
 {};
@@ -66,18 +71,6 @@ struct IsPrintableBy<VarType,
                                              std::declval<const VarType &>()))>
     : public std::true_type
 {};
-
-template<typename VarType, typename Printer, typename... Printers>
-struct SelectPrinter : public std::conditional_t<IsPrintableBy<VarType, Printer>::value,
-                                                 SelectPrinter<VarType, Printer>,
-                                                 SelectPrinter<VarType, Printers...>>
-{};
-
-template<typename VarType, typename Printer>
-struct SelectPrinter<VarType, Printer>
-{
-    using PrinterType = Printer;
-};
 
 template<typename VarType, typename TraitsTuple, typename Printer, typename = void>
 struct IsPrintableByWithTuple : public std::false_type
@@ -93,25 +86,45 @@ struct IsPrintableByWithTuple<VarType,
     : public std::true_type
 {};
 
-template<typename VarType, typename TraitsTuple, typename Printer, typename... Printers>
-struct SelectPrinterTraitsTuple
-    : public std::conditional_t<IsPrintableByWithTuple<VarType, TraitsTuple, Printer>::value,
-                                SelectPrinterTraitsTuple<VarType, TraitsTuple, Printer>,
-                                SelectPrinterTraitsTuple<VarType, TraitsTuple, Printers...>>
+} // Impl namespace
+
+/// @brief This class detects whether the given Printer class has a suitable print function
+/// to export the variable of VarType.
+template<typename VarType, typename Printer>
+struct IsPrintableBy: public Impl::IsPrintableBy<VarType, Printer>
 {};
 
+/// @brief Template alias for selecting a suitable printer class from the list of printers.
+template<typename VarType, typename... Printers>
+using SelectPrinter = ClassSelector<VarType, IsPrintableBy, Printers...>;
+
+
+
+
+
+template<typename TupleType, typename Printer>
+struct IsPrintableByWithTuple
+{};
+
+
 template<typename VarType, typename TraitsTuple, typename Printer>
-struct SelectPrinterTraitsTuple<VarType, TraitsTuple, Printer>
-{
-    using PrinterType = Printer;
-};
+struct IsPrintableByWithTuple<std::tuple<VarType, TraitsTuple>, Printer>
+    : Impl::IsPrintableByWithTuple<VarType, TraitsTuple, Printer>
+{};
+
+
+
+template<typename VarType, typename TraitsTuple, typename Printer, typename... Printers>
+using SelectPrinterTraitsTuple = ClassSelector<std::tuple<VarType, TraitsTuple>, IsPrintableByWithTuple, Printer, Printers...>;
+
+
 
 template<>
 template<typename T>
 void VariableExport<VARIABLE_EXPORT_METHOD_OSTREAM>::exportVariable(std::ostream &ost, const T &var)
 {
     SelectPrinter< T, PrintCustom, PrintText, PrintIterable, PrintIndexable, PrintTraitedClass,
-                   PrintExportable, PrintTuple, PrintAny >::PrinterType::print(ost, var);
+                   PrintExportable, PrintTuple, PrintAny >::SelectedClass::print(ost, var);
 }
 
 template<>
@@ -120,7 +133,7 @@ void VariableExport<VARIABLE_EXPORT_METHOD_OSTREAM>::exportVariable(std::ostream
 {
     SelectPrinterTraitsTuple< T, std::tuple<TraitsTypes...>,
                               PrintCustom, PrintText, PrintIterable, PrintIndexable, PrintTraitedClass,
-                              PrintExportable, PrintTuple, PrintAny >::PrinterType::print(ost, var, traitsTuple);
+                              PrintExportable, PrintTuple, PrintAny >::SelectedClass::print(ost, var, traitsTuple);
 }
 
 
@@ -128,7 +141,7 @@ template<typename T>
 void VariableExport<VARIABLE_EXPORT_METHOD_STDIO>::exportVariable(const T &var)
 {
     SelectPrinter< T, PrintCustom, PrintText, PrintIterable, PrintIndexable, PrintTraitedClass,
-                   PrintExportable, PrintTuple, PrintAny >::PrinterType::print(var);
+                   PrintExportable, PrintTuple, PrintAny >::SelectedClass::print(var);
 }
 
 
@@ -137,7 +150,7 @@ void VariableExport<VARIABLE_EXPORT_METHOD_STDIO>::exportVariable(const T &var, 
 {
     SelectPrinterTraitsTuple< T, std::tuple<TraitsTypes...>,
                               PrintCustom, PrintText, PrintIterable, PrintIndexable, PrintTraitedClass,
-                              PrintExportable, PrintTuple, PrintAny >::PrinterType::print(var, traitsTuple);
+                              PrintExportable, PrintTuple, PrintAny >::SelectedClass::print(var, traitsTuple);
 }
 
 

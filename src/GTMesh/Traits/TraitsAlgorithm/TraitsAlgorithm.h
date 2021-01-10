@@ -850,43 +850,58 @@ public:
     using type = typename declComonType<>::type;
 };
 
-
 template<template<typename, typename> class Operator>
 struct TraitsAggregationProcesor {
+private:
+    template <typename TraitType>
+    static constexpr
+        std::enable_if_t<HasDefaultArithmeticTraits<TraitType>::value, unsigned int>
+        lastAttributeIndex(){
+        return DefaultArithmeticTraits<TraitType>::size() - 1;
+    }
 
-    template<typename TraitT, unsigned int Index = DefaultArithmeticTraits<TraitT>::size() - 1, typename std::enable_if< Index == 0, bool >::type = true >
-    inline static
-    auto
-    evaluate(const TraitT& op1){
+    template <typename TraitType>
+    static constexpr
+        std::enable_if_t<!HasDefaultArithmeticTraits<TraitType>::value, unsigned int>
+        lastAttributeIndex(...){
+        return 0;
+    }
+
+public:
+    template<typename TraitT,
+             unsigned int Index = lastAttributeIndex<TraitT>(),
+             typename std::enable_if<Index == 0 && HasDefaultArithmeticTraits<TraitT>::value, bool>::type = true>
+    inline static auto evaluate(const TraitT &op1)
+    {
         return evaluate(DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index>(op1));
     }
 
-    template<typename TraitT, unsigned int Index = DefaultArithmeticTraits<TraitT>::size() - 1, typename std::enable_if< (Index > 0) && (Index <= DefaultArithmeticTraits<TraitT>::size() - 1), bool >::type = true>
-    inline static
-    auto
-    evaluate(const TraitT& op1){
-
+    template<typename TraitT,
+             unsigned int Index = lastAttributeIndex<TraitT>(),
+             typename std::enable_if<(Index > 0) && (Index <= lastAttributeIndex<TraitT>())
+                                         && HasDefaultArithmeticTraits<TraitT>::value,
+                                     bool>::type = true>
+    inline static auto evaluate(const TraitT &op1)
+    {
         return Operator<
-                decltype(evaluate<TraitT, Index - 1>(op1)),
-                decltype(evaluate(DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index>(op1)))
-                >::evaluate(
-                    (evaluate<TraitT, Index - 1>(op1)),
-                    (evaluate(DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index>(op1)))
-                );
-
+            decltype(evaluate<TraitT, Index - 1>(op1)),
+            decltype(evaluate(DefaultArithmeticTraits<TraitT>::getTraits().template getValue<Index>(
+                op1)))>::evaluate((evaluate<TraitT, Index - 1>(op1)),
+                                  (evaluate(DefaultArithmeticTraits<TraitT>::getTraits()
+                                                .template getValue<Index>(op1))));
     }
 
     template <typename T, typename std::enable_if< !std::is_class<T>::value, bool >::type = true>
     inline static
-    auto
-    evaluate(const T& arg) noexcept {
+        auto
+        evaluate(const T& arg) noexcept {
         return  arg;
     }
 
     template <typename T, typename std::enable_if< IsIndexable<T>::value, bool >::type = true>
     inline static
-    auto
-    evaluate(const T& array) noexcept {
+        auto
+        evaluate(const T& array) noexcept {
         if (array.size() > 0){
             using resType = decltype (evaluate(array[0]));
             auto res = evaluate(array[0]);

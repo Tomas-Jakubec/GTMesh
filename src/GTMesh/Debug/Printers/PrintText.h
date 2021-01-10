@@ -3,7 +3,6 @@
 #include <GTMesh/Traits/CustomTypeTraits.h>
 
 struct PrintText {
-    static int print(...) {return 0;}
 
     template<typename T>
     using isTextType = std::enable_if_t < std::is_same<T, std::string>::value ||

@@ -4,7 +4,6 @@
 #include "../VariableExport.h"
 
 struct PrintExportable {
-    static int print(...) {return 0;}
 
     /**
      * Prints the variable with. Valid if the

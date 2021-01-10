@@ -114,6 +114,24 @@ TEST( VariableExportTest_Traited, basicTest )
     ss.str("");
     ss.clear();
 
+    VariableExport<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_OSTREAM>::exportVariable(
+        ss, bindTraits(e, DefaultArithmeticTraits<ExportTest>::getTraits()));
+    EXPECT_EQ(
+        ss.str(),
+        R"({ "attrInt" : 1, "attrDouble" : 42.15, "attrTempData" : { "density" : 42.15, "momentum" : [ 42.15, 84.3, 42.15 ] } })");
+    ss.str("");
+    ss.clear();
+
+    VariableExport<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_OSTREAM>::exportVariable(
+        ss,
+        bindTraits(e,
+                   DefaultArithmeticTraits<ExportTest>::getTraits(),
+                   DefaultArithmeticTraits<tempData>::getTraits()));
+    EXPECT_EQ(
+        ss.str(),
+        R"({ "attrInt" : 1, "attrDouble" : 42.15, "attrTempData" : { "density" : 42.15, "velocity" : [ 1, 2, 1 ] } })");
+    ss.str("");
+    ss.clear();
 }
 #endif
 

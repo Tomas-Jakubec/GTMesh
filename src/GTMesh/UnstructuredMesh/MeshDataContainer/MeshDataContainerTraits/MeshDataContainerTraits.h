@@ -12,7 +12,7 @@ public:
     struct nameContainer : nameContainer<Index + 1>{
         char name[9] = {};
         nameContainer() {
-            sprintf(name, "dim: %d", MeshDataContainer<T, dims...>::template dimensionAt<Index>());
+            sprintf_s(name, "dim: %d", MeshDataContainer<T, dims...>::template dimensionAt<Index>());
         }
     };
 

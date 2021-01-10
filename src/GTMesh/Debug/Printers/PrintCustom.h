@@ -8,7 +8,6 @@
  * function.
  */
 struct PrintCustom {
-    static int print(...) {return 0;}
 
     template <typename T>
     using IsPrintableToStream = Impl::void_t<decltype(PrintTo(std::declval<const T&>(), std::declval<std::ostream&>()))>;

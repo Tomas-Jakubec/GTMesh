@@ -2,89 +2,7 @@
 #define PRINTTRAITEDCLASS_H
 #include "../VariableExport.h"
 
-template <typename Class, typename ClassTraits>
-struct IsTraitsOf : public std::false_type {};
-
-template <typename Class, typename ClassTraits>
-struct IsTraitsOf<Class, const ClassTraits&> : public IsTraitsOf<Class, std::decay_t<ClassTraits>>{};
-
-
-template <typename Class, typename ... TraitsArgs>
-struct IsTraitsOf<Class, Traits<Class, TraitsArgs...>> : public std::true_type {};
-
-
-/**
- * This class selects the first class traits with respect
- * to Class. If none type of traits is given, it returns
- * DefaultIOTraits<Class> if possible.
- */
-template <typename Class, size_t Index, typename... TraitsTypes>
-struct SelectTraits{};
-
-template <typename Class, size_t Index, typename TraitsType, typename... TraitsTypes>
-struct SelectTraits<Class, Index, TraitsType, TraitsTypes...> : public
-        std::conditional_t<IsTraitsOf<Class, TraitsType>::value, SelectTraits<Class, Index, TraitsType>, SelectTraits<Class, Index + 1, TraitsTypes...>>{};
-
-template <typename Class, size_t Index, typename TraitsType>
-struct SelectTraits<Class, Index, TraitsType> {
-    static constexpr bool valid = IsTraitsOf<Class, TraitsType>::value || HasDefaultIOTraits<Class>::value;
-private:
-    template <bool b, bool valid, typename = void>
-    struct _conditional{
-        using type = TraitsType;
-    };
-
-    template <typename Dummy>
-    struct _conditional<false, true, Dummy>{
-        using type = typename DefaultIOTraits<Class>::traitsType;
-    };
-
-
-    template <typename Dummy>
-    struct _conditional<false, false, Dummy>{
-        using type = void;
-    };
-public:
-    using TypeTraits = typename _conditional< IsTraitsOf<Class, TraitsType>::value, valid >::type;
-
-    template<typename ... Args, typename TT = TraitsType, typename std::enable_if<IsTraitsOf<Class, TT>::value, bool>::type = true>
-    static const auto& getTraitsInstance(const std::tuple<Args...>& t) {
-        return std::get<Index>(t);
-    }
-
-
-    template<typename ... Args, typename TT = TraitsType, typename std::enable_if<!IsTraitsOf<Class, TT>::value, bool>::type = true>
-    static auto getTraitsInstance(const std::tuple<Args...>&) {
-        return DefaultIOTraits<Class>::getTraits();
-    }
-};
-
-template <typename Class, size_t Index>
-struct SelectTraits<Class, Index> {
-    static constexpr bool valid = HasDefaultIOTraits<Class>::value;
-private:
-    template <bool valid, typename = void>
-    struct _conditional{
-        using type = typename DefaultIOTraits<Class>::traitsType;
-    };
-
-
-    template <typename Dummy>
-    struct _conditional<false, Dummy>{
-        using type = void;
-    };
-public:
-    using TypeTraits = typename _conditional< valid >::type;
-
-
-    template<typename ... Args>
-    static auto getTraitsInstance(const std::tuple<Args...>&) {
-        return DefaultIOTraits<Class>::getTraits();
-    }
-};
-
 struct PrintTraitedClass {
-    static int print(...){return 0;}
 
     template<typename T, typename TraitsIO, unsigned int Index = 0, bool = Index == TraitsIO::size() - 1>
     struct PrintClass{
@@ -151,7 +69,7 @@ struct PrintTraitedClass {
     }
 
     template<typename Class, typename ...TraitsTypes>
-    using IsValid = std::enable_if_t<SelectTraits<Class, 0, TraitsTypes...>::valid, bool>;
+    using IsValid = std::enable_if_t<SelectTraitsWithIODefault<Class, 0, TraitsTypes...>::valid, bool>;
 
 
     template< typename Class, typename PrimaryTraits,  typename ... SecondaryTraits>
@@ -163,7 +81,7 @@ struct PrintTraitedClass {
     template< typename Class, typename PrimaryTraits,  typename ... SecondaryTraits, IsValid<Class, PrimaryTraits, SecondaryTraits...> = true>
     static void print(std::ostream& ost, const Class &traitedClass, const std::tuple<PrimaryTraits, SecondaryTraits...>& tupleTraits)
     {
-        auto traits = SelectTraits<Class, 0, PrimaryTraits, SecondaryTraits...>::getTraitsInstance(tupleTraits);
+        auto traits = SelectTraitsWithIODefault<Class, 0, PrimaryTraits, SecondaryTraits...>::getTraitsInstance(tupleTraits);
         ost << "{ ";
         PrintClass<Class, decltype(traits)>::print(ost, traitedClass, traits, tupleTraits);
         ost << " }";
@@ -188,11 +106,12 @@ struct PrintTraitedClass {
     template< typename Class, typename PrimaryTraits,  typename ... SecondaryTraits, IsValid<Class, PrimaryTraits, SecondaryTraits...> = true>
     static void print(const Class &traitedClass, const std::tuple<PrimaryTraits, SecondaryTraits...>& tupleTraits)
     {
-        auto traits = SelectTraits<Class, 0, PrimaryTraits, SecondaryTraits...>::getTraitsInstance(tupleTraits);
+        auto traits = SelectTraitsWithIODefault<Class, 0, PrimaryTraits, SecondaryTraits...>::getTraitsInstance(tupleTraits);
         printf("{ ");
         PrintClass<Class, decltype(traits)>::print(traitedClass, traits, tupleTraits);
         printf(" }");
     }
+
 };
 
 #endif // PRINTTRAITEDCLASS_H

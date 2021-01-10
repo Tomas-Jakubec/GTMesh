@@ -3,7 +3,6 @@
 #include "../VariableExport.h"
 
 struct PrintTuple {
-    static int print(...){return 0;}
     /**
      * @brief Python-like print of dictionary pair of key and value.
      */
@@ -18,7 +17,7 @@ struct PrintTuple {
     }
 
     template<typename T1, typename T2>
-    static void exportVariable(const std::pair<T1,T2>& b, ...)
+    static void print(const std::pair<T1,T2>& b, ...)
     {
         printf("{ ");
         VariableExport<VARIABLE_EXPORT_METHOD_STDIO>::exportVariable(b.first);
