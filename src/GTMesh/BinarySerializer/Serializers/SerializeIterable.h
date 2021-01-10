@@ -28,7 +28,6 @@ struct SerializeIterable {
         }
     }
 
-    // TODO think how to deserialize lists and maps
 };
 
 struct DeserializeAsociativeMap {
