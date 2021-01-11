@@ -239,7 +239,7 @@ private:
                  typename Real,
                  unsigned int... Dimensions,
                  typename... TraitsTuple>
-        static typename std::enable_if<(!SelectTraits<typename MeshDataContainer<T, Dimensions...>::
+        static typename std::enable_if<(!SelectTraitsWithIODefault<typename MeshDataContainer<T, Dimensions...>::
                                                           template DataContainerType<Index>::type,
                                                       0,
                                                       TraitsTuple...>::valid)>::type
@@ -256,7 +256,7 @@ private:
                  typename Real,
                  unsigned int... Dimensions,
                  typename... TraitsTuple>
-        static typename std::enable_if<(SelectTraits<typename MeshDataContainer<T, Dimensions...>::
+        static typename std::enable_if<(SelectTraitsWithIODefault<typename MeshDataContainer<T, Dimensions...>::
                                                          template DataContainerType<Index>::type,
                                                      0,
                                                      TraitsTuple...>::valid)>::type
@@ -271,11 +271,11 @@ private:
 
             MeshDataIterator<Index - 1, true>::writeToStream(ost, data, writer, tupTraits);
 
-            constexprFor<WriteData, SelectTraits<type, 0, TraitsTuple...>::TypeTraits::size()>(
+            constexprFor<WriteData, SelectTraitsWithIODefault<type, 0, TraitsTuple...>::TypeTraits::size()>(
                 ost,
                 data.template getDataByPos<Index>(),
                 writer,
-                SelectTraits<type, 0, TraitsTuple...>::getTraitsInstance(tupTraits));
+                SelectTraitsWithIODefault<type, 0, TraitsTuple...>::getTraitsInstance(tupTraits));
         }
     };
 
@@ -287,7 +287,7 @@ private:
                  unsigned int... Dimensions,
                  typename... TraitsTuple>
         static typename std::enable_if<
-            (!SelectTraits<
+            (!SelectTraitsWithIODefault<
                 typename MeshDataContainer<T, Dimensions...>::template DataContainerType<0>::type,
                 0,
                 TraitsTuple...>::valid)>::type
@@ -308,7 +308,7 @@ private:
                  unsigned int... Dimensions,
                  typename... TraitsTuple>
         static typename std::enable_if<
-            (SelectTraits<
+            (SelectTraitsWithIODefault<
                 typename MeshDataContainer<T, Dimensions...>::template DataContainerType<0>::type,
                 0,
                 TraitsTuple...>::valid)>::type
@@ -320,13 +320,13 @@ private:
             using type =
                 typename MeshDataContainer<T, Dimensions...>::template DataContainerType<0>::type;
 
-            DBGVAR((SelectTraits<type, 0, TraitsTuple...>::TypeTraits::size()));
+            DBGVAR((SelectTraitsWithIODefault<type, 0, TraitsTuple...>::TypeTraits::size()));
 
-            constexprFor<WriteData, SelectTraits<type, 0, TraitsTuple...>::TypeTraits::size()>(
+            constexprFor<WriteData, SelectTraitsWithIODefault<type, 0, TraitsTuple...>::TypeTraits::size()>(
                 ost,
                 data.template getDataByPos<0>(),
                 writer,
-                SelectTraits<type, 0, TraitsTuple...>::getTraitsInstance(tupTraits));
+                SelectTraitsWithIODefault<type, 0, TraitsTuple...>::getTraitsInstance(tupTraits));
         }
     };
 

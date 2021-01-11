@@ -158,7 +158,7 @@ public:
     struct MeshDataIterator
     {
         template<typename T, unsigned int... Dimensions, typename... TraitsTuple>
-        static typename std::enable_if<(!SelectTraits<typename MeshDataContainer<T, Dimensions...>::
+        static typename std::enable_if<(!SelectTraitsWithIODefault<typename MeshDataContainer<T, Dimensions...>::
                                                           template DataContainerType<Index>::type,
                                                       0,
                                                       TraitsTuple...>::valid)>::type
@@ -171,7 +171,7 @@ public:
         }
 
         template<typename T, unsigned int... Dimensions, typename... TraitsTuple>
-        static typename std::enable_if<(SelectTraits<typename MeshDataContainer<T, Dimensions...>::
+        static typename std::enable_if<(SelectTraitsWithIODefault<typename MeshDataContainer<T, Dimensions...>::
                                                          template DataContainerType<Index>::type,
                                                      0,
                                                      TraitsTuple...>::valid)>::type
@@ -185,11 +185,11 @@ public:
 
             MeshDataIterator<Index - 1, true>::writeToStream(ist, data, dataPositions, tupTraits);
 
-            constexprFor<ReadData, SelectTraits<type, 0, TraitsTuple...>::TypeTraits::size()>(
+            constexprFor<ReadData, SelectTraitsWithIODefault<type, 0, TraitsTuple...>::TypeTraits::size()>(
                 ist,
                 data.template getDataByPos<Index>(),
                 dataPositions,
-                SelectTraits<type, 0, TraitsTuple...>::getTraitsInstance(tupTraits));
+                SelectTraitsWithIODefault<type, 0, TraitsTuple...>::getTraitsInstance(tupTraits));
         }
     };
 
@@ -198,7 +198,7 @@ public:
     {
         template<typename T, unsigned int... Dimensions, typename... TraitsTuple>
         static typename std::enable_if<
-            (!SelectTraits<
+            (!SelectTraitsWithIODefault<
                 typename MeshDataContainer<T, Dimensions...>::template DataContainerType<0>::type,
                 0,
                 TraitsTuple...>::valid)>::type
@@ -215,7 +215,7 @@ public:
 
         template<typename T, unsigned int... Dimensions, typename... TraitsTuple>
         static typename std::enable_if<
-            (SelectTraits<
+            (SelectTraitsWithIODefault<
                 typename MeshDataContainer<T, Dimensions...>::template DataContainerType<0>::type,
                 0,
                 TraitsTuple...>::valid)>::type
@@ -227,11 +227,11 @@ public:
             using type =
                 typename MeshDataContainer<T, Dimensions...>::template DataContainerType<0>::type;
 
-            constexprFor<ReadData, SelectTraits<type, 0, TraitsTuple...>::TypeTraits::size()>(
+            constexprFor<ReadData, SelectTraitsWithIODefault<type, 0, TraitsTuple...>::TypeTraits::size()>(
                 ist,
                 data.template getDataByPos<0>(),
                 dataPositions,
-                SelectTraits<type, 0, TraitsTuple...>::getTraitsInstance(tupTraits));
+                SelectTraitsWithIODefault<type, 0, TraitsTuple...>::getTraitsInstance(tupTraits));
         }
     };
 
