@@ -1,13 +1,13 @@
 #ifndef VTKMESHDATAREADER_H
 #define VTKMESHDATAREADER_H
 #include "../../../Traits/Traits.h"
+#include "../../../Utils/ConstexprFor.h"
 #include "../../../Traits/CustomTypeTraits.h"
 #include "../MeshDataContainer.h"
 #include "../../../Debug/Debug.h"
 #include <istream>
 #include <map>
 #include <sstream>
-#include <GTMesh/Debug/Printers/PrintTraitedClass.h>
 
 template <unsigned int MeshDimension, typename IndexType>
 class VTKMeshDataReader {
