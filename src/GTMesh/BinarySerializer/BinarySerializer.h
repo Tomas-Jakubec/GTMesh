@@ -30,7 +30,7 @@ public:
 
     template<typename T, typename ... Rest>
     void write(const T& data, const Rest&... additionalData) {
-        write(data)
+        write(data);
         write(additionalData...);
     }
 

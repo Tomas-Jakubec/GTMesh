@@ -26,6 +26,7 @@ enable_testing()
 include(BuildGtest)
 include_directories(${CMAKE_SOURCE_DIR}/..)
 add_subdirectory( Debug )
+add_subdirectory( BinarySerializer )
 add_subdirectory( Traits )
 add_subdirectory( UnstructuredMesh )
 
