@@ -10,7 +10,7 @@ struct SerializeCustom {
 
 
     template <typename T>
-    using IsBitviseDeserializable = Impl::void_t<decltype(BinaryDeserialize(std::declval<BinarySerializer::ByteContainerIterator&>(), std::declval<const T&>()))>;
+    using IsBitviseDeserializable = Impl::void_t<decltype(BinaryDeserialize(std::declval<BinarySerializer::ByteContainerIterator&>(), std::declval<T&>()))>;
 
 
     template <typename T>

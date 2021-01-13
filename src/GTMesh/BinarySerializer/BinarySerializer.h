@@ -28,32 +28,74 @@ public:
         return data;
     }
 
+    template<typename T, typename ... Rest>
+    void write(const T& data, const Rest&... additionalData) {
+        write(data)
+        write(additionalData...);
+    }
+
     template<typename T>
-    void maddNext(const T& data) {
+    void write(const T& data) {
         addNext(mData, data);
     }
 
     template <typename T>
-    void mreadNext(T& data) {
+    BinarySerializer& operator<<(const T& value) {
+        this->write(value);
+        return *this;
+    }
+
+    template <typename T, typename ... Rest>
+    void read(T& data, Rest&... additionalData) {
+        read(data);
+        read(additionalData...);
+    }
+
+    template <typename T>
+    void read(T& data) {
+        resetIteratorIfNotValid();
         readNext(mDataIterator, data);
     }
 
     template <typename T>
-    T mreadNext() {
+    T read() {
         return readNext<T>(mDataIterator);
+    }
+
+    template <typename T>
+    BinarySerializer& operator>>(T& value) {
+        this->read(value);
+        return *this;
     }
 
     void resetIterator() {
         mDataIterator = mData.cbegin();
     }
-//private:
+
+    bool isIteratorValid() {
+        return mData.begin() <= mDataIterator && mData.end() > mDataIterator;
+    }
+
+    void resetIteratorIfNotValid() {
+        if (!isIteratorValid()) {
+            resetIterator();
+        }
+    }
+
+    void clear() {
+        mData.clear();
+        mDataIterator = {};
+    }
+private:
     ByteContainer mData;
     ByteContainerIterator mDataIterator;
 };
 
 #include "Serializers/SerializeCustom.h"
 #include "Serializers/SerializeSimple.h"
+#include "Serializers/SerializeTraitedClass.h"
 #include "Serializers/SerializeIterable.h"
+#include "Serializers/SerializeIndexable.h"
 #include "Serializers/SerializeTuple.h"
 #include <GTMesh/Utils/ClassSelector.h>
 
@@ -79,7 +121,7 @@ struct IsDeserializableBy<
     VarType,
     Serializer,
     decltype(Serializer::deserialize(std::declval<std::vector<unsigned char>::const_iterator &>(),
-                                  std::declval<const VarType &>()))> : public std::true_type
+                                  std::declval<VarType &>()))> : public std::true_type
 {};
 
 } // Impl namespace
@@ -94,8 +136,13 @@ using SelectSerializer = ClassSelector<VarType, IsSerializableBy, Serializers...
 template<typename T>
 void BinarySerializer::addNext(std::vector<BinarySerializer::Byte> &binaryDataContainer, const T &data)
 {
-    SelectSerializer<T, SerializeCustom, SerializeSimple, SerializeIterable, SerializeTuple>::
-        SelectedClass::serialize(binaryDataContainer, data);
+    SelectSerializer<T,
+                     SerializeCustom,
+                     SerializeSimple,
+                     SerializeTraitedClass,
+                     SerializeIterable,
+                     SerializeIndexable,
+                     SerializeTuple>::SelectedClass::serialize(binaryDataContainer, data);
 }
 
 template<typename VarType, typename Serializer>
@@ -111,9 +158,11 @@ void BinarySerializer::readNext(std::vector<Byte>::const_iterator& binaryDataIte
     SelectDeserializer<T,
                        SerializeCustom,
                        SerializeSimple,
+                       SerializeTraitedClass,
                        DeserializeAsociativeMap,
                        DeserializeAsociativeSet,
                        SerializeIterable,
+                       SerializeIndexable,
                        SerializeTuple>::SelectedClass::deserialize(binaryDataIterator, data);
 }
 

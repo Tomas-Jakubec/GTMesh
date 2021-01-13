@@ -32,17 +32,19 @@ public:
 
     constexpr MemberAccess(MemberAccess<Class, ValueType Class::*, void> &&) = default;
 
-    inline ValueType getValue(const Class *c) const { return c->*mReference; }
+    inline const ValueType& getValue(const Class *c) const { return c->*mReference; }
 
     inline void setValue(Class *c, const ValueType &val) const { c->*mReference = val; }
 
     inline ValueType &getAttr(Class *c) const { return c->*mReference; }
+    inline const ValueType &getAttr(const Class *c) const { return c->*mReference; }
 
-    inline ValueType getValue(const Class &c) const { return c.*mReference; }
+    inline const ValueType& getValue(const Class &c) const { return c.*mReference; }
 
     inline void setValue(Class &c, const ValueType &val) const { c.*mReference = val; }
 
     inline ValueType &getAttr(Class &c) const { return c.*mReference; }
+    inline const ValueType &getAttr(const Class &c) const { return c.*mReference; }
 };
 
 // Experimental function traits approach
