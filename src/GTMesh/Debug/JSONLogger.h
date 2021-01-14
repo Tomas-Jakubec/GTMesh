@@ -4,6 +4,7 @@
 #include <fstream>
 #include "VariableExport.h"
 #include <iostream>
+#include <iomanip>
 /**
  * @brief The JSONLogger class
  * has opened file to write log
@@ -84,7 +85,7 @@ public:
             firstWrite = false;
         }
 
-        (*logFile) << "\t{\n\t\t\"expr\" : \""<< escapeQuotationMarks( name ) <<
+        (*logFile) << "\t{\n\t\t\"expr\" : \""<< std::quoted( name ) <<
                       "\",\n\t\t\"data\" : " ;
         VariableExport<>::exportVariable(*logFile, value);
         (*logFile) << "\n}";
@@ -108,7 +109,7 @@ public:
                       "\n\t\t\"gInd\" : " << groupIndex << "," <<
                       "\n\t\t\"file\" : \"" << cppFile << "\"," <<
                       "\n\t\t\"line\" : " << line << "," <<
-                      "\n\t\t\"expr\" : \""<< escapeQuotationMarks( name ) << "\"," <<
+                      "\n\t\t\"expr\" : \""<< std::quoted( name ) << "\"," <<
                       "\n\t\t\"data\" : ";
         VariableExport<>::exportVariable(*logFile, value);
         (*logFile) << "\n\t}";
@@ -132,7 +133,7 @@ public:
                       "\n\t\t\"gInd\" : " << groupIndex << "," <<
                       "\n\t\t\"file\" : \"" << cppFile << "\"," <<
                       "\n\t\t\"line\" : " << line << "," <<
-                      "\n\t\t\"expr\" : \""<< escapeQuotationMarks( name ) << "\"," <<
+                      "\n\t\t\"expr\" : \""<< std::quoted( name ) << "\"," <<
                       "\n\t\t\"data\" : ";
         VariableExport<>::exportVariable(*logFile, value);
 
@@ -157,16 +158,6 @@ public:
         }
         return res;
     }
-
-    std::string escapeQuotationMarks(const char * str){
-        std::string res = str;
-        size_t pos = 0;
-        while((pos = res.find("\"", pos + 2)) != res.npos){
-            res.replace(pos, 1, "\\\"");
-        }
-        return res;
-    }
-
 };
 
 #endif // JSONLOGGER_H
