@@ -17,7 +17,6 @@ class JSONLogger {
     std::ofstream* logFile;
     int groupIndex = 0;
     bool firstWrite = true;
-
 public:
     JSONLogger(){logFile = nullptr;}
 
@@ -85,9 +84,9 @@ public:
             firstWrite = false;
         }
 
-        (*logFile) << "\t{\n\t\t\"expr\" : \""<< std::quoted( name ) <<
-                      "\",\n\t\t\"data\" : " ;
-        VariableExport<>::exportVariable(*logFile, value);
+        (*logFile) << "\t{\n\t\t\"expr\" : "<< std::quoted( name ) <<
+                      ",\n\t\t\"data\" : " ;
+        VariableExport::exportVariable(*logFile, value);
         (*logFile) << "\n}";
 
 
@@ -109,9 +108,9 @@ public:
                       "\n\t\t\"gInd\" : " << groupIndex << "," <<
                       "\n\t\t\"file\" : \"" << cppFile << "\"," <<
                       "\n\t\t\"line\" : " << line << "," <<
-                      "\n\t\t\"expr\" : \""<< std::quoted( name ) << "\"," <<
+                      "\n\t\t\"expr\" : " << std::quoted( name ) << "," <<
                       "\n\t\t\"data\" : ";
-        VariableExport<>::exportVariable(*logFile, value);
+        VariableExport::exportVariable(*logFile, value);
         (*logFile) << "\n\t}";
 
         writeVar(line, cppFile, rest...);
@@ -133,9 +132,9 @@ public:
                       "\n\t\t\"gInd\" : " << groupIndex << "," <<
                       "\n\t\t\"file\" : \"" << cppFile << "\"," <<
                       "\n\t\t\"line\" : " << line << "," <<
-                      "\n\t\t\"expr\" : \""<< std::quoted( name ) << "\"," <<
+                      "\n\t\t\"expr\" : " << std::quoted( name ) << "," <<
                       "\n\t\t\"data\" : ";
-        VariableExport<>::exportVariable(*logFile, value);
+        VariableExport::exportVariable(*logFile, value);
 
         (*logFile) << "\n\t}";
 

@@ -17,19 +17,19 @@ TEST( VariableExportTest_Basic, basicTest )
 
     std::stringstream ss;
 
-    VariableExport<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_OSTREAM>::exportVariable(ss, r);
+    VariableExport::exportVariable(ss, r);
     EXPECT_EQ(ss.str(),"42.15");
     ss.str("");
     ss.clear();
-    VariableExport<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_OSTREAM>::exportVariable(ss, i);
+    VariableExport::exportVariable(ss, i);
     EXPECT_EQ(ss.str(),"15");
     ss.str("");
     ss.clear();
-    VariableExport<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_OSTREAM>::exportVariable(ss, c);
+    VariableExport::exportVariable(ss, c);
     EXPECT_EQ(ss.str(),"\"*\"");
     ss.str("");
     ss.clear();
-    VariableExport<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_OSTREAM>::exportVariable(ss, b);
+    VariableExport::exportVariable(ss, b);
     EXPECT_EQ(ss.str(),"false");
     ss.str("");
     ss.clear();
@@ -50,15 +50,15 @@ TEST( VariableExportTest_Container, basicTest )
 
     std::stringstream ss;
 
-    VariableExport<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_OSTREAM>::exportVariable(ss, list);
+    VariableExport::exportVariable(ss, list);
     EXPECT_EQ(ss.str(),"[ 1, 2, 3 ]");
     ss.str("");
     ss.clear();
-    VariableExport<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_OSTREAM>::exportVariable(ss, vec);
+    VariableExport::exportVariable(ss, vec);
     EXPECT_EQ(ss.str(),"[ [ 1, 2, 3 ], [ 1, 2, 3 ], [ 1, 2, 3 ], [ 1, 2, 3 ], [ 1, 2, 3 ] ]");
     ss.str("");
     ss.clear();
-    VariableExport<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_OSTREAM>::exportVariable(ss, m);
+    VariableExport::exportVariable(ss, m);
     EXPECT_EQ(ss.str(),R"([ { "druhy": 2}, { "prvni": 1}, { "treti": 3} ])");
     ss.str("");
     ss.clear();
@@ -109,12 +109,12 @@ TEST( VariableExportTest_Traited, basicTest )
 
     std::stringstream ss;
 
-    VariableExport<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_OSTREAM>::exportVariable(ss, e);
+    VariableExport::exportVariable(ss, e);
     EXPECT_EQ(ss.str(),R"({ "attrInt" : 1, "attrDouble" : 42.15, "attrFloat" : 15.8, "attrLongDouble" : 1.58e+301, "attrChar" : "*", "attrULL" : 465135168421684684, "attrStr" : "Ahojky", "attrTempData" : { "density" : 42.15, "momentum" : [ 42.15, 84.3, 42.15 ] }, "attrVec" : [ "tohle", "je", "nejlepsi", "debugovaci", "system" ] })");
     ss.str("");
     ss.clear();
 
-    VariableExport<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_OSTREAM>::exportVariable(
+    VariableExport::exportVariable(
         ss, bindTraits(e, DefaultArithmeticTraits<ExportTest>::getTraits()));
     EXPECT_EQ(
         ss.str(),
@@ -122,7 +122,7 @@ TEST( VariableExportTest_Traited, basicTest )
     ss.str("");
     ss.clear();
 
-    VariableExport<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_OSTREAM>::exportVariable(
+    VariableExport::exportVariable(
         ss,
         bindTraits(e,
                    DefaultArithmeticTraits<ExportTest>::getTraits(),

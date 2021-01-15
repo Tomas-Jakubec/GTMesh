@@ -12,12 +12,6 @@
 
 
 
-enum VARIABLE_EXPORT_METHOD {
-    VARIABLE_EXPORT_METHOD_OSTREAM,
-    VARIABLE_EXPORT_METHOD_STDIO
-};
-
-template <VARIABLE_EXPORT_METHOD target = VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_OSTREAM>
 struct VariableExport {
 
 
@@ -27,11 +21,7 @@ struct VariableExport {
 
     template <typename T, typename ... TraitsTypes>
     static void exportVariable(std::ostream& ost, const T& var, const std::tuple<TraitsTypes...>&);
-};
 
-template <>
-struct VariableExport<VARIABLE_EXPORT_METHOD_STDIO>
-{
 
     template <typename T>
     static void exportVariable(const T& var);
@@ -119,17 +109,17 @@ using SelectPrinterTraitsTuple = ClassSelector<std::tuple<VarType, TraitsTuple>,
 
 
 
-template<>
+
 template<typename T>
-void VariableExport<VARIABLE_EXPORT_METHOD_OSTREAM>::exportVariable(std::ostream &ost, const T &var)
+void VariableExport::exportVariable(std::ostream &ost, const T &var)
 {
     SelectPrinter< T, PrintCustom, PrintText, PrintIterable, PrintIndexable, PrintTraitedClass,
                    PrintExportable, PrintTuple, PrintAny >::SelectedClass::print(ost, var);
 }
 
-template<>
+
 template<typename T, typename ... TraitsTypes>
-void VariableExport<VARIABLE_EXPORT_METHOD_OSTREAM>::exportVariable(std::ostream &ost, const T &var, const std::tuple<TraitsTypes...>& traitsTuple)
+void VariableExport::exportVariable(std::ostream &ost, const T &var, const std::tuple<TraitsTypes...>& traitsTuple)
 {
     SelectPrinterTraitsTuple< T, std::tuple<TraitsTypes...>,
                               PrintCustom, PrintText, PrintIterable, PrintIndexable, PrintTraitedClass,
@@ -138,7 +128,7 @@ void VariableExport<VARIABLE_EXPORT_METHOD_OSTREAM>::exportVariable(std::ostream
 
 
 template<typename T>
-void VariableExport<VARIABLE_EXPORT_METHOD_STDIO>::exportVariable(const T &var)
+void VariableExport::exportVariable(const T &var)
 {
     SelectPrinter< T, PrintCustom, PrintText, PrintIterable, PrintIndexable, PrintTraitedClass,
                    PrintExportable, PrintTuple, PrintAny >::SelectedClass::print(var);
@@ -146,7 +136,7 @@ void VariableExport<VARIABLE_EXPORT_METHOD_STDIO>::exportVariable(const T &var)
 
 
 template<typename T, typename ... TraitsTypes>
-void VariableExport<VARIABLE_EXPORT_METHOD_STDIO>::exportVariable(const T &var, const std::tuple<TraitsTypes...>& traitsTuple)
+void VariableExport::exportVariable(const T &var, const std::tuple<TraitsTypes...>& traitsTuple)
 {
     SelectPrinterTraitsTuple< T, std::tuple<TraitsTypes...>,
                               PrintCustom, PrintText, PrintIterable, PrintIndexable, PrintTraitedClass,

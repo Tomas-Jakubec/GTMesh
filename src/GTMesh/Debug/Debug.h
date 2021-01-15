@@ -5,7 +5,6 @@
 #include "../Macros/MacroForEach.h"
 #include <iostream>
 #include "HTMLLogger.h"
-#include "CSVLogger.h"
 #include "JSONLogger.h"
 #include "ConsoleLogger.h"
 #include "../Singleton/Singleton.h"
@@ -18,14 +17,12 @@ namespace dbg {
     struct DBGStatics {
         HtmlLogger HDBGLog = HtmlLogger("DBG.html");
 
-        CSVLogger CSVDBGLog = CSVLogger("DBG.csv");
-
         JSONLogger JSONDBGLog = JSONLogger("DBG.json");
 
     };
 
-    ConsoleLogger<>& getDebugConsoleLogger() {
-        static ConsoleLogger<> consoleLogger = ConsoleLogger<>();
+    inline ConsoleLogger& getDebugConsoleLogger() {
+        static ConsoleLogger consoleLogger = ConsoleLogger();
         return consoleLogger;
     }
 }
@@ -36,7 +33,7 @@ namespace dbg {
 #define DBGVAR(...) dbg::getDebugConsoleLogger().writeVariable(__LINE__, __func__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
 #define DBGVARCOND(condition, ...) if(condition) DBGVAR(__VA_ARGS__)
 
-#define DBGVAR_STDIO(...) ConsoleLogger<VARIABLE_EXPORT_METHOD_STDIO>::writeVar(__LINE__, __FILE__, FOR_EACH(STRVAR, __VA_ARGS__))
+#define DBGVAR_STDIO(...) ConsoleLogger::writeVarC(__LINE__, __FILE__, __func__, FOR_EACH(STRVAR, __VA_ARGS__))
 #define DBGVARCOND_STDIO(condition, ...) if(condition) DBGVAR_STDIO(__VA_ARGS__)
 
 #define DBGMSG(...) dbg::getDebugConsoleLogger().writeMessage("++", __LINE__, __func__, __FILE__, __VA_ARGS__)
@@ -62,7 +59,7 @@ exit(1);}
 
 
 #define DBGCHECK dbg::getDebugConsoleLogger().writeMessage("--", __LINE__, __func__, __FILE__, "check line")
-
+#define DBGCHECK_STDIO ConsoleLogger::writeMessageC("--", __LINE__, __func__, __FILE__, "check line")
 
 #else
 

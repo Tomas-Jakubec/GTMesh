@@ -3,13 +3,16 @@
 #include "VariableExport.h"
 
 #ifdef _WIN32
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #include <windows.h>
 #endif
+
+
 /**
  * @brief The ConsoleLogger class
  */
-template <VARIABLE_EXPORT_METHOD method = VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_OSTREAM>
 class ConsoleLogger {
     bool mColoredOutput = true; //!< If true then the output the variable names and their values are highlighted.
     bool mOnlyFilename = false; //!< If true then the filename is exported without its path.
@@ -87,7 +90,7 @@ public:
         printHeader(line, funcName, sourceFile, prefix);
         std::cerr << "==> ";
         insertMessageColor();
-        VariableExport<>::exportVariable(std::cerr, message);
+        VariableExport::exportVariable(std::cerr, message);
         resetColor();
         std::cerr << " <==" << std::endl;
 
@@ -117,7 +120,7 @@ private:
         resetColor();
         std::cerr << " ]] ==> " << std::flush;
         insertValueColor();
-        VariableExport<>::exportVariable(std::cerr, value);
+        VariableExport::exportVariable(std::cerr, value);
         resetColor();
         std::cerr << "\n";
 
@@ -189,80 +192,39 @@ private:
         }
         return res;
     }
-};
-
-
-
-
-template <>
-class ConsoleLogger<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_STDIO> {
 
 public:
 
     template<typename MSGTYPE, typename... MSGTYPES>
-    static void writeMessage(const char* prefix, int line, const char* sourceFile, const MSGTYPE& message, const MSGTYPES&... rest) {
-        writeMessage(prefix, line, sourceFile, message);
-        writeMessage(prefix, line, sourceFile, rest...);
+    static void writeMessageC(const char* prefix, int line, const char* funcName, const char* sourceFile, const MSGTYPE& message, const MSGTYPES&... rest) {
+        writeMessageC(prefix, funcName, line, sourceFile, message);
+        writeMessageC(prefix, funcName, line, sourceFile, rest...);
     }
 
 
     template<typename MSGTYPE>
-    static void writeMessage(const char* prefix, int line, const char* sourceFile, const MSGTYPE& message) {
+    static void writeMessageC(const char* prefix, int line, const char* funcName, const char* sourceFile, const MSGTYPE& message) {
+        printf("%s %s: %i <%s> ==> ", prefix, sourceFile, line, funcName);
 
-        printf("%s %s << %i >> ==> ",
-               prefix,
-               sourceFile,
-               line);
-
-        VariableExport<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_STDIO>::exportVariable(message);
+        VariableExport::exportVariable(message);
 
         printf(" <==\n");
     }
 
-    template<typename VAR_NAME, typename VAR, typename ... REST>
-    static void writeVar(VAR_NAME name, VAR value, REST ... rest){
-
-        writeVar(name, value);
-        writeVar(rest...);
-    }
-
-
-    template<typename VAR_NAME, typename VAR>
-    static void writeVar(VAR_NAME name, VAR value){
-
-        std::cerr << "variable " << name << " has value: " << value;
-    }
-
 
 
     template<typename VAR_NAME, typename VAR, typename ... REST>
-    static void writeVar(int line, const char* cppFile, const VAR_NAME& name,const VAR& value,const REST& ... rest){
+    static void writeVarC(int line, const char* funcName, const char* cppFile, const VAR_NAME& name,const VAR& value,const REST& ... rest){
 
-        writeVar(line, cppFile, name, value);
-        writeVar(line, cppFile,  rest...);
+        writeVarC(line, funcName, cppFile, name, value);
+        writeVarC(line, funcName, cppFile, rest...);
     }
 
     template<typename VAR>
-    static void writeVar(int line, const char* cppFile, const char* name,const VAR& value){
+    static void writeVarC(int line, const char* funcName, const char* cppFile, const char* name,const VAR& value){
+        printf("== %s: %i <%s> [[ %s ]] ==> ", cppFile, line, funcName, name);
 
-        printf("== %s << %i >> [[ %s ]] ==> ",
-               cppFile,
-               line,
-               name);
-
-        VariableExport<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_STDIO>::exportVariable(value);
-        printf("\n");
-    }
-
-    template<typename VAR>
-    static void writeVar(int line, const char* cppFile, const char* name,const std::initializer_list<VAR>& value){
-
-        printf("== %s << %i >> [[ %s ]] ==> ",
-               cppFile,
-               line,
-               name);
-
-        VariableExport<VARIABLE_EXPORT_METHOD::VARIABLE_EXPORT_METHOD_STDIO>::exportVariable(value);
+        VariableExport::exportVariable(value);
         printf("\n");
     }
 

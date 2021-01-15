@@ -14,7 +14,7 @@ struct PrintIterable {
         auto it = list.begin();
         ost << "[ ";
         while (it != list.end()){
-            VariableExport<>::exportVariable(ost, *it);
+            VariableExport::exportVariable(ost, *it);
             if (++it != list.end()){
                 ost << ", ";
             }
@@ -29,7 +29,7 @@ struct PrintIterable {
         auto it = list.begin();
         ost << "[ ";
         while (it != list.end()){
-            VariableExport<>::exportVariable(ost, *it, traitsTuple);
+            VariableExport::exportVariable(ost, *it, traitsTuple);
             if (++it != list.end()){
                 ost << ", ";
             }
@@ -44,7 +44,7 @@ struct PrintIterable {
         auto it = list.begin();
         printf("[ ");
         while (it != list.end()){
-            VariableExport<VARIABLE_EXPORT_METHOD_STDIO>::exportVariable(*it);
+            VariableExport::exportVariable(*it);
             if (++it != list.end()){
                 printf(", ");
             }
@@ -60,7 +60,7 @@ struct PrintIterable {
         auto it = list.begin();
         printf("[ ");
         while (it != list.end()){
-            VariableExport<VARIABLE_EXPORT_METHOD_STDIO>::exportVariable(*it, traitsTuple);
+            VariableExport::exportVariable(*it, traitsTuple);
             if (++it != list.end()){
                 printf(", ");
             }

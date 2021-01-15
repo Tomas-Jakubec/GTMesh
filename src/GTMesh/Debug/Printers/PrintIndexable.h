@@ -19,7 +19,7 @@ struct PrintIndexable {
     static void print(std::ostream& ost, const Indexable& vec) {
         ost << "[ ";
         for (decltype (size(vec))i = 0; i < size(vec); i++){
-            VariableExport<>::exportVariable(ost, vec[i]);
+            VariableExport::exportVariable(ost, vec[i]);
             if (i <  size(vec) - 1){
                 ost << ", ";
             }
@@ -32,7 +32,7 @@ struct PrintIndexable {
     static void print(std::ostream& ost, const Indexable& vec, const std::tuple<TraitsTypes...>& traitsTuple) {
         ost << "[ ";
         for (decltype (size(vec))i = 0; i < size(vec); i++){
-            VariableExport<>::exportVariable(ost, vec[i], traitsTuple);
+            VariableExport::exportVariable(ost, vec[i], traitsTuple);
             if (i <  size(vec) - 1){
                 ost << ", ";
             }
@@ -45,7 +45,7 @@ struct PrintIndexable {
     static void print(const Indexable& vec) {
         printf("[ ");
         for (decltype (size(vec))i = 0; i < size(vec); i++){
-            VariableExport<VARIABLE_EXPORT_METHOD_STDIO>::exportVariable(vec[i]);
+            VariableExport::exportVariable(vec[i]);
             if (i < size(vec) - 1){
                 printf(", ");
             }
@@ -58,7 +58,7 @@ struct PrintIndexable {
     static void print(const Indexable& vec, const std::tuple<TraitsTypes...>& traitsTuple) {
         printf("[ ");
         for (decltype (size(vec))i = 0; i < size(vec); i++){
-            VariableExport<VARIABLE_EXPORT_METHOD_STDIO>::exportVariable(vec[i], traitsTuple);
+            VariableExport::exportVariable(vec[i], traitsTuple);
             if (i < size(vec) - 1){
                 printf(", ");
             }

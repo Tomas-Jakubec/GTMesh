@@ -1,78 +1,123 @@
 #ifndef PRINTTUPLE_H
 #define PRINTTUPLE_H
 #include "../VariableExport.h"
-
+#include <GTMesh/Utils/ConstexprFor.h>
+/**
+ * @brief Provides functions that prints std::pair and std::tuple similarly to the python.
+ */
 struct PrintTuple {
     /**
      * @brief Python-like print of dictionary pair of key and value.
      */
     template<typename T1, typename T2>
-    static void print(std::ostream& ost, const std::pair<T1,T2>& b, ...)
+    static void print(std::ostream& ost, const std::pair<T1,T2>& b)
     {
         ost << "{ ";
-        VariableExport<VARIABLE_EXPORT_METHOD_OSTREAM>::exportVariable(ost, b.first);
+        VariableExport::exportVariable(ost, b.first);
         ost << ": ";
-        VariableExport<VARIABLE_EXPORT_METHOD_OSTREAM>::exportVariable(ost, b.second);
+        VariableExport::exportVariable(ost, b.second);
+        ost << "}";
+    }
+
+    template<typename T1, typename T2, typename ... TraitsTypes>
+    static void print(std::ostream& ost, const std::pair<T1,T2>& b, const std::tuple<TraitsTypes...>& traitsTuple)
+    {
+        ost << "{ ";
+        VariableExport::exportVariable(ost, b.first, traitsTuple);
+        ost << ": ";
+        VariableExport::exportVariable(ost, b.second, traitsTuple);
         ost << "}";
     }
 
     template<typename T1, typename T2>
-    static void print(const std::pair<T1,T2>& b, ...)
+    static void print(const std::pair<T1,T2>& b)
     {
         printf("{ ");
-        VariableExport<VARIABLE_EXPORT_METHOD_STDIO>::exportVariable(b.first);
+        VariableExport::exportVariable(b.first);
         printf(": ");
-        VariableExport<VARIABLE_EXPORT_METHOD_STDIO>::exportVariable(b.second);
+        VariableExport::exportVariable(b.second);
         printf("}");
     }
 
-
-    template < unsigned int Index = 0, bool print = false, typename ... Types,  std::enable_if_t<(Index < sizeof... (Types) - 1) && !print, bool > = true >
-    static void printTuple(std::ostream& ost, const std::tuple<Types...>& varTuple) {
-        printTuple< Index, true >(ost, varTuple);
-        printTuple< Index + 1 >(ost, varTuple);
-    }
-
-
-    template < unsigned int Index = 0, bool print = false, typename ... Types,  std::enable_if_t<(Index == sizeof... (Types) - 1) || print, bool > = true >
-    static void printTuple(std::ostream& ost, const std::tuple<Types...>& varTuple) {
-        VariableExport<VARIABLE_EXPORT_METHOD_OSTREAM>::exportVariable(ost, std::get<Index>(varTuple));
-        if (Index < sizeof... (Types) - 1) {
-            ost << ", ";
-        }
-    }
-
-    template<typename ... Types>
-    static void print(std::ostream& ost, const std::tuple<Types...>& varTuple, ...)
-    {
-        ost << "{ ";
-        printTuple(ost, varTuple);
-        ost << "}";
-    }
-
-    // Version for printf
-    // These functions are to be performed in CUDA kernels
-    template < unsigned int Index = 0, bool print = false, typename ... Types,  std::enable_if_t<(Index < sizeof... (Types) - 1) && !print, bool > = true >
-    static void printTuple(const std::tuple<Types...>& varTuple) {
-        printTuple< Index, true >(varTuple);
-        printTuple< Index + 1 >(varTuple);
-    }
-
-
-    template < unsigned int Index = 0, bool print = false, typename ... Types,  std::enable_if_t<(Index == sizeof... (Types) - 1) || print, bool > = true >
-    static void printTuple(const std::tuple<Types...>& varTuple) {
-        VariableExport<VARIABLE_EXPORT_METHOD_STDIO>::exportVariable(std::get<Index>(varTuple));
-        if (Index < sizeof... (Types) - 1) {
-            printf(", ");
-        }
-    }
-
-    template<typename ... Types>
-    static void print(const std::tuple<Types...>& varTuple, ...)
+    template<typename T1, typename T2, typename ... TraitsTypes>
+    static void print(const std::pair<T1,T2>& b, const std::tuple<TraitsTypes...>& traitsTuple)
     {
         printf("{ ");
-        printTuple(varTuple);
+        VariableExport::exportVariable(b.first, traitsTuple);
+        printf(": ");
+        VariableExport::exportVariable(b.second, traitsTuple);
         printf("}");
+    }
+
+    struct PrintTupleExec {
+        template < unsigned int Index = 0, typename ... Types>
+        static void printTuple(std::ostream& ost, const std::tuple<Types...>& varTuple) {
+            VariableExport::exportVariable(ost, std::get<Index>(varTuple));
+            if (Index < sizeof... (Types) - 1) {
+                ost << ", ";
+            }
+        }
+
+        template < unsigned int Index = 0, typename ... Types, typename ... TraitsTypes>
+        static void printTuple(std::ostream& ost, const std::tuple<Types...>& varTuple, const std::tuple<TraitsTypes...>& traitsTuple) {
+            VariableExport::exportVariable(ost, std::get<Index>(varTuple), traitsTuple);
+            if (Index < sizeof... (Types) - 1) {
+                ost << ", ";
+            }
+        }
+
+        // printf version
+        template < unsigned int Index = 0, typename ... Types>
+        static void exec(const std::tuple<Types...>& varTuple) {
+            VariableExport::exportVariable(std::get<Index>(varTuple));
+            if (Index < sizeof... (Types) - 1) {
+                printf(", ");
+            }
+        }
+
+        template < unsigned int Index = 0, typename ... Types, typename ... TraitsTypes>
+        static void exec(const std::tuple<Types...>& varTuple, const std::tuple<TraitsTypes...>& traitsTuple) {
+            VariableExport::exportVariable(std::get<Index>(varTuple), traitsTuple);
+            if (Index < sizeof... (Types) - 1) {
+                printf(", ");
+            }
+        }
+    };
+
+
+    template<typename ... Types>
+    static void print(std::ostream& ost, const std::tuple<Types...>& varTuple)
+    {
+        ost << "[ ";
+        constexprFor<PrintTupleExec, sizeof... (Types)>(ost, varTuple);
+        ost << "]";
+    }
+
+
+    template<typename ... Types, typename ... TraitsTypes>
+    static void print(std::ostream& ost, const std::tuple<Types...>& varTuple, const std::tuple<TraitsTypes...>& traitsTuple)
+    {
+        ost << "[ ";
+        constexprFor<PrintTupleExec, sizeof... (Types)>(ost, varTuple, traitsTuple);
+        ost << "]";
+    }
+
+
+
+    template<typename ... Types>
+    static void print(const std::tuple<Types...>& varTuple)
+    {
+        printf("[ ");
+        constexprFor<PrintTupleExec, sizeof... (Types)>(varTuple);
+        printf("]");
+    }
+
+    template<typename ... Types, typename ... TraitsTypes>
+    static void print(const std::tuple<Types...>& varTuple, const std::tuple<TraitsTypes...>& traitsTuple)
+    {
+        printf("[ ");
+        constexprFor<PrintTupleExec, sizeof... (Types)>(varTuple, traitsTuple);
+        printf("]");
     }
 };
 
