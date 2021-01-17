@@ -82,6 +82,11 @@ public:
         }
     }
 
+    /**
+     * @brief This function clears the contained vector. Note that clear does not
+     * free the memory. Thus, it is efficient to reuse serializer especially for sending
+     * repetetive messages with the same data length.
+     */
     void clear() {
         mData.clear();
         mDataIterator = {};

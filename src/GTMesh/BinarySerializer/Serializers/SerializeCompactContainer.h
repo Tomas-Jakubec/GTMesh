@@ -20,12 +20,11 @@ struct Compact<T, std::enable_if_t<Impl::IsSimpleSerializable_v<T>>> : public st
  * Indexable interface for stl containers.
  */
 template<typename T>
-struct Compact<
-    T,
-    Impl::void_t<
-        std::enable_if_t<::IsIndexable<T>::value
-                         && Compact<std::decay_t<decltype(std::declval<const T &>()[0])>>::value>,
-        decltype(std::declval<T &>().data())>> : public std::true_type
+struct Compact<T,
+               Impl::void_t<std::enable_if_t<
+                   ::IsIndexable<T>::value
+                   && Compact<std::decay_t<decltype(std::declval<const T &>()[0])>>::value>>>
+    : public std::true_type
 {
     using size_type = decltype(std::declval<const T &>().size());
     using value_type = std::decay_t<decltype(std::declval<const T &>()[0])>;
@@ -46,9 +45,9 @@ struct Compact<
     static void resize(T & /*val*/, size_type /*new_size*/)
     {}
 
-    static const value_type *data(const T &val) { return val.data(); }
+    static const value_type *data(const T &val) { return &val[0]; }
 
-    static value_type *data(T &val) { return val.data(); }
+    static value_type *data(T &val) { return &val[0]; }
 };
 
 /**
@@ -58,8 +57,8 @@ template<typename T>
 struct Compact<
     T,
     void_t<std::enable_if_t<::IsTNLIndexable<T>::value
-                            && Compact<std::decay_t<decltype(std::declval<const T &>()[0])>>::value>,
-           decltype(std::declval<T &>().getData())>> : public std::true_type
+                            && Compact<std::decay_t<decltype(std::declval<const T &>()[0])>>::value>>>
+    : public std::true_type
 {
     using size_type = decltype(std::declval<const T &>().getSize());
     using value_type = std::decay_t<decltype(std::declval<const T &>()[0])>;
@@ -76,9 +75,9 @@ struct Compact<
     static void resize(T & /*val*/, size_type /*new_size*/)
     {}
 
-    static const value_type *data(const T &val) { return val.getData(); }
+    static const value_type *data(const T &val) { return &val[0]; }
 
-    static value_type *data(T &val) { return val.getData(); }
+    static value_type *data(T &val) { return &val[0]; }
 };
 } // namespace Interface
 
@@ -87,9 +86,12 @@ struct Compact<
  * The condition is that the contained type must be also simple binary serializable.
  */
 struct SerializeCompactContainer {
-    template <typename T, typename ..., std::enable_if_t<Interface::Indexable<T>::value && Interface::Compact<T>::value, bool> = true>
-    static void serialize(std::vector<unsigned char>& dataContainer, const T& data){
-
+    template<typename T,
+             typename...,
+             std::enable_if_t<Interface::Indexable<T>::value && Interface::Compact<T>::value,
+                              bool> = true>
+    static void serialize(std::vector<unsigned char> &dataContainer, const T &data)
+    {
         auto size = Interface::Compact<T>::size(data);
         /*
         dataContainer.resize(dataContainer.size() + (size * sizeof (Interface::Compact<T>::value_type)));
@@ -100,8 +102,12 @@ struct SerializeCompactContainer {
                              reinterpret_cast<const BinarySerializer::Byte*>(Interface::Compact<T>::data(data) + size));
     }
 
-    template <typename T, typename ..., std::enable_if_t<Interface::Indexable<T>::value && Interface::Compact<T>::value, bool> = true>
-    static void deserialize(std::vector<unsigned char>::const_iterator& dataIterator, T& data){
+    template<typename T,
+             typename...,
+             std::enable_if_t<Interface::Indexable<T>::value && Interface::Compact<T>::value,
+                              bool> = true>
+    static void deserialize(std::vector<unsigned char>::const_iterator &dataIterator, T &data)
+    {
         auto size = Interface::Compact<T>::size(data);
 
         BinarySerializer::readNext(dataIterator, size);
@@ -110,10 +116,10 @@ struct SerializeCompactContainer {
             Interface::Compact<T>::resize(data, size);
         }
 
-        DBGVAR(size, Interface::Compact<T>::size(data));
-        memcpy(Interface::Compact<T>::data(data), dataIterator.base(), size * sizeof (typename Interface::Compact<T>::value_type));
+        memcpy(Interface::Compact<T>::data(data),
+               dataIterator.base(),
+               size * sizeof(typename Interface::Compact<T>::value_type));
         dataIterator += size * sizeof (typename Interface::Compact<T>::value_type);
     }
-
 };
 #endif // SERIALIZECOMPACTCONTAINER_H

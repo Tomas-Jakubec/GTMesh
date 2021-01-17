@@ -93,6 +93,26 @@ TEST( BinarySerializerComplex, basicTest )
     valArr[valArr == 2 * testVal] = auxValArr;
     ASSERT_TRUE(floatArrayCompare(valArr, std::valarray<double>(testVal, 4)));
 }
+
+namespace Interface{
+template<>
+struct Compact<NumStruct, void> :public std::true_type
+{};
+}
+
+TEST( BinarySerializerCompact, basicTest )
+{
+    NumStruct n(1, 5);
+    std::array<NumStruct, 3> ud = {n, 2*n, 3*n};
+    std::vector<std::array<NumStruct, 3>> data(2, ud);
+    auto data_copy = data;
+    EXPECT_TRUE(Interface::Compact<decltype(data)>::value);
+    BinarySerializer s;
+    s << data;
+    data.clear();
+    s >> data;
+    EXPECT_EQ(data, data_copy);
+}
 #endif
 
 #include "UnitTests/main.h"
