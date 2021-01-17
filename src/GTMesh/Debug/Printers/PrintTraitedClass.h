@@ -69,7 +69,7 @@ struct PrintTraitedClass {
     }
 
     template<typename Class, typename ...TraitsTypes>
-    using IsValid = std::enable_if_t<SelectTraitsWithIODefault<Class, 0, TraitsTypes...>::valid, bool>;
+    using IsValid = std::enable_if_t<SelectTraitsWithIODefault<Class, TraitsTypes...>::valid, bool>;
 
 
     template< typename Class, typename PrimaryTraits,  typename ... SecondaryTraits>
@@ -81,7 +81,7 @@ struct PrintTraitedClass {
     template< typename Class, typename PrimaryTraits,  typename ... SecondaryTraits, IsValid<Class, PrimaryTraits, SecondaryTraits...> = true>
     static void print(std::ostream& ost, const Class &traitedClass, const std::tuple<PrimaryTraits, SecondaryTraits...>& tupleTraits)
     {
-        auto traits = SelectTraitsWithIODefault<Class, 0, PrimaryTraits, SecondaryTraits...>::getTraitsInstance(tupleTraits);
+        auto traits = SelectTraitsWithIODefault<Class, PrimaryTraits, SecondaryTraits...>::getTraitsInstance(tupleTraits);
         ost << "{ ";
         PrintClass<Class, decltype(traits)>::print(ost, traitedClass, traits, tupleTraits);
         ost << " }";
@@ -106,7 +106,7 @@ struct PrintTraitedClass {
     template< typename Class, typename PrimaryTraits,  typename ... SecondaryTraits, IsValid<Class, PrimaryTraits, SecondaryTraits...> = true>
     static void print(const Class &traitedClass, const std::tuple<PrimaryTraits, SecondaryTraits...>& tupleTraits)
     {
-        auto traits = SelectTraitsWithIODefault<Class, 0, PrimaryTraits, SecondaryTraits...>::getTraitsInstance(tupleTraits);
+        auto traits = SelectTraitsWithIODefault<Class, PrimaryTraits, SecondaryTraits...>::getTraitsInstance(tupleTraits);
         printf("{ ");
         PrintClass<Class, decltype(traits)>::print(traitedClass, traits, tupleTraits);
         printf(" }");

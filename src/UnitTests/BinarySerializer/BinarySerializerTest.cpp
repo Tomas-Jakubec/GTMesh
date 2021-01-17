@@ -113,6 +113,23 @@ TEST( BinarySerializerCompact, basicTest )
     s >> data;
     EXPECT_EQ(data, data_copy);
 }
+
+
+TEST( BinarySerializerBoundTraits, basicTest )
+{
+    NumStruct n(1, 5);
+    std::vector<NumStruct> data(2, n);
+    auto expectedResult = data;
+    for(auto& val : expectedResult) {
+        val.data1 = 0;
+    }
+    BinarySerializer s;
+    auto bindData = bindTraits(data, makeTraits<NumStruct>("", &NumStruct::data2));
+    s << bindData;
+    data.clear();
+    s >> bindData;
+    EXPECT_EQ(data, expectedResult);
+}
 #endif
 
 #include "UnitTests/main.h"

@@ -18,8 +18,18 @@ public:
     template<typename T>
     static void addNext(std::vector<Byte>& binaryDataContainer, const T& data);
 
-    template <typename T>
-    static void readNext(std::vector<Byte>::const_iterator& binaryDataIterator, T& data);
+    template<typename T, typename... TupleTraits>
+    static void addNext(std::vector<Byte> &binaryDataContainer,
+                        const T &data,
+                        const std::tuple<TupleTraits...> &tupleTraits);
+
+    template<typename T>
+    static void readNext(std::vector<Byte>::const_iterator &binaryDataIterator, T &data);
+
+    template<typename T, typename... TupleTraits>
+    static void readNext(std::vector<Byte>::const_iterator &binaryDataIterator,
+                         T &data,
+                         const std::tuple<TupleTraits...> &tupleTraits);
 
     template <typename T>
     static T readNext(std::vector<Byte>::const_iterator& binaryDataIterator) {
@@ -122,6 +132,21 @@ struct IsSerializableBy<VarType,
     : public std::true_type
 {};
 
+template<typename VarType, typename TupleTraits, typename Serializer, typename = void>
+struct IsSerializableByWithBindedTraits : public std::false_type
+{};
+
+template<typename VarType, typename TupleTraits, typename Serializer>
+struct IsSerializableByWithBindedTraits<
+    VarType,
+    TupleTraits,
+    Serializer,
+    decltype(Serializer::serialize(std::declval<BinarySerializer::ByteContainer &>(),
+                                   std::declval<const VarType &>(),
+                                   std::declval<const TupleTraits &>()))>
+    : public std::true_type
+{};
+
 template<typename VarType, typename Serializer, typename = void>
 struct IsDeserializableBy : public std::false_type
 {};
@@ -132,6 +157,20 @@ struct IsDeserializableBy<
     Serializer,
     decltype(Serializer::deserialize(std::declval<std::vector<unsigned char>::const_iterator &>(),
                                   std::declval<VarType &>()))> : public std::true_type
+{};
+
+template<typename VarType, typename TupleTraits, typename Serializer, typename = void>
+struct IsDeserializableByWithBindedTraits : public std::false_type
+{};
+
+template<typename VarType, typename TupleTraits, typename Serializer>
+struct IsDeserializableByWithBindedTraits<
+    VarType,
+    TupleTraits,
+    Serializer,
+    decltype(Serializer::deserialize(std::declval<std::vector<unsigned char>::const_iterator &>(),
+                                     std::declval<VarType &>(),
+                                     std::declval<const TupleTraits &>()))> : public std::true_type
 {};
 
 } // Impl namespace
@@ -156,6 +195,36 @@ void BinarySerializer::addNext(std::vector<BinarySerializer::Byte> &binaryDataCo
                      SerializeTuple>::SelectedClass::serialize(binaryDataContainer, data);
 }
 
+template<typename TupleType, typename Serializer>
+struct IsSerializableByWithTraits
+{};
+
+
+template<typename VarType, typename TraitsTuple, typename Serializer>
+struct IsSerializableByWithTraits<std::tuple<VarType, TraitsTuple>, Serializer>
+    : Impl::IsSerializableByWithBindedTraits<VarType, TraitsTuple, Serializer>
+{};
+
+
+template<typename VarType, typename TraitsTuple, typename... Serializers>
+using SelectSerializerWithTraits = ClassSelector<std::tuple<VarType, TraitsTuple>, IsSerializableByWithTraits, Serializers...>;
+
+template<typename T, typename ... TupleTraits>
+void BinarySerializer::addNext(std::vector<BinarySerializer::Byte> &binaryDataContainer, const T &data,
+                               const std::tuple<TupleTraits...>& traits)
+{
+    SelectSerializerWithTraits<T, std::tuple<TupleTraits...>,
+                               SerializeCustom,
+                               SerializeSimple,
+                               SerializeCompactContainer,
+                               SerializeTraitedClass,
+                               SerializeIterable,
+                               SerializeIndexable,
+                               SerializeTuple>::SelectedClass::serialize(binaryDataContainer,
+                                                                         data,
+                                                                         traits);
+}
+
 template<typename VarType, typename Serializer>
 struct IsDeserializableBy: public Impl::IsDeserializableBy<VarType, Serializer>
 {};
@@ -176,6 +245,38 @@ void BinarySerializer::readNext(std::vector<Byte>::const_iterator& binaryDataIte
                        SerializeIterable,
                        SerializeIndexable,
                        SerializeTuple>::SelectedClass::deserialize(binaryDataIterator, data);
+}
+
+template<typename TupleType, typename Serializer>
+struct IsDeserializableByWithTraits
+{};
+
+
+template<typename VarType, typename TraitsTuple, typename Serializer>
+struct IsDeserializableByWithTraits<std::tuple<VarType, TraitsTuple>, Serializer>
+    : Impl::IsDeserializableByWithBindedTraits<VarType, TraitsTuple, Serializer>
+{};
+
+
+template<typename VarType, typename TraitsTuple, typename... Serializers>
+using SelectDeserializerWithTraits = ClassSelector<std::tuple<VarType, TraitsTuple>, IsDeserializableByWithTraits, Serializers...>;
+
+template<typename T, typename ... TupleTraits>
+void BinarySerializer::readNext(std::vector<Byte>::const_iterator& binaryDataIterator, T& data,
+                                const std::tuple<TupleTraits...>& traits)
+{
+    SelectDeserializerWithTraits<T, std::tuple<TupleTraits...>,
+                                 SerializeCustom,
+                                 SerializeSimple,
+                                 SerializeCompactContainer,
+                                 SerializeTraitedClass,
+                                 DeserializeAsociativeMap,
+                                 DeserializeAsociativeSet,
+                                 SerializeIterable,
+                                 SerializeIndexable,
+                                 SerializeTuple>::SelectedClass::deserialize(binaryDataIterator,
+                                                                             data,
+                                                                             traits);
 }
 
 #endif // BINARYSERIALIZER_H

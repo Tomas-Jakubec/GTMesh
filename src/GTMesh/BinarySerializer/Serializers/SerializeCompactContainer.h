@@ -20,11 +20,12 @@ struct Compact<T, std::enable_if_t<Impl::IsSimpleSerializable_v<T>>> : public st
  * Indexable interface for stl containers.
  */
 template<typename T>
-struct Compact<T,
-               Impl::void_t<std::enable_if_t<
-                   ::IsIndexable<T>::value
-                   && Compact<std::decay_t<decltype(std::declval<const T &>()[0])>>::value>>>
-    : public std::true_type
+struct Compact<
+    T,
+    Impl::void_t<
+        std::enable_if_t<::IsIndexable<T>::value
+                         && Compact<std::decay_t<decltype(std::declval<const T &>()[0])>>::value>,
+        decltype(std::declval<const T &>().data())>> : public std::true_type
 {
     using size_type = decltype(std::declval<const T &>().size());
     using value_type = std::decay_t<decltype(std::declval<const T &>()[0])>;
@@ -57,8 +58,8 @@ template<typename T>
 struct Compact<
     T,
     void_t<std::enable_if_t<::IsTNLIndexable<T>::value
-                            && Compact<std::decay_t<decltype(std::declval<const T &>()[0])>>::value>>>
-    : public std::true_type
+                            && Compact<std::decay_t<decltype(std::declval<const T &>()[0])>>::value>,
+           decltype(std::declval<const T &>().getData())>> : public std::true_type
 {
     using size_type = decltype(std::declval<const T &>().getSize());
     using value_type = std::decay_t<decltype(std::declval<const T &>()[0])>;
