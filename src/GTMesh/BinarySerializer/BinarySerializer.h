@@ -86,6 +86,10 @@ public:
         mData.clear();
         mDataIterator = {};
     }
+
+    const ByteContainer& getData() {
+        return mData;
+    }
 private:
     ByteContainer mData;
     ByteContainerIterator mDataIterator;
@@ -97,6 +101,7 @@ private:
 #include "Serializers/SerializeIterable.h"
 #include "Serializers/SerializeIndexable.h"
 #include "Serializers/SerializeTuple.h"
+#include "Serializers/SerializeCompactContainer.h"
 #include <GTMesh/Utils/ClassSelector.h>
 
 namespace Impl {
@@ -139,6 +144,7 @@ void BinarySerializer::addNext(std::vector<BinarySerializer::Byte> &binaryDataCo
     SelectSerializer<T,
                      SerializeCustom,
                      SerializeSimple,
+                     SerializeCompactContainer,
                      SerializeTraitedClass,
                      SerializeIterable,
                      SerializeIndexable,
@@ -158,6 +164,7 @@ void BinarySerializer::readNext(std::vector<Byte>::const_iterator& binaryDataIte
     SelectDeserializer<T,
                        SerializeCustom,
                        SerializeSimple,
+                       SerializeCompactContainer,
                        SerializeTraitedClass,
                        DeserializeAsociativeMap,
                        DeserializeAsociativeSet,

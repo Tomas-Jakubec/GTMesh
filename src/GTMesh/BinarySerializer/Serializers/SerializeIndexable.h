@@ -2,28 +2,80 @@
 #define SERIALIZEINDEXABLE_H
 #include <GTMesh/Traits/CustomTypeTraits.h>
 #include "../BinarySerializer.h"
+
+namespace Interface {
+/**
+ * Generic template for indexable interface
+ */
+template <typename T, typename = void>
+struct Indexable : public std::false_type {};
+
+/**
+ * Indexable interface for stl containers.
+ */
+template<typename T>
+struct Indexable<T, std::enable_if_t<::IsIndexable<T>::value>> : public std::true_type
+{
+    using size_type = decltype(std::declval<const T &>().size());
+
+    static size_type size(const T &val) { return val.size(); }
+
+    template<typename _T = T, std::enable_if_t<IsResizable<_T>::value, bool> = true>
+    static void resize(T &val, size_type new_size)
+    {
+        val.resize(new_size);
+    }
+
+    /**
+     * Some types like std::array do not have the resize member function.
+     * However, it still has subscript operator.
+     */
+    template<typename _T = T, std::enable_if_t<!IsResizable<_T>::value, bool> = true>
+    static void resize(T &/*val*/, size_type /*new_size*/)
+    {}
+};
+
+/**
+ * Indexable interface for TNL containers.
+ */
+template<typename T>
+struct Indexable<T, std::enable_if_t<::IsTNLIndexable<T>::value>> : public std::true_type
+{
+    using size_type = decltype(std::declval<const T &>().getSize());
+
+    static size_type size(const T &val) { return val.getSize(); }
+
+    template<typename _T = T, std::enable_if_t<IsTNLResizable<_T>::value, bool> = true>
+    static void resize(T &val, size_type new_size)
+    {
+        val.resize(new_size);
+    }
+
+    template<typename _T = T, std::enable_if_t<!IsTNLResizable<_T>::value, bool> = true>
+    static void resize(T &/*val*/, size_type /*new_size*/)
+    {}
+};
+}
+
 struct SerializeIndexable {
-    template <typename T, typename ..., std::enable_if_t<IsIndexable<T>::value, bool> = true>
+    template <typename T, typename ..., std::enable_if_t<Interface::Indexable<T>::value, bool> = true>
     static void serialize(std::vector<unsigned char>& dataContainer, const T& data){
-        using size_type = decltype(data.size());
 
-        BinarySerializer::addNext(dataContainer, data.size());
-        size_type size = data.size();
+        auto size = Interface::Indexable<T>::size(data);
+        BinarySerializer::addNext(dataContainer, size);
 
-        for (size_type i = 0; i < size; i++) {
+        for (decltype(size) i = 0; i < size; i++) {
             BinarySerializer::addNext(dataContainer, data[i]);
         }
     }
-
-
 
     template <typename T, typename ..., std::enable_if_t<IsIndexable<T>::value, bool> = true>
     static void deserialize(std::vector<unsigned char>::const_iterator& dataIterator, T& data){
         using size_type = decltype(data.size());
         size_type size = BinarySerializer::readNext<decltype(data.size())>(dataIterator);
 
-        if (data.size() != size) {
-            data.resize(size);
+        if (Interface::Indexable<T>::size(data) != size) {
+            Interface::Indexable<T>::resize(data, size);
         }
 
         for (size_type i = 0; i < size; i++) {
@@ -32,4 +84,5 @@ struct SerializeIndexable {
     }
 
 };
+
 #endif // SERIALIZEINDEXABLE_H
