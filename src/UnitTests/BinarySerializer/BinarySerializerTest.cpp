@@ -130,6 +130,41 @@ TEST( BinarySerializerBoundTraits, basicTest )
     s >> bindData;
     EXPECT_EQ(data, expectedResult);
 }
+
+/**
+ * @brief Tests that BinarySerializer is able to save its container into a binary file.
+ */
+TEST(BinarySerializerFileDump, basicTest) {
+    const char* fileName = "dump_bin";
+    remove(fileName);
+
+    //prepare data
+    NumStruct ns(1.0, 2.0);
+    std::vector<NumStruct> origData(100000, ns);
+    for (size_t i = 0; i < origData.size(); i++) {
+        origData[i] *= i;
+    }
+
+    BinarySerializer serializer;
+    serializer << origData;
+    BinarySerializer::ByteContainer expectedContainter = serializer.getData();
+
+    serializer.saveToFile(fileName);
+    serializer.clear();
+
+    // Expect that the file exists
+    EXPECT_TRUE(std::ifstream(fileName).good());
+
+    serializer.loadFromFile(fileName);
+
+    EXPECT_EQ(serializer.getData(), expectedContainter);
+
+    auto data = serializer.read<std::vector<NumStruct>>();
+
+    EXPECT_EQ(data , origData);
+
+    remove(fileName);
+}
 #endif
 
 #include "UnitTests/main.h"

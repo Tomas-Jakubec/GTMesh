@@ -65,7 +65,6 @@ public:
     static void serialize(BinarySerializer::ByteContainer &container, const T &var,
                           const std::tuple<TupleTraits...>& tupleTraits)
     {
-        DBGVAR(bindTraits(var, std::get<0>(tupleTraits)));
         constexprFor<TraitedClassBinarySerializer,
                      SelectTraitsWithArithmeticDefault<T, TupleTraits...>::TypeTraits::size()>(
             container,

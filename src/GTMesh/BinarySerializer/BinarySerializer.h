@@ -2,6 +2,7 @@
 #define BINARYSERIALIZER_H
 #include <vector>
 #include <cstdint>
+#include <fstream>
 
 // TODO možná změnit jméno
 /**
@@ -69,6 +70,7 @@ public:
 
     template <typename T>
     T read() {
+        resetIteratorIfNotValid();
         return readNext<T>(mDataIterator);
     }
 
@@ -105,6 +107,26 @@ public:
     const ByteContainer& getData() {
         return mData;
     }
+
+    void saveToFile(const std::string &fileName)
+    {
+        std::ofstream file(fileName, std::ofstream::binary);
+        if (file) {
+            file.write(reinterpret_cast<char *>(mData.data()), mData.size());
+            file.close();
+        } else {
+            throw std::runtime_error("unable to open file " + fileName);
+        }
+    }
+
+    void loadFromFile(const std::string &fileName) {
+        std::ifstream file(fileName, std::ifstream::binary);
+        if (file) {
+            mData = ByteContainer(std::istreambuf_iterator<char>(file),
+                                  std::istreambuf_iterator<char>());
+        }
+    }
+
 private:
     ByteContainer mData;
     ByteContainerIterator mDataIterator;
