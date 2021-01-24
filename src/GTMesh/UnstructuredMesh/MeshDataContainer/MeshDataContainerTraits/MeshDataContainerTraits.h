@@ -1,6 +1,7 @@
 #ifndef MESHDATACONTAINERTRAITS_H
 #define MESHDATACONTAINERTRAITS_H
 
+#include <stdio.h>
 #include "../MeshDataContainer.h"
 #include <GTMesh/Traits/Traits.h>
 

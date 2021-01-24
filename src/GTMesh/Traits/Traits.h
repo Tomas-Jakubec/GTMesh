@@ -276,7 +276,7 @@ public:
      * arguments: <BR> (unsigned int,
      * const auto& [as const MemberApproach<Class, typename>&]
      * const std::string&)
-     *//*
+     */
     template<typename Functor>
         void apply(Functor f) const {
             Apply<>::apply(*this,f);
@@ -285,7 +285,7 @@ public:
     template<template <typename, typename>class Functor>
         void apply() const {
             Apply<>::template apply<Functor>(*this);
-        }*/
+        }
 };
 
 namespace Impl {
@@ -335,8 +335,34 @@ class DefaultIOTraits : public DefaultTraits<Class> {};
 template<typename Class>
 class DefaultArithmeticTraits : public DefaultTraits<Class> {};
 
+namespace Impl {
 
-#include "CustomTypeTraits.h"
+template<typename T1, template<typename> class TraitsType, typename = void>
+struct has_default_traits : public std::false_type
+{};
+
+template<typename T1, template<typename> class TraitsType>
+struct has_default_traits<T1, TraitsType, void_t<decltype(TraitsType<T1>::getTraits())>>
+    : public std::true_type
+{};
+
+} // Impl namespace
+
+template <typename T, template<typename> class DefaultTraitsType>
+struct HasDefaultTraitsOfType: public Impl::has_default_traits<T, DefaultTraitsType>
+{};
+
+template<typename T>
+struct HasDefaultTraits : public Impl::has_default_traits<T, DefaultTraits>
+{};
+
+template<typename T>
+struct HasDefaultIOTraits : public Impl::has_default_traits<T, DefaultIOTraits>
+{};
+
+template<typename T>
+struct HasDefaultArithmeticTraits : public Impl::has_default_traits<T, DefaultArithmeticTraits>
+{};
 
 namespace Impl {
 template <unsigned int Index, unsigned int ...Indices>

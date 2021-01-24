@@ -1,6 +1,5 @@
 #ifndef CUSTOMTRAITS_H
 #define CUSTOMTRAITS_H
-#include "Traits.h"
 #include <iostream>
 #include <type_traits>
 
@@ -92,14 +91,6 @@ struct is_traits<T1, void_t<decltype(T1::isTraits)>> : public std::true_type
 {};
 
 
-template<typename T1, template<typename> class TraitsType, typename = void>
-struct has_default_traits : public std::false_type
-{};
-
-template<typename T1, template<typename> class TraitsType>
-struct has_default_traits<T1, TraitsType, void_t<decltype(TraitsType<T1>::getTraits())>>
-    : public std::true_type
-{};
 
 } // namespace Impl
 
@@ -129,22 +120,6 @@ struct IsTNLResizable : public Impl::is_tnl_resizable<T1>
 
 template<typename T>
 struct IsTraits : public Impl::is_traits<T>
-{};
-
-template <typename T, template<typename> class DefaultTraitsType>
-struct HasDefaultTraitsOfType: public Impl::has_default_traits<T, DefaultTraitsType>
-{};
-
-template<typename T>
-struct HasDefaultTraits : public Impl::has_default_traits<T, DefaultTraits>
-{};
-
-template<typename T>
-struct HasDefaultIOTraits : public Impl::has_default_traits<T, DefaultIOTraits>
-{};
-
-template<typename T>
-struct HasDefaultArithmeticTraits : public Impl::has_default_traits<T, DefaultArithmeticTraits>
 {};
 
 #endif // CUSTOMTRAITS_H
