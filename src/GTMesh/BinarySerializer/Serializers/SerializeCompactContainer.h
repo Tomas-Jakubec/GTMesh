@@ -4,6 +4,7 @@
 #include "../BinarySerializer.h"
 #include "SerializeSimple.h"
 #include <GTMesh/Debug/Debug.h>
+#include <cstring> // memcpy
 namespace Interface {
 /**
  * Generic template for indexable interface
@@ -117,7 +118,7 @@ struct SerializeCompactContainer {
             Interface::Compact<T>::resize(data, size);
         }
 
-        memcpy(Interface::Compact<T>::data(data),
+        std::memcpy(Interface::Compact<T>::data(data),
                dataIterator.base(),
                size * sizeof(typename Interface::Compact<T>::value_type));
         dataIterator += size * sizeof (typename Interface::Compact<T>::value_type);
