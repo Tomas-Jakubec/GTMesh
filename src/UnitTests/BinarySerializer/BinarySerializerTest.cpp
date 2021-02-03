@@ -36,7 +36,7 @@ struct NumStruct {
     }
     auto operator== (const NumStruct& rhs) const {
         return fabs(data1 - rhs.data1) < 1e-5 &&
-               fabs(data1 - rhs.data1) < 1e-5;
+               fabs(data2 - rhs.data2) < 1e-5;
     }
 };
 MAKE_ATTRIBUTE_TRAIT(NumStruct, data1, data2);

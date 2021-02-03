@@ -48,7 +48,7 @@ struct Indexable<T, std::enable_if_t<::IsTNLIndexable<T>::value>> : public std::
     template<typename _T = T, std::enable_if_t<IsTNLResizable<_T>::value, bool> = true>
     static void resize(T &val, size_type new_size)
     {
-        val.resize(new_size);
+        val.setSize(new_size);
     }
 
     template<typename _T = T, std::enable_if_t<!IsTNLResizable<_T>::value, bool> = true>

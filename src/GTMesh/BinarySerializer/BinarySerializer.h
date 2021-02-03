@@ -122,8 +122,12 @@ public:
     void loadFromFile(const std::string &fileName) {
         std::ifstream file(fileName, std::ifstream::binary);
         if (file) {
-            mData = ByteContainer(std::istreambuf_iterator<char>(file),
-                                  std::istreambuf_iterator<char>());
+            file.seekg(0, std::ios::end);
+            auto file_size = file.tellg();
+            file.seekg(0, std::ios::beg);
+            mData.resize(file_size);
+            file.read(reinterpret_cast<std::ios::char_type*>(mData.data()), file_size);
+            file.close();
         }
     }
 

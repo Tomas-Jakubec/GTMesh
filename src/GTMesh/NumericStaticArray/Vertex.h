@@ -19,7 +19,7 @@ public:
     Vertex<Dim, Real>& operator =(const std::initializer_list<Real>& l);
 
 
-    constexpr unsigned int size() const {
+    static constexpr unsigned int size() {
         return Dim;
     }
 
