@@ -6,56 +6,65 @@
 
 struct PrintIndexable {
 
-
-    template< typename Indexable, std::enable_if_t<Interface::Indexable<Indexable>::value, bool> = true >
-    static void print(std::ostream& ost, const Indexable& vec) {
+    template<typename Indexable, std::enable_if_t<Interface::Indexable<Indexable>::value, bool> = true>
+    static void print(std::ostream &ost, const Indexable &vec)
+    {
         ost << "[ ";
         const auto size = Interface::Indexable<Indexable>::size(vec);
-        for (typename std::decay<decltype (size)>::type i = 0; i < size; i++){
-            VariableExport::exportVariable(ost, vec[i]);
-            if (i <  size - 1){
+        for (typename std::decay<decltype(size)>::type i = 0; i < size; i++) {
+            VariableExport::exportVariable(ost, Interface::Indexable<Indexable>::getElement(vec, i));
+            if (i < size - 1) {
                 ost << ", ";
             }
         }
         ost << " ]";
     }
 
-
-    template< typename Indexable, typename ... TraitsTypes, std::enable_if_t<IsIndexable<Indexable>::value || IsTNLIndexable<Indexable>::value, bool> = true >
-    static void print(std::ostream& ost, const Indexable& vec, const std::tuple<TraitsTypes...>& traitsTuple) {
+    template<typename Indexable,
+             typename... TraitsTypes,
+             std::enable_if_t<Interface::Indexable<Indexable>::value, bool> = true>
+    static void print(std::ostream &ost,
+                      const Indexable &vec,
+                      const std::tuple<TraitsTypes...> &traitsTuple)
+    {
         ost << "[ ";
         const auto size = Interface::Indexable<Indexable>::size(vec);
-        for (typename std::decay<decltype (size)>::type i = 0; i < size; i++){
-            VariableExport::exportVariable(ost, vec[i], traitsTuple);
-            if (i <  size - 1){
+        for (typename std::decay<decltype(size)>::type i = 0; i < size; i++) {
+            VariableExport::exportVariable(ost,
+                                           Interface::Indexable<Indexable>::getElement(vec, i),
+                                           traitsTuple);
+            if (i < size - 1) {
                 ost << ", ";
             }
         }
         ost << " ]";
     }
 
-
-    template< typename Indexable, std::enable_if_t<IsIndexable<Indexable>::value || IsTNLIndexable<Indexable>::value, bool> = true >
-    static void print(const Indexable& vec) {
+    template<typename Indexable, std::enable_if_t<Interface::Indexable<Indexable>::value, bool> = true>
+    static void print(const Indexable &vec)
+    {
         printf("[ ");
         const auto size = Interface::Indexable<Indexable>::size(vec);
-        for (typename std::decay<decltype (size)>::type i = 0; i < size; i++){
-            VariableExport::exportVariable(vec[i]);
-            if (i < size - 1){
+        for (typename std::decay<decltype(size)>::type i = 0; i < size; i++) {
+            VariableExport::exportVariable(Interface::Indexable<Indexable>::getElement(vec, i));
+            if (i < size - 1) {
                 printf(", ");
             }
         }
         printf(" ]");
     }
 
-
-    template< typename Indexable, typename ... TraitsTypes, std::enable_if_t<IsIndexable<Indexable>::value || IsTNLIndexable<Indexable>::value, bool> = true >
-    static void print(const Indexable& vec, const std::tuple<TraitsTypes...>& traitsTuple) {
+    template<typename Indexable,
+             typename... TraitsTypes,
+             std::enable_if_t<Interface::Indexable<Indexable>::value, bool> = true>
+    static void print(const Indexable &vec, const std::tuple<TraitsTypes...> &traitsTuple)
+    {
         printf("[ ");
         const auto size = Interface::Indexable<Indexable>::size(vec);
-        for (typename std::decay<decltype (size)>::type i = 0; i < size; i++){
-            VariableExport::exportVariable(vec[i], traitsTuple);
-            if (i < size - 1){
+        for (typename std::decay<decltype(size)>::type i = 0; i < size; i++) {
+            VariableExport::exportVariable(Interface::Indexable<Indexable>::getElement(vec, i),
+                                           traitsTuple);
+            if (i < size - 1) {
                 printf(", ");
             }
         }

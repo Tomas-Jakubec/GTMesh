@@ -91,38 +91,38 @@
 struct SerializeCompactContainer {
     template<typename T,
              typename...,
-             std::enable_if_t<Interface::Indexable<T>::value && Interface::Compact<T>::value,
+             std::enable_if_t<Interface::CompactContainer<T>::value,
                               bool> = true>
     static void serialize(std::vector<unsigned char> &dataContainer, const T &data)
     {
-        auto size = Interface::Compact<T>::size(data);
+        auto size = Interface::CompactContainer<T>::size(data);
         /*
         dataContainer.resize(dataContainer.size() + (size * sizeof (Interface::Compact<T>::value_type)));
         */
         BinarySerializer::addNext(dataContainer, size);
         dataContainer.insert(dataContainer.end(),
-                             reinterpret_cast<const BinarySerializer::Byte*>(Interface::Compact<T>::data(data)),
-                             reinterpret_cast<const BinarySerializer::Byte*>(Interface::Compact<T>::data(data) + size));
+                             reinterpret_cast<const BinarySerializer::Byte*>(Interface::CompactContainer<T>::data(data)),
+                             reinterpret_cast<const BinarySerializer::Byte*>(Interface::CompactContainer<T>::data(data) + size));
     }
 
     template<typename T,
              typename...,
-             std::enable_if_t<Interface::Indexable<T>::value && Interface::Compact<T>::value,
+             std::enable_if_t<Interface::CompactContainer<T>::value,
                               bool> = true>
     static void deserialize(std::vector<unsigned char>::const_iterator &dataIterator, T &data)
     {
-        auto size = Interface::Compact<T>::size(data);
+        auto size = Interface::CompactContainer<T>::size(data);
 
         BinarySerializer::readNext(dataIterator, size);
 
-        if (Interface::Compact<T>::size(data) != size) {
-            Interface::Compact<T>::resize(data, size);
+        if (Interface::CompactContainer<T>::size(data) != size) {
+            Interface::CompactContainer<T>::resize(data, size);
         }
 
-        std::memcpy(Interface::Compact<T>::data(data),
+        std::memcpy(Interface::CompactContainer<T>::data(data),
                dataIterator.base(),
-               size * sizeof(typename Interface::Compact<T>::value_type));
-        dataIterator += size * sizeof (typename Interface::Compact<T>::value_type);
+               size * sizeof(typename Interface::CompactContainer<T>::value_type));
+        dataIterator += size * sizeof (typename Interface::CompactContainer<T>::value_type);
     }
 };
 #endif // SERIALIZECOMPACTCONTAINER_H

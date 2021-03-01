@@ -16,12 +16,26 @@ struct Indexable : public std::false_type {};
 template<typename T>
 struct Indexable<T, std::enable_if_t<::IsIndexable<T>::value>> : public std::true_type
 {
-    using size_type = decltype(std::declval<const T &>().size());
+    using sizeType = decltype(std::declval<const T &>().size());
 
-    static size_type size(const T &val) { return val.size(); }
+    using valueType = typename std::decay<decltype(std::declval<const T &>()[0])>::type;
+
+    static sizeType size(const T &val) { return val.size(); }
+
+    static const valueType& getElement(const T& array, const sizeType& index) {
+        return array[index];
+    }
+
+    static void setElement(T& array, const sizeType& index, const valueType& newValue) {
+        return array[index] = newValue;
+    }
+
+    static valueType& getElementRef(T& array, const sizeType& index) {
+        return array[index];
+    }
 
     template<typename _T = T, std::enable_if_t<IsResizable<_T>::value, bool> = true>
-    static void resize(T &val, size_type new_size)
+    static void resize(T &val, sizeType new_size)
     {
         val.resize(new_size);
     }
@@ -31,7 +45,7 @@ struct Indexable<T, std::enable_if_t<::IsIndexable<T>::value>> : public std::tru
      * However, it still has subscript operator.
      */
     template<typename _T = T, std::enable_if_t<!IsResizable<_T>::value, bool> = true>
-    static void resize(T &/*val*/, size_type /*new_size*/)
+    static void resize(T &/*val*/, sizeType /*new_size*/)
     {}
 };
 
@@ -41,18 +55,31 @@ struct Indexable<T, std::enable_if_t<::IsIndexable<T>::value>> : public std::tru
 template<typename T>
 struct Indexable<T, std::enable_if_t<::IsTNLIndexable<T>::value>> : public std::true_type
 {
-    using size_type = decltype(std::declval<const T &>().getSize());
+    using sizeType = decltype(std::declval<const T &>().getSize());
+    using valueType = typename std::decay<decltype(std::declval<const T &>()[0])>::type;
 
-    static size_type size(const T &val) { return val.getSize(); }
+    static sizeType size(const T &val) { return val.getSize(); }
+
+    static const valueType& getElement(const T& array, const sizeType& index) {
+        return array[index];
+    }
+
+    static void setElement(T& array, const sizeType& index, const valueType& newValue) {
+        return array[index] = newValue;
+    }
+
+    static valueType& getElementRef(T& array, const sizeType& index) {
+        return array[index];
+    }
 
     template<typename _T = T, std::enable_if_t<IsTNLResizable<_T>::value, bool> = true>
-    static void resize(T &val, size_type new_size)
+    static void resize(T &val, sizeType new_size)
     {
         val.setSize(new_size);
     }
 
     template<typename _T = T, std::enable_if_t<!IsTNLResizable<_T>::value, bool> = true>
-    static void resize(T &/*val*/, size_type /*new_size*/)
+    static void resize(T &/*val*/, sizeType /*new_size*/)
     {}
 };
 }
