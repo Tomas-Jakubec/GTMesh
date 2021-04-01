@@ -51,7 +51,7 @@ struct PrintTuple {
 
     struct PrintTupleExec {
         template < unsigned int Index = 0, typename ... Types>
-        static void printTuple(std::ostream& ost, const std::tuple<Types...>& varTuple) {
+        static void exec(std::ostream& ost, const std::tuple<Types...>& varTuple) {
             VariableExport::exportVariable(ost, std::get<Index>(varTuple));
             if (Index < sizeof... (Types) - 1) {
                 ost << ", ";
@@ -59,7 +59,7 @@ struct PrintTuple {
         }
 
         template < unsigned int Index = 0, typename ... Types, typename ... TraitsTypes>
-        static void printTuple(std::ostream& ost, const std::tuple<Types...>& varTuple, const std::tuple<TraitsTypes...>& traitsTuple) {
+        static void exec(std::ostream& ost, const std::tuple<Types...>& varTuple, const std::tuple<TraitsTypes...>& traitsTuple) {
             VariableExport::exportVariable(ost, std::get<Index>(varTuple), traitsTuple);
             if (Index < sizeof... (Types) - 1) {
                 ost << ", ";

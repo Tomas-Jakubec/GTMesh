@@ -36,7 +36,7 @@ struct NumStruct {
     }
     auto operator== (const NumStruct& rhs) const {
         return fabs(data1 - rhs.data1) < 1e-5 &&
-               fabs(data1 - rhs.data1) < 1e-5;
+               fabs(data2 - rhs.data2) < 1e-5;
     }
 };
 MAKE_ATTRIBUTE_TRAIT(NumStruct, data1, data2);
@@ -98,6 +98,11 @@ namespace Interface{
 template<>
 struct Compact<NumStruct, void> :public std::true_type
 {};
+
+template<typename T, size_t size>
+struct Compact<std::array<T, size>, std::enable_if_t<Compact<T>::value>> :public std::true_type
+{};
+
 }
 
 TEST( BinarySerializerCompact, basicTest )
@@ -106,7 +111,7 @@ TEST( BinarySerializerCompact, basicTest )
     std::array<NumStruct, 3> ud = {n, 2*n, 3*n};
     std::vector<std::array<NumStruct, 3>> data(2, ud);
     auto data_copy = data;
-    EXPECT_TRUE(Interface::Compact<decltype(data)>::value);
+    EXPECT_TRUE(Interface::CompactContainer<decltype(data)>::value);
     BinarySerializer s;
     s << data;
     data.clear();
