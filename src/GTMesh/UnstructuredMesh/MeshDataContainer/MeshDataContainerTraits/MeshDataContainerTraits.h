@@ -1,10 +1,9 @@
 #ifndef MESHDATACONTAINERTRAITS_H
 #define MESHDATACONTAINERTRAITS_H
 
-#include <string>
 #include "../MeshDataContainer.h"
 #include <GTMesh/Traits/Traits.h>
-#include <GTMesh/Debug/Debug.h>
+
 template <typename T, unsigned int ...dims>
 class Traits<MeshDataContainer<T, dims...>> {
 public:
@@ -18,7 +17,6 @@ public:
             int i = 4;
             for (unsigned int mod = 100; mod > 0; mod /= 10){
                 int digit = dim / mod;
-                DBGVAR(digit, mod);
                 if (digit > 0) {
                     name[i] = '0' + char(digit);
                     i++;
