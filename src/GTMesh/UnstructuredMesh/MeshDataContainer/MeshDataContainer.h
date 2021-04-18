@@ -588,7 +588,7 @@ private:
     /// Stops the template recursion of allocateMemory
     template <unsigned int pos, typename ContainterType>
     std::enable_if_t<(pos == sizeof...(Dimensions))>
-    allocateMemory(const ContainterType& mesh) {}
+    allocateMemory(const ContainterType& /*mesh*/) {}
 
     template <unsigned int pos, unsigned int Dimension, typename IndexType, typename Real, unsigned int ...Reserve>
     std::enable_if_t<(pos < sizeof...(Dimensions))>
