@@ -16,35 +16,28 @@ MeshDataContainer<Vector<Dimension, Real>, Dimension - 1> computeCellsCenterDiff
 
     if (mesh.getBoundaryCells().empty()) {
         for (auto &face : mesh.getFaces()) {
-            if (!isInvalidIndex(face.getCellLeftIndex())
-                && !isInvalidIndex(face.getCellRightIndex())) {
-                connectingLines.at(face) = mesh.getCells().at(face.getCellLeftIndex()).getCenter()
-                                          - mesh.getCells().at(face.getCellRightIndex()).getCenter();
-
-            } else if (!isInvalidIndex(face.getCellLeftIndex())
-                       && isInvalidIndex(face.getCellRightIndex())) {
-                connectingLines.at(face) = mesh.getCells().at(face.getCellLeftIndex()).getCenter()
-                                          - face.getCenter();
-
-            } else if (isInvalidIndex(face.getCellLeftIndex())
-                       && !isInvalidIndex(face.getCellRightIndex())) {
+            if (!isInvalidIndex(face.getCellLeftIndex()) && !isInvalidIndex(face.getCellRightIndex())) {
                 connectingLines.at(face) = mesh.getCells().at(face.getCellRightIndex()).getCenter()
-                                          - face.getCenter();
+                                           - mesh.getCells().at(face.getCellLeftIndex()).getCenter();
+
+            } else if (!isInvalidIndex(face.getCellLeftIndex()) && isInvalidIndex(face.getCellRightIndex())) {
+                connectingLines.at(face) = face.getCenter() - mesh.getCells().at(face.getCellLeftIndex()).getCenter();
+
+            } else if (isInvalidIndex(face.getCellLeftIndex()) && !isInvalidIndex(face.getCellRightIndex())) {
+                connectingLines.at(face) = face.getCenter() - mesh.getCells().at(face.getCellRightIndex()).getCenter();
             }
         }
 
     } else {
         for (auto &face : mesh.getFaces()) {
             auto &cellLeft = isBoundaryIndex(face.getCellLeftIndex())
-                                 ? mesh.getBoundaryCells().at(
-                                     extractBoundaryIndex(face.getCellLeftIndex()))
+                                 ? mesh.getBoundaryCells().at(extractBoundaryIndex(face.getCellLeftIndex()))
                                  : mesh.getCells().at(face.getCellLeftIndex());
             auto &cellRight = isBoundaryIndex(face.getCellRightIndex())
-                                  ? mesh.getBoundaryCells().at(
-                                      extractBoundaryIndex(face.getCellRightIndex()))
+                                  ? mesh.getBoundaryCells().at(extractBoundaryIndex(face.getCellRightIndex()))
                                   : mesh.getCells().at(face.getCellRightIndex());
 
-            connectingLines.at(face) = cellLeft.getCenter() - cellRight.getCenter();
+            connectingLines.at(face) = cellRight.getCenter() - cellLeft.getCenter();
         }
     }
 
