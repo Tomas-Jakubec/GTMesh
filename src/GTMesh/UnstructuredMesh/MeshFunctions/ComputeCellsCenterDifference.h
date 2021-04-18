@@ -9,26 +9,26 @@
 #include <valarray>
 
 template<unsigned int Dimension, typename IndexType, typename Real, unsigned int... Reserve>
-MeshDataContainer<Real, Dimension - 1> computeCellsCenterDifference(
+MeshDataContainer<Vector<Dimension, Real>, Dimension - 1> computeCellsCenterDifference(
     const MeshElements<Dimension, IndexType, Real, Reserve...> &mesh)
 {
-    MeshDataContainer<Vector<Dimension, Real>, Dimension - 1> connetingLines(mesh);
+    MeshDataContainer<Vector<Dimension, Real>, Dimension - 1> connectingLines(mesh);
 
     if (mesh.getBoundaryCells().empty()) {
         for (auto &face : mesh.getFaces()) {
             if (!isInvalidIndex(face.getCellLeftIndex())
                 && !isInvalidIndex(face.getCellRightIndex())) {
-                connetingLines.at(face) = mesh.getCells().at(face.getCellLeftIndex()).getCenter()
+                connectingLines.at(face) = mesh.getCells().at(face.getCellLeftIndex()).getCenter()
                                           - mesh.getCells().at(face.getCellRightIndex()).getCenter();
 
             } else if (!isInvalidIndex(face.getCellLeftIndex())
                        && isInvalidIndex(face.getCellRightIndex())) {
-                connetingLines.at(face) = mesh.getCells().at(face.getCellLeftIndex()).getCenter()
+                connectingLines.at(face) = mesh.getCells().at(face.getCellLeftIndex()).getCenter()
                                           - face.getCenter();
 
             } else if (isInvalidIndex(face.getCellLeftIndex())
                        && !isInvalidIndex(face.getCellRightIndex())) {
-                connetingLines.at(face) = mesh.getCells().at(face.getCellRightIndex()).getCenter()
+                connectingLines.at(face) = mesh.getCells().at(face.getCellRightIndex()).getCenter()
                                           - face.getCenter();
             }
         }
@@ -44,11 +44,11 @@ MeshDataContainer<Real, Dimension - 1> computeCellsCenterDifference(
                                       extractBoundaryIndex(face.getCellRightIndex()))
                                   : mesh.getCells().at(face.getCellRightIndex());
 
-            connetingLines.at(face) = cellLeft.getCenter() - cellRight.getCenter();
+            connectingLines.at(face) = cellLeft.getCenter() - cellRight.getCenter();
         }
     }
 
-    return connetingLines;
+    return connectingLines;
 }
 
 #endif // COMPUTECENTERDIFFERENCE_H
