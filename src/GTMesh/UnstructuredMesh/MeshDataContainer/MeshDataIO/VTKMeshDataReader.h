@@ -160,7 +160,6 @@ public:
         template<typename T, unsigned int... Dimensions, typename... TraitsTuple>
         static typename std::enable_if<(!SelectTraitsWithIODefault<typename MeshDataContainer<T, Dimensions...>::
                                                           template DataContainerType<Index>::type,
-                                                      0,
                                                       TraitsTuple...>::valid)>::type
         readFromStream(std::istream &ist,
                        MeshDataContainer<T, Dimensions...> &data,
@@ -173,7 +172,6 @@ public:
         template<typename T, unsigned int... Dimensions, typename... TraitsTuple>
         static typename std::enable_if<(SelectTraitsWithIODefault<typename MeshDataContainer<T, Dimensions...>::
                                                          template DataContainerType<Index>::type,
-                                                     0,
                                                      TraitsTuple...>::valid)>::type
         readFromStream(std::istream &ist,
                        MeshDataContainer<T, Dimensions...> &data,
@@ -185,11 +183,11 @@ public:
 
             MeshDataIterator<Index - 1, true>::writeToStream(ist, data, dataPositions, tupTraits);
 
-            constexprFor<ReadData, SelectTraitsWithIODefault<type, 0, TraitsTuple...>::TypeTraits::size()>(
+            constexprFor<ReadData, SelectTraitsWithIODefault<type, TraitsTuple...>::TypeTraits::size()>(
                 ist,
                 data.template getDataByPos<Index>(),
                 dataPositions,
-                SelectTraitsWithIODefault<type, 0, TraitsTuple...>::getTraitsInstance(tupTraits));
+                SelectTraitsWithIODefault<type,  TraitsTuple...>::getTraitsInstance(tupTraits));
         }
     };
 
@@ -200,7 +198,6 @@ public:
         static typename std::enable_if<
             (!SelectTraitsWithIODefault<
                 typename MeshDataContainer<T, Dimensions...>::template DataContainerType<0>::type,
-                0,
                 TraitsTuple...>::valid)>::type
         readFromStream(std::istream &,
                        MeshDataContainer<T, Dimensions...> &,
@@ -217,7 +214,6 @@ public:
         static typename std::enable_if<
             (SelectTraitsWithIODefault<
                 typename MeshDataContainer<T, Dimensions...>::template DataContainerType<0>::type,
-                0,
                 TraitsTuple...>::valid)>::type
         readFromStream(std::istream &ist,
                        MeshDataContainer<T, Dimensions...> &data,
@@ -227,11 +223,11 @@ public:
             using type =
                 typename MeshDataContainer<T, Dimensions...>::template DataContainerType<0>::type;
 
-            constexprFor<ReadData, SelectTraitsWithIODefault<type, 0, TraitsTuple...>::TypeTraits::size()>(
+            constexprFor<ReadData, SelectTraitsWithIODefault<type, TraitsTuple...>::TypeTraits::size()>(
                 ist,
                 data.template getDataByPos<0>(),
                 dataPositions,
-                SelectTraitsWithIODefault<type, 0, TraitsTuple...>::getTraitsInstance(tupTraits));
+                SelectTraitsWithIODefault<type, TraitsTuple...>::getTraitsInstance(tupTraits));
         }
     };
 

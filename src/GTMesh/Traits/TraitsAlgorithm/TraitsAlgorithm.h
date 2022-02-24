@@ -613,9 +613,10 @@ log10(const TraitT& op1) noexcept {
 template< typename T1 >
 struct Sqrt
 {
-   static auto evaluate( const T1& a ) -> decltype( std::sqrt(a) )
+   static auto evaluate( const T1& a ) -> decltype( sqrt(a) )
    {
-      return std::sqrt(a);
+        using std::sqrt;
+        return sqrt(a);
    }
 };
 

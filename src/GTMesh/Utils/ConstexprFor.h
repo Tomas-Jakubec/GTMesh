@@ -5,7 +5,7 @@
 #ifndef CONSTEXPRFOR_H
 #define CONSTEXPRFOR_H
 #include <utility>
-
+#include <stddef.h>
 template <size_t start, size_t stop, size_t step = 1>
 class ConstexprFor {
 public:

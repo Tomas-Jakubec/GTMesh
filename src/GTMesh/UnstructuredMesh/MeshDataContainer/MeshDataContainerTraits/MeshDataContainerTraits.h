@@ -10,9 +10,20 @@ public:
     template< unsigned int Index = 0,
               bool = (Index == sizeof... (dims)) > // stopping condition
     struct nameContainer : nameContainer<Index + 1>{
-        char name[9] = {};
+        char name[8] = "dim ";
         nameContainer() {
-            sprintf_s(name, "dim: %d", MeshDataContainer<T, dims...>::template dimensionAt<Index>());
+            unsigned int dim = MeshDataContainer<T, dims...>::template dimensionAt<Index>();
+            static_assert (MeshDataContainer<T, dims...>::template dimensionAt<Index>() < 1000, "limit of the string is dimension 999");
+            int i = 4;
+            for (unsigned int mod = 100; mod > 0; mod /= 10){
+                int digit = dim / mod;
+                if (digit > 0) {
+                    name[i] = '0' + char(digit);
+                    i++;
+                }
+                dim -= digit * mod;
+            }
+            name[i + 1] = '\0';
         }
     };
 

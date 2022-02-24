@@ -6,7 +6,7 @@
 
 namespace Impl {
 template<typename T>
-inline constexpr bool IsSimpleSerializable_v = !std::is_class<T>::value;
+constexpr bool IsSimpleSerializable_v = std::is_arithmetic<T>::value || std::is_enum<T>::value;
 }
 
 /**

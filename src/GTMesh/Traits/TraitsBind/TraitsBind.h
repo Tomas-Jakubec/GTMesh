@@ -127,11 +127,11 @@ public:
     }
 };
 
-template <typename Class, size_t Index, typename... TraitsTypes>
-using SelectTraitsWithIODefault = SelectTraits<Class, Index, DefaultIOTraits, TraitsTypes...>;
+template <typename Class, typename... TraitsTypes>
+using SelectTraitsWithIODefault = SelectTraits<Class, 0, DefaultIOTraits, TraitsTypes...>;
 
-template <typename Class, size_t Index, typename... TraitsTypes>
-using SelectTraitsWithArithmeticDefault = SelectTraits<Class, Index, DefaultArithmeticTraits, TraitsTypes...>;
+template <typename Class, typename... TraitsTypes>
+using SelectTraitsWithArithmeticDefault = SelectTraits<Class, 0, DefaultArithmeticTraits, TraitsTypes...>;
 
 
 #endif // TRAITSBIND_H

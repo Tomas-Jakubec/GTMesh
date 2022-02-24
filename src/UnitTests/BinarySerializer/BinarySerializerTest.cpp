@@ -36,7 +36,7 @@ struct NumStruct {
     }
     auto operator== (const NumStruct& rhs) const {
         return fabs(data1 - rhs.data1) < 1e-5 &&
-               fabs(data1 - rhs.data1) < 1e-5;
+               fabs(data2 - rhs.data2) < 1e-5;
     }
 };
 MAKE_ATTRIBUTE_TRAIT(NumStruct, data1, data2);
@@ -92,6 +92,83 @@ TEST( BinarySerializerComplex, basicTest )
 
     valArr[valArr == 2 * testVal] = auxValArr;
     ASSERT_TRUE(floatArrayCompare(valArr, std::valarray<double>(testVal, 4)));
+}
+
+namespace Interface{
+template<>
+struct Compact<NumStruct, void> :public std::true_type
+{};
+
+template<typename T, size_t size>
+struct Compact<std::array<T, size>, std::enable_if_t<Compact<T>::value>> :public std::true_type
+{};
+
+}
+
+TEST( BinarySerializerCompact, basicTest )
+{
+    NumStruct n(1, 5);
+    std::array<NumStruct, 3> ud = {n, 2*n, 3*n};
+    std::vector<std::array<NumStruct, 3>> data(2, ud);
+    auto data_copy = data;
+    EXPECT_TRUE(Interface::CompactContainer<decltype(data)>::value);
+    BinarySerializer s;
+    s << data;
+    data.clear();
+    s >> data;
+    EXPECT_EQ(data, data_copy);
+}
+
+
+TEST( BinarySerializerBoundTraits, basicTest )
+{
+    NumStruct n(1, 5);
+    std::vector<NumStruct> data(2, n);
+    auto expectedResult = data;
+    for(auto& val : expectedResult) {
+        val.data1 = 0;
+    }
+    BinarySerializer s;
+    auto bindData = bindTraits(data, makeTraits<NumStruct>("", &NumStruct::data2));
+    s << bindData;
+    data.clear();
+    s >> bindData;
+    EXPECT_EQ(data, expectedResult);
+}
+
+/**
+ * @brief Tests that BinarySerializer is able to save its container into a binary file.
+ */
+TEST(BinarySerializerFileDump, basicTest) {
+    const char* fileName = "dump_bin";
+    remove(fileName);
+
+    //prepare data
+    NumStruct ns(1.0, 2.0);
+    std::vector<NumStruct> origData(100000, ns);
+    for (size_t i = 0; i < origData.size(); i++) {
+        origData[i] *= i;
+    }
+
+    BinarySerializer serializer;
+    serializer << origData;
+    BinarySerializer::ByteContainer expectedContainter = serializer.getData();
+
+    serializer.saveToFile(fileName);
+    serializer.clear();
+
+    // Expect that the file exists
+    EXPECT_TRUE(std::ifstream(fileName).good());
+
+    serializer.loadFromFile(fileName);
+
+    EXPECT_EQ(serializer.getData(), expectedContainter);
+
+    auto data = serializer.read<std::vector<NumStruct>>();
+
+    EXPECT_EQ(data , origData);
+
+    remove(fileName);
 }
 #endif
 

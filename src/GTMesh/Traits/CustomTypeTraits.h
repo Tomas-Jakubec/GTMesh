@@ -1,11 +1,9 @@
 #ifndef CUSTOMTRAITS_H
 #define CUSTOMTRAITS_H
-#include "Traits.h"
 #include <iostream>
 #include <type_traits>
 
 namespace Impl {
-#ifdef _MSC_VER
 template<typename... T> struct make_void {
     using type = void;
 };
@@ -19,13 +17,7 @@ template<typename... T> struct make_bool {
 
 template<typename... T>
 using bool_t = typename make_bool<T...>::type;
-#else
-template<typename...>
-using void_t = void;
 
-template<typename...>
-using bool_t = bool;
-#endif
 template<typename T1, typename T2 = void>
 struct is_exportable : public std::false_type
 {};
@@ -58,6 +50,17 @@ struct is_indexable<
 {};
 
 template<typename T1, typename T2 = void>
+struct is_resizable : public std::false_type
+{};
+
+template<typename T1>
+struct is_resizable<
+    T1,
+    void_t<decltype(std::declval<T1 &>().resize(0))>>
+    : public std::true_type
+{};
+
+template<typename T1, typename T2 = void>
 struct is_tnl_indexable : public std::false_type
 {};
 
@@ -65,6 +68,17 @@ template<typename T1>
 struct is_tnl_indexable<
     T1,
     void_t<decltype(std::declval<const T1 &>()[0]), decltype(std::declval<const T1 &>().getSize())>>
+    : public std::true_type
+{};
+
+template<typename T1, typename T2 = void>
+struct is_tnl_resizable : public std::false_type
+{};
+
+template<typename T1>
+struct is_tnl_resizable<
+    T1,
+    void_t<decltype(std::declval<T1 &>().setSize(0))>>
     : public std::true_type
 {};
 
@@ -77,14 +91,6 @@ struct is_traits<T1, void_t<decltype(T1::isTraits)>> : public std::true_type
 {};
 
 
-template<typename T1, template<typename> class TraitsType, typename = void>
-struct has_default_traits : public std::false_type
-{};
-
-template<typename T1, template<typename> class TraitsType>
-struct has_default_traits<T1, TraitsType, void_t<decltype(TraitsType<T1>::getTraits())>>
-    : public std::true_type
-{};
 
 } // namespace Impl
 
@@ -101,27 +107,19 @@ struct IsIndexable : public Impl::is_indexable<T1>
 {};
 
 template<typename T1>
+struct IsResizable : public Impl::is_resizable<T1>
+{};
+
+template<typename T1>
 struct IsTNLIndexable : public Impl::is_tnl_indexable<T1>
+{};
+
+template<typename T1>
+struct IsTNLResizable : public Impl::is_tnl_resizable<T1>
 {};
 
 template<typename T>
 struct IsTraits : public Impl::is_traits<T>
-{};
-
-template <typename T, template<typename> class DefaultTraitsType>
-struct HasDefaultTraitsOfType: public Impl::has_default_traits<T, DefaultTraitsType>
-{};
-
-template<typename T>
-struct HasDefaultTraits : public Impl::has_default_traits<T, DefaultTraits>
-{};
-
-template<typename T>
-struct HasDefaultIOTraits : public Impl::has_default_traits<T, DefaultIOTraits>
-{};
-
-template<typename T>
-struct HasDefaultArithmeticTraits : public Impl::has_default_traits<T, DefaultArithmeticTraits>
 {};
 
 #endif // CUSTOMTRAITS_H

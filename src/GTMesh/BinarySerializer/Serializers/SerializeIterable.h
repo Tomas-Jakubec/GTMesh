@@ -15,7 +15,8 @@ struct SerializeIterable {
 
 
     template <typename T, typename ..., std::enable_if_t<IsIterable<T>::value, bool> = true>
-    static void deserialize(std::vector<unsigned char>::const_iterator& dataIterator, T& data){
+    static Impl::void_t<decltype(T::resize)>
+        deserialize(std::vector<unsigned char>::const_iterator& dataIterator, T& data){
 
         decltype(data.size()) size = BinarySerializer::readNext<decltype(data.size())>(dataIterator);
 
