@@ -441,5 +441,5 @@ TEST(Mesh4D, Mesh4DpropertiesEmbed)
 //    MeshRefineTest();
 //}
 //#else
-#include "UnitTests/main.h"
+#include "main.h"
 //#endif

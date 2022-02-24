@@ -53,4 +53,4 @@ TEST( ArithmeticTraitsTest, basicTest )
 
 #endif
 
-#include "UnitTests/main.h"
+#include "main.h"

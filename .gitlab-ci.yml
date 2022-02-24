@@ -11,15 +11,15 @@ before_script:
 # do it with the build directory. Hence, we must build, test and install in the
 # same job.
 stages:
-    - build
+    - test
 
-my build job:
-    stage: build
+test_unit:
+    stage: test
     script:
         - export CTEST_OUTPUT_ON_FAILURE=1
         - export CTEST_PARALLEL_LEVEL=4
         # go to the unit tests directory
-        - pushd src/UnitTests/
+        - pushd tests
         # create and go to the build directory
         - mkdir -p "./builddir/$CI_JOB_NAME"
         - pushd "./builddir/$CI_JOB_NAME"

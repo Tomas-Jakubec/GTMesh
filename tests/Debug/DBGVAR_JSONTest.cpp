@@ -174,4 +174,4 @@ TEST( DBGVAR_JSONTest, basicTest )
 
 #endif
 
-#include "UnitTests/main.h"
+#include "main.h"

@@ -67,4 +67,4 @@ TEST( MakeMeshDataContainerTest, basicTest )
 
 #endif
 
-#include "UnitTests/main.h"
+#include "main.h"
