@@ -51,7 +51,6 @@ TEST( MakeMeshDataContainerTest, basicTest )
     EXPECT_EQ(containerIni.getDataByPos<3>(), std::vector<int>(mesh3.getElements<1>().size(), 15));
 
 
-    DBGMSG("assign test");
     MeshDataContainer<std::tuple<int, double, char, int>, 3, 2, 0, 1> containerAssign;
 
     containerAssign = containerIni;
@@ -62,8 +61,27 @@ TEST( MakeMeshDataContainerTest, basicTest )
     EXPECT_EQ(contAlloc.getDataByDim<1>(), std::vector<double>(mesh3.getElements<1>().size(), 87));
 }
 
+TEST(MakeMeshDataContainerTest, connections)
+{
+    UnstructuredMesh<3, size_t, double, 6> mesh3;
+    twoDeformedPrisms(mesh3);
 
+    MeshDataContainer<std::tuple<int, int>, 0, 3> meshData(mesh3, 0, 3);
 
+    const auto conn03 = mesh3.connections<0, 3>();
+    for (const auto &vert : mesh3.getElements<0>()) {
+        for (const auto &elementIndex : conn03[vert]) {
+            EXPECT_EQ(meshData[elementIndex], 3);
+        }
+    }
+
+    const auto neighborhood = mesh3.neighborhood<0, 3>();
+    for (const auto &vert : mesh3.getElements<0>()) {
+        for (const auto &elementIndex : neighborhood[vert]) {
+            EXPECT_EQ(meshData[elementIndex], 0);
+        }
+    }
+}
 
 #endif
 

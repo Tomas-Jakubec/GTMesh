@@ -177,7 +177,7 @@ public:
      * StartDim.
      */
     template<unsigned int StartDim, unsigned int TargetDim, Order ConnectionsOrder = ORDER_ASCEND>
-    MeshDataContainer<std::vector<IndexType>, StartDim> connections() const
+    MeshDataContainer<std::vector<ElementIndex<TargetDim, IndexType>>, StartDim> connections() const
     {
         return MeshConnections<StartDim, TargetDim, ConnectionsOrder>::connections(*this);
     }
@@ -191,7 +191,7 @@ public:
              unsigned int ConnectingDim,
              unsigned int ConnectedDim = StartDim,
              Order ConnectionsOrder = Order::ORDER_ASCEND>
-    MeshDataContainer<std::vector<IndexType>, StartDim> neighborhood() const
+    MeshDataContainer<std::vector<ElementIndex<ConnectedDim, IndexType>>, StartDim> neighborhood() const
     {
         return MeshNeighborhood<StartDim, ConnectingDim, ConnectedDim, ConnectionsOrder>::neighbors(
             *this);
