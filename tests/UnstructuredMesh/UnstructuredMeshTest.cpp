@@ -96,10 +96,10 @@ TEST( UnstructuredMesh2D_Functions_Test, basicTest )
     EXPECT_TRUE(floatArrayCompare(dist.getDataByPos<0>(), expectCellDist));
 
     // Mesh connections
-    std::vector<std::vector<size_t>> expCon20 = { { 0, 1, 2 }, { 1, 2, 3 } };
-    std::vector<std::vector<size_t>> expCon21 = { { 0, 1, 2 }, { 2, 3, 4 } };
-    std::vector<std::vector<size_t>> expCon12 = { { 0 }, { 0 }, { 0, 1 }, { 1 }, { 1 } };
-    std::vector<std::vector<size_t>> expCon02 = { { 0 }, { 0, 1 }, { 0, 1 }, { 1 } };
+    std::vector<std::vector<ElementIndex<0, size_t>>> expCon20 = { { 0, 1, 2 }, { 1, 2, 3 } };
+    std::vector<std::vector<ElementIndex<1, size_t>>> expCon21 = { { 0, 1, 2 }, { 2, 3, 4 } };
+    std::vector<std::vector<ElementIndex<2, size_t>>> expCon12 = { { 0 }, { 0 }, { 0, 1 }, { 1 }, { 1 } };
+    std::vector<std::vector<ElementIndex<2, size_t>>> expCon02 = { { 0 }, { 0, 1 }, { 0, 1 }, { 1 } };
 
     EXPECT_EQ((mesh.connections<2,0>().getDataByPos<0>()), expCon20);
     EXPECT_EQ((mesh.connections<2,1>().getDataByPos<0>()), expCon21);
@@ -107,10 +107,10 @@ TEST( UnstructuredMesh2D_Functions_Test, basicTest )
     EXPECT_EQ((mesh.connections<0,2>().getDataByPos<0>()), expCon02);
 
 
-    std::vector<std::vector<size_t>> expNeighbors20 = { { 1 }, { 0 } };
-    std::vector<std::vector<size_t>> expNeighbors210 = { { 0, 1, 2 }, { 1, 2, 3 } };
-    std::vector<std::vector<size_t>> expNeighbors120 = { { 0, 1, 2 }, { 0, 1, 2 }, { 0, 1, 2, 3 }, { 1, 2, 3 }, { 1, 2, 3 } };
-    std::vector<std::vector<size_t>> expNeighbors02 = { { 1, 2 }, { 0, 2, 3 }, { 0, 1, 3 }, { 1, 2 } };
+    std::vector<std::vector<ElementIndex<2, size_t>>> expNeighbors20 = { { 1 }, { 0 } };
+    std::vector<std::vector<ElementIndex<0, size_t>>> expNeighbors210 = { { 0, 1, 2 }, { 1, 2, 3 } };
+    std::vector<std::vector<ElementIndex<0, size_t>>> expNeighbors120 = { { 0, 1, 2 }, { 0, 1, 2 }, { 0, 1, 2, 3 }, { 1, 2, 3 }, { 1, 2, 3 } };
+    std::vector<std::vector<ElementIndex<0, size_t>>> expNeighbors02 = { { 1, 2 }, { 0, 2, 3 }, { 0, 1, 3 }, { 1, 2 } };
 
     EXPECT_EQ((mesh.neighborhood<2,0>().getDataByPos<0>()),   expNeighbors20);
     EXPECT_EQ((mesh.neighborhood<2,1,0>().getDataByPos<0>()), expNeighbors210);
@@ -251,10 +251,10 @@ TEST( UnstructuredMesh3D_Functions_Test, 3DMeshTest )
     EXPECT_TRUE(floatArrayCompare(dist.getDataByPos<0>(), expectCellDist));
 
     // Mesh connections
-    std::vector<std::vector<size_t>> expCon20 = { { 0, 1, 2 }, { 1, 2, 3 }, { 0, 1, 4, 5 }, { 0, 2, 4, 6 }, { 2, 3, 6, 7 }, { 1, 3, 5, 7 }, { 4, 5, 6 }, { 5, 6, 7 }, { 1, 2, 5, 6 } };
-    std::vector<std::vector<size_t>> expCon30 = { { 0, 1, 2, 4, 5, 6 }, { 1, 2, 3, 5, 6, 7 } };
-    std::vector<std::vector<size_t>> expCon03 = { { 0 }, { 0, 1 }, { 0, 1 }, { 1 }, { 0 }, { 0, 1 }, { 0, 1 }, { 1 } };
-    std::vector<std::vector<size_t>> expCon13 = { { 0 }, { 0 }, { 1 }, { 1 }, { 0 }, { 0, 1 }, { 1 }, { 0, 1 }, { 0 }, { 1 }, { 1 }, { 0 }, { 0, 1 }, { 0, 1 } };
+    std::vector<std::vector<ElementIndex<0, size_t>>> expCon20 = { { 0, 1, 2 }, { 1, 2, 3 }, { 0, 1, 4, 5 }, { 0, 2, 4, 6 }, { 2, 3, 6, 7 }, { 1, 3, 5, 7 }, { 4, 5, 6 }, { 5, 6, 7 }, { 1, 2, 5, 6 } };
+    std::vector<std::vector<ElementIndex<0, size_t>>> expCon30 = { { 0, 1, 2, 4, 5, 6 }, { 1, 2, 3, 5, 6, 7 } };
+    std::vector<std::vector<ElementIndex<3, size_t>>> expCon03 = { { 0 }, { 0, 1 }, { 0, 1 }, { 1 }, { 0 }, { 0, 1 }, { 0, 1 }, { 1 } };
+    std::vector<std::vector<ElementIndex<3, size_t>>> expCon13 = { { 0 }, { 0 }, { 1 }, { 1 }, { 0 }, { 0, 1 }, { 1 }, { 0, 1 }, { 0 }, { 1 }, { 1 }, { 0 }, { 0, 1 }, { 0, 1 } };
 
     EXPECT_EQ((mesh.connections<2,0>().getDataByPos<0>()), expCon20);
     EXPECT_EQ((mesh.connections<3,0>().getDataByPos<0>()), expCon30);
@@ -262,11 +262,11 @@ TEST( UnstructuredMesh3D_Functions_Test, 3DMeshTest )
     EXPECT_EQ((mesh.connections<1,3>().getDataByPos<0>()), expCon13);
 
     // Test neighbors
-    std::vector<std::vector<size_t>> expNeighbors20 = { { 1, 2, 3, 4, 5, 8 }, { 0, 2, 3, 4, 5, 8 }, { 0, 1, 3, 5, 6, 7, 8 }, { 0, 1, 2, 4, 6, 7, 8 }, { 0, 1, 3, 5, 6, 7, 8 }, { 0, 1, 2, 4, 6, 7, 8 }, { 2, 3, 4, 5, 7, 8 }, { 2, 3, 4, 5, 6, 8 }, { 0, 1, 2, 3, 4, 5, 6, 7 } };
-    std::vector<std::vector<size_t>> expNeighbors230 = { { 0, 1, 2, 4, 5, 6 }, { 1, 2, 3, 5, 6, 7 }, { 0, 1, 2, 4, 5, 6 }, { 0, 1, 2, 4, 5, 6 }, { 1, 2, 3, 5, 6, 7 }, { 1, 2, 3, 5, 6, 7 }, { 0, 1, 2, 4, 5, 6 }, { 1, 2, 3, 5, 6, 7 }, { 0, 1, 2, 3, 4, 5, 6, 7 } };
-    std::vector<std::vector<size_t>> expNeighbors020 = { { 1, 2, 4, 5, 6 }, { 0, 2, 3, 4, 5, 6, 7 }, { 0, 1, 3, 4, 5, 6, 7 }, { 1, 2, 5, 6, 7 }, { 0, 1, 2, 5, 6 }, { 0, 1, 2, 3, 4, 6, 7 }, { 0, 1, 2, 3, 4, 5, 7 }, { 1, 2, 3, 5, 6 } };
-    std::vector<std::vector<size_t>> expNeighbors320 = { { 0, 1, 2, 4, 5, 6 }, { 1, 2, 3, 5, 6, 7 } };
-    std::vector<std::vector<size_t>> expNeighbors02 = { { 1, 2, 4, 5, 6 }, { 0, 2, 3, 4, 5, 6, 7 }, { 0, 1, 3, 4, 5, 6, 7 }, { 1, 2, 5, 6, 7 }, { 0, 1, 2, 5, 6 }, { 0, 1, 2, 3, 4, 6, 7 }, { 0, 1, 2, 3, 4, 5, 7 }, { 1, 2, 3, 5, 6 } };
+    std::vector<std::vector<ElementIndex<2, size_t>>> expNeighbors20 = { { 1, 2, 3, 4, 5, 8 }, { 0, 2, 3, 4, 5, 8 }, { 0, 1, 3, 5, 6, 7, 8 }, { 0, 1, 2, 4, 6, 7, 8 }, { 0, 1, 3, 5, 6, 7, 8 }, { 0, 1, 2, 4, 6, 7, 8 }, { 2, 3, 4, 5, 7, 8 }, { 2, 3, 4, 5, 6, 8 }, { 0, 1, 2, 3, 4, 5, 6, 7 } };
+    std::vector<std::vector<ElementIndex<0, size_t>>> expNeighbors230 = { { 0, 1, 2, 4, 5, 6 }, { 1, 2, 3, 5, 6, 7 }, { 0, 1, 2, 4, 5, 6 }, { 0, 1, 2, 4, 5, 6 }, { 1, 2, 3, 5, 6, 7 }, { 1, 2, 3, 5, 6, 7 }, { 0, 1, 2, 4, 5, 6 }, { 1, 2, 3, 5, 6, 7 }, { 0, 1, 2, 3, 4, 5, 6, 7 } };
+    std::vector<std::vector<ElementIndex<0, size_t>>> expNeighbors020 = { { 1, 2, 4, 5, 6 }, { 0, 2, 3, 4, 5, 6, 7 }, { 0, 1, 3, 4, 5, 6, 7 }, { 1, 2, 5, 6, 7 }, { 0, 1, 2, 5, 6 }, { 0, 1, 2, 3, 4, 6, 7 }, { 0, 1, 2, 3, 4, 5, 7 }, { 1, 2, 3, 5, 6 } };
+    std::vector<std::vector<ElementIndex<0, size_t>>> expNeighbors320 = { { 0, 1, 2, 4, 5, 6 }, { 1, 2, 3, 5, 6, 7 } };
+    std::vector<std::vector<ElementIndex<0, size_t>>> expNeighbors02 = { { 1, 2, 4, 5, 6 }, { 0, 2, 3, 4, 5, 6, 7 }, { 0, 1, 3, 4, 5, 6, 7 }, { 1, 2, 5, 6, 7 }, { 0, 1, 2, 5, 6 }, { 0, 1, 2, 3, 4, 6, 7 }, { 0, 1, 2, 3, 4, 5, 7 }, { 1, 2, 3, 5, 6 } };
 
     EXPECT_EQ((mesh.neighborhood<2,0>().getDataByPos<0>()),   expNeighbors20);
     EXPECT_EQ((mesh.neighborhood<2,3,0>().getDataByPos<0>()), expNeighbors230);
@@ -380,15 +380,15 @@ void test4DMesh(UnstructuredMesh<4, IndexType, Real, Reserve...>& mesh){
     mesh.initializeCenters();
     // Tests of connections
     auto con20 = mesh.template connections<2,0>();
-    std::vector<std::vector<IndexType>> ex_con20 = { { 0, 1, 2 }, { 0, 1, 3 }, { 1, 2, 3 }, { 0, 2, 3 }, { 0, 1, 4 }, { 0, 2, 4 }, { 1, 2, 4 }, { 0, 3, 4 }, { 1, 3, 4 }, { 2, 3, 4 } };
+    std::vector<std::vector<ElementIndex<0, IndexType>>> ex_con20 = { { 0, 1, 2 }, { 0, 1, 3 }, { 1, 2, 3 }, { 0, 2, 3 }, { 0, 1, 4 }, { 0, 2, 4 }, { 1, 2, 4 }, { 0, 3, 4 }, { 1, 3, 4 }, { 2, 3, 4 } };
     EXPECT_EQ(con20.template getDataByPos<0>(), ex_con20);
 
     auto con30 = mesh.template connections<3,0>();
-    std::vector<std::vector<IndexType>> ex_con30 = { { 0, 1, 2, 3 }, { 0, 1, 2, 4 }, { 0, 1, 3, 4 }, { 1, 2, 3, 4 }, { 0, 2, 3, 4 } };
+    std::vector<std::vector<ElementIndex<0, IndexType>>> ex_con30 = { { 0, 1, 2, 3 }, { 0, 1, 2, 4 }, { 0, 1, 3, 4 }, { 1, 2, 3, 4 }, { 0, 2, 3, 4 } };
     EXPECT_EQ(con30.template getDataByPos<0>(), ex_con30);
 
     auto con40 = mesh.template connections<4,0>();
-    std::vector<std::vector<IndexType>> ex_con40 = { { 0, 1, 2, 3, 4 } };
+    std::vector<std::vector<ElementIndex<0, IndexType>>> ex_con40 = { { 0, 1, 2, 3, 4 } };
     EXPECT_EQ(con40.template getDataByPos<0>(), ex_con40);
 
     // Tests of center calculation

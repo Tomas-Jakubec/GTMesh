@@ -493,7 +493,27 @@ public:
         return getDataByDim<ElementDim>()[element.getIndex()];
     }
 
+    /**
+     * @brief Returns an element of the array allocated to the dimension
+     * of the passed @a element.
+     * @param element Element of a mesh the data are mapped to
+     */
+    template<unsigned int ElementDimension, typename IndexType>
+    DataType &operator[](const ElementIndex<ElementDimension, IndexType> &elementIndex)
+    {
+        return getDataByDim<ElementDimension>()[elementIndex.index];
+    }
 
+    /**
+     * @brief Returns an element of the array allocated to the dimension
+     * of the passed @a element.
+     * @param element Element of a mesh the data are mapped to
+     */
+    template<unsigned int ElementDimension, typename IndexType>
+    const DataType &operator[](const ElementIndex<ElementDimension, IndexType> &elementIndex) const
+    {
+        return getDataByDim<ElementDimension>()[elementIndex.index];
+    }
 
     /*
      * Assign operators
@@ -825,6 +845,29 @@ public:
         return getDataByDim<ElementDim>()[element.getIndex()];
     }
 
+    /**
+     * @brief Returns an element of the array allocated to the dimension
+     * of the passed @a element.
+     * @param element Element of a mesh the data are mapped to
+     */
+    template<unsigned int ElementDim, typename IndexType>
+    std::tuple_element_t<dimensionIndex<ElementDim>(), std::tuple<DataTypes...>> &operator[](
+        const ElementIndex<ElementDim, IndexType> &elementIndex)
+    {
+        return getDataByDim<ElementDim>()[elementIndex.index];
+    }
+
+    /**
+     * @brief Returns an element of the array allocated to the dimension
+     * of the passed @a element.
+     * @param element Element of a mesh the data are mapped to
+     */
+    template<unsigned int ElementDim, typename IndexType>
+    const std::tuple_element_t<dimensionIndex<ElementDim>(), std::tuple<DataTypes...>> &operator[](
+        const ElementIndex<ElementDim, IndexType> &elementIndex) const
+    {
+        return getDataByDim<ElementDim>()[elementIndex.index];
+    }
 
     MeshDataContainer() = default;
 

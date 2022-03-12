@@ -27,7 +27,7 @@ struct MeshConnections {
     static
     typename std::enable_if <
     (StartDim < TargetDim),
-    MeshDataContainer<std::vector<IndexType>, StartDim>
+            MeshDataContainer<std::vector<ElementIndex<TargetDim, IndexType>>, StartDim>
     >::type
     connections(
             const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
@@ -39,7 +39,7 @@ struct MeshConnections {
         MeshApply<StartDim, TargetDim>::apply(mesh, [&tmpSet](IndexType orig, IndexType connected){
             tmpSet.template getDataByPos<0>().at(orig).insert(connected);
         });
-        MeshDataContainer<std::vector<IndexType>, StartDim> res(mesh);
+        MeshDataContainer<std::vector<ElementIndex<TargetDim, IndexType>>, StartDim> res(mesh);
         // Copy the temporary data into result data
         for (IndexType i = IndexType(); i < res.template getDataByPos<0>().size(); i++) {
             res.template getDataByPos<0>()[i].insert(
@@ -62,14 +62,14 @@ struct MeshConnections {
     static
     typename std::enable_if <
     (StartDim >= TargetDim),
-    MeshDataContainer<std::vector<IndexType>, StartDim>
+    MeshDataContainer<std::vector<ElementIndex<TargetDim, IndexType>>, StartDim>
     >::type
     connections(
             const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
             ) {
 
         std::set<IndexType> tmpSet;
-        MeshDataContainer<std::vector<IndexType>, StartDim> res(mesh);
+        MeshDataContainer<std::vector<ElementIndex<TargetDim, IndexType>>, StartDim> res(mesh);
 
         for(IndexType index = IndexType(); index < mesh.template getElements<StartDim>().size(); index++) {
 
@@ -134,7 +134,7 @@ struct MeshConnections<StartDim, TargetDim, Order::ORDER_ORIGINAL> {
      * @return
      */
     template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
-    static MeshDataContainer<std::vector<IndexType>, StartDim> connections(
+    static MeshDataContainer<std::vector<ElementIndex<TargetDim, IndexType>>, StartDim> connections(
             const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
             ) {
         MeshDataContainer<std::map<IndexType, IndexType>, StartDim> tempMap(mesh);
@@ -147,7 +147,7 @@ struct MeshConnections<StartDim, TargetDim, Order::ORDER_ORIGINAL> {
             }
         );
 
-        MeshDataContainer<std::vector<IndexType>, StartDim> result(mesh);
+        MeshDataContainer<std::vector<ElementIndex<TargetDim, IndexType>>, StartDim> result(mesh);
         for (IndexType i = 0; i < mesh.template getElements<StartDim>().size(); i++){
             //resize the vector at the position
             result.template getDataByPos<0>().at(i).resize(

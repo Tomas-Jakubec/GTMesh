@@ -7,11 +7,11 @@ template <unsigned int StartDim, unsigned int ConnectingDim, unsigned int Connec
 class MeshNeighborhood{
 public:
     template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
-    static MeshDataContainer<std::vector<IndexType>, StartDim> neighbors(
+    static MeshDataContainer<std::vector<ElementIndex<ConnectedDim, IndexType>>, StartDim> neighbors(
                 const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
             ) {
 
-        MeshDataContainer<std::vector<IndexType>, StartDim> result(mesh);
+        MeshDataContainer<std::vector<ElementIndex<ConnectedDim, IndexType>>, StartDim> result(mesh);
         auto firstConnections = MeshConnections<StartDim, ConnectingDim, order>::connections(mesh);
         auto secondConnections = MeshConnections<ConnectingDim, ConnectedDim, order>::connections(mesh);
 
@@ -19,9 +19,9 @@ public:
 
             std::set<IndexType> tmpResultSet;
 
-            for (IndexType& firstConectedElem : firstConnections.template getDataByPos<0>().at(elementIndex)){
+            for (auto& firstConectedElem : firstConnections.template getDataByPos<0>().at(elementIndex)){
 
-                for (IndexType& neighborIndex : secondConnections.template getDataByPos<0>().at(firstConectedElem)){
+                for (auto& neighborIndex : secondConnections.template getDataByPos<0>().at(firstConectedElem)){
 
                     if (StartDim == ConnectedDim && elementIndex == neighborIndex) {
                         continue;
@@ -47,11 +47,11 @@ template <unsigned int StartDim, unsigned int ConnectingDim, unsigned int Connec
 class MeshNeighborhood<StartDim, ConnectingDim, ConnectedDim, Order::ORDER_ORIGINAL>{
 public:
     template<unsigned int MeshDimension, typename IndexType, typename Real, unsigned int ...Reserve>
-    static MeshDataContainer<std::vector<IndexType>, StartDim> neighbors(
+    static MeshDataContainer<std::vector<ElementIndex<ConnectedDim, IndexType>>, StartDim> neighbors(
                 const MeshElements<MeshDimension, IndexType, Real, Reserve...>& mesh
             ) {
 
-        MeshDataContainer<std::vector<IndexType>, StartDim> result(mesh);
+        MeshDataContainer<std::vector<ElementIndex<ConnectedDim, IndexType>>, StartDim> result(mesh);
         auto firstConnections = MeshConnections<StartDim, ConnectingDim, Order::ORDER_ORIGINAL>::connections(mesh);
         auto secondConnections = MeshConnections<ConnectingDim, ConnectedDim, Order::ORDER_ORIGINAL>::connections(mesh);
 
@@ -59,9 +59,9 @@ public:
 
             std::map<IndexType, IndexType> tempResultMap;
 
-            for (IndexType& firstConectedElem : firstConnections.template getDataByPos<0>().at(elementIndex)){
+            for (auto& firstConectedElem : firstConnections.template getDataByPos<0>().at(elementIndex)){
 
-                for (IndexType& neighborIndex : secondConnections.template getDataByPos<0>().at(firstConectedElem)){
+                for (auto& neighborIndex : secondConnections.template getDataByPos<0>().at(firstConectedElem)){
 
                     if (StartDim == ConnectedDim && elementIndex == neighborIndex) {
                         continue;
