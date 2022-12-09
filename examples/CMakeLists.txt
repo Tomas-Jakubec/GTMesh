@@ -16,7 +16,6 @@ include_directories(${CMAKE_SOURCE_DIR}/../src)
 add_subdirectory( Debug )
 add_subdirectory( BinarySerializer )
 #add_subdirectory( Traits )
-add_subdirectory( HeatConduction )
 add_subdirectory( UnstructuredMesh )
 
 ## below are targets for each test
