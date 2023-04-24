@@ -11,9 +11,9 @@ The tools developed as part of GTMesh:
 - user friendly, simple and generic [debugging tool](src/GTMesh/Debug/)
 - [Traits](src/GTMesh/Traits/), basic reflection of C++ data structures
 
-## Basic Tutorial
+To build the examples and tests run `./build_and_test.sh`.
 
-To build the examples and tests, run `./build_and_test.sh`.
+## Basic Tutorial
 
 Initialization of the `UnstructuredMesh` object:
 
