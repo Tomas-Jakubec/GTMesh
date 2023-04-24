@@ -26,13 +26,13 @@ class FPMAMeshWriter<3, IndexType, Real> : public MeshWriter<3>{
      * @brief faceVert<HR>
      * correctly erdered vertices for all faces
      */
-    MeshDataContainer<std::vector<IndexType>, 2> faceVert;
+    MeshDataContainer<std::vector<ElementIndex<2, IndexType>>, 2> faceVert;
 
     /**
      * @brief cellFace<HR>
      * original order of faces
      */
-    MeshDataContainer<std::vector<IndexType>, 3> cellFace;
+    MeshDataContainer<std::vector<ElementIndex<3, IndexType>>, 3> cellFace;
 
     /**
      * @brief This funcion return indexes of vertices of a face in correct order
@@ -47,7 +47,7 @@ class FPMAMeshWriter<3, IndexType, Real> : public MeshWriter<3>{
     template<unsigned int ...Reserve>
     void indexFace(MeshElements<3, IndexType, Real, Reserve...>& mesh,
                    typename MeshElements<3, IndexType, Real, Reserve...>::Face& face,
-                   std::vector<IndexType>& verticesIndexed){
+                   std::vector<ElementIndex<3, IndexType>>& verticesIndexed){
 
         // export the face in "left" direction see VTK export
         IndexType startVertex = mesh.getEdges().at(face.getSubelements()[0]).getVertexBIndex();
@@ -143,7 +143,7 @@ public:
         ost << mesh.getFaces().size() << std::endl;
         for(auto& face : mesh.getFaces()) {
             ost << faceVert.at(face).size() << ' ';
-            for (IndexType& vertIndex : faceVert.at(face)) {
+            for (IndexType vertIndex : faceVert.at(face)) {
                 ost << vertIndex << ' ';
             }
             ost << std::endl;
@@ -153,7 +153,7 @@ public:
         ost << mesh.getCells().size() << std::endl;
         for(auto& cell : mesh.getCells()) {
             ost << cellFace.at(cell).size() << ' ';
-            for (IndexType& faceIndex : cellFace.at(cell)) {
+            for (IndexType faceIndex : cellFace.at(cell)) {
                 ost << faceIndex << ' ';
             }
             ost << std::endl;

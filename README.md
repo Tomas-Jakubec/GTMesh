@@ -1,21 +1,21 @@
-[![pipeline status](https://mmg-gitlab.fjfi.cvut.cz/gitlab/jakubec/UnstructuredMesh/badges/master/pipeline.svg)](https://mmg-gitlab.fjfi.cvut.cz/gitlab/jakubec/UnstructuredMesh/commits/master)
-
 # GTMesh
 
-The GTMesh is a C++ library utilizing modern C++ paradigms as template metaprogramming
+The GTMesh is a C++ library utilizing modern C++ paradigms as template meta-programming
 and type traits. The aim of GTMesh is to provide an implementation working with an unstructured mesh
 of any dimension and topology. Furthermore, the library provides additional tools developed
 during the development of UnstructuredMesh and its functionalities. The minimal
 required C++ standard is C++14.
 
 The tools developed as part of GTMesh:
-- [unstructured mesh](src/GTMesh/UnstructuredMesh/) with simple and user friendly inferface
+- [unstructured mesh](src/GTMesh/UnstructuredMesh/) with simple and user friendly interface
 - user friendly, simple and generic [debugging tool](src/GTMesh/Debug/)
-- [Traits](src/GTMesh/Traits/), a tool describing C++ data structures and
+- [Traits](src/GTMesh/Traits/), basic reflection of C++ data structures
 
 ## Basic Tutorial
 
-Inicialization of the `UnstructuredMesh` object:
+To build the examples and tests, run `./build_and_test.sh`.
+
+Initialization of the `UnstructuredMesh` object:
 
 The `UnstructuredMesh` class has four template parameters, where the last is
 variadic.
@@ -113,12 +113,12 @@ int main () {
 
     // The flags container has internally 3 separate arrays (std::vector).
     // Each array is mapped to elements of different dimension (3, 2 and 1).
-    // The data can be allocated to the mesh directly in the contructor,
+    // The data can be allocated to the mesh directly in the constructor,
     // also it is possible to initialize the allocated containers at once.
     MeshDataContainer<size_t, 3, 2, 1> flags(mesh, 1);
 
     MeshDataContainer<double, 3> cellsMeasures;
-    // Memory allocation accoring to the mesh
+    // Memory allocation according to the mesh
     cellsMeasures.allocateData(mesh, 0);
 
     // Maps type int to the 3rd dimension and char to the 1st dimension
@@ -184,7 +184,7 @@ int main () {
         }
     );
     
-    // Determinte the vertices connected to cells
+    // Determine the vertices connected to cells
     auto connections3_0 = mesh.connections<3, 0>(); // MeshDataContainer<std::vector<size_t>, 3>
     
     // Vertices connected to the fisrst cell
