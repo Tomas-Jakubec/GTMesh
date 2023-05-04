@@ -61,6 +61,7 @@ TEST( MakeMeshDataContainerTest, basicTest )
     EXPECT_EQ(contAlloc.getDataByDim<1>(), std::vector<double>(mesh3.getElements<1>().size(), 87));
 }
 
+
 TEST(MakeMeshDataContainerTest, connections)
 {
     UnstructuredMesh<3, size_t, double, 6> mesh3;
