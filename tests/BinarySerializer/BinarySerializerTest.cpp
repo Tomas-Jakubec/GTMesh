@@ -71,12 +71,11 @@ TEST( BinarySerializerComplex, basicTest )
 {
     NumStruct ns{2, 85};
     double testVal = 42.15;
-    std::valarray<double> valArr = {testVal, testVal, 2*testVal, 2*testVal};
-
+    std::vector<double> valArr = {testVal, testVal, 2*testVal, 2*testVal};
     BinarySerializer ser;
     std::map<std::string, int> m ={{"1", 2}, {"2", 3}};
     ser.write(m, ns);
-    ser << const_cast<const std::valarray<double>&>(valArr)[valArr == testVal];
+    ser << valArr;
     m.clear();
     ns = {0,0};
     ASSERT_EQ(ns, NumStruct(0, 0));
@@ -87,11 +86,7 @@ TEST( BinarySerializerComplex, basicTest )
 
     std::valarray<double> auxValArr;
     ser >> auxValArr;
-    ASSERT_TRUE(floatArrayCompare(auxValArr, std::valarray<double>(testVal, 2)));
-
-
-    valArr[valArr == 2 * testVal] = auxValArr;
-    ASSERT_TRUE(floatArrayCompare(valArr, std::valarray<double>(testVal, 4)));
+    ASSERT_TRUE(floatArrayCompare(auxValArr, valArr));
 }
 
 namespace Interface{

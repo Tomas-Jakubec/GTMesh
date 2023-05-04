@@ -17,6 +17,8 @@ public:
     virtual
     MeshDataContainer<typename elementType::ElementType, MeshDimension>
     getCellTypes() const = 0;
+
+    virtual ~MeshReader() = default;
 };
 
 

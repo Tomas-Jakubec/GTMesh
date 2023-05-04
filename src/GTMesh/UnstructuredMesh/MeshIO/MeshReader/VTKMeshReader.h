@@ -20,6 +20,8 @@ public:
 
     template<typename IndexType, typename Real, unsigned int ...Reserve>
     VTKMeshReader(const MeshElements<MeshDimension, IndexType, Real, Reserve...>&){}
+
+    virtual ~VTKMeshReader() = default
 };
 
 
@@ -139,7 +141,7 @@ public:
             if (typeIt != TypeConversionTable.end()){
                 cellTypes.template getDataByPos<0>().at(i) = typeIt->second;
             } else {
-                std::runtime_error("unsuported cell type");
+                std::runtime_error("unsupported cell type");
             }
         }
     }
@@ -418,7 +420,7 @@ public:
             if (typeIt != TypeConversionTable.end()){
                 cellTypes.template getDataByPos<0>().at(i) = typeIt->second;
             } else {
-                std::runtime_error("unsuported cell type");
+                std::runtime_error("unsupported cell type");
             }
         }
     }

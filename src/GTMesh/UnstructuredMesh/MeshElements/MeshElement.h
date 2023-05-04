@@ -144,14 +144,16 @@ struct emptyStruct{};
 
 struct emptyStruct2{};
 
-
-
+template <unsigned int Number>
+constexpr unsigned int minusOne() {
+    return Number - 1;
+}
 
 
 template <unsigned int MeshDim, unsigned int ElementDim, typename IndexType, typename Real, unsigned int Reserve = 0>
 class MeshElement : public MeshElementBase<IndexType>,
-                    public std::conditional<ElementDim == MeshDim - 1,CellBoundaryConnection<IndexType>, emptyStruct>::type,
-                    public std::conditional<ElementDim == MeshDim - 1,ComputationallySignificantElement<MeshDim, Real>, emptyStruct2>::type{
+                    public std::conditional<ElementDim == minusOne<MeshDim>(),CellBoundaryConnection<IndexType>, emptyStruct>::type,
+                    public std::conditional<ElementDim == minusOne<MeshDim>(),ComputationallySignificantElement<MeshDim, Real>, emptyStruct2>::type{
     SubelementContainer<IndexType, Reserve> subelements;
 public:
 
@@ -165,7 +167,7 @@ public:
 
     MeshElement(IndexType index = INVALID_INDEX(IndexType))
         :MeshElementBase<IndexType>(index),
-         std::conditional<ElementDim == MeshDim - 1,CellBoundaryConnection<IndexType>, emptyStruct>::type()
+         std::conditional<ElementDim == minusOne<MeshDim>(),CellBoundaryConnection<IndexType>, emptyStruct>::type()
     {}
 
 };
