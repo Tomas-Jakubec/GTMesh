@@ -316,8 +316,6 @@ private:
             using type =
                 typename MeshDataContainer<T, Dimensions...>::template DataContainerType<0>::type;
 
-            DBGVAR((SelectTraitsWithIODefault<type, TraitsTuple...>::TypeTraits::size()));
-
             constexprFor<WriteData, SelectTraitsWithIODefault<type, TraitsTuple...>::TypeTraits::size()>(
                 ost,
                 data.template getDataByPos<0>(),

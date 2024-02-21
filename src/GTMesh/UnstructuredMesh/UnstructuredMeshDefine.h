@@ -8,26 +8,41 @@
 
 
 template <typename IndexType>
+constexpr IndexType invalidIndex() {
+    return std::numeric_limits<IndexType>::max();
+}
+
+template <typename IndexType>
+constexpr IndexType boundaryIndexBase() {
+    return static_cast<IndexType>(1) << (std::numeric_limits<IndexType>::digits - 1);
+}
+
+template <typename IndexType>
+constexpr IndexType boundaryExtractIndexBase() {
+    return static_cast<IndexType>(~boundaryIndexBase<IndexType>());
+}
+
+template <typename IndexType>
 bool isInvalidIndex(const IndexType& index){
-    return index == INVALID_INDEX(IndexType);
+    return index == invalidIndex<IndexType>();
 }
 
 
 template <typename IndexType>
 bool isBoundaryIndex(const IndexType& index){
-    return (BOUNDARY_INDEX(IndexType) & index) == BOUNDARY_INDEX(IndexType);
+    return (boundaryIndexBase<IndexType>() & index) == boundaryIndexBase<IndexType>();
 }
 
 
 template <typename IndexType>
 IndexType makeBoundaryIndex(const IndexType& index){
-    return (BOUNDARY_INDEX(IndexType) | index);
+    return (boundaryIndexBase<IndexType>() | index);
 }
 
 
 template <typename IndexType>
 IndexType extractBoundaryIndex(const IndexType& index){
-    return (EXTRACTING_INDEX(IndexType) & index);
+    return (boundaryExtractIndexBase<IndexType>() & index);
 }
 
 #endif // UNSTRUCTED_MESH_DEFINE_H

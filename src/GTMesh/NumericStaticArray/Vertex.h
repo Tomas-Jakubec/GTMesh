@@ -11,12 +11,37 @@ class Vertex : public std::array<Real, Dim> {
 
 
 public:
-    Vertex() = default;
-    Vertex(const std::initializer_list<Real>& l){
-        *this = l;
+    constexpr Vertex(): std::array<Real,Dim>() {}
+    constexpr Vertex(const Vertex& vert): std::array<Real, Dim>(vert) {}
+    constexpr Vertex(const std::initializer_list<Real>& l): std::array<Real, Dim>() {
+        unsigned int i = 0;
+        auto lIter = l.begin();
+        const auto lEnd = l.end();
+        for(unsigned int i = 0; i < Dim; ++i){
+            if (lIter != lEnd) {
+                (*this)[i] = *lIter;
+                ++lIter;
+            }else{
+                break;
+            }
+        }
     }
 
-    Vertex<Dim, Real>& operator =(const std::initializer_list<Real>& l);
+    Vertex<Dim, Real>& operator=(const std::initializer_list<Real>& l) {
+        unsigned int i = 0;
+        auto lIter = l.begin();
+        const auto lEnd = l.end();
+        for(unsigned int i = 0; i < Dim; ++i){
+            if (lIter != lEnd) {
+                (*this)[i] = *lIter;
+                ++lIter;
+            }else{
+                (*this)[i] = Real();
+            }
+        }
+        return *this;
+    }
+
 
 
     static constexpr unsigned int size() {
@@ -63,26 +88,6 @@ public:
     bool operator!=(const Vertex<Dim, Real>&) const;
 };
 
-
-template<unsigned int Dim, typename Real>
-Vertex<Dim, Real>& Vertex<Dim, Real>::operator =(const std::initializer_list<Real> &l){
-    unsigned int i = 0;
-
-    for(Real x : l){
-        if (i < Dim){
-            (*this)[i] = x;
-        }else{
-            break;
-        }
-        i++;
-    }
-    if (i < Dim){
-        for (; i < Dim; i++) {
-            (*this)[i] = Real();
-        }
-    }
-    return *this;
-}
 /*
 ** Calculates the Eucleid norm of the point
 */
